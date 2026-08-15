@@ -14,9 +14,12 @@ env/
 venv/
 .venv/
 ENV/
-build/
-develop-eggs/
+# Compilacion y Paquetes Frontend
 dist/
+**/dist/
+frontend/dist/
+build/
+**/build/
 downloads/
 eggs/
 .eggs/
