@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  postgres_gis:
+    image: docker.io/postgis/postgis:16-3.4-alpine
+    container_name: uniwheels_postgres_gis
+    environment:
+      POSTGRES_USER: uniwheels_user
+      POSTGRES_PASSWORD: secret_postgres_pass
+      POSTGRES_MULTIPLE_DATABASES: "auth_db,vehicle_db,route_gis_db,trip_db,notification_db"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh:Z
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U uniwheels_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: docker.io/library/redis:7-alpine
+    container_name: uniwheels_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  osrm_backend:
+    image: docker.io/osrm/osrm-backend:latest
+    container_name: uniwheels_osrm
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./osrm-data:/data
+    command: osrm-routed --algorithm mld /data/santander.osrm
+
+volumes:
+  postgres_data:

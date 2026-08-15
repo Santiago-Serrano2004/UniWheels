@@ -1,0 +1,77 @@
+# Dependencias
+node_modules/
+vendor/
+.pnp
+.pnp.js
+
+# Python y entornos virtuales
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Pruebas y Cobertura de Codigo
+.phpunit.result.cache
+.pest/
+coverage/
+*.lcov
+.nyc_output
+.pytest_cache/
+
+# Variables de Entorno y Secretos Locales
+.env
+.env.backup
+.env.production
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Registros de Logs y Bases de Datos Locales
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+*.sqlite
+
+# Archivos del Editor y Sistema Operativo
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Almacenamiento y Cache Temporal de Microservicios
+services/*/storage/*.key
+services/*/storage/framework/cache/*
+services/*/storage/framework/sessions/*
+services/*/storage/framework/views/*
+docker/osrm-data/*
+!docker/osrm-data/.gitkeep
