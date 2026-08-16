@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { routesService } from '../../services/api';
+import { routesService, tripLifecycleService } from '../../services/api';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -14,30 +14,79 @@ import {
   Clock,
   Navigation,
   Sparkles,
+  Layers,
+  Play,
+  Square,
+  Moon,
+  Sun,
+  Globe,
+  Compass,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// Pines vectoriales personalizados
-const createCustomPin = (bgColor, iconText, borderColor = '#ffffff') =>
+// Catálogo de estilos visuales profesionales para Leaflet
+const MAP_STYLES = [
+  {
+    id: 'positron',
+    name: 'Minimalista Claro (CartoDB)',
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; CartoDB &copy; OpenStreetMap',
+    icon: Sun,
+    badge: 'Recomendado',
+  },
+  {
+    id: 'voyager',
+    name: 'Urbano Detallado (Voyager)',
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; CartoDB &copy; OpenStreetMap',
+    icon: Compass,
+  },
+  {
+    id: 'dark',
+    name: 'Modo Noche (Dark Matter)',
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; CartoDB &copy; OpenStreetMap',
+    icon: Moon,
+  },
+  {
+    id: 'osm',
+    name: 'OpenStreetMap Estándar',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; OpenStreetMap contributors',
+    icon: Globe,
+  },
+  {
+    id: 'satellite',
+    name: 'Satélite HD (Esri World)',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri &copy; Maxar, Earthstar Geographics',
+    icon: Layers,
+  },
+];
+
+// Pines vectoriales personalizados con CSS dinámico
+const createCustomPin = (bgColor, iconText, borderColor = '#ffffff', isVehicle = false, heading = 0) =>
   L.divIcon({
     className: 'custom-leaflet-marker',
     html: `
-      <div style="background-color: ${bgColor}; width: 36px; height: 36px; border-radius: 50%; border: 3px solid ${borderColor}; box-shadow: 0 4px 12px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; transition: transform 0.2s ease;">
-        ${iconText}
+      <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;">
+        ${isVehicle ? '<div class="gps-beacon-ring"></div>' : ''}
+        <div style="background-color: ${bgColor}; width: 36px; height: 36px; border-radius: 50%; border: 3px solid ${borderColor}; box-shadow: 0 4px 14px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; transform: rotate(${heading}deg); transition: transform 0.3s ease;">
+          ${iconText}
+        </div>
       </div>
     `,
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
   });
 
-const driverIcon = createCustomPin('#0284c7', '🚗');
 const pickupIcon = createCustomPin('#f59e0b', '📍', '#fef3c7');
 const directPickupIcon = createCustomPin('#10b981', '📍', '#d1fae5');
-const campusIcon = createCustomPin('#082f49', '🎓');
+const campusIcon = createCustomPin('#082f49', '🎓', '#ffffff');
 
 const TOMTOM_KEY = import.meta.env.VITE_TOMTOM_API_KEY || '';
 
-// Componente para capturar clics en el mapa y evaluar el desvío vehicular real
+// Componente para capturar clics en el mapa y mover el punto de recogida
 const MapClickHandler = ({ onLocationSelect }) => {
   useMapEvents({
     click(e) {
@@ -62,7 +111,6 @@ async function fetchRoadGeometry(points) {
 
     const data = await response.json();
     if (data.code === 'Ok' && data.routes?.[0]?.geometry?.coordinates) {
-      // Convertir de [lng, lat] GeoJSON a [lat, lng] de Leaflet
       return data.routes[0].geometry.coordinates.map((pt) => [pt[1], pt[0]]);
     }
   } catch (e) {
@@ -84,12 +132,16 @@ export const TripMapView = () => {
   const isBooked = Boolean(activePassengerBooking);
   const campusName = user?.campus?.name || user?.campus || 'Campus El Jardín';
 
-  // Coordenadas fijas de origen y destino vehicular
+  // Coordenadas fijas
   const driverOrigin = [7.0678, -73.1066]; // C.C. Cañaveral
   const campusDestination = [7.1193, -73.1042]; // Campus El Jardín UNAB
 
-  // Estados de control del mapa y telemetría de IA
+  // Estados visuales y de configuración del mapa
+  const [selectedStyleId, setSelectedStyleId] = useState('positron');
+  const [showStyleModal, setShowStyleModal] = useState(false);
   const [showTrafficLayer, setShowTrafficLayer] = useState(true);
+
+  // Estados de telemetría y ruteo
   const [selectedPickup, setSelectedPickup] = useState([7.1186, -73.1102]); // Parque San Pío
   const [pickupName, setPickupName] = useState('Parque San Pío (Cabecera)');
   const [mainRouteCoords, setMainRouteCoords] = useState([]);
@@ -105,6 +157,15 @@ export const TripMapView = () => {
   });
   const [isLoadingEvaluation, setIsLoadingEvaluation] = useState(false);
 
+  // Simulación de vehículo GPS en movimiento
+  const [isSimulatingGps, setIsSimulatingGps] = useState(false);
+  const [vehiclePos, setVehiclePos] = useState(driverOrigin);
+  const [vehicleHeading, setVehicleHeading] = useState(0);
+  const simIndexRef = useRef(0);
+  const simTimerRef = useRef(null);
+
+  const activeStyle = MAP_STYLES.find((s) => s.id === selectedStyleId) || MAP_STYLES[0];
+
   // Puntos rápidos predefinidos en Bucaramanga
   const quickPoints = [
     { name: 'Parque San Pío (Desvío)', coords: [7.1186, -73.1102] },
@@ -113,25 +174,23 @@ export const TripMapView = () => {
     { name: 'Puerta del Sol', coords: [7.1023, -73.1185] },
   ];
 
-  // 1. Cargar la trayectoria vehicular real de la ruta principal en el montaje
+  // 1. Cargar ruta principal en el montaje
   useEffect(() => {
     let isMounted = true;
-
     async function loadMainRoute() {
       const coords = await fetchRoadGeometry([driverOrigin, campusDestination]);
       if (isMounted && coords.length > 0) {
         setMainRouteCoords(coords);
+        setVehiclePos(coords[0]);
       }
     }
-
     loadMainRoute();
-
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // 2. Evaluar y cargar la trayectoria vehicular del desvío cuando cambia el punto de recogida
+  // 2. Evaluar y cargar desvío cuando cambia el punto de recogida
   const handleSelectPickup = useCallback(
     async (coords, name = 'Punto seleccionado en el mapa') => {
       setSelectedPickup(coords);
@@ -139,13 +198,11 @@ export const TripMapView = () => {
       setIsLoadingEvaluation(true);
 
       try {
-        // Consultar geometría real turn-by-turn con OSRM pasando por la parada de recogida
         const detourGeometry = await fetchRoadGeometry([driverOrigin, coords, campusDestination]);
         if (detourGeometry.length > 0) {
           setDetourRouteCoords(detourGeometry);
         }
 
-        // Consultar telemetría e IA en el microservicio (puerto 8003)
         const matches = await routesService.searchMatches(coords[0], coords[1], 1);
         if (matches && matches.length > 0) {
           const topMatch = matches[0];
@@ -159,7 +216,6 @@ export const TripMapView = () => {
             estimated_arrival_time: '07:15 AM',
           });
         } else {
-          // Evaluación instantánea
           const esDirecto = Math.abs(coords[0] - 7.0856) < 0.003;
           setMatchingData({
             modality: esDirecto ? 'modalidad_1_directa' : 'modalidad_2_desvio',
@@ -180,12 +236,75 @@ export const TripMapView = () => {
     [driverOrigin, campusDestination]
   );
 
-  // Cargar el desvío inicial
   useEffect(() => {
     handleSelectPickup(selectedPickup, pickupName);
   }, []);
 
-  const manejarReserva = () => {
+  // 3. Simulación de movimiento GPS fluido sobre la polilínea
+  const toggleGpsSimulation = () => {
+    if (isSimulatingGps) {
+      clearInterval(simTimerRef.current);
+      setIsSimulatingGps(false);
+      return;
+    }
+
+    const activePath =
+      matchingData.modality === 'modalidad_2_desvio' && detourRouteCoords.length > 0
+        ? detourRouteCoords
+        : mainRouteCoords;
+
+    if (!activePath || activePath.length < 2) return;
+
+    setIsSimulatingGps(true);
+    simIndexRef.current = 0;
+
+    simTimerRef.current = setInterval(() => {
+      if (simIndexRef.current >= activePath.length - 1) {
+        simIndexRef.current = 0;
+      } else {
+        simIndexRef.current += 1;
+      }
+
+      const current = activePath[simIndexRef.current];
+      const next = activePath[Math.min(simIndexRef.current + 1, activePath.length - 1)];
+
+      // Calcular rumbo (heading)
+      const dLat = next[0] - current[0];
+      const dLng = next[1] - current[1];
+      const angle = (Math.atan2(dLng, dLat) * 180) / Math.PI;
+
+      setVehiclePos(current);
+      setVehicleHeading(angle);
+    }, 280);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (simTimerRef.current) clearInterval(simTimerRef.current);
+    };
+  }, []);
+
+  const manejarReserva = async () => {
+    try {
+      // Guardar en trip-service (puerto 8004)
+      await tripLifecycleService.bookTrip({
+        route_id: '01a00000-0000-0000-0000-000000000001',
+        driver_id: '01a00000-0000-0000-0000-000000000002',
+        passenger_id: user?.id || '01a00000-0000-0000-0000-000000000003',
+        driver_name: 'Carlos Mendoza',
+        passenger_name: user?.name || 'Pasajero UniWheels',
+        vehicle_plate: 'KLU-492',
+        vehicle_model: 'Mazda 3 (Rojo)',
+        pickup_address: pickupName,
+        dropoff_address: campusName,
+        total_fare_cop: matchingData.suggested_fare_cop,
+        scheduled_pickup_time: new Date().toISOString(),
+        boarding_pin: '4829',
+      });
+    } catch {
+      // Fallback transparente
+    }
+
     bookPassengerTrip({
       driverName: 'Carlos Mendoza',
       vehicle: 'Mazda 3 (Rojo)',
@@ -211,10 +330,11 @@ export const TripMapView = () => {
           scrollWheelZoom={true}
           className="w-full h-full"
         >
-          {/* Capa Base de Mapa OpenStreetMap */}
+          {/* Capa Base Seleccionada */}
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            key={activeStyle.id}
+            attribution={activeStyle.attribution}
+            url={activeStyle.url}
           />
 
           {/* Capa Satelital de Tráfico en Vivo TomTom (Overlay) */}
@@ -229,27 +349,43 @@ export const TripMapView = () => {
           {/* Captura de clics en el mapa */}
           <MapClickHandler onLocationSelect={(coords) => handleSelectPickup(coords)} />
 
-          {/* Polilínea Vehicular Real de la Ruta Principal (Azul Lochmara) */}
+          {/* Polilínea Base: Resplandor de la ruta */}
           {mainRouteCoords.length > 1 && (
             <Polyline
               positions={mainRouteCoords}
               pathOptions={{
                 color: '#0284c7',
-                weight: 5,
-                opacity: 0.85,
+                weight: 6,
+                opacity: 0.45,
                 lineCap: 'round',
                 lineJoin: 'round',
               }}
             />
           )}
 
-          {/* Polilínea Vehicular Real del Desvío Asistido por IA (Ámbar / Naranja) */}
+          {/* Polilínea Vehicular Real con Flujo Animado (Azul Lochmara) */}
+          {mainRouteCoords.length > 1 && (
+            <Polyline
+              positions={mainRouteCoords}
+              pathOptions={{
+                color: '#0284c7',
+                weight: 4,
+                opacity: 0.95,
+                dashArray: '10, 10',
+                className: 'animated-route-flow',
+                lineCap: 'round',
+                lineJoin: 'round',
+              }}
+            />
+          )}
+
+          {/* Polilínea Vehicular Real del Desvío de IA (Ámbar punteado si aplica Modalidad 2) */}
           {matchingData.modality === 'modalidad_2_desvio' && detourRouteCoords.length > 1 && (
             <Polyline
               positions={detourRouteCoords}
               pathOptions={{
                 color: '#f59e0b',
-                weight: 6,
+                weight: 5,
                 dashArray: '8, 8',
                 opacity: 0.95,
                 lineCap: 'round',
@@ -258,14 +394,21 @@ export const TripMapView = () => {
             />
           )}
 
-          {/* Marcadores */}
-          <Marker position={driverOrigin} icon={driverIcon}>
+          {/* Marcador del Vehículo en Vivo (Con rumbo y faro de pulsación) */}
+          <Marker
+            position={vehiclePos}
+            icon={createCustomPin('#0284c7', '🚗', '#ffffff', isSimulatingGps, vehicleHeading)}
+          >
             <Popup>
-              <strong>🚗 Origen del Conductor</strong>
-              <br />C.C. Cañaveral (Floridablanca)
+              <strong>🚗 Conductor en Vivo: Carlos Mendoza</strong>
+              <br />
+              Mazda 3 (Rojo) • <strong>KLU-492</strong>
+              <br />
+              {isSimulatingGps ? '⚡ Vehículo en movimiento' : '📍 Punto de partida: Cañaveral'}
             </Popup>
           </Marker>
 
+          {/* Marcador del Punto de Recogida */}
           <Marker
             position={selectedPickup}
             icon={matchingData.modality === 'modalidad_1_directa' ? directPickupIcon : pickupIcon}
@@ -273,14 +416,18 @@ export const TripMapView = () => {
             <Popup>
               <strong>📍 {pickupName}</strong>
               <br />
-              {matchingData.modality === 'modalidad_1_directa' ? '⚡ Abordaje directo (0 min desvío)' : `✨ Desvío asistido (+${matchingData.detour_minutes} min)`}
+              {matchingData.modality === 'modalidad_1_directa'
+                ? '⚡ Abordaje directo (0 min desvío)'
+                : `✨ Desvío asistido (+${matchingData.detour_minutes} min)`}
             </Popup>
           </Marker>
 
+          {/* Marcador de Destino Universitario */}
           <Marker position={campusDestination} icon={campusIcon}>
             <Popup>
               <strong>🎓 Destino Universitario</strong>
-              <br />{campusName}
+              <br />
+              {campusName}
             </Popup>
           </Marker>
         </MapContainer>
@@ -295,19 +442,46 @@ export const TripMapView = () => {
             <span className="font-semibold">{matchingData.traffic_status}</span>
           </div>
 
-          {/* Botón Toggle Capa de Tráfico TomTom */}
-          <button
-            type="button"
-            onClick={() => setShowTrafficLayer(!showTrafficLayer)}
-            className={`px-3 py-1.5 rounded-full shadow-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer backdrop-blur-md border ${
-              showTrafficLayer
-                ? 'bg-amber-500 text-white border-amber-400 shadow-amber-500/20'
-                : 'bg-white/90 text-slate-700 border-slate-200 hover:bg-white'
-            }`}
-          >
-            <Activity className={`w-3.5 h-3.5 ${showTrafficLayer ? 'animate-pulse' : ''}`} />
-            <span>Tráfico TomTom {showTrafficLayer ? 'ON' : 'OFF'}</span>
-          </button>
+          {/* Botones de Control: Estilo de Mapa + Simulación GPS + Tráfico TomTom */}
+          <div className="flex items-center gap-1.5">
+            {/* Selector de Estilo de Mapa */}
+            <button
+              type="button"
+              onClick={() => setShowStyleModal(true)}
+              className="p-2 rounded-full bg-white/90 hover:bg-white text-slate-700 border border-slate-200/90 shadow-md backdrop-blur-md transition-all cursor-pointer"
+              title="Cambiar estilo gráfico del mapa"
+            >
+              <Layers className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Botón Simulación GPS en Vivo */}
+            <button
+              type="button"
+              onClick={toggleGpsSimulation}
+              className={`px-3 py-1.5 rounded-full shadow-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer backdrop-blur-md border ${
+                isSimulatingGps
+                  ? 'bg-emerald-600 text-white border-emerald-500 shadow-emerald-600/30'
+                  : 'bg-white/90 text-slate-700 border-slate-200 hover:bg-white'
+              }`}
+            >
+              {isSimulatingGps ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+              <span>{isSimulatingGps ? 'Pausar GPS' : 'GPS en Vivo'}</span>
+            </button>
+
+            {/* Toggle Tráfico TomTom */}
+            <button
+              type="button"
+              onClick={() => setShowTrafficLayer(!showTrafficLayer)}
+              className={`px-3 py-1.5 rounded-full shadow-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer backdrop-blur-md border ${
+                showTrafficLayer
+                  ? 'bg-amber-500 text-white border-amber-400 shadow-amber-500/20'
+                  : 'bg-white/90 text-slate-700 border-slate-200 hover:bg-white'
+              }`}
+            >
+              <Activity className={`w-3.5 h-3.5 ${showTrafficLayer ? 'animate-pulse' : ''}`} />
+              <span>Tráfico {showTrafficLayer ? 'ON' : 'OFF'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Puntos Rápidos de Abordaje */}
@@ -331,6 +505,69 @@ export const TripMapView = () => {
           })}
         </div>
       </div>
+
+      {/* Modal / Menú Selector de Estilo de Mapa */}
+      <AnimatePresence>
+        {showStyleModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl p-5 w-full max-w-sm border border-slate-200 shadow-2xl space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-lochmara-600" />
+                  <h3 className="text-sm font-extrabold text-slate-900">Estilo Gráfico de Leaflet</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowStyleModal(false)}
+                  className="text-slate-400 hover:text-slate-600 text-xs font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {MAP_STYLES.map((style) => {
+                  const isCurrent = style.id === selectedStyleId;
+                  const Icon = style.icon;
+                  return (
+                    <button
+                      key={style.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedStyleId(style.id);
+                        setShowStyleModal(false);
+                      }}
+                      className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                        isCurrent
+                          ? 'border-lochmara-600 bg-lochmara-50/70 text-lochmara-900 font-bold'
+                          : 'border-slate-200 hover:bg-slate-50 text-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-2 rounded-xl ${isCurrent ? 'bg-lochmara-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold">{style.name}</p>
+                          {style.badge && (
+                            <span className="text-[10px] text-lochmara-600 font-bold">{style.badge}</span>
+                          )}
+                        </div>
+                      </div>
+                      {isCurrent && <CheckCircle2 className="w-4 h-4 text-lochmara-600" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Drawer Inferior Flotante */}
       <motion.div
