@@ -273,3 +273,71 @@ export const routesService = {
   },
 };
 
+// URL base del Microservicio de Gestión del Ciclo de Vida de Viajes
+const TRIP_API_BASE_URL = import.meta.env.VITE_TRIP_API_URL || 'http://localhost:8004/api/v1';
+
+export const tripLifecycleClient = axios.create({
+  baseURL: TRIP_API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  },
+  timeout: 6000,
+});
+
+// Servicios del Ciclo de Vida del Viaje (Fase 05 - trip-service)
+export const tripLifecycleService = {
+  async bookTrip(tripPayload) {
+    try {
+      const response = await tripLifecycleClient.post('/trips', tripPayload);
+      return response.data;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'Error al reservar el viaje en el trip-service.' };
+    }
+  },
+
+  async startDriving(tripId) {
+    const response = await tripLifecycleClient.post(`/trips/${tripId}/start`);
+    return response.data;
+  },
+
+  async arriveAtMeetingPoint(tripId) {
+    const response = await tripLifecycleClient.post(`/trips/${tripId}/arrive`);
+    return response.data;
+  },
+
+  async verifyPin(tripId, pin) {
+    try {
+      const response = await tripLifecycleClient.post(`/trips/${tripId}/verify-pin`, { pin });
+      return response.data;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'Código PIN inválido.' };
+    }
+  },
+
+  async completeTrip(tripId) {
+    const response = await tripLifecycleClient.post(`/trips/${tripId}/complete`);
+    return response.data;
+  },
+
+  async cancelTrip(tripId, cancelledBy, reason) {
+    const response = await tripLifecycleClient.post(`/trips/${tripId}/cancel`, {
+      cancelled_by: cancelledBy,
+      reason: reason,
+    });
+    return response.data;
+  },
+
+  async getActivePassengerTrip(passengerId) {
+    try {
+      const response = await tripLifecycleClient.get(`/passenger/${passengerId}/active-trip`);
+      return response.data?.data || null;
+    } catch {
+      return null;
+    }
+  },
+};
+
+
