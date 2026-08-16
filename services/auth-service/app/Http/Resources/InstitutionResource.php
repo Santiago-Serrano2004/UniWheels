@@ -29,6 +29,7 @@ class InstitutionResource extends JsonResource
                 'address' => $campus->address,
                 'latitude' => (float) $campus->latitude,
                 'longitude' => (float) $campus->longitude,
+                'is_main_campus' => (bool) ($campus->is_main_campus ?? false),
             ]) : [],
         ];
     }

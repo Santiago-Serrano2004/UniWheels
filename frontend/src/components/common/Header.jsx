@@ -25,7 +25,7 @@ export const Header = () => {
 
   return (
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 pt-4 pb-3 flex items-center justify-between shadow-2xs select-none">
-      {/* Isotipo / Emblema y Campus */}
+      {/* Isotipo / Emblema */}
       <div className="flex items-center gap-2">
         <div
           onClick={() => setActiveTab(activeRole === 'driver' ? 'driver' : 'home')}
@@ -33,11 +33,6 @@ export const Header = () => {
         >
           <Emblem className="h-7 w-auto drop-shadow-xs" />
           <span className="font-extrabold text-slate-900 text-sm tracking-tight">UniWheels</span>
-        </div>
-
-        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-lochmara-50 border border-lochmara-200/70 text-lochmara-800 text-[11px] font-medium ml-1">
-          <MapPin className="w-3 h-3 text-lochmara-500" />
-          <span className="truncate max-w-[90px]">{user?.campus?.replace('Campus ', '') || 'El Jardín'}</span>
         </div>
       </div>
 

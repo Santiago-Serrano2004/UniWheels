@@ -31,6 +31,7 @@ class InstitutionSeeder extends Seeder
                 'address' => 'Avenida 42 No. 48 - 11, Bucaramanga, Santander',
                 'latitude' => 7.1193460,
                 'longitude' => -73.1042780,
+                'is_main_campus' => true,
                 'is_active' => true,
             ],
             [
@@ -39,6 +40,7 @@ class InstitutionSeeder extends Seeder
                 'address' => 'Calle 158 No. 20 - 40, Cañaveral, Floridablanca, Santander',
                 'latitude' => 7.0664910,
                 'longitude' => -73.1037890,
+                'is_main_campus' => false,
                 'is_active' => true,
             ],
             [
@@ -47,6 +49,7 @@ class InstitutionSeeder extends Seeder
                 'address' => 'Carrera 45 No. 44 - 15, Terrazas, Bucaramanga, Santander',
                 'latitude' => 7.1138210,
                 'longitude' => -73.1068420,
+                'is_main_campus' => false,
                 'is_active' => true,
             ],
             [
@@ -55,6 +58,7 @@ class InstitutionSeeder extends Seeder
                 'address' => 'Calle 42 No. 34 - 14, Bucaramanga, Santander',
                 'latitude' => 7.1182100,
                 'longitude' => -73.1165200,
+                'is_main_campus' => false,
                 'is_active' => true,
             ],
         ];

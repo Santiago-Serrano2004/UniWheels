@@ -18,6 +18,7 @@ class InstitutionCampus extends Model
         'address',
         'latitude',
         'longitude',
+        'is_main_campus',
         'is_active',
     ];
 
@@ -26,6 +27,7 @@ class InstitutionCampus extends Model
         return [
             'latitude' => 'float',
             'longitude' => 'float',
+            'is_main_campus' => 'boolean',
             'is_active' => 'boolean',
         ];
     }

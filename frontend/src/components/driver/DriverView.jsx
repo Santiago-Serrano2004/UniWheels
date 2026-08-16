@@ -15,11 +15,11 @@ import {
   ArrowRight,
   Search,
   CheckCircle2,
-  AlertCircle,
+  X,
   Loader2,
   Building2,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 // Pines vectoriales personalizados para Leaflet
 const createCustomPin = (color, emoji) =>
@@ -73,15 +73,15 @@ function MapLocationPicker({ position, onPositionChange }) {
 export const DriverView = () => {
   const { user } = useAppStore();
 
-  // 1. Sentido del Viaje: 'hacia_campus' | 'desde_campus' (Estructura cerrada)
+  // 1. Sentido del Viaje: 'hacia_campus' | 'desde_campus'
   const [sentidoViaje, setSentidoViaje] = useState('hacia_campus');
 
   // 2. Lista de sedes oficiales cargadas desde la base de datos
   const [sedesInstitucion, setSedesInstitucion] = useState([
-    { id: 1, name: 'Campus El Jardín' },
-    { id: 2, name: 'Campus El Bosque' },
-    { id: 3, name: 'CSU — Centro de Servicios Universitarios' },
-    { id: 4, name: 'Campus La Casona' },
+    { id: 1, name: 'Campus El Jardín', is_main_campus: true },
+    { id: 2, name: 'Campus El Bosque', is_main_campus: false },
+    { id: 3, name: 'CSU — Centro de Servicios Universitarios', is_main_campus: false },
+    { id: 4, name: 'Campus La Casona', is_main_campus: false },
   ]);
 
   // Sede seleccionada
@@ -104,12 +104,27 @@ export const DriverView = () => {
 
   const buscadorRef = useRef(null);
 
-  // Cargar sedes dinámicas desde la API
+  // Cerrar sugerencias al hacer clic fuera del buscador
+  useEffect(() => {
+    const manejarClickFuera = (e) => {
+      if (buscadorRef.current && !buscadorRef.current.contains(e.target)) {
+        setMostrandoSugerencias(false);
+      }
+    };
+    document.addEventListener('mousedown', manejarClickFuera);
+    return () => document.removeEventListener('mousedown', manejarClickFuera);
+  }, []);
+
+  // Cargar sedes dinámicas desde la base de datos
   useEffect(() => {
     authService.getInstitutions().then((instituciones) => {
       if (instituciones && instituciones.length > 0 && instituciones[0].campuses) {
         setSedesInstitucion(instituciones[0].campuses);
-        if (user?.campus) {
+        // Seleccionar sede principal por defecto
+        const sedePrincipal = instituciones[0].campuses.find((c) => c.is_main_campus);
+        if (sedePrincipal) {
+          setSedeSeleccionada(sedePrincipal.name);
+        } else if (user?.campus) {
           setSedeSeleccionada(user.campus);
         }
       }
@@ -126,7 +141,7 @@ export const DriverView = () => {
           setCargandoGeocodificacion(false);
           setMostrandoSugerencias(true);
         });
-      }, 300);
+      }, 250);
 
       return () => clearTimeout(timer);
     } else {
@@ -186,7 +201,7 @@ export const DriverView = () => {
 
   return (
     <div className="space-y-4 pb-6 select-none">
-      {/* 1. HERO BANNER MODO CONDUCTOR */}
+      {/* 1. HERO BANNER CON BOTÓN DESLIZANTE TIPO ON/OFF */}
       <section className="bg-gradient-to-br from-[#082f49] via-slate-900 to-slate-950 text-white rounded-3xl p-5 shadow-md relative overflow-hidden space-y-3">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
@@ -202,29 +217,40 @@ export const DriverView = () => {
           </div>
         </div>
 
-        {/* Selector Cerrado de Sentido del Viaje */}
-        <div className="p-1 bg-white/10 backdrop-blur-md rounded-2xl flex items-center gap-1 border border-white/10 text-xs">
+        {/* Alternador con Animación Suave de Desplazamiento (Sliding Pill) */}
+        <div className="relative p-1 bg-white/10 backdrop-blur-md rounded-2xl flex items-center border border-white/10 text-xs select-none">
           <button
             type="button"
             onClick={() => setSentidoViaje('hacia_campus')}
-            className={`flex-1 py-2 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              sentidoViaje === 'hacia_campus'
-                ? 'bg-lochmara-500 text-white shadow-xs'
-                : 'text-slate-300 hover:text-white'
+            className={`relative flex-1 py-2 rounded-xl font-bold transition-colors flex items-center justify-center gap-1.5 z-10 cursor-pointer ${
+              sentidoViaje === 'hacia_campus' ? 'text-white' : 'text-slate-300 hover:text-white'
             }`}
           >
+            {sentidoViaje === 'hacia_campus' && (
+              <motion.div
+                layoutId="pill-direction"
+                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                className="absolute inset-0 bg-lochmara-500 rounded-xl shadow-xs z-[-1]"
+              />
+            )}
             <span>Hacia el Campus</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
+
           <button
             type="button"
             onClick={() => setSentidoViaje('desde_campus')}
-            className={`flex-1 py-2 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              sentidoViaje === 'desde_campus'
-                ? 'bg-lochmara-500 text-white shadow-xs'
-                : 'text-slate-300 hover:text-white'
+            className={`relative flex-1 py-2 rounded-xl font-bold transition-colors flex items-center justify-center gap-1.5 z-10 cursor-pointer ${
+              sentidoViaje === 'desde_campus' ? 'text-white' : 'text-slate-300 hover:text-white'
             }`}
           >
+            {sentidoViaje === 'desde_campus' && (
+              <motion.div
+                layoutId="pill-direction"
+                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                className="absolute inset-0 bg-lochmara-500 rounded-xl shadow-xs z-[-1]"
+              />
+            )}
             <span>Desde el Campus</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
@@ -246,19 +272,14 @@ export const DriverView = () => {
         </motion.div>
       )}
 
-      {/* 3. FORMULARIO ESTRUCTURADO: CAMPUS Y DIRECCIÓN */}
+      {/* 3. FORMULARIO ESTRUCTURADO */}
       <form onSubmit={publicarTrayecto} className="space-y-4">
-        {/* SELECCIÓN OBLIGATORIA DEL CAMPUS UNIVERSITARIO */}
+        {/* SELECCIÓN LIMPIA DEL CAMPUS UNIVERSITARIO */}
         <section className="bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5 text-lochmara-600" />
-              <span>Campus Universitario ({sentidoViaje === 'hacia_campus' ? 'Destino Fijo' : 'Origen Fijo'})</span>
-            </label>
-            <span className="text-[10px] text-emerald-700 bg-emerald-50 font-bold px-2 py-0.5 rounded-full border border-emerald-200">
-              Sede Oficial
-            </span>
-          </div>
+          <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+            <Building2 className="w-3.5 h-3.5 text-lochmara-600" />
+            <span>Campus Universitario</span>
+          </label>
 
           <select
             value={sedeSeleccionada}
@@ -267,14 +288,14 @@ export const DriverView = () => {
           >
             {sedesInstitucion.map((s) => (
               <option key={s.id} value={s.name}>
-                {s.name}
+                {s.name} {s.is_main_campus ? '• (Sede Principal)' : ''}
               </option>
             ))}
           </select>
         </section>
 
-        {/* SELECCIÓN DEL PUNTO EN EL AMB (ORIGEN O DESTINO SEGÚN CORRESPONDA) */}
-        <section className="bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs space-y-3">
+        {/* SELECCIÓN DEL PUNTO EN EL AMB (CON DESPLEGABLE EN CAPA SUPERIOR Z-50) */}
+        <section className="relative z-30 bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
               {sentidoViaje === 'hacia_campus' ? 'Desde (Punto de Partida)' : 'Hacia (Punto de Llegada)'}
@@ -301,16 +322,34 @@ export const DriverView = () => {
                 placeholder="Buscar barrio, dirección o punto en el AMB..."
                 className="w-full bg-slate-50 text-xs rounded-2xl pl-10 pr-9 py-3 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 font-medium"
               />
-              {cargandoGeocodificacion && (
+              {cargandoGeocodificacion ? (
                 <Loader2 className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-lochmara-600 animate-spin" />
-              )}
+              ) : busquedaTexto ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBusquedaTexto('');
+                    setMostrandoSugerencias(false);
+                  }}
+                  className="p-1 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              ) : null}
             </div>
 
-            {/* Menú Desplegable de Sugerencias Photon / Nominatim */}
+            {/* Menú Desplegable de Sugerencias en Capa Superior z-50 */}
             {mostrandoSugerencias && (
-              <div className="absolute top-full left-0 right-0 z-40 mt-1.5 bg-white rounded-2xl border border-slate-200 shadow-xl divide-y divide-slate-100 overflow-hidden max-h-56 overflow-y-auto">
-                <div className="p-2 bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Sugerencias en Bucaramanga y AMB
+              <div className="absolute top-full left-0 right-0 z-50 mt-1.5 bg-white rounded-2xl border border-slate-200 shadow-2xl divide-y divide-slate-100 overflow-hidden max-h-56 overflow-y-auto">
+                <div className="p-2 bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                  <span>Sugerencias en Bucaramanga y AMB</span>
+                  <button
+                    type="button"
+                    onClick={() => setMostrandoSugerencias(false)}
+                    className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
                 {sugerencias.map((lugar, idx) => (
                   <button
@@ -330,13 +369,13 @@ export const DriverView = () => {
             )}
           </div>
 
-          {/* Dirección Fijada Automáticamente (Desde el mapa o búsqueda) */}
+          {/* Dirección Sincronizada Automáticamente con el Mapa */}
           <div className="p-3 rounded-2xl bg-lochmara-50/80 border border-lochmara-200 flex items-center justify-between text-xs">
             <div className="flex items-center gap-2.5 truncate">
               <div className="w-2.5 h-2.5 rounded-full bg-lochmara-600 shrink-0" />
               <div>
                 <span className="text-[10px] text-lochmara-700 font-bold block uppercase">
-                  {sentidoViaje === 'hacia_campus' ? 'Punto de Partida Fijado' : 'Punto de Llegada Fijado'}
+                  {sentidoViaje === 'hacia_campus' ? 'Desde (Punto de Partida Fijado)' : 'Hacia (Punto de Llegada Fijado)'}
                 </span>
                 <span className="font-bold text-slate-900 truncate">{direccionLugar}</span>
               </div>
@@ -348,7 +387,7 @@ export const DriverView = () => {
         </section>
 
         {/* 4. SELECTOR DIDÁCTICO EN EL MAPA LEAFLET */}
-        <section className="bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs space-y-2">
+        <section className="relative z-10 bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
               Seleccionar en el Mapa
