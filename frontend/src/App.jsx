@@ -12,14 +12,61 @@ import { DriverOnboardingView } from './components/driver/DriverOnboardingView';
 import { WalletView } from './components/wallet/WalletView';
 import { ProfileView } from './components/profile/ProfileView';
 import { PassengerTripsView } from './components/trips/PassengerTripsView';
+import { ActiveRoleConflictBlocker } from './components/common/ActiveRoleConflictBlocker';
 import { RotateCcw, Smartphone, LogOut } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
-  const { user, isAuthenticated, activeTab, setActiveTab, logout, showWelcomeMascot, closeWelcomeMascot } = useAppStore();
+  const {
+    user,
+    isAuthenticated,
+    activeTab,
+    setActiveTab,
+    activeRole,
+    toggleRole,
+    activeDriverTrip,
+    activePassengerBooking,
+    logout,
+    showWelcomeMascot,
+    closeWelcomeMascot,
+  } = useAppStore();
 
   const renderActiveView = () => {
+    // 1. La pestaña de Perfil SIEMPRE es accesible independientemente del rol o estado
+    if (activeTab === 'profile') {
+      return <ProfileView />;
+    }
+
+    // 2. Validación de conflicto: Si tiene viaje activo como conductor e intenta interactuar como pasajero
+    if (activeRole === 'passenger' && activeDriverTrip) {
+      return (
+        <ActiveRoleConflictBlocker
+          conflictType="driver_active"
+          activeTrip={activeDriverTrip}
+          onRedirect={() => {
+            toggleRole();
+            setActiveTab('home');
+          }}
+        />
+      );
+    }
+
+    // 3. Validación de conflicto: Si tiene reserva activa como pasajero e intenta operar como conductor
+    if (activeRole === 'driver' && activePassengerBooking) {
+      return (
+        <ActiveRoleConflictBlocker
+          conflictType="passenger_active"
+          activeTrip={activePassengerBooking}
+          onRedirect={() => {
+            toggleRole();
+            setActiveTab('trips');
+          }}
+        />
+      );
+    }
+
+    // 4. Vistas estándar según activeTab
     switch (activeTab) {
       case 'home':
         return <HomeView />;
@@ -35,8 +82,6 @@ export default function App() {
         );
       case 'wallet':
         return <WalletView />;
-      case 'profile':
-        return <ProfileView />;
       default:
         return <HomeView />;
     }

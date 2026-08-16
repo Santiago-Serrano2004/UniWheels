@@ -48,6 +48,30 @@ export const useAppStore = create((set, get) => ({
   // Estado del Viaje Activo del Conductor (null si no hay viaje publicado)
   activeDriverTrip: null,
 
+  // Estado del Viaje/Reserva Activa del Pasajero (null si no tiene reserva)
+  activePassengerBooking: null,
+
+  // Reservar un viaje como pasajero
+  bookPassengerTrip: (tripData) => {
+    const booking = {
+      id: 'book_' + Date.now(),
+      bookedAt: new Date().toISOString(),
+      status: 'confirmed',
+      boardingPin: '4829', // PIN de abordaje de 4 dígitos para verificación
+      ...tripData,
+    };
+    set({
+      activePassengerBooking: booking,
+      activeTab: 'trips',
+    });
+    return booking;
+  },
+
+  // Cancelar reserva de pasajero
+  cancelPassengerBooking: () => {
+    set({ activePassengerBooking: null });
+  },
+
   // Saldo de Billetera del Conductor (Mínimo requerido para publicar: $ 2.000 COP)
   driverWalletBalance: 25000,
 

@@ -24,8 +24,9 @@ const pickupIcon = createCustomPin('#0ea5e9', '📍');
 const campusIcon = createCustomPin('#082f49', '🎓');
 
 export const TripMapView = () => {
-  const { user } = useAppStore();
-  const [isBooked, setIsBooked] = useState(false);
+  const { user, activePassengerBooking, bookPassengerTrip, cancelPassengerBooking } = useAppStore();
+
+  const isBooked = Boolean(activePassengerBooking);
 
   const campusName = user?.campus?.name || user?.campus || 'Campus Universitario';
 
@@ -41,6 +42,25 @@ export const TripMapView = () => {
     [7.1172, -73.1215],
     [7.1193, -73.1227],
   ];
+
+  const manejarReserva = () => {
+    if (isBooked) {
+      cancelPassengerBooking();
+    } else {
+      bookPassengerTrip({
+        driverName: 'Carlos Mendoza',
+        vehicle: 'Mazda 3 (Rojo)',
+        plate: 'KLU-492',
+        origin: 'Cañaveral - La Florida',
+        pickup: 'Parque San Pío',
+        destination: campusName,
+        departureTime: '06:45 AM',
+        estimatedPickupTime: '07:05 AM',
+        fare: '$ 4.500',
+        boardingPin: '4829',
+      });
+    }
+  };
 
   return (
     <div className="relative w-full h-[calc(100dvh-135px)] sm:h-[720px] flex flex-col justify-between overflow-hidden rounded-3xl select-none">
@@ -134,17 +154,17 @@ export const TripMapView = () => {
 
         {/* Boton de Accion de Reserva */}
         <button
-          onClick={() => setIsBooked(!isBooked)}
+          onClick={manejarReserva}
           className={`w-full py-3 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md ${
             isBooked
-              ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+              ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/25'
               : 'bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white shadow-lochmara-600/30'
           }`}
         >
           {isBooked ? (
             <>
               <CheckCircle2 className="w-4 h-4" />
-              <span>Cupo Confirmado (Monitoreando en Vivo)</span>
+              <span>Cupo Reservado (Ver en Mis Viajes)</span>
             </>
           ) : (
             <>
