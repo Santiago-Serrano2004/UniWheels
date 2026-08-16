@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { CancelTripPenaltyModal } from './CancelTripPenaltyModal';
+import { DriverHistoryView } from './DriverHistoryView';
 import {
   Car,
   MapPin,
@@ -30,22 +31,27 @@ export const DriverCockpitCard = () => {
 
   if (!activeDriverTrip) {
     return (
-      <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-2xs space-y-3 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-lochmara-50 border border-lochmara-200 text-lochmara-600 flex items-center justify-center mx-auto shadow-2xs">
-          <Car className="w-6 h-6" />
+      <div className="space-y-4 pb-6 select-none">
+        <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-2xs space-y-3 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-lochmara-50 border border-lochmara-200 text-lochmara-600 flex items-center justify-center mx-auto shadow-2xs">
+            <Car className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">No tienes un viaje publicado</h3>
+            <p className="text-xs text-slate-500 max-w-xs mx-auto mt-0.5">
+              Publica tu trayecto diario hacia o desde la universidad para compartir gastos con tu comunidad.
+            </p>
+          </div>
+          <button
+            onClick={() => setActiveTab('driver')}
+            className="w-full py-3 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-bold transition-all shadow-md shadow-lochmara-600/20 cursor-pointer"
+          >
+            Publicar Nuevo Trayecto
+          </button>
         </div>
-        <div>
-          <h3 className="text-sm font-bold text-slate-900">No tienes un viaje publicado</h3>
-          <p className="text-xs text-slate-500 max-w-xs mx-auto mt-0.5">
-            Publica tu trayecto diario hacia o desde la universidad para compartir gastos con tu comunidad.
-          </p>
-        </div>
-        <button
-          onClick={() => setActiveTab('driver')}
-          className="w-full py-3 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-bold transition-all shadow-md shadow-lochmara-600/20 cursor-pointer"
-        >
-          Publicar Nuevo Trayecto
-        </button>
+
+        {/* Historial de Conducción */}
+        <DriverHistoryView />
       </div>
     );
   }
@@ -191,6 +197,9 @@ export const DriverCockpitCard = () => {
         <AlertTriangle className="w-4 h-4 text-rose-600" />
         <span>Cancelar Publicación de Viaje</span>
       </button>
+
+      {/* 4. HISTORIAL DE CONDUCCIÓN */}
+      <DriverHistoryView />
 
       {/* MODAL DE PENALIZACIÓN SI HAY PASAJEROS */}
       <CancelTripPenaltyModal
