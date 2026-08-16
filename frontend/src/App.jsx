@@ -12,6 +12,7 @@ import { DriverOnboardingView } from './components/driver/DriverOnboardingView';
 import { WalletView } from './components/wallet/WalletView';
 import { ProfileView } from './components/profile/ProfileView';
 import { PassengerTripsView } from './components/trips/PassengerTripsView';
+import { DriverHistoryView } from './components/driver/DriverHistoryView';
 import { ActiveRoleConflictBlocker } from './components/common/ActiveRoleConflictBlocker';
 import { RotateCcw, Smartphone, LogOut } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -60,7 +61,7 @@ export default function App() {
           activeTrip={activePassengerBooking}
           onRedirect={() => {
             toggleRole();
-            setActiveTab('trips');
+            setActiveTab('history');
           }}
         />
       );
@@ -72,8 +73,9 @@ export default function App() {
         return <HomeView />;
       case 'map':
         return <TripMapView />;
+      case 'history':
       case 'trips':
-        return <PassengerTripsView />;
+        return activeRole === 'driver' ? <DriverHistoryView /> : <PassengerTripsView />;
       case 'driver':
         return user?.isDriver ? (
           <DriverView />

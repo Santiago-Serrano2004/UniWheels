@@ -26,6 +26,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/driver/history', [TripController::class, 'getDriverHistory']);
     Route::get('/passenger/history', [TripController::class, 'getPassengerHistory']);
     Route::get('/wallet/transactions', [TripController::class, 'getWalletTransactions']);
+    Route::get('/user/reputation-stats', [TripController::class, 'getUserReputationStats']);
     Route::post('/ratings', [TripController::class, 'submitRating']);
 
     // Rutas protegidas por Bearer Token (Sanctum)

@@ -212,4 +212,13 @@ export const tripsService = {
       return { success: true };
     }
   },
+
+  async getUserReputationStats() {
+    try {
+      const response = await apiClient.get('/user/reputation-stats');
+      return response.data?.data || null;
+    } catch {
+      return null;
+    }
+  },
 };

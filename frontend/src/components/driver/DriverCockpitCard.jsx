@@ -50,8 +50,22 @@ export const DriverCockpitCard = () => {
           </button>
         </div>
 
-        {/* Historial de Conducción */}
-        <DriverHistoryView />
+        {/* Acceso Rápido al Historial */}
+        <button
+          onClick={() => setActiveTab('history')}
+          className="w-full p-4 rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs text-left transition-all flex items-center justify-between group cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-lochmara-50 text-lochmara-600 flex items-center justify-center font-bold">
+              <History className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900">Historial de Conducción</p>
+              <p className="text-[11px] text-slate-500">Consulta tus viajes completados y califica a tus pasajeros</p>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+        </button>
       </div>
     );
   }
@@ -197,9 +211,6 @@ export const DriverCockpitCard = () => {
         <AlertTriangle className="w-4 h-4 text-rose-600" />
         <span>Cancelar Publicación de Viaje</span>
       </button>
-
-      {/* 4. HISTORIAL DE CONDUCCIÓN */}
-      <DriverHistoryView />
 
       {/* MODAL DE PENALIZACIÓN SI HAY PASAJEROS */}
       <CancelTripPenaltyModal

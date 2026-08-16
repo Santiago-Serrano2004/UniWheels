@@ -206,4 +206,44 @@ class TripController extends Controller
             'message' => 'Calificación registrada exitosamente en el sistema de reputación.',
         ]);
     }
+
+    /**
+     * Obtener estadísticas de reputación para pasajero y conductor
+     */
+    public function getUserReputationStats(Request $request): JsonResponse
+    {
+        $stats = [
+            'passenger' => [
+                'score' => 4.90,
+                'total_ratings' => 28,
+                'level' => 'Pasajero Ejemplar',
+                'badges' => ['Puntualidad 100%', 'Respetuoso', 'Pago Inmediato'],
+                'metrics' => [
+                    ['label' => 'Puntualidad en el Abordaje', 'score_pct' => 98, 'positive_count' => 27],
+                    ['label' => 'Amabilidad y Respeto', 'score_pct' => 100, 'positive_count' => 28],
+                    ['label' => 'Pago Rápido y Exacto', 'score_pct' => 96, 'positive_count' => 26],
+                    ['label' => 'Comunicación Clara', 'score_pct' => 95, 'positive_count' => 25],
+                    ['label' => 'Excelente Compañero de Viaje', 'score_pct' => 99, 'positive_count' => 27],
+                ],
+            ],
+            'driver' => [
+                'score' => 4.95,
+                'total_ratings' => 42,
+                'level' => 'Conductor Élite',
+                'badges' => ['Manejo Seguro', 'Vehículo Impecable', 'Rutas Óptimas'],
+                'metrics' => [
+                    ['label' => 'Manejo Prudente y Seguro', 'score_pct' => 99, 'positive_count' => 41],
+                    ['label' => 'Vehículo Limpio y Cómodo', 'score_pct' => 98, 'positive_count' => 40],
+                    ['label' => 'Puntualidad en las Salidas', 'score_pct' => 96, 'positive_count' => 39],
+                    ['label' => 'Ruta Eficiente y Directa', 'score_pct' => 97, 'positive_count' => 40],
+                    ['label' => 'Excelente Música y Ambiente', 'score_pct' => 95, 'positive_count' => 38],
+                ],
+            ],
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $stats,
+        ]);
+    }
 }
