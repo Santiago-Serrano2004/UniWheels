@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { authService, INSTITUCIONES_PREDETERMINADAS } from '../../services/api';
+import { authService, parseBackendError, INSTITUCIONES_PREDETERMINADAS } from '../../services/api';
 import { HabeasDataModal } from '../common/HabeasDataModal';
 import { PhotoPickerModal } from '../common/PhotoPickerModal';
 import { AlertBanner } from '../common/AlertBanner';
@@ -165,12 +165,7 @@ export const RegisterForm = ({ onBack }) => {
       }, 1200);
     } catch (err) {
       setEstaProcesando(false);
-      if (err.errors) {
-        const primerError = Object.values(err.errors)[0]?.[0];
-        setMensajeError(primerError || 'Error al validar los datos en el servidor.');
-      } else {
-        setMensajeError(err.message || 'Error al procesar el registro con el servidor.');
-      }
+      setMensajeError(parseBackendError(err));
     }
   };
 

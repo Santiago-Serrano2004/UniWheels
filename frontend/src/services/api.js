@@ -26,6 +26,39 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+/**
+ * Normalizador de errores del backend a lenguaje natural en español
+ */
+export const parseBackendError = (err) => {
+  if (!err) return 'Ocurrió un error inesperado. Intenta nuevamente.';
+
+  if (err.errors && typeof err.errors === 'object') {
+    const rawError = Object.values(err.errors)[0]?.[0];
+    if (rawError) {
+      if (rawError.includes('validation.min.string')) return 'El campo no cumple con el número mínimo de caracteres requerido.';
+      if (rawError.includes('validation.max.string')) return 'El campo excede la longitud máxima permitida.';
+      if (rawError.includes('validation.required')) return 'Este campo es obligatorio.';
+      if (rawError.includes('validation.unique')) return 'Ya existe un registro con esta información en el sistema.';
+      if (rawError.includes('validation.after')) return 'La fecha de vigencia debe ser estrictamente futura (posterior a hoy).';
+      if (rawError.includes('validation.in')) return 'La opción seleccionada no es válida.';
+      if (rawError.includes('validation.regex')) return 'El formato del campo no es válido para Colombia.';
+      return rawError;
+    }
+  }
+
+  if (err.message) {
+    if (err.message.includes('Unauthenticated') || err.message.includes('401')) {
+      return 'Credenciales incorrectas o correo no registrado.';
+    }
+    if (err.message.includes('validation.')) {
+      return 'Por favor revisa los campos señalados en el formulario.';
+    }
+    return err.message;
+  }
+
+  return 'No se pudo conectar con el servidor. Intenta de nuevo.';
+};
+
 // Catálogo institucional oficial UNAB
 export const INSTITUCIONES_PREDETERMINADAS = [
   {

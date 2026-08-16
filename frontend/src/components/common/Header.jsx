@@ -55,7 +55,7 @@ export const Header = () => {
           {isDriverVerified && activeRole === 'driver' ? (
             <>
               <Car className="w-3.5 h-3.5 text-emerald-200" />
-              <span>Modo Conductor</span>
+              <span>Conductor</span>
             </>
           ) : (
             <>

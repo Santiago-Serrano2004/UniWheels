@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { authService } from '../../services/api';
+import { authService, parseBackendError } from '../../services/api';
 import {
   vehicleApiService,
   MARCAS_COLOMBIA_CARROS,
@@ -357,12 +357,7 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
       setPasoActual(5);
     } catch (err) {
       setEstaEnviando(false);
-      if (err.errors) {
-        const primerError = Object.values(err.errors)[0]?.[0];
-        setMensajeError(primerError || 'Error al validar los documentos en el servidor.');
-      } else {
-        setMensajeError(err.message || 'Ocurrió un error al procesar el registro con el servidor.');
-      }
+      setMensajeError(parseBackendError(err));
     }
   };
 

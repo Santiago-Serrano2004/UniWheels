@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { authService } from '../../services/api';
+import { authService, parseBackendError } from '../../services/api';
 import { AlertBanner } from '../common/AlertBanner';
 import {
   Mail,
@@ -75,14 +75,7 @@ export const LoginForm = ({ onBack }) => {
       }
     } catch (err) {
       setEstaCargando(false);
-      if (err.errors) {
-        const primerError = Object.values(err.errors)[0]?.[0];
-        setMensajeError(primerError || 'Error de autenticación.');
-      } else if (err.message) {
-        setMensajeError(err.message);
-      } else {
-        setMensajeError('Credenciales incorrectas o correo no registrado.');
-      }
+      setMensajeError(parseBackendError(err));
     }
   };
 

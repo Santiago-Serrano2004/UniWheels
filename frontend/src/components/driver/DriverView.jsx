@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '../../store/useAppStore';
+import { authService } from '../../services/api';
 import { placesApiService, LUGARES_POPULARES_AMB } from '../../services/placesApiService';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -12,18 +13,15 @@ import {
   Users,
   Navigation,
   ArrowRight,
-  ArrowLeftRight,
   Search,
   CheckCircle2,
   AlertCircle,
-  Sparkles,
-  ShieldCheck,
-  Plus,
   Loader2,
+  Building2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Crear pines personalizados para el mapa
+// Pines vectoriales personalizados para Leaflet
 const createCustomPin = (color, emoji) =>
   L.divIcon({
     className: 'custom-leaflet-marker',
@@ -38,6 +36,14 @@ const createCustomPin = (color, emoji) =>
 
 const pointIcon = createCustomPin('#0284c7', '📍');
 const campusIcon = createCustomPin('#082f49', '🎓');
+
+// Coordenadas oficiales de las sedes
+const SEDES_COORDENADAS = {
+  'Campus El Jardín': [7.1193, -73.1227],
+  'Campus El Bosque': [7.0625, -73.1028],
+  'CSU — Centro de Servicios Universitarios': [7.1145, -73.1189],
+  'Campus La Casona': [7.1245, -73.1215],
+};
 
 // Componente interactivo para capturar clics o arrastre del marcador en Leaflet
 function MapLocationPicker({ position, onPositionChange }) {
@@ -59,7 +65,7 @@ function MapLocationPicker({ position, onPositionChange }) {
       }}
       icon={pointIcon}
     >
-      <Popup>Punto fijado (Arrastra o toca el mapa para mover)</Popup>
+      <Popup>Punto seleccionado (Toca o arrastra para mover)</Popup>
     </Marker>
   );
 }
@@ -67,65 +73,84 @@ function MapLocationPicker({ position, onPositionChange }) {
 export const DriverView = () => {
   const { user } = useAppStore();
 
-  // Dirección del viaje: 'hacia_universidad' | 'desde_universidad'
-  const [direccionViaje, setDireccionViaje] = useState('hacia_universidad');
+  // 1. Sentido del Viaje: 'hacia_campus' | 'desde_campus' (Estructura cerrada)
+  const [sentidoViaje, setSentidoViaje] = useState('hacia_campus');
 
-  // Coordenadas de referencia del campus del usuario (ej: El Jardín)
-  const campusCoords = [7.1193, -73.1227];
-  const campusNombre = user?.campus?.name || user?.campus || 'Campus El Jardín';
+  // 2. Lista de sedes oficiales cargadas desde la base de datos
+  const [sedesInstitucion, setSedesInstitucion] = useState([
+    { id: 1, name: 'Campus El Jardín' },
+    { id: 2, name: 'Campus El Bosque' },
+    { id: 3, name: 'CSU — Centro de Servicios Universitarios' },
+    { id: 4, name: 'Campus La Casona' },
+  ]);
 
-  // Punto personalizado (Barrio/Lugar en Bucaramanga o AMB)
+  // Sede seleccionada
+  const [sedeSeleccionada, setSedeSeleccionada] = useState('Campus El Jardín');
+
+  // 3. Punto personalizado (Barrio/Lugar en el AMB)
   const [puntoCoords, setPuntoCoords] = useState([7.0678, -73.1066]); // Cañaveral por defecto
-  const [textoDireccion, setTextoDireccion] = useState('Centro Comercial Cañaveral, Floridablanca');
-  const [busquedaLugar, setBusquedaLugar] = useState('');
-  const [sugerenciasLugares, setSugerenciasLugares] = useState([]);
+  const [direccionLugar, setDireccionLugar] = useState('Centro Comercial Cañaveral, Floridablanca');
+  const [busquedaTexto, setBusquedaTexto] = useState('');
+  const [sugerencias, setSugerencias] = useState([]);
   const [mostrandoSugerencias, setMostrandoSugerencias] = useState(false);
-  const [buscandoDireccion, setBuscandoDireccion] = useState(false);
+  const [cargandoGeocodificacion, setCargandoGeocodificacion] = useState(false);
 
-  // Parámetros de la ruta
+  // 4. Parámetros del Viaje
   const [horaSalida, setHoraSalida] = useState('06:45');
   const [cupos, setCupos] = useState(3);
   const [tarifa, setTarifa] = useState('4500');
-  const [rutaPublicada, setRutaPublicada] = useState(false);
+  const [trayectoPublicado, setTrayectoPublicado] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
 
   const buscadorRef = useRef(null);
 
-  // Buscar sugerencias de lugares con Photon / Nominatim API
+  // Cargar sedes dinámicas desde la API
   useEffect(() => {
-    if (busquedaLugar.trim().length >= 2) {
-      setBuscandoDireccion(true);
+    authService.getInstitutions().then((instituciones) => {
+      if (instituciones && instituciones.length > 0 && instituciones[0].campuses) {
+        setSedesInstitucion(instituciones[0].campuses);
+        if (user?.campus) {
+          setSedeSeleccionada(user.campus);
+        }
+      }
+    });
+  }, [user]);
+
+  // Buscar sugerencias en vivo con Photon / Nominatim API
+  useEffect(() => {
+    if (busquedaTexto.trim().length >= 2) {
+      setCargandoGeocodificacion(true);
       const timer = setTimeout(() => {
-        placesApiService.searchPlaces(busquedaLugar).then((res) => {
-          setSugerenciasLugares(res);
-          setBuscandoDireccion(false);
+        placesApiService.searchPlaces(busquedaTexto).then((res) => {
+          setSugerencias(res);
+          setCargandoGeocodificacion(false);
           setMostrandoSugerencias(true);
         });
       }, 300);
 
       return () => clearTimeout(timer);
     } else {
-      setSugerenciasLugares(LUGARES_POPULARES_AMB.slice(0, 4));
+      setSugerencias(LUGARES_POPULARES_AMB.slice(0, 4));
     }
-  }, [busquedaLugar]);
+  }, [busquedaTexto]);
 
-  // Manejar selección de lugar de la lista de autocompletado
-  const seleccionarLugar = (lugar) => {
+  // Manejar selección de lugar desde la lista desplegable
+  const seleccionarLugarSugerido = (lugar) => {
     setPuntoCoords(lugar.coords);
-    setTextoDireccion(`${lugar.nombre} (${lugar.direccion.split(',')[0]})`);
-    setBusquedaLugar('');
+    setDireccionLugar(`${lugar.nombre} (${lugar.direccion.split(',')[0]})`);
+    setBusquedaTexto('');
     setMostrandoSugerencias(false);
   };
 
-  // Manejar cambio de punto desde el mapa interactivo (Reverse Geocoding)
+  // Manejar selección en el mapa Leaflet -> Reverse Geocoding automático
   const manejarCambioPuntoMapa = async (nuevasCoords) => {
     setPuntoCoords(nuevasCoords);
     const direccionObtenida = await placesApiService.reverseGeocode(nuevasCoords[0], nuevasCoords[1]);
-    setTextoDireccion(direccionObtenida);
+    setDireccionLugar(direccionObtenida);
   };
 
-  // Usar geolocalización actual del navegador
-  const usarMiUbicacion = () => {
+  // Usar geolocalización actual
+  const usarUbicacionActual = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
@@ -133,7 +158,7 @@ export const DriverView = () => {
           const lon = pos.coords.longitude;
           setPuntoCoords([lat, lon]);
           const dir = await placesApiService.reverseGeocode(lat, lon);
-          setTextoDireccion(dir);
+          setDireccionLugar(dir);
         },
         () => {
           alert('No se pudo obtener tu ubicación actual.');
@@ -142,16 +167,21 @@ export const DriverView = () => {
     }
   };
 
-  // Trazado de ruta en el mapa
+  // Coordenadas de la sede seleccionada
+  const coordsSedeActual = SEDES_COORDENADAS[sedeSeleccionada] || [7.1193, -73.1227];
+
+  // Trazado de ruta
   const trazadoRuta =
-    direccionViaje === 'hacia_universidad'
-      ? [puntoCoords, campusCoords]
-      : [campusCoords, puntoCoords];
+    sentidoViaje === 'hacia_campus'
+      ? [puntoCoords, coordsSedeActual]
+      : [coordsSedeActual, puntoCoords];
 
   const publicarTrayecto = (e) => {
     e.preventDefault();
-    setRutaPublicada(true);
-    setMensajeExito('¡Tu trayecto ha sido publicado! Los estudiantes de tu corredor podrán solicitar cupos.');
+    setTrayectoPublicado(true);
+    const origenTexto = sentidoViaje === 'hacia_campus' ? direccionLugar : sedeSeleccionada;
+    const destinoTexto = sentidoViaje === 'hacia_campus' ? sedeSeleccionada : direccionLugar;
+    setMensajeExito(`¡Trayecto publicado exitosamente! Ruta: ${origenTexto} ➔ ${destinoTexto} (${horaSalida} AM)`);
   };
 
   return (
@@ -172,13 +202,13 @@ export const DriverView = () => {
           </div>
         </div>
 
-        {/* Alternador de Dirección Bidireccional */}
+        {/* Selector Cerrado de Sentido del Viaje */}
         <div className="p-1 bg-white/10 backdrop-blur-md rounded-2xl flex items-center gap-1 border border-white/10 text-xs">
           <button
             type="button"
-            onClick={() => setDireccionViaje('hacia_universidad')}
+            onClick={() => setSentidoViaje('hacia_campus')}
             className={`flex-1 py-2 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              direccionViaje === 'hacia_universidad'
+              sentidoViaje === 'hacia_campus'
                 ? 'bg-lochmara-500 text-white shadow-xs'
                 : 'text-slate-300 hover:text-white'
             }`}
@@ -188,9 +218,9 @@ export const DriverView = () => {
           </button>
           <button
             type="button"
-            onClick={() => setDireccionViaje('desde_universidad')}
+            onClick={() => setSentidoViaje('desde_campus')}
             className={`flex-1 py-2 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              direccionViaje === 'desde_universidad'
+              sentidoViaje === 'desde_campus'
                 ? 'bg-lochmara-500 text-white shadow-xs'
                 : 'text-slate-300 hover:text-white'
             }`}
@@ -201,7 +231,7 @@ export const DriverView = () => {
         </div>
       </section>
 
-      {/* 2. MENSAJE DE ÉXITO TRAS PUBLICAR */}
+      {/* 2. MENSAJE DE ÉXITO */}
       {mensajeExito && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -216,52 +246,77 @@ export const DriverView = () => {
         </motion.div>
       )}
 
-      {/* 3. FORMULARIO INTERACTIVO DE PUNTOS Y MAPA */}
+      {/* 3. FORMULARIO ESTRUCTURADO: CAMPUS Y DIRECCIÓN */}
       <form onSubmit={publicarTrayecto} className="space-y-4">
-        {/* Tarjeta de Origen y Destino */}
+        {/* SELECCIÓN OBLIGATORIA DEL CAMPUS UNIVERSITARIO */}
+        <section className="bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+              <Building2 className="w-3.5 h-3.5 text-lochmara-600" />
+              <span>Campus Universitario ({sentidoViaje === 'hacia_campus' ? 'Destino Fijo' : 'Origen Fijo'})</span>
+            </label>
+            <span className="text-[10px] text-emerald-700 bg-emerald-50 font-bold px-2 py-0.5 rounded-full border border-emerald-200">
+              Sede Oficial
+            </span>
+          </div>
+
+          <select
+            value={sedeSeleccionada}
+            onChange={(e) => setSedeSeleccionada(e.target.value)}
+            className="w-full bg-slate-50 text-xs font-bold text-slate-900 rounded-2xl px-3.5 py-3 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 shadow-2xs cursor-pointer"
+          >
+            {sedesInstitucion.map((s) => (
+              <option key={s.id} value={s.name}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </section>
+
+        {/* SELECCIÓN DEL PUNTO EN EL AMB (ORIGEN O DESTINO SEGÚN CORRESPONDA) */}
         <section className="bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-              {direccionViaje === 'hacia_universidad' ? 'Punto de Partida' : 'Punto de Llegada'}
+              {sentidoViaje === 'hacia_campus' ? 'Desde (Punto de Partida)' : 'Hacia (Punto de Llegada)'}
             </h3>
             <button
               type="button"
-              onClick={usarMiUbicacion}
+              onClick={usarUbicacionActual}
               className="inline-flex items-center gap-1 text-[11px] font-bold text-lochmara-600 hover:underline cursor-pointer"
             >
               <Navigation className="w-3 h-3" />
-              <span>Mi Ubicación Actual</span>
+              <span>Mi Ubicación</span>
             </button>
           </div>
 
-          {/* Input de Búsqueda con Autocompletado de Lugares */}
+          {/* Input de Búsqueda de Lugar / Dirección */}
           <div className="relative" ref={buscadorRef}>
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                value={busquedaLugar}
+                value={busquedaTexto}
                 onFocus={() => setMostrandoSugerencias(true)}
-                onChange={(e) => setBusquedaLugar(e.target.value)}
-                placeholder="Escribe barrio, dirección o punto (ej: San Pío, Cañaveral)..."
+                onChange={(e) => setBusquedaTexto(e.target.value)}
+                placeholder="Buscar barrio, dirección o punto en el AMB..."
                 className="w-full bg-slate-50 text-xs rounded-2xl pl-10 pr-9 py-3 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 font-medium"
               />
-              {buscandoDireccion && (
+              {cargandoGeocodificacion && (
                 <Loader2 className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-lochmara-600 animate-spin" />
               )}
             </div>
 
-            {/* Menú Desplegable de Sugerencias en Vivo (Photon / Nominatim) */}
+            {/* Menú Desplegable de Sugerencias Photon / Nominatim */}
             {mostrandoSugerencias && (
               <div className="absolute top-full left-0 right-0 z-40 mt-1.5 bg-white rounded-2xl border border-slate-200 shadow-xl divide-y divide-slate-100 overflow-hidden max-h-56 overflow-y-auto">
                 <div className="p-2 bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Lugares y Direcciones Sugeridas
+                  Sugerencias en Bucaramanga y AMB
                 </div>
-                {sugerenciasLugares.map((lugar, idx) => (
+                {sugerencias.map((lugar, idx) => (
                   <button
                     key={idx}
                     type="button"
-                    onClick={() => seleccionarLugar(lugar)}
+                    onClick={() => seleccionarLugarSugerido(lugar)}
                     className="w-full p-2.5 flex items-start gap-2.5 hover:bg-lochmara-50 text-left transition-colors cursor-pointer"
                   >
                     <MapPin className="w-3.5 h-3.5 text-lochmara-600 shrink-0 mt-0.5" />
@@ -275,24 +330,20 @@ export const DriverView = () => {
             )}
           </div>
 
-          {/* Resumen del Punto Seleccionado */}
-          <div className="p-3 rounded-2xl bg-lochmara-50/70 border border-lochmara-200/70 flex items-center justify-between text-xs">
+          {/* Dirección Fijada Automáticamente (Desde el mapa o búsqueda) */}
+          <div className="p-3 rounded-2xl bg-lochmara-50/80 border border-lochmara-200 flex items-center justify-between text-xs">
             <div className="flex items-center gap-2.5 truncate">
               <div className="w-2.5 h-2.5 rounded-full bg-lochmara-600 shrink-0" />
-              <span className="font-bold text-slate-900 truncate">{textoDireccion}</span>
+              <div>
+                <span className="text-[10px] text-lochmara-700 font-bold block uppercase">
+                  {sentidoViaje === 'hacia_campus' ? 'Punto de Partida Fijado' : 'Punto de Llegada Fijado'}
+                </span>
+                <span className="font-bold text-slate-900 truncate">{direccionLugar}</span>
+              </div>
             </div>
             <span className="text-[10px] font-bold text-lochmara-700 bg-white px-2 py-0.5 rounded-full border border-lochmara-200 shrink-0">
-              Fijado
+              Coordenada Activa
             </span>
-          </div>
-
-          {/* Destino / Origen Institucional Fijo */}
-          <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs text-slate-600">
-            <div className="flex items-center gap-2.5 truncate">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-              <span>Campus: <strong className="text-slate-900">{campusNombre}</strong></span>
-            </div>
-            <span className="text-[10px] text-slate-400 font-medium shrink-0">Sede Oficial</span>
           </div>
         </section>
 
@@ -300,12 +351,12 @@ export const DriverView = () => {
         <section className="bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-              Ajuste Preciso en el Mapa
+              Seleccionar en el Mapa
             </h3>
             <span className="text-[10px] text-slate-500 font-medium">Toca o arrastra el pin</span>
           </div>
 
-          <div className="relative w-full h-48 rounded-2xl overflow-hidden border border-slate-200">
+          <div className="relative w-full h-52 rounded-2xl overflow-hidden border border-slate-200">
             <MapContainer
               center={puntoCoords}
               zoom={14}
@@ -317,30 +368,30 @@ export const DriverView = () => {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
 
-              {/* Trazado de Ruta */}
+              {/* Trazado de Ruta Bidireccional */}
               <Polyline
                 positions={trazadoRuta}
                 pathOptions={{ color: '#0284c7', weight: 4, opacity: 0.8, dashArray: '6, 6' }}
               />
 
-              {/* Marcador Didáctico de Ubicación Personalizada */}
+              {/* Marcador del Punto en el AMB */}
               <MapLocationPicker
                 position={puntoCoords}
                 onPositionChange={manejarCambioPuntoMapa}
               />
 
-              {/* Marcador del Campus */}
-              <Marker position={campusCoords} icon={campusIcon}>
-                <Popup>{campusNombre}</Popup>
+              {/* Marcador del Campus Universitario */}
+              <Marker position={coordsSedeActual} icon={campusIcon}>
+                <Popup>{sedeSeleccionada}</Popup>
               </Marker>
             </MapContainer>
           </div>
         </section>
 
-        {/* 5. PARÁMETROS DEL VIAJE: HORA, CUPOS Y APORTE */}
+        {/* 5. PARÁMETROS DE SALIDA, CUPOS Y APORTE */}
         <section className="bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs space-y-3">
           <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-            Detalles de Salida y Cupos
+            Detalles del Trayecto
           </h3>
 
           <div className="grid grid-cols-3 gap-2.5">
@@ -359,7 +410,7 @@ export const DriverView = () => {
               />
             </div>
 
-            {/* Cupos Disponibles */}
+            {/* Cupos */}
             <div className="space-y-1">
               <label className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
                 <Users className="w-3 h-3 text-lochmara-600" />
@@ -378,7 +429,7 @@ export const DriverView = () => {
               </select>
             </div>
 
-            {/* Aporte por Pasajero */}
+            {/* Tarifa / Aporte */}
             <div className="space-y-1">
               <label className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
                 <DollarSign className="w-3 h-3 text-emerald-600" />
@@ -398,7 +449,7 @@ export const DriverView = () => {
           </div>
         </section>
 
-        {/* 6. BOTÓN PARA PUBLICAR TRAYECTO */}
+        {/* 6. BOTÓN PARA PUBLICAR */}
         <button
           type="submit"
           className="w-full py-3.5 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-lochmara-600/25"
