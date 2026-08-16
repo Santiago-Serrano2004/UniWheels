@@ -15,6 +15,8 @@ import {
   Plus,
   UserPlus,
   UserCheck,
+  ChevronRight,
+  History,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
