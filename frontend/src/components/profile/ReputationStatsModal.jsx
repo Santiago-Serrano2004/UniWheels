@@ -3,11 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Star,
   X,
-  Award,
+  User,
+  Car,
   ShieldCheck,
   TrendingUp,
-  Heart,
-  Sparkles,
 } from 'lucide-react';
 
 export const ReputationStatsModal = ({
@@ -23,7 +22,6 @@ export const ReputationStatsModal = ({
   const statsPasajero = estadisticasData?.passenger || {
     score: 4.9,
     total_ratings: 28,
-    level: 'Pasajero Ejemplar',
     metrics: [
       { label: 'Puntualidad en el Abordaje', score_pct: 98, positive_count: 27 },
       { label: 'Amabilidad y Respeto', score_pct: 100, positive_count: 28 },
@@ -36,7 +34,6 @@ export const ReputationStatsModal = ({
   const statsConductor = estadisticasData?.driver || {
     score: 4.95,
     total_ratings: 42,
-    level: 'Conductor Élite',
     metrics: [
       { label: 'Manejo Prudente y Seguro', score_pct: 99, positive_count: 41 },
       { label: 'Vehículo Limpio y Cómodo', score_pct: 98, positive_count: 40 },
@@ -62,8 +59,8 @@ export const ReputationStatsModal = ({
           {/* Cabecera */}
           <div className="flex items-center justify-between pb-2 border-b border-slate-100">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
-                <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200">
+                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
               </div>
               <div>
                 <h3 className="text-xs font-bold text-slate-900">Reputación y Desempeño</h3>
@@ -79,36 +76,38 @@ export const ReputationStatsModal = ({
             </button>
           </div>
 
-          {/* Selector de Rol si es Conductor */}
+          {/* Selector de Rol con Iconos Vectoriales */}
           {isDriverVerified && (
             <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 text-[10px] font-bold">
               <button
                 type="button"
                 onClick={() => setRolEstadisticas('passenger')}
-                className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer text-center ${
+                className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   rolEstadisticas === 'passenger'
                     ? 'bg-white text-slate-900 shadow-xs'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                🎓 Pasajero
+                <User className="w-3.5 h-3.5" />
+                <span>Pasajero</span>
               </button>
               <button
                 type="button"
                 onClick={() => setRolEstadisticas('driver')}
-                className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer text-center ${
+                className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   rolEstadisticas === 'driver'
                     ? 'bg-lochmara-600 text-white shadow-xs'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                🚗 Conductor
+                <Car className="w-3.5 h-3.5" />
+                <span>Conductor</span>
               </button>
             </div>
           )}
 
-          {/* Tarjeta de Resumen de Puntuación */}
-          <div className="bg-gradient-to-br from-slate-900 to-[#082f49] text-white rounded-2xl p-4 shadow-xs flex items-center justify-between">
+          {/* Tarjeta de Resumen de Puntuación (Sin carta de nivel/ejemplar) */}
+          <div className="bg-gradient-to-br from-slate-900 to-[#082f49] text-white rounded-2xl p-4 shadow-xs">
             <div className="space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-lochmara-300">
                 {rolEstadisticas === 'driver' && isDriverVerified
@@ -126,15 +125,8 @@ export const ReputationStatsModal = ({
                 </div>
               </div>
               <p className="text-[11px] text-slate-300">
-                Basado en <strong className="text-white">{statsActuales.total_ratings} calificaciones</strong>
+                Basado en <strong className="text-white">{statsActuales.total_ratings} calificaciones</strong> recibidas
               </p>
-            </div>
-
-            <div className="text-right">
-              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[10px] font-bold">
-                <Award className="w-3.5 h-3.5" />
-                <span>{statsActuales.level}</span>
-              </div>
             </div>
           </div>
 
