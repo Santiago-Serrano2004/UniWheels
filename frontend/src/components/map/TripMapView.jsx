@@ -1,9 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { Car, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import {
+  Car,
+  ShieldCheck,
+  CheckCircle2,
+  KeyRound,
+  CalendarCheck,
+  AlertTriangle,
+  ArrowRight,
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // Crear pines vectoriales personalizados para el mapa
@@ -24,15 +32,20 @@ const pickupIcon = createCustomPin('#0ea5e9', '📍');
 const campusIcon = createCustomPin('#082f49', '🎓');
 
 export const TripMapView = () => {
-  const { user, activePassengerBooking, bookPassengerTrip, cancelPassengerBooking } = useAppStore();
+  const {
+    user,
+    activePassengerBooking,
+    bookPassengerTrip,
+    cancelPassengerBooking,
+    setActiveTab,
+  } = useAppStore();
 
   const isBooked = Boolean(activePassengerBooking);
-
   const campusName = user?.campus?.name || user?.campus || 'Campus Universitario';
 
   // Coordenadas reales del corredor hacia el campus universitario
   const driverOrigin = [7.0982, -73.1116]; // Cañaveral
-  const passengerPickup = [7.1145, -73.1189]; // Parque San Pio
+  const passengerPickup = [7.1145, -73.1189]; // Parque San Pío
   const campusDestination = [7.1193, -73.1227]; // Campus Universitario
 
   const routeCorridor = [
@@ -44,22 +57,18 @@ export const TripMapView = () => {
   ];
 
   const manejarReserva = () => {
-    if (isBooked) {
-      cancelPassengerBooking();
-    } else {
-      bookPassengerTrip({
-        driverName: 'Carlos Mendoza',
-        vehicle: 'Mazda 3 (Rojo)',
-        plate: 'KLU-492',
-        origin: 'Cañaveral - La Florida',
-        pickup: 'Parque San Pío',
-        destination: campusName,
-        departureTime: '06:45 AM',
-        estimatedPickupTime: '07:05 AM',
-        fare: '$ 4.500',
-        boardingPin: '4829',
-      });
-    }
+    bookPassengerTrip({
+      driverName: 'Carlos Mendoza',
+      vehicle: 'Mazda 3 (Rojo)',
+      plate: 'KLU-492',
+      origin: 'Cañaveral - La Florida',
+      pickup: 'Parque San Pío',
+      destination: campusName,
+      departureTime: '06:45 AM',
+      estimatedPickupTime: '07:05 AM',
+      fare: '$ 4.500',
+      boardingPin: '4829',
+    });
   };
 
   return (
@@ -114,65 +123,94 @@ export const TripMapView = () => {
         </div>
       </div>
 
-      {/* Drawer Inferior Flotante con Detalles del Viaje */}
+      {/* Drawer Inferior Flotante */}
       <motion.div
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="relative z-10 m-3 bg-white/95 backdrop-blur-lg rounded-3xl p-4 border border-slate-200/90 shadow-xl space-y-3"
       >
-        {/* Informacion del Conductor */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-lochmara-100 text-lochmara-800 font-extrabold text-sm flex items-center justify-center border border-lochmara-200">
-              CM
-            </div>
-            <div>
-              <div className="flex items-center gap-1">
-                <span className="text-xs font-bold text-slate-900">Carlos Mendoza</span>
-                <ShieldCheck className="w-3.5 h-3.5 text-lochmara-600" />
+        {isBooked ? (
+          /* ESTADO: YA TIENE UN VIAJE RESERVADO */
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-700 text-[11px] font-bold">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Tienes una solicitud activa</span>
               </div>
-              <p className="text-[11px] text-slate-600">
-                Mazda 3 • <span className="font-bold">KLU-492</span> (3 cupos libres)
-              </p>
+
+              <span className="text-xs font-mono font-bold text-slate-700">
+                PIN: {activePassengerBooking.boardingPin || '4829'}
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-600">
+              Ya tienes una reserva activa con <strong>{activePassengerBooking.driverName || 'Carlos Mendoza'}</strong> ({activePassengerBooking.plate || 'KLU-492'}). Para reservar otra ruta, primero debes cancelar tu viaje actual.
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab('trips')}
+                className="flex-1 py-2.5 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md shadow-lochmara-600/20 cursor-pointer"
+              >
+                <CalendarCheck className="w-3.5 h-3.5" />
+                <span>Ver Mi Viaje</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => cancelPassengerBooking()}
+                className="py-2.5 px-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-all cursor-pointer"
+              >
+                Cancelar
+              </button>
             </div>
           </div>
+        ) : (
+          /* ESTADO: DISPONIBLE PARA RESERVAR */
+          <>
+            {/* Información del Conductor */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-lochmara-100 text-lochmara-800 font-extrabold text-sm flex items-center justify-center border border-lochmara-200">
+                  CM
+                </div>
+                <div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-bold text-slate-900">Carlos Mendoza</span>
+                    <ShieldCheck className="w-3.5 h-3.5 text-lochmara-600" />
+                  </div>
+                  <p className="text-[11px] text-slate-600">
+                    Mazda 3 • <span className="font-bold">KLU-492</span> (3 cupos libres)
+                  </p>
+                </div>
+              </div>
 
-          <div className="text-right">
-            <span className="text-base font-extrabold text-lochmara-700">$ 4.500</span>
-            <p className="text-[10px] text-slate-400">Tarifa fija de viaje</p>
-          </div>
-        </div>
+              <div className="text-right">
+                <span className="text-base font-extrabold text-lochmara-700">$ 4.500</span>
+                <p className="text-[10px] text-slate-400">Tarifa fija de viaje</p>
+              </div>
+            </div>
 
-        {/* Punto de Recogida Seleccionado */}
-        <div className="bg-slate-50 rounded-2xl p-2.5 border border-slate-100 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-lochmara-500" />
-            <span className="font-semibold text-slate-800 truncate">Punto: Parque San Pío</span>
-          </div>
-          <span className="text-[11px] text-slate-500">Llegada ~ 07:05 AM</span>
-        </div>
+            {/* Punto de Recogida Seleccionado */}
+            <div className="bg-slate-50 rounded-2xl p-2.5 border border-slate-100 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-lochmara-500" />
+                <span className="font-semibold text-slate-800 truncate">Punto: Parque San Pío</span>
+              </div>
+              <span className="text-[11px] text-slate-500">Llegada ~ 07:05 AM</span>
+            </div>
 
-        {/* Boton de Accion de Reserva */}
-        <button
-          onClick={manejarReserva}
-          className={`w-full py-3 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md ${
-            isBooked
-              ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/25'
-              : 'bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white shadow-lochmara-600/30'
-          }`}
-        >
-          {isBooked ? (
-            <>
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Cupo Reservado (Ver en Mis Viajes)</span>
-            </>
-          ) : (
-            <>
+            {/* Botón de Acción de Reserva */}
+            <button
+              onClick={manejarReserva}
+              className="w-full py-3 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-lochmara-600/30"
+            >
               <Car className="w-4 h-4" />
               <span>Confirmar y Reservar Cupo</span>
-            </>
-          )}
-        </button>
+            </button>
+          </>
+        )}
       </motion.div>
     </div>
   );

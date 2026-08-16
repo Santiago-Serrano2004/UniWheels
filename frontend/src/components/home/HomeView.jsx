@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { authService } from '../../services/api';
 import { DriverCockpitCard } from '../driver/DriverCockpitCard';
+import { PassengerTripsView } from '../trips/PassengerTripsView';
 import {
   Search,
   MapPin,
@@ -16,13 +17,18 @@ import {
 import { motion } from 'framer-motion';
 
 export const HomeView = () => {
-  const { user, activeRole, setActiveTab } = useAppStore();
+  const { user, activeRole, activePassengerBooking, setActiveTab } = useAppStore();
   const [destination, setDestination] = useState('');
   const [campuses, setCampuses] = useState([]);
 
-  // Si el rol activo es CONDUCTOR, mostrar su panel de viaje activo
+  // Si el rol activo es CONDUCTOR, mostrar su panel de conductor
   if (activeRole === 'driver') {
     return <DriverCockpitCard />;
+  }
+
+  // Si es PASAJERO y tiene una reserva activa, mostrar su panel de viaje activo
+  if (activePassengerBooking) {
+    return <PassengerTripsView />;
   }
 
   // Cargar sedes dinámicas desde la base de datos
