@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { authService, tripsService } from '../../services/api';
 import { DriverCockpitCard } from '../driver/DriverCockpitCard';
-import { PassengerTripsView } from '../trips/PassengerTripsView';
+import { PassengerActiveTripCard } from '../trips/PassengerActiveTripCard';
 import {
   Search,
   MapPin,
@@ -26,9 +26,9 @@ export const HomeView = () => {
     return <DriverCockpitCard />;
   }
 
-  // Si es PASAJERO y tiene una reserva activa, mostrar su panel de viaje activo
+  // Si es PASAJERO y tiene una reserva activa, mostrar ÚNICAMENTE su tarjeta de viaje activo
   if (activePassengerBooking) {
-    return <PassengerTripsView />;
+    return <PassengerActiveTripCard />;
   }
 
   const [nearbyRides, setNearbyRides] = useState([]);
