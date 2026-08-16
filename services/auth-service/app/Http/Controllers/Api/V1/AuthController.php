@@ -114,7 +114,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Inicio de sesion exitoso.',
+            'message' => 'Inicio de sesión exitoso.',
             'data' => [
                 'user' => new UserResource($usuario),
                 'access_token' => $tokenAcceso,
@@ -309,7 +309,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Sesion cerrada exitosamente. Token revocado.',
+            'message' => 'Sesión cerrada exitosamente. Token revocado.',
         ]);
     }
 }

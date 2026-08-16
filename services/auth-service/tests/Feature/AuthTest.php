@@ -58,7 +58,7 @@ test('un estudiante puede registrarse exitosamente con prefijo y codigo estudian
     $response->assertStatus(201)
         ->assertJson([
             'success' => true,
-            'message' => 'Usuario registrado exitosamente en la comunidad UniWheels.',
+            'message' => 'Usuario registrado exitosamente. Se ha enviado un correo de bienvenida.',
         ])
         ->assertJsonPath('data.user.email', 'crodriguez@unab.edu.co')
         ->assertJsonPath('data.user.academic_profile.student_code', 'U00099887')
