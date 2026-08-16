@@ -15,6 +15,7 @@ class Institution extends Model
         'code',
         'domain',
         'logo_url',
+        'welcome_image_url',
         'is_active',
     ];
 

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
+import { authService } from '../../services/api';
 import {
   Search,
   MapPin,
@@ -14,14 +15,21 @@ import {
 import { motion } from 'framer-motion';
 
 export const HomeView = () => {
-  const { user, activeRole, setActiveTab } = useAppStore();
+  const { user, setActiveTab } = useAppStore();
   const [destination, setDestination] = useState('');
+  const [campuses, setCampuses] = useState([]);
 
-  const campusDestinations = [
-    { name: 'Campus El Jardín', address: 'Avenida 42 # 48 - 11', time: '12 min' },
-    { name: 'Campus CSU Floridablanca', address: 'Calle 107 # 42 - 33', time: '22 min' },
-    { name: 'Campus El Bosque', address: 'Calle 158 # 20 - 40', time: '18 min' },
-  ];
+  // Cargar sedes dinámicas desde la base de datos
+  useEffect(() => {
+    authService.getInstitutions().then((instituciones) => {
+      if (instituciones && instituciones.length > 0) {
+        const inst = instituciones[0];
+        if (inst.campuses && inst.campuses.length > 0) {
+          setCampuses(inst.campuses);
+        }
+      }
+    });
+  }, []);
 
   const nearbyRides = [
     {
@@ -53,7 +61,7 @@ export const HomeView = () => {
   ];
 
   return (
-    <div className="space-y-4 pb-6">
+    <div className="space-y-4 pb-6 select-none">
       {/* Tarjeta de Bienvenida y Busqueda Rapida */}
       <section className="bg-gradient-to-br from-[#082f49] to-slate-900 text-white rounded-3xl p-5 shadow-md relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-lochmara-500/20 rounded-full blur-2xl pointer-events-none" />
@@ -61,11 +69,17 @@ export const HomeView = () => {
         <div className="relative z-10 space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-lochmara-300 font-medium">Hola, {user.name.split(' ')[0]}</p>
+              <p className="text-xs text-lochmara-300 font-medium">
+                Hola, {user?.name ? user.name.split(' ')[0] : 'Estudiante'}
+              </p>
               <h2 className="text-lg font-extrabold tracking-tight">¿A dónde viajas hoy?</h2>
             </div>
-            <div className="w-9 h-9 rounded-2xl bg-lochmara-500/20 border border-lochmara-400/30 flex items-center justify-center">
-              <Navigation className="w-4 h-4 text-lochmara-300" />
+            <div className="w-11 h-11 rounded-2xl bg-lochmara-500/20 border border-lochmara-400/30 flex items-center justify-center overflow-hidden shadow-xs">
+              {user?.profilePhoto ? (
+                <img src={user.profilePhoto} alt={user.name} className="w-full h-full object-cover" />
+              ) : (
+                <Navigation className="w-5 h-5 text-lochmara-300" />
+              )}
             </div>
           </div>
 
@@ -83,28 +97,35 @@ export const HomeView = () => {
         </div>
       </section>
 
-      {/* Sedes UNAB Frecuentes */}
+      {/* Sedes Oficiales Dinámicas desde Base de Datos */}
       <section className="space-y-2">
         <div className="flex items-center justify-between px-1">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Sedes Principales</h3>
-          <span className="text-[11px] text-lochmara-600 font-semibold cursor-pointer">Ver mapa</span>
+          <span
+            onClick={() => setActiveTab('map')}
+            className="text-[11px] text-lochmara-600 font-semibold cursor-pointer hover:underline"
+          >
+            Ver mapa
+          </span>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
-          {campusDestinations.map((campus, index) => (
+        <div className="grid grid-cols-2 gap-2.5">
+          {campuses.map((campus) => (
             <button
-              key={index}
+              key={campus.id}
               onClick={() => setActiveTab('map')}
               className="bg-white border border-slate-200/80 rounded-2xl p-2.5 flex flex-col items-start justify-between shadow-2xs hover:border-lochmara-300 hover:shadow-xs transition-all text-left cursor-pointer"
             >
               <div className="w-6 h-6 rounded-xl bg-lochmara-50 text-lochmara-600 flex items-center justify-center mb-2">
                 <MapPin className="w-3.5 h-3.5" />
               </div>
-              <div>
-                <p className="text-[11px] font-bold text-slate-800 leading-tight truncate w-full">
+              <div className="w-full">
+                <p className="text-[11px] font-bold text-slate-800 leading-tight truncate">
                   {campus.name.replace('Campus ', '')}
                 </p>
-                <p className="text-[10px] text-slate-600 mt-0.5">{campus.time}</p>
+                <p className="text-[10px] text-slate-500 mt-0.5 truncate">
+                  {campus.code}
+                </p>
               </div>
             </button>
           ))}
@@ -114,13 +135,8 @@ export const HomeView = () => {
       {/* Rutas Compartidas Disponibles en tu Corredor */}
       <section className="space-y-2.5">
         <div className="flex items-center justify-between px-1">
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Rutas Cercanas Disponibles
-            </h3>
-            <p className="text-[10px] text-slate-600">Emparejamiento espacial en tu radio</p>
-          </div>
-          <span className="text-[11px] font-semibold text-lochmara-600 cursor-pointer">Filtrar</span>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Rutas Disponibles</h3>
+          <span className="text-[11px] text-slate-400 font-medium">Bucaramanga y AMB</span>
         </div>
 
         <div className="space-y-2.5">
@@ -128,10 +144,9 @@ export const HomeView = () => {
             <motion.div
               key={ride.id}
               whileTap={{ scale: 0.98 }}
-              onClick={() => setActiveTab('map')}
-              className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs hover:border-lochmara-300 hover:shadow-xs transition-all cursor-pointer space-y-3"
+              className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-2xs space-y-3 hover:border-lochmara-200 transition-all cursor-pointer"
             >
-              {/* Encabezado del Conductor */}
+              {/* Conductor y Vehiculo */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-2xl bg-lochmara-100 text-lochmara-800 font-extrabold text-xs flex items-center justify-center border border-lochmara-200">
@@ -189,6 +204,29 @@ export const HomeView = () => {
           ))}
         </div>
       </section>
+
+      {/* Invitación a Registrarse como Conductor (Solo para Pasajeros) */}
+      {!user?.isDriver && (
+        <section
+          onClick={() => setActiveTab('driver')}
+          className="bg-lochmara-50/80 hover:bg-lochmara-100 border border-lochmara-200/80 rounded-3xl p-4 shadow-2xs transition-all cursor-pointer text-left group"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-2xl bg-lochmara-600 text-white flex items-center justify-center shadow-md shadow-lochmara-600/20 group-hover:scale-105 transition-transform shrink-0">
+                <Car className="w-5 h-5" />
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-xs font-bold text-slate-900">¿Tienes vehículo propio?</p>
+                <p className="text-[11px] text-slate-600">
+                  Regístrate como conductor para compartir tus gastos de transporte
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-lochmara-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
+          </div>
+        </section>
+      )}
     </div>
   );
 };

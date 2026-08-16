@@ -1,30 +1,38 @@
 import React, { useState } from 'react';
+import { useAppStore } from '../../store/useAppStore';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { ShieldCheck, Users, Clock, ArrowRight, CheckCircle2, Car } from 'lucide-react';
+import { Car, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Creacion de iconos SVG para los pines del mapa
-const createCustomPin = (bgColor, label) =>
+// Crear pines vectoriales personalizados para el mapa
+const createCustomPin = (color, emoji) =>
   L.divIcon({
-    className: 'custom-leaflet-pin',
-    html: `<div style="background-color: ${bgColor}; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 11px; border: 2.5px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">${label}</div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
+    className: 'custom-leaflet-marker',
+    html: `
+      <div style="background-color: ${color}; width: 34px; height: 34px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; font-size: 15px;">
+        ${emoji}
+      </div>
+    `,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
   });
 
 const driverIcon = createCustomPin('#0284c7', '🚗');
 const pickupIcon = createCustomPin('#0ea5e9', '📍');
-const unabIcon = createCustomPin('#082f49', '🎓');
+const campusIcon = createCustomPin('#082f49', '🎓');
 
 export const TripMapView = () => {
+  const { user } = useAppStore();
   const [isBooked, setIsBooked] = useState(false);
 
-  // Coordenadas reales del corredor de Bucaramanga a UNAB Campus El Jardin
+  const campusName = user?.campus?.name || user?.campus || 'Campus Universitario';
+
+  // Coordenadas reales del corredor hacia el campus universitario
   const driverOrigin = [7.0982, -73.1116]; // Cañaveral
   const passengerPickup = [7.1145, -73.1189]; // Parque San Pio
-  const unabDestination = [7.1193, -73.1227]; // UNAB El Jardín
+  const campusDestination = [7.1193, -73.1227]; // Campus Universitario
 
   const routeCorridor = [
     [7.0982, -73.1116],
@@ -35,7 +43,7 @@ export const TripMapView = () => {
   ];
 
   return (
-    <div className="relative w-full h-[calc(100dvh-135px)] sm:h-[720px] flex flex-col justify-between overflow-hidden rounded-3xl">
+    <div className="relative w-full h-[calc(100dvh-135px)] sm:h-[720px] flex flex-col justify-between overflow-hidden rounded-3xl select-none">
       {/* Contenedor del Mapa Leaflet */}
       <div className="absolute inset-0 z-0">
         <MapContainer
@@ -68,8 +76,8 @@ export const TripMapView = () => {
           <Marker position={passengerPickup} icon={pickupIcon}>
             <Popup>Tu Punto de Abordaje (San Pío)</Popup>
           </Marker>
-          <Marker position={unabDestination} icon={unabIcon}>
-            <Popup>Destino: UNAB Campus El Jardín</Popup>
+          <Marker position={campusDestination} icon={campusIcon}>
+            <Popup>Destino: {campusName}</Popup>
           </Marker>
         </MapContainer>
       </div>
@@ -111,7 +119,7 @@ export const TripMapView = () => {
 
           <div className="text-right">
             <span className="text-base font-extrabold text-lochmara-700">$ 4.500</span>
-            <p className="text-[10px] text-slate-400">Tarifa fija UNAB</p>
+            <p className="text-[10px] text-slate-400">Tarifa fija de viaje</p>
           </div>
         </div>
 

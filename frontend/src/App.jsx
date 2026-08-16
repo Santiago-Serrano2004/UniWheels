@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { useAppStore } from './store/useAppStore';
 import { SplashScreen } from './components/common/SplashScreen';
 import { AuthGatewayView } from './components/auth/AuthGatewayView';
+import { InstitutionalWelcomeModal } from './components/common/InstitutionalWelcomeModal';
 import { Header } from './components/common/Header';
 import { BottomNav } from './components/common/BottomNav';
 import { HomeView } from './components/home/HomeView';
 import { TripMapView } from './components/map/TripMapView';
 import { DriverView } from './components/driver/DriverView';
+import { DriverOnboardingView } from './components/driver/DriverOnboardingView';
 import { WalletView } from './components/wallet/WalletView';
 import { ProfileView } from './components/profile/ProfileView';
 import { RotateCcw, Smartphone, LogOut } from 'lucide-react';
@@ -14,7 +16,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
-  const { isAuthenticated, activeTab, logout } = useAppStore();
+  const { user, isAuthenticated, activeTab, setActiveTab, logout, showWelcomeMascot, closeWelcomeMascot } = useAppStore();
 
   const renderActiveView = () => {
     switch (activeTab) {
@@ -23,7 +25,11 @@ export default function App() {
       case 'map':
         return <TripMapView />;
       case 'driver':
-        return <DriverView />;
+        return user?.isDriver ? (
+          <DriverView />
+        ) : (
+          <DriverOnboardingView onBack={() => setActiveTab('home')} />
+        );
       case 'wallet':
         return <WalletView />;
       case 'profile':
@@ -95,7 +101,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.97 }}
               transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-              className="flex-1 flex flex-col justify-between overflow-hidden"
+              className="flex-1 flex flex-col justify-between overflow-hidden relative"
             >
               {/* Encabezado Móvil */}
               <Header />
@@ -117,6 +123,12 @@ export default function App() {
 
               {/* Barra de Navegación Inferior */}
               <BottomNav />
+
+              {/* Modal de Bienvenida con Mascota Institucional (Post-Login / Registro) */}
+              <InstitutionalWelcomeModal
+                isOpen={showWelcomeMascot}
+                onClose={closeWelcomeMascot}
+              />
             </motion.div>
           )}
         </AnimatePresence>

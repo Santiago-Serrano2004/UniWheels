@@ -4,23 +4,33 @@ import { Home, Map, Car, Wallet, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const BottomNav = () => {
-  const { activeTab, setActiveTab, activeRole } = useAppStore();
+  const { activeTab, setActiveTab, user, activeRole } = useAppStore();
 
-  const navItems = [
-    { id: 'home', label: 'Inicio', icon: Home },
-    { id: 'map', label: 'Ruta', icon: Map },
-    {
-      id: 'driver',
-      label: activeRole === 'driver' ? 'Mis Cupos' : 'Conducir',
-      icon: Car,
-      highlight: activeRole === 'driver',
-    },
-    { id: 'wallet', label: 'Billetera', icon: Wallet },
-    { id: 'profile', label: 'Perfil', icon: User },
-  ];
+  const isDriverVerified = Boolean(user?.isDriver);
+
+  // Si el usuario es conductor verificado, tiene los 5 tabs. Si es solo pasajero, tiene los 4 tabs de pasajero.
+  const navItems = isDriverVerified
+    ? [
+        { id: 'home', label: 'Inicio', icon: Home },
+        { id: 'map', label: 'Ruta', icon: Map },
+        {
+          id: 'driver',
+          label: activeRole === 'driver' ? 'Mis Cupos' : 'Conducir',
+          icon: Car,
+          highlight: activeRole === 'driver',
+        },
+        { id: 'wallet', label: 'Billetera', icon: Wallet },
+        { id: 'profile', label: 'Perfil', icon: User },
+      ]
+    : [
+        { id: 'home', label: 'Inicio', icon: Home },
+        { id: 'map', label: 'Buscar Ruta', icon: Map },
+        { id: 'wallet', label: 'Billetera', icon: Wallet },
+        { id: 'profile', label: 'Perfil', icon: User },
+      ];
 
   return (
-    <nav className="sticky bottom-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 px-2 py-1.5 shadow-lg">
+    <nav className="sticky bottom-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 px-2 py-1.5 shadow-lg select-none">
       <div className="flex items-center justify-around">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -30,7 +40,7 @@ export const BottomNav = () => {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className="relative flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-colors cursor-pointer"
+              className="relative flex flex-col items-center justify-center py-1 px-3.5 rounded-2xl transition-colors cursor-pointer"
             >
               {/* Indicador de Fondo Activo con Framer Motion */}
               {isActive && (
@@ -50,7 +60,7 @@ export const BottomNav = () => {
                   }`}
                 />
                 {item.highlight && (
-                  <span className="absolute -top-1 -right-1.5 w-2 h-2 bg-lochmara-500 rounded-full ring-2 ring-white animate-pulse" />
+                  <span className="absolute -top-1 -right-1.5 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-white animate-pulse" />
                 )}
               </div>
 

@@ -19,6 +19,7 @@ class InstitutionSeeder extends Seeder
                 'name' => 'Universidad Autónoma de Bucaramanga',
                 'code' => 'UNAB',
                 'logo_url' => 'https://unab.edu.co/wp-content/uploads/2022/07/logo-unab-footer.png',
+                'welcome_image_url' => '/assets/institutions/unab-mascot.png',
                 'is_active' => true,
             ]
         );
@@ -49,7 +50,7 @@ class InstitutionSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'name' => 'La Casona UNAB',
+                'name' => 'Campus La Casona',
                 'code' => 'CASONA',
                 'address' => 'Calle 42 No. 34 - 14, Bucaramanga, Santander',
                 'latitude' => 7.1182100,

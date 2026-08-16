@@ -36,24 +36,24 @@ UniWheels/
 
 ---
 
-## 3. Reglas de Negocio y Seguridad Institucional
+## 3. Reglas de Negocio, Seguridad y Normativa Vehicular
 
-1. **Comunidad Exclusiva UNAB:**
-   * Registro restringido a correos institucionales `@unab.edu.co`.
-   * Ciclo de re-verificación semestral cada 6 meses (`verification_expires_at`).
-   * Código estudiantil validado mediante expresión regular obligatoria `^U\d{8}$`.
-2. **Sedes Universitarias Homologadas:**
-   * Campus El Jardín (Avenida 42 # 48-11, Bucaramanga)
-   * Campus El Bosque (Calle 157 # 19-55, Floridablanca)
-   * CSU Terrazas (Calle 51 # 27-24, Bucaramanga)
-   * La Casona UNAB (Calle 42 # 34-14, Bucaramanga)
-3. **Modelo Financiero y Billetera Prepago del Conductor:**
-   * El pasajero paga el total del viaje directamente al conductor (Efectivo / Nequi / DaviPlata).
+1. **Comunidad Universitaria Multi-Institucional Dinámica:**
+   * Registro con correos institucionales validados por dominio (`@unab.edu.co`, etc.).
+   * Mascota de bienvenida y sedes universitarias consumidas dinámicamente desde base de datos.
+   * Separación estricta de roles: los nuevos registros ingresan con rol de **Pasajero** y tienen un portal dedicado para registrarse como **Conductor**.
+2. **Registro de Conductores con NHTSA vPIC API y Caché de 24h:**
+   * Conexión en vivo con la API oficial internacional de la NHTSA para la carga dinámica de modelos por marca.
+   * Caché local con recarga diaria de 24 horas (`vehicleApiService.js`).
+   * Visualizador de placa colombiana reflectiva con remaches y repujado oficial (`ColombianPlateInput.jsx`).
+3. **Cumplimiento Normativo Colombiano de Tránsito y Transporte:**
+   * **Revisión Técnico-Mecánica (Ley 2294 de 2023 / Ley 1964 de 2019):** Exigible a automóviles particulares (gasolina, diésel, híbridos y eléctricos) a partir de los 5 años de matrícula. Motocicletas a partir de los 2 años.
+   * **Póliza SOAT y Licencia de Conducción:** Validación estricta de formatos numéricos colombianos y verificación de vigencia activa (fechas estrictamente futuras).
+   * **Habeas Data (Ley 1581 de 2012):** Autorización expresa, almacenamiento seguro en disco privado y URLs firmadas de 10 minutos para auditoría institucional.
+4. **Modelo Financiero y Billetera Prepago:**
+   * El pasajero abona el viaje al conductor (efectivo / digital).
    * La plataforma debita automáticamente la comisión/markup (12% a 15%) de la Billetera Prepago del conductor.
-   * Límite de crédito operativo: Si el saldo de la billetera es menor a -$5.000 COP, el conductor no puede publicar nuevas rutas hasta recargar.
-4. **Cumplimiento Normativo Colombiano:**
-   * **Revisión Técnico-Mecánica (Ley 2294 de 2023):** Exigible a vehículos con más de 5 años y motocicletas con más de 2 años.
-   * **Habeas Data (Ley 1581 de 2012):** Almacenamiento de documentos en disco privado con URLs firmadas de 10 minutos y bitácora inmutable en `document_access_logs`.
+   * Límite de crédito operativo de -$5.000 COP antes de pausar la publicación de nuevos cupos.
 
 ---
 

@@ -4,40 +4,26 @@ import { Wallet, ArrowDownRight, ArrowUpRight, PlusCircle, ShieldCheck, CreditCa
 
 export const WalletView = () => {
   const { user } = useAppStore();
-  const [balance, setBalance] = useState(user.walletBalance || 45000);
+  const [balance, setBalance] = useState(user?.walletBalance || 0);
 
   const transactions = [
     {
       id: 't1',
-      title: 'Pago Viaje Cañaveral → El Jardín',
-      date: 'Hoy, 07:45 AM',
-      amount: '-$ 4.500',
-      type: 'debit',
-    },
-    {
-      id: 't2',
-      title: 'Recarga Billetera PSE / Bancolombia',
-      date: 'Ayer, 04:30 PM',
-      amount: '+$ 50.000',
+      title: 'Billetera Digital Universitaria',
+      date: 'Hoy',
+      amount: '$ 0',
       type: 'credit',
-    },
-    {
-      id: 't3',
-      title: 'Pago Viaje CSU → Cabecera',
-      date: '14 Ago, 06:15 PM',
-      amount: '-$ 4.000',
-      type: 'debit',
     },
   ];
 
   return (
-    <div className="space-y-4 pb-6">
+    <div className="space-y-4 pb-6 select-none">
       {/* Tarjeta de Saldo Principal */}
       <section className="bg-gradient-to-br from-[#082f49] to-slate-950 text-white rounded-3xl p-5 shadow-md relative overflow-hidden">
         <div className="relative z-10 space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-lochmara-300 font-semibold tracking-wide">
-              Billetera Estudiantil UNAB
+              Billetera Estudiantil {user?.institution ? 'UNAB' : ''}
             </span>
             <div className="flex items-center gap-1 text-[11px] text-emerald-300 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-400/30">
               <ShieldCheck className="w-3.5 h-3.5" />

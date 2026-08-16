@@ -18,39 +18,42 @@ export const AuthGatewayView = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.96 }}
+      initial={{ opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.96 }}
-      transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      className="flex-1 h-full flex flex-col items-center justify-center p-6 text-slate-900 select-none"
+      exit={{ opacity: 0, scale: 0.97 }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      className="flex-1 h-full flex flex-col justify-between p-6 text-slate-900 select-none bg-slate-50"
     >
-      {/* Contenedor Centrado en la Mitad de la Pantalla */}
-      <div className="w-full max-w-xs flex flex-col items-center text-center space-y-6">
-        {/* Isotipo Directo */}
+      {/* 1. ESPACIO SUPERIOR LIMPIO */}
+      <div className="pt-4" />
+
+      {/* 2. ZONA CENTRAL CON EL ISOTIPO Y TÍTULO (Espacioso y aireado) */}
+      <div className="flex flex-col items-center text-center space-y-6 max-w-xs mx-auto">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.05 }}
           className="flex items-center justify-center"
         >
-          <Emblem className="w-24 h-auto drop-shadow-md" />
+          <Emblem className="w-28 h-auto drop-shadow-md" />
         </motion.div>
 
-        {/* Textos y Titulos */}
-        <div className="space-y-1.5">
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 leading-tight">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 leading-tight">
             UniWheels
           </h1>
           <p className="text-sm font-semibold text-lochmara-600">
             Movilidad Inteligente
           </p>
-          <p className="text-xs text-slate-500 pt-1">
+          <p className="text-xs text-slate-500 pt-0.5">
             Comparte tus rutas universitarias.
           </p>
         </div>
+      </div>
 
-        {/* Botones de Accion */}
-        <div className="w-full space-y-3 pt-2">
+      {/* 3. ZONA INFERIOR DE ACCIÓN (Botones en alcance ergonómico del pulgar) */}
+      <div className="space-y-4 max-w-xs w-full mx-auto pb-4">
+        <div className="space-y-3">
           <motion.button
             whileTap={{ scale: 0.98 }}
             onClick={() => setPasoAutenticacion('login')}
@@ -63,7 +66,7 @@ export const AuthGatewayView = () => {
           <motion.button
             whileTap={{ scale: 0.98 }}
             onClick={() => setPasoAutenticacion('registro')}
-            className="w-full py-3.5 rounded-2xl bg-white hover:bg-lochmara-50/80 active:bg-lochmara-100 text-slate-800 border border-slate-200 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+            className="w-full py-3.5 rounded-2xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
           >
             <UserPlus className="w-4 h-4 text-lochmara-600" />
             <span>Registrarse</span>
@@ -71,8 +74,8 @@ export const AuthGatewayView = () => {
         </div>
 
         {/* Sello Institucional */}
-        <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-600 pt-2">
-          <ShieldCheck className="w-3.5 h-3.5 text-lochmara-600 shrink-0" />
+        <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 text-center">
+          <ShieldCheck className="w-3.5 h-3.5 text-lochmara-500 shrink-0" />
           <span>Acceso exclusivo para comunidad universitaria</span>
         </div>
       </div>

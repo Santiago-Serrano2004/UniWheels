@@ -20,6 +20,7 @@ class InstitutionResource extends JsonResource
             'code' => $this->code,
             'domain' => $this->domain,
             'logo_url' => $this->logo_url,
+            'welcome_image_url' => $this->welcome_image_url,
             'is_active' => (bool) $this->is_active,
             'campuses' => $this->campuses ? $this->campuses->map(fn ($campus) => [
                 'id' => $campus->id,

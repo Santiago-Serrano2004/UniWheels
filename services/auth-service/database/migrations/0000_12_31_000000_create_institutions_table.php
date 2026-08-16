@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('code', 20)->unique();
             $table->string('domain', 100)->unique();
             $table->string('logo_url')->nullable();
+            $table->string('welcome_image_url')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
