@@ -3,6 +3,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { authService, INSTITUCIONES_PREDETERMINADAS } from '../../services/api';
 import { HabeasDataModal } from '../common/HabeasDataModal';
 import { PhotoPickerModal } from '../common/PhotoPickerModal';
+import { AlertBanner } from '../common/AlertBanner';
 import {
   User,
   School,
@@ -227,14 +228,12 @@ export const RegisterForm = ({ onBack }) => {
 
           {/* Mensaje de Error */}
           {mensajeError && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2"
-            >
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{mensajeError}</span>
-            </motion.div>
+            <AlertBanner
+              message={mensajeError}
+              type="error"
+              title="No pudimos completar el registro"
+              onClose={() => setMensajeError('')}
+            />
           )}
 
           {/* Notificacion de Bienvenida */}

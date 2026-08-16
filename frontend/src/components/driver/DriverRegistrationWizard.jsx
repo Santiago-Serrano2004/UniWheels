@@ -8,6 +8,7 @@ import {
 } from '../../services/vehicleApiService';
 import { ColombianPlateInput } from './ColombianPlateInput';
 import { PhotoPickerModal } from '../common/PhotoPickerModal';
+import { AlertBanner } from '../common/AlertBanner';
 import {
   Car,
   Bike,
@@ -410,14 +411,12 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
 
       {/* 2. MENSAJE DE ERROR DESTACADO */}
       {mensajeError && (
-        <motion.div
-          initial={{ opacity: 0, y: -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2"
-        >
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span className="leading-snug">{mensajeError}</span>
-        </motion.div>
+        <AlertBanner
+          message={mensajeError}
+          type="error"
+          title="Verificación Requerida"
+          onClose={() => setMensajeError('')}
+        />
       )}
 
       {/* 3. VISTAS DEL ASISTENTE */}

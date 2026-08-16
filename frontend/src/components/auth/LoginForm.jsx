@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { authService } from '../../services/api';
+import { AlertBanner } from '../common/AlertBanner';
 import {
   Mail,
   Lock,
@@ -175,26 +176,22 @@ export const LoginForm = ({ onBack }) => {
 
           {/* Mensaje de Error */}
           {mensajeError && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2"
-            >
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{mensajeError}</span>
-            </motion.div>
+            <AlertBanner
+              message={mensajeError}
+              type="error"
+              title="Error de Acceso"
+              onClose={() => setMensajeError('')}
+            />
           )}
 
           {/* Mensaje de Exito */}
           {mensajeExito && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2"
-            >
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>{mensajeExito}</span>
-            </motion.div>
+            <AlertBanner
+              message={mensajeExito}
+              type="success"
+              title="Operación Exitosa"
+              onClose={() => setMensajeExito('')}
+            />
           )}
 
           {/* Formulario */}
