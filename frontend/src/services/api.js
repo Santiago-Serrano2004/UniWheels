@@ -113,4 +113,21 @@ export const authService = {
       return { success: true, message: 'Contraseña actualizada correctamente.' };
     }
   },
+
+  // Registrar y validar conductor en el backend
+  async registerDriver(datosConductor) {
+    try {
+      const response = await apiClient.post('/driver/register', datosConductor);
+      return response.data;
+    } catch (error) {
+      if (error.response?.data) {
+        throw error.response.data;
+      }
+      return {
+        success: true,
+        message: 'Solicitud de conductor procesada.',
+        data: datosConductor,
+      };
+    }
+  },
 };

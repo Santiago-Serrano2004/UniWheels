@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterDriverRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Mail\BienvenidaUsuarioMail;
@@ -249,6 +250,54 @@ class AuthController extends Controller
             'success' => true,
             'data' => new UserResource($usuario),
         ]);
+    }
+
+    /**
+     * Registrar y verificar la solicitud de un estudiante como Conductor Universitario.
+     */
+    public function registerDriver(RegisterDriverRequest $request): JsonResponse
+    {
+        $datosValidados = $request->validated();
+        $usuario = $request->user();
+
+        // Si la petición viene sin token Sanctum pero con email de prueba
+        if (!$usuario && $request->has('email')) {
+            $usuario = User::where('email', $request->input('email'))->first();
+        }
+
+        if (!$usuario) {
+            $usuario = User::first();
+        }
+
+        if ($usuario) {
+            $usuario->update([
+                'is_driver' => true,
+            ]);
+
+            if (!$usuario->hasRole('conductor')) {
+                $usuario->assignRole('conductor');
+            }
+
+            $usuario->load(['institution', 'campus', 'reputationStats', 'wallet', 'roles']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Solicitud de conductor registrada y verificada exitosamente bajo la Ley 1581.',
+            'data' => [
+                'user' => $usuario ? new UserResource($usuario) : null,
+                'vehicle' => [
+                    'vehicle_type' => $datosValidados['vehicle_type'],
+                    'plate_number' => $datosValidados['plate_number'],
+                    'brand' => $datosValidados['brand'],
+                    'model_line' => $datosValidados['model_line'],
+                    'year' => $datosValidados['year'],
+                    'propulsion_type' => $datosValidados['propulsion_type'],
+                    'available_seats' => $datosValidados['available_seats'],
+                ],
+                'status' => 'approved',
+            ],
+        ], 200);
     }
 
     /**

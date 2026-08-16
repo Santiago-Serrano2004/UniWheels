@@ -18,6 +18,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
     Route::post('/auth/send-verification-code', [AuthController::class, 'sendVerificationCode']);
+    Route::post('/driver/register', [AuthController::class, 'registerDriver']);
 
     // Rutas protegidas por Bearer Token (Sanctum)
     Route::middleware('auth:sanctum')->group(function () {

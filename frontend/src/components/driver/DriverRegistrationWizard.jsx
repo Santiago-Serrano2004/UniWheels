@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
+import { authService } from '../../services/api';
 import {
   vehicleApiService,
   MARCAS_COLOMBIA_CARROS,
@@ -295,8 +296,8 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
     setPasoActual(4);
   };
 
-  // FINALIZAR Y ENVIAR REGISTRO
-  const finalizarRegistroConductor = (e) => {
+  // FINALIZAR Y ENVIAR REGISTRO AL BACKEND
+  const finalizarRegistroConductor = async (e) => {
     e.preventDefault();
     setMensajeError('');
 
@@ -307,7 +308,32 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
 
     setEstaEnviando(true);
 
-    setTimeout(() => {
+    const payloadConductor = {
+      email: user?.email,
+      vehicle_type: tipoVehiculo,
+      plate_number: placa.trim().toUpperCase(),
+      brand: marca,
+      model_line: modelo.trim(),
+      year: Number(ano),
+      color: color,
+      propulsion_type: tipoPropulsion,
+      available_seats: Number(cupos),
+      soat_number: numeroSoat.trim(),
+      soat_expires_at: vencimientoSoat,
+      soat_photo: fotoSoat || 'data:image/png;base64,mock',
+      rtm_number: requiereTecnomecanica() ? numeroTecno.trim() : null,
+      rtm_expires_at: requiereTecnomecanica() ? vencimientoTecno : null,
+      rtm_photo: requiereTecnomecanica() ? (fotoTecno || 'data:image/png;base64,mock') : null,
+      license_number: numeroLicencia.trim(),
+      license_category: categoriaLicencia,
+      license_expires_at: vencimientoLicencia,
+      license_photo: fotoLicencia || 'data:image/png;base64,mock',
+      habeas_data_accepted: true,
+    };
+
+    try {
+      await authService.registerDriver(payloadConductor);
+
       setEstaEnviando(false);
       updateDriverStatus('approved', {
         vehicle: {
@@ -328,7 +354,15 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
         status: 'approved',
       });
       setPasoActual(5);
-    }, 1200);
+    } catch (err) {
+      setEstaEnviando(false);
+      if (err.errors) {
+        const primerError = Object.values(err.errors)[0]?.[0];
+        setMensajeError(primerError || 'Error al validar los documentos en el servidor.');
+      } else {
+        setMensajeError(err.message || 'Ocurrió un error al procesar el registro con el servidor.');
+      }
+    }
   };
 
   return (
