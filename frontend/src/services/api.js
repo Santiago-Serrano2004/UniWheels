@@ -222,3 +222,54 @@ export const tripsService = {
     }
   },
 };
+
+// URL base del Microservicio de Emparejamiento Geoespacial e IA
+const ROUTE_API_BASE_URL = import.meta.env.VITE_ROUTE_API_URL || 'http://localhost:8003/api/v1';
+
+export const routeApiClient = axios.create({
+  baseURL: ROUTE_API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  },
+  timeout: 6000,
+});
+
+// Servicios de IA y Ruteo Geoespacial (PostGIS + OSRM)
+export const routesService = {
+  async publishRoute(routePayload) {
+    try {
+      const response = await routeApiClient.post('/routes', routePayload);
+      return response.data;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'Error al publicar la ruta con indexación PostGIS.' };
+    }
+  },
+
+  async searchMatches(pickupLat, pickupLng, destinationCampusId = 1) {
+    try {
+      const response = await routeApiClient.post('/routes/search-match', {
+        pickup_lat: pickupLat,
+        pickup_lng: pickupLng,
+        destination_campus_id: destinationCampusId,
+      });
+      return response.data?.data || [];
+    } catch {
+      return [];
+    }
+  },
+
+  async evaluateDetour(routeId, pickupLat, pickupLng) {
+    try {
+      const response = await routeApiClient.post(`/routes/${routeId}/evaluate-detour`, {
+        pickup_lat: pickupLat,
+        pickup_lng: pickupLng,
+      });
+      return response.data?.data || null;
+    } catch {
+      return null;
+    }
+  },
+};
+
