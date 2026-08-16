@@ -11,6 +11,7 @@ import { DriverView } from './components/driver/DriverView';
 import { DriverOnboardingView } from './components/driver/DriverOnboardingView';
 import { WalletView } from './components/wallet/WalletView';
 import { ProfileView } from './components/profile/ProfileView';
+import { PassengerTripsView } from './components/trips/PassengerTripsView';
 import { RotateCcw, Smartphone, LogOut } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -24,6 +25,8 @@ export default function App() {
         return <HomeView />;
       case 'map':
         return <TripMapView />;
+      case 'trips':
+        return <PassengerTripsView />;
       case 'driver':
         return user?.isDriver ? (
           <DriverView />

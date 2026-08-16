@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { authService } from '../../services/api';
 import { placesApiService, LUGARES_POPULARES_AMB } from '../../services/placesApiService';
+import { InsufficientBalanceModal } from './InsufficientBalanceModal';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -15,9 +16,11 @@ import {
   ArrowRight,
   Search,
   CheckCircle2,
+  AlertCircle,
   X,
   Loader2,
   Building2,
+  CalendarCheck,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -71,7 +74,13 @@ function MapLocationPicker({ position, onPositionChange }) {
 }
 
 export const DriverView = () => {
-  const { user } = useAppStore();
+  const {
+    user,
+    activeDriverTrip,
+    publishDriverTrip,
+    driverWalletBalance,
+    setActiveTab,
+  } = useAppStore();
 
   // 1. Sentido del Viaje: 'hacia_campus' | 'desde_campus'
   const [sentidoViaje, setSentidoViaje] = useState('hacia_campus');
@@ -99,8 +108,7 @@ export const DriverView = () => {
   const [horaSalida, setHoraSalida] = useState('06:45');
   const [cupos, setCupos] = useState(3);
   const [tarifa, setTarifa] = useState('4500');
-  const [trayectoPublicado, setTrayectoPublicado] = useState(false);
-  const [mensajeExito, setMensajeExito] = useState('');
+  const [modalSaldoInsuficiente, setModalSaldoInsuficiente] = useState(false);
 
   const buscadorRef = useRef(null);
 
@@ -120,7 +128,6 @@ export const DriverView = () => {
     authService.getInstitutions().then((instituciones) => {
       if (instituciones && instituciones.length > 0 && instituciones[0].campuses) {
         setSedesInstitucion(instituciones[0].campuses);
-        // Seleccionar sede principal por defecto
         const sedePrincipal = instituciones[0].campuses.find((c) => c.is_main_campus);
         if (sedePrincipal) {
           setSedeSeleccionada(sedePrincipal.name);
@@ -191,13 +198,72 @@ export const DriverView = () => {
       ? [puntoCoords, coordsSedeActual]
       : [coordsSedeActual, puntoCoords];
 
-  const publicarTrayecto = (e) => {
+  // Validar y publicar trayecto
+  const manejarPublicarTrayecto = (e) => {
     e.preventDefault();
-    setTrayectoPublicado(true);
+
+    // 1. Validación de saldo mínimo de conductor ($ 2.000 COP)
+    if (driverWalletBalance < 2000) {
+      setModalSaldoInsuficiente(true);
+      return;
+    }
+
     const origenTexto = sentidoViaje === 'hacia_campus' ? direccionLugar : sedeSeleccionada;
     const destinoTexto = sentidoViaje === 'hacia_campus' ? sedeSeleccionada : direccionLugar;
-    setMensajeExito(`¡Trayecto publicado exitosamente! Ruta: ${origenTexto} ➔ ${destinoTexto} (${horaSalida} AM)`);
+
+    publishDriverTrip({
+      direction: sentidoViaje,
+      campus: sedeSeleccionada,
+      origin: origenTexto,
+      destination: destinoTexto,
+      originCoords: sentidoViaje === 'hacia_campus' ? puntoCoords : coordsSedeActual,
+      destinationCoords: sentidoViaje === 'hacia_campus' ? coordsSedeActual : puntoCoords,
+      departureTime: horaSalida,
+      seats: Number(cupos),
+      availableSeats: Number(cupos),
+      price: Number(tarifa),
+    });
   };
+
+  // SI YA EXISTE UN VIAJE ACTIVO, MOSTRAR MENSAJE Y BLOQUEAR NUEVA PUBLICACIÓN
+  if (activeDriverTrip) {
+    return (
+      <div className="space-y-4 pb-6 select-none">
+        <div className="bg-gradient-to-br from-[#082f49] via-slate-900 to-slate-950 text-white rounded-3xl p-5 shadow-lg space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[11px] font-bold">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Publicación Activa</span>
+            </div>
+            <span className="text-xs font-mono font-bold text-lochmara-300">
+              {activeDriverTrip.departureTime}
+            </span>
+          </div>
+
+          <h2 className="text-base font-extrabold">Ya tienes un viaje publicado</h2>
+          <p className="text-xs text-slate-300">
+            Tu vehículo ya tiene un trayecto activo programado. Para publicar una nueva ruta, primero debes finalizar o cancelar el viaje actual.
+          </p>
+
+          <div className="p-3 bg-white/10 rounded-2xl border border-white/10 text-xs space-y-1">
+            <p className="text-[10px] text-slate-400 uppercase font-bold">Ruta Actual</p>
+            <p className="font-bold text-white truncate">
+              {activeDriverTrip.origin} ➔ {activeDriverTrip.destination}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('home')}
+            className="w-full py-3 rounded-2xl bg-lochmara-500 hover:bg-lochmara-400 active:bg-lochmara-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+          >
+            <CalendarCheck className="w-4 h-4" />
+            <span>Ir a Mi Panel de Viaje</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 pb-6 select-none">
@@ -257,23 +323,8 @@ export const DriverView = () => {
         </div>
       </section>
 
-      {/* 2. MENSAJE DE ÉXITO */}
-      {mensajeExito && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-start gap-2.5 shadow-2xs"
-        >
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-          <div>
-            <p className="font-bold">Trayecto Activo</p>
-            <p className="text-[11px] text-emerald-700 leading-snug">{mensajeExito}</p>
-          </div>
-        </motion.div>
-      )}
-
-      {/* 3. FORMULARIO ESTRUCTURADO */}
-      <form onSubmit={publicarTrayecto} className="space-y-4">
+      {/* 2. FORMULARIO ESTRUCTURADO */}
+      <form onSubmit={manejarPublicarTrayecto} className="space-y-4">
         {/* SELECCIÓN LIMPIA DEL CAMPUS UNIVERSITARIO */}
         <section className="bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs space-y-2">
           <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
@@ -370,23 +421,18 @@ export const DriverView = () => {
           </div>
 
           {/* Dirección Sincronizada Automáticamente con el Mapa */}
-          <div className="p-3 rounded-2xl bg-lochmara-50/80 border border-lochmara-200 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2.5 truncate">
-              <div className="w-2.5 h-2.5 rounded-full bg-lochmara-600 shrink-0" />
-              <div>
-                <span className="text-[10px] text-lochmara-700 font-bold block uppercase">
-                  {sentidoViaje === 'hacia_campus' ? 'Desde (Punto de Partida Fijado)' : 'Hacia (Punto de Llegada Fijado)'}
-                </span>
-                <span className="font-bold text-slate-900 truncate">{direccionLugar}</span>
-              </div>
+          <div className="p-3 rounded-2xl bg-lochmara-50/80 border border-lochmara-200 flex items-center gap-2.5 text-xs">
+            <div className="w-2.5 h-2.5 rounded-full bg-lochmara-600 shrink-0" />
+            <div className="min-w-0 flex-1 truncate">
+              <span className="text-[10px] text-lochmara-700 font-bold block uppercase">
+                {sentidoViaje === 'hacia_campus' ? 'Desde (Punto de Partida Fijado)' : 'Hacia (Punto de Llegada Fijado)'}
+              </span>
+              <span className="font-bold text-slate-900 truncate block">{direccionLugar}</span>
             </div>
-            <span className="text-[10px] font-bold text-lochmara-700 bg-white px-2 py-0.5 rounded-full border border-lochmara-200 shrink-0">
-              Coordenada Activa
-            </span>
           </div>
         </section>
 
-        {/* 4. SELECTOR DIDÁCTICO EN EL MAPA LEAFLET */}
+        {/* 3. SELECTOR DIDÁCTICO EN EL MAPA LEAFLET */}
         <section className="relative z-10 bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
@@ -427,7 +473,7 @@ export const DriverView = () => {
           </div>
         </section>
 
-        {/* 5. PARÁMETROS DE SALIDA, CUPOS Y APORTE */}
+        {/* 4. PARÁMETROS DE SALIDA, CUPOS Y APORTE */}
         <section className="bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs space-y-3">
           <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
             Detalles del Trayecto
@@ -488,7 +534,7 @@ export const DriverView = () => {
           </div>
         </section>
 
-        {/* 6. BOTÓN PARA PUBLICAR */}
+        {/* 5. BOTÓN PARA PUBLICAR */}
         <button
           type="submit"
           className="w-full py-3.5 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-lochmara-600/25"
@@ -497,6 +543,15 @@ export const DriverView = () => {
           <span>Publicar Trayecto en Mi Corredor</span>
         </button>
       </form>
+
+      {/* MODAL DE SALDO INSUFICIENTE EN BILLETERA DE CONDUCTOR */}
+      <InsufficientBalanceModal
+        isOpen={modalSaldoInsuficiente}
+        onClose={() => setModalSaldoInsuficiente(false)}
+        currentBalance={driverWalletBalance}
+        minRequired={2000}
+        onGoToRecharge={() => setActiveTab('wallet')}
+      />
     </div>
   );
 };

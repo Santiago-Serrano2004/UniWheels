@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { authService } from '../../services/api';
+import { DriverCockpitCard } from '../driver/DriverCockpitCard';
 import {
   Search,
   MapPin,
@@ -15,9 +16,14 @@ import {
 import { motion } from 'framer-motion';
 
 export const HomeView = () => {
-  const { user, setActiveTab } = useAppStore();
+  const { user, activeRole, setActiveTab } = useAppStore();
   const [destination, setDestination] = useState('');
   const [campuses, setCampuses] = useState([]);
+
+  // Si el rol activo es CONDUCTOR, mostrar su panel de viaje activo
+  if (activeRole === 'driver') {
+    return <DriverCockpitCard />;
+  }
 
   // Cargar sedes dinámicas desde la base de datos
   useEffect(() => {

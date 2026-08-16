@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-// Recuperar sesion previa almacenada localmente en el dispositivo
+// Recuperar sesión previa almacenada localmente en el dispositivo
 const getStoredUser = () => {
   try {
     const data = localStorage.getItem('uniwheels_session');
@@ -12,8 +12,8 @@ const getStoredUser = () => {
 
 const initialUser = getStoredUser();
 
-export const useAppStore = create((set) => ({
-  // Estado de Autenticacion persistente
+export const useAppStore = create((set, get) => ({
+  // Estado de Autenticación persistente
   isAuthenticated: !!initialUser,
   user: initialUser,
 
@@ -22,7 +22,7 @@ export const useAppStore = create((set) => ({
   closeWelcomeMascot: () => set({ showWelcomeMascot: false }),
   openWelcomeMascot: () => set({ showWelcomeMascot: true }),
 
-  // Tab activo de navegacion movil: 'home' | 'map' | 'driver' | 'wallet' | 'profile'
+  // Tab activo de navegación: 'home' | 'map' | 'driver' | 'wallet' | 'profile' | 'trips'
   activeTab: 'home',
   setActiveTab: (tab) => set({ activeTab: tab }),
 
@@ -30,7 +30,6 @@ export const useAppStore = create((set) => ({
   activeRole: initialUser?.isDriver ? initialUser?.role || 'passenger' : 'passenger',
   toggleRole: () =>
     set((state) => {
-      // Si el usuario no es conductor aprobado, no puede alternar
       if (!state.user?.isDriver) {
         return { activeRole: 'passenger' };
       }
@@ -39,10 +38,68 @@ export const useAppStore = create((set) => ({
       try {
         localStorage.setItem('uniwheels_session', JSON.stringify(updatedUser));
       } catch {}
-      return { activeRole: newRole, user: updatedUser };
+      return {
+        activeRole: newRole,
+        user: updatedUser,
+        activeTab: 'home', // Al alternar rol, regresar a la pestaña de inicio correspondiente
+      };
     }),
 
-  // Iniciar Sesion y persistir en el dispositivo (por defecto estrictamente Pasajero)
+  // Estado del Viaje Activo del Conductor (null si no hay viaje publicado)
+  activeDriverTrip: null,
+
+  // Saldo de Billetera del Conductor (Mínimo requerido para publicar: $ 2.000 COP)
+  driverWalletBalance: 25000,
+
+  // Publicar un nuevo viaje
+  publishDriverTrip: (tripData) => {
+    const newTrip = {
+      id: 'trip_' + Date.now(),
+      createdAt: new Date().toISOString(),
+      status: 'active',
+      passengers: [], // Lista de pasajeros confirmados
+      ...tripData,
+    };
+    set({
+      activeDriverTrip: newTrip,
+      activeTab: 'home', // Llevar al conductor a su panel principal de viaje activo
+    });
+    return newTrip;
+  },
+
+  // Cancelar viaje del conductor
+  cancelDriverTrip: (applyPenalty = false, penaltyAmount = 3000) => {
+    const currentBalance = get().driverWalletBalance;
+    const newBalance = applyPenalty ? Math.max(0, currentBalance - penaltyAmount) : currentBalance;
+
+    set({
+      activeDriverTrip: null,
+      driverWalletBalance: newBalance,
+    });
+  },
+
+  // Simular aceptación/adición de pasajero al viaje activo (para pruebas)
+  addPassengerToActiveTrip: (passenger) => {
+    const trip = get().activeDriverTrip;
+    if (!trip) return;
+    const updatedPassengers = [...(trip.passengers || []), passenger];
+    set({
+      activeDriverTrip: {
+        ...trip,
+        passengers: updatedPassengers,
+        availableSeats: Math.max(0, (trip.seats || trip.availableSeats) - updatedPassengers.length),
+      },
+    });
+  },
+
+  // Recargar Billetera del Conductor
+  rechargeDriverWallet: (amount) => {
+    set((state) => ({
+      driverWalletBalance: state.driverWalletBalance + Number(amount),
+    }));
+  },
+
+  // Iniciar Sesión
   login: (userData) => {
     const userToSave = userData || {
       id: 'u1',
@@ -57,10 +114,8 @@ export const useAppStore = create((set) => ({
       institutionWelcomeImage: '/assets/institutions/unab-mascot.png',
       rating: 5.0,
       tripsCount: 0,
-      walletBalance: 0,
     };
 
-    // Asegurar que si isDriver es falso, el rol sea estrictamente passenger
     if (!userToSave.isDriver) {
       userToSave.role = 'passenger';
       userToSave.driverStatus = userToSave.driverStatus || 'unregistered';
@@ -78,7 +133,7 @@ export const useAppStore = create((set) => ({
     });
   },
 
-  // Actualizar estado de conductor del usuario
+  // Actualizar estado de conductor
   updateDriverStatus: (status, driverData = {}) =>
     set((state) => {
       if (!state.user) return {};
@@ -96,10 +151,11 @@ export const useAppStore = create((set) => ({
       return {
         user: updatedUser,
         activeRole: isApproved ? 'driver' : 'passenger',
+        activeTab: isApproved ? 'driver' : 'home',
       };
     }),
 
-  // Cerrar Sesion y limpiar persistencia
+  // Cerrar Sesión
   logout: () => {
     try {
       localStorage.removeItem('uniwheels_session');
@@ -109,6 +165,7 @@ export const useAppStore = create((set) => ({
       user: null,
       activeTab: 'home',
       activeRole: 'passenger',
+      activeDriverTrip: null,
       showWelcomeMascot: false,
     });
   },
