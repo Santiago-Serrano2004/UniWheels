@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { routesService } from '../../services/api';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents } from 'react-leaflet';
@@ -9,18 +9,15 @@ import {
   ShieldCheck,
   CheckCircle2,
   CalendarCheck,
-  ArrowRight,
   Activity,
-  Layers,
-  Sparkles,
   MapPin,
   Clock,
-  Coins,
-  AlertCircle,
+  Navigation,
+  Sparkles,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
-// Crear pines vectoriales personalizados para el mapa
+// Pines vectoriales personalizados
 const createCustomPin = (bgColor, iconText, borderColor = '#ffffff') =>
   L.divIcon({
     className: 'custom-leaflet-marker',
@@ -40,7 +37,7 @@ const campusIcon = createCustomPin('#082f49', '🎓');
 
 const TOMTOM_KEY = import.meta.env.VITE_TOMTOM_API_KEY || '';
 
-// Componente para capturar clics en el mapa y mover el punto de recogida
+// Componente para capturar clics en el mapa y evaluar el desvío vehicular real
 const MapClickHandler = ({ onLocationSelect }) => {
   useMapEvents({
     click(e) {
@@ -49,6 +46,31 @@ const MapClickHandler = ({ onLocationSelect }) => {
   });
   return null;
 };
+
+/**
+ * Consultar geometría vehicular real calle por calle en OSRM (OpenStreetMap Routing)
+ */
+async function fetchRoadGeometry(points) {
+  if (!points || points.length < 2) return [];
+
+  const coordsParam = points.map((p) => `${p[1]},${p[0]}`).join(';');
+  const url = `https://router.project-osrm.org/route/v1/driving/${coordsParam}?overview=full&geometries=geojson`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return points;
+
+    const data = await response.json();
+    if (data.code === 'Ok' && data.routes?.[0]?.geometry?.coordinates) {
+      // Convertir de [lng, lat] GeoJSON a [lat, lng] de Leaflet
+      return data.routes[0].geometry.coordinates.map((pt) => [pt[1], pt[0]]);
+    }
+  } catch (e) {
+    console.warn('Fallo OSRM client-side, usando fallback:', e);
+  }
+
+  return points;
+}
 
 export const TripMapView = () => {
   const {
@@ -62,10 +84,16 @@ export const TripMapView = () => {
   const isBooked = Boolean(activePassengerBooking);
   const campusName = user?.campus?.name || user?.campus || 'Campus El Jardín';
 
+  // Coordenadas fijas de origen y destino vehicular
+  const driverOrigin = [7.0678, -73.1066]; // C.C. Cañaveral
+  const campusDestination = [7.1193, -73.1042]; // Campus El Jardín UNAB
+
   // Estados de control del mapa y telemetría de IA
   const [showTrafficLayer, setShowTrafficLayer] = useState(true);
-  const [selectedPickup, setSelectedPickup] = useState([7.1186, -73.1102]); // Parque San Pío (Desvío)
+  const [selectedPickup, setSelectedPickup] = useState([7.1186, -73.1102]); // Parque San Pío
   const [pickupName, setPickupName] = useState('Parque San Pío (Cabecera)');
+  const [mainRouteCoords, setMainRouteCoords] = useState([]);
+  const [detourRouteCoords, setDetourRouteCoords] = useState([]);
   const [matchingData, setMatchingData] = useState({
     modality: 'modalidad_2_desvio',
     detour_minutes: 4.5,
@@ -77,27 +105,6 @@ export const TripMapView = () => {
   });
   const [isLoadingEvaluation, setIsLoadingEvaluation] = useState(false);
 
-  // Coordenadas fijas de la ruta principal (Cañaveral -> Campus El Jardín)
-  const driverOrigin = [7.0678, -73.1066]; // Cañaveral
-  const campusDestination = [7.1193, -73.1042]; // Campus El Jardín
-
-  // Corredor principal original
-  const directCorridor = [
-    [7.0678, -73.1066], // Cañaveral
-    [7.0856, -73.1142], // Provenza
-    [7.1023, -73.1185], // Puerta del Sol
-    [7.1145, -73.1100], // Carrera 33
-    [7.1193, -73.1042], // Campus El Jardín
-  ];
-
-  // Corredor con desvío asistido por IA (hacia Parque San Pío / Cabecera)
-  const detourCorridor = [
-    [7.1023, -73.1185], // Puerta del Sol
-    [7.1145, -73.1100], // Cra 33
-    [7.1186, -73.1102], // Parada de Desvío (San Pío)
-    [7.1193, -73.1042], // Llegada al Campus
-  ];
-
   // Puntos rápidos predefinidos en Bucaramanga
   const quickPoints = [
     { name: 'Parque San Pío (Desvío)', coords: [7.1186, -73.1102] },
@@ -106,54 +113,77 @@ export const TripMapView = () => {
     { name: 'Puerta del Sol', coords: [7.1023, -73.1185] },
   ];
 
-  // Evaluar desvío cuando cambia el punto de abordaje
-  const handleSelectPickup = async (coords, name = 'Punto seleccionado en el mapa') => {
-    setSelectedPickup(coords);
-    setPickupName(name);
-    setIsLoadingEvaluation(true);
+  // 1. Cargar la trayectoria vehicular real de la ruta principal en el montaje
+  useEffect(() => {
+    let isMounted = true;
 
-    try {
-      // Consultar endpoint del microservicio de IA en puerto 8003
-      const matches = await routesService.searchMatches(coords[0], coords[1], 1);
-      if (matches && matches.length > 0) {
-        const topMatch = matches[0];
-        setMatchingData({
-          modality: topMatch.modality || 'modalidad_2_desvio',
-          detour_minutes: topMatch.detour_minutes ?? 4.0,
-          suggested_fare_cop: topMatch.suggested_fare_cop ?? 4500,
-          traffic_status: topMatch.traffic_status || 'Telemetría TomTom en vivo',
-          traffic_source: topMatch.traffic_source || 'tomtom_live',
-          is_viable: topMatch.is_viable !== false,
-          estimated_arrival_time: '07:15 AM',
-        });
-      } else {
-        // Modo local inteligente si no hay rutas activas en la BD
-        const esDirecto = Math.abs(coords[0] - 7.0856) < 0.005;
-        setMatchingData({
-          modality: esDirecto ? 'modalidad_1_directa' : 'modalidad_2_desvio',
-          detour_minutes: esDirecto ? 0.0 : 4.2,
-          suggested_fare_cop: esDirecto ? 4500 : 5700,
-          traffic_status: 'Tráfico fluido en tiempo real',
-          traffic_source: 'tomtom_live',
-          is_viable: true,
-          estimated_arrival_time: '07:15 AM',
-        });
+    async function loadMainRoute() {
+      const coords = await fetchRoadGeometry([driverOrigin, campusDestination]);
+      if (isMounted && coords.length > 0) {
+        setMainRouteCoords(coords);
       }
-    } catch {
-      // Fallback seguro
-      setMatchingData({
-        modality: 'modalidad_2_desvio',
-        detour_minutes: 4.5,
-        suggested_fare_cop: 5800,
-        traffic_status: 'Estimación con modelo horario',
-        traffic_source: 'hourly_model',
-        is_viable: true,
-        estimated_arrival_time: '07:18 AM',
-      });
-    } finally {
-      setIsLoadingEvaluation(false);
     }
-  };
+
+    loadMainRoute();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // 2. Evaluar y cargar la trayectoria vehicular del desvío cuando cambia el punto de recogida
+  const handleSelectPickup = useCallback(
+    async (coords, name = 'Punto seleccionado en el mapa') => {
+      setSelectedPickup(coords);
+      setPickupName(name);
+      setIsLoadingEvaluation(true);
+
+      try {
+        // Consultar geometría real turn-by-turn con OSRM pasando por la parada de recogida
+        const detourGeometry = await fetchRoadGeometry([driverOrigin, coords, campusDestination]);
+        if (detourGeometry.length > 0) {
+          setDetourRouteCoords(detourGeometry);
+        }
+
+        // Consultar telemetría e IA en el microservicio (puerto 8003)
+        const matches = await routesService.searchMatches(coords[0], coords[1], 1);
+        if (matches && matches.length > 0) {
+          const topMatch = matches[0];
+          setMatchingData({
+            modality: topMatch.modality || 'modalidad_2_desvio',
+            detour_minutes: topMatch.detour_minutes ?? 4.0,
+            suggested_fare_cop: topMatch.suggested_fare_cop ?? 4500,
+            traffic_status: topMatch.traffic_status || 'Telemetría TomTom en vivo',
+            traffic_source: topMatch.traffic_source || 'tomtom_live',
+            is_viable: topMatch.is_viable !== false,
+            estimated_arrival_time: '07:15 AM',
+          });
+        } else {
+          // Evaluación instantánea
+          const esDirecto = Math.abs(coords[0] - 7.0856) < 0.003;
+          setMatchingData({
+            modality: esDirecto ? 'modalidad_1_directa' : 'modalidad_2_desvio',
+            detour_minutes: esDirecto ? 0.0 : 4.2,
+            suggested_fare_cop: esDirecto ? 4500 : 5700,
+            traffic_status: 'Tráfico fluido en tiempo real',
+            traffic_source: 'tomtom_live',
+            is_viable: true,
+            estimated_arrival_time: '07:15 AM',
+          });
+        }
+      } catch (err) {
+        console.error('Error evaluando desvío:', err);
+      } finally {
+        setIsLoadingEvaluation(false);
+      }
+    },
+    [driverOrigin, campusDestination]
+  );
+
+  // Cargar el desvío inicial
+  useEffect(() => {
+    handleSelectPickup(selectedPickup, pickupName);
+  }, []);
 
   const manejarReserva = () => {
     bookPassengerTrip({
@@ -192,32 +222,38 @@ export const TripMapView = () => {
             <TileLayer
               attribution='&copy; <a href="https://www.tomtom.com/">TomTom Traffic</a>'
               url={`https://api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png?key=${TOMTOM_KEY}`}
-              opacity={0.75}
+              opacity={0.8}
             />
           )}
 
           {/* Captura de clics en el mapa */}
           <MapClickHandler onLocationSelect={(coords) => handleSelectPickup(coords)} />
 
-          {/* Polilínea de la Ruta Principal (Azul Lochmara) */}
-          <Polyline
-            positions={directCorridor}
-            pathOptions={{
-              color: '#0284c7',
-              weight: 5,
-              opacity: 0.9,
-            }}
-          />
-
-          {/* Polilínea del Desvío de IA (Ámbar punteado si aplica Modalidad 2) */}
-          {matchingData.modality === 'modalidad_2_desvio' && (
+          {/* Polilínea Vehicular Real de la Ruta Principal (Azul Lochmara) */}
+          {mainRouteCoords.length > 1 && (
             <Polyline
-              positions={detourCorridor}
+              positions={mainRouteCoords}
+              pathOptions={{
+                color: '#0284c7',
+                weight: 5,
+                opacity: 0.85,
+                lineCap: 'round',
+                lineJoin: 'round',
+              }}
+            />
+          )}
+
+          {/* Polilínea Vehicular Real del Desvío Asistido por IA (Ámbar / Naranja) */}
+          {matchingData.modality === 'modalidad_2_desvio' && detourRouteCoords.length > 1 && (
+            <Polyline
+              positions={detourRouteCoords}
               pathOptions={{
                 color: '#f59e0b',
                 weight: 6,
                 dashArray: '8, 8',
                 opacity: 0.95,
+                lineCap: 'round',
+                lineJoin: 'round',
               }}
             />
           )}
@@ -225,8 +261,8 @@ export const TripMapView = () => {
           {/* Marcadores */}
           <Marker position={driverOrigin} icon={driverIcon}>
             <Popup>
-              <strong>Origen del Conductor</strong>
-              <br />Cañaveral (Floridablanca)
+              <strong>🚗 Origen del Conductor</strong>
+              <br />C.C. Cañaveral (Floridablanca)
             </Popup>
           </Marker>
 
@@ -235,7 +271,7 @@ export const TripMapView = () => {
             icon={matchingData.modality === 'modalidad_1_directa' ? directPickupIcon : pickupIcon}
           >
             <Popup>
-              <strong>{pickupName}</strong>
+              <strong>📍 {pickupName}</strong>
               <br />
               {matchingData.modality === 'modalidad_1_directa' ? '⚡ Abordaje directo (0 min desvío)' : `✨ Desvío asistido (+${matchingData.detour_minutes} min)`}
             </Popup>
@@ -243,7 +279,7 @@ export const TripMapView = () => {
 
           <Marker position={campusDestination} icon={campusIcon}>
             <Popup>
-              <strong>Destino Universitario</strong>
+              <strong>🎓 Destino Universitario</strong>
               <br />{campusName}
             </Popup>
           </Marker>
