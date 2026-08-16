@@ -20,17 +20,6 @@ export const HomeView = () => {
   const { user, activeRole, activePassengerBooking, setActiveTab } = useAppStore();
   const [destination, setDestination] = useState('');
   const [campuses, setCampuses] = useState([]);
-
-  // Si el rol activo es CONDUCTOR, mostrar su panel de conductor
-  if (activeRole === 'driver') {
-    return <DriverCockpitCard />;
-  }
-
-  // Si es PASAJERO y tiene una reserva activa, mostrar ÚNICAMENTE su tarjeta de viaje activo
-  if (activePassengerBooking) {
-    return <PassengerActiveTripCard />;
-  }
-
   const [nearbyRides, setNearbyRides] = useState([]);
 
   // Cargar sedes dinámicas y viajes disponibles desde el backend
@@ -46,22 +35,34 @@ export const HomeView = () => {
 
     tripsService.getAvailableTrips().then((trips) => {
       if (trips && trips.length > 0) {
-        setNearbyRides(trips.map(t => ({
-          id: t.id,
-          driverName: t.driver_name,
-          vehicle: t.vehicle,
-          plate: t.plate,
-          rating: t.rating,
-          origin: t.origin,
-          destination: t.destination,
-          departureTime: t.departure_time,
-          availableSeats: t.available_seats,
-          fare: t.fare,
-          detourMinutes: t.detour_minutes,
-        })));
+        setNearbyRides(
+          trips.map((t) => ({
+            id: t.id,
+            driverName: t.driver_name,
+            vehicle: t.vehicle,
+            plate: t.plate,
+            rating: t.rating,
+            origin: t.origin,
+            destination: t.destination,
+            departureTime: t.departure_time,
+            availableSeats: t.available_seats,
+            fare: t.fare,
+            detourMinutes: t.detour_minutes,
+          }))
+        );
       }
     });
   }, []);
+
+  // Si el rol activo es CONDUCTOR, mostrar su panel de conductor
+  if (activeRole === 'driver') {
+    return <DriverCockpitCard />;
+  }
+
+  // Si es PASAJERO y tiene una reserva activa, mostrar ÚNICAMENTE su tarjeta de viaje activo
+  if (activePassengerBooking) {
+    return <PassengerActiveTripCard />;
+  }
 
   return (
     <div className="space-y-4 pb-6 select-none">
