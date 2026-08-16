@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\Log;
  */
 class LiveTrafficService
 {
-    const MAX_DAILY_REQUESTS = 2000; // Límite de seguridad diario para no sobrepasar la cuota gratuita
-    const CACHE_TTL_MINUTES = 10; // Duración de la caché por sector geográfico
+    const MAX_DAILY_REQUESTS = 2400; // Límite de seguridad diario para 75.000 consultas mensuales
+    const CACHE_TTL_MINUTES = 5; // Refresco cada 5 min para máxima fidelidad vial
 
     protected ?string $apiKey = null;
     protected string $flowApiUrl;
