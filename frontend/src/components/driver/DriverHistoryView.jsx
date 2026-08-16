@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { tripsService } from '../../services/api';
 import { RatingFeedbackModal } from '../common/RatingFeedbackModal';
 import {
   History,
@@ -22,50 +23,35 @@ export const DriverHistoryView = () => {
     tripId: null,
   });
 
-  const [viajesHistorial, setViajesHistorial] = useState([
-    {
-      id: 'dtrip_1',
-      date: 'Hoy, 06:45 AM',
-      origin: 'Cañaveral - C.C. Cañaveral',
-      destination: 'Campus El Jardín',
-      duration: '24 min',
-      distance: '8.4 km',
-      totalEarned: 13500,
-      commissionPaid: 1620,
-      passengers: [
-        { id: 'p_1', name: 'Laura Gómez', program: 'Medicina', pickup: 'Parque San Pío', rated: false },
-        { id: 'p_2', name: 'Mateo Cárdenas', program: 'Ingeniería de Sistemas', pickup: 'Estación Provenza', rated: true, ratingScore: 5 },
-        { id: 'p_3', name: 'Camila Duarte', program: 'Derecho', pickup: 'Cañaveral', rated: false },
-      ],
-      routePolyline: [
-        [7.0678, -73.1066],
-        [7.0856, -73.1142],
-        [7.1186, -73.1102],
-        [7.1193, -73.1227],
-      ],
-    },
-    {
-      id: 'dtrip_2',
-      date: 'Ayer, 01:15 PM',
-      origin: 'Campus El Jardín',
-      destination: 'Cabecera - Parque Santander',
-      duration: '18 min',
-      distance: '6.2 km',
-      totalEarned: 9000,
-      commissionPaid: 1080,
-      passengers: [
-        { id: 'p_4', name: 'Andrés Suárez', program: 'Administración', pickup: 'El Jardín', rated: true, ratingScore: 5 },
-        { id: 'p_5', name: 'Sofía Rueda', program: 'Psicología', pickup: 'El Jardín', rated: true, ratingScore: 5 },
-      ],
-      routePolyline: [
-        [7.1193, -73.1227],
-        [7.1205, -73.1145],
-        [7.1225, -73.1285],
-      ],
-    },
-  ]);
+  const [viajesHistorial, setViajesHistorial] = useState([]);
+  const [viajeExpandido, setViajeExpandido] = useState(null);
 
-  const [viajeExpandido, setViajeExpandido] = useState('dtrip_1');
+  useEffect(() => {
+    tripsService.getDriverHistory().then((data) => {
+      if (data && data.length > 0) {
+        const formateados = data.map((d) => ({
+          id: d.id,
+          date: d.date,
+          origin: d.origin,
+          destination: d.destination,
+          duration: d.duration,
+          distance: d.distance,
+          totalEarned: d.total_earned,
+          commissionPaid: d.commission_paid,
+          passengers: d.passengers.map((p) => ({
+            id: p.id,
+            name: p.name,
+            program: p.program,
+            pickup: p.pickup,
+            rated: p.rated,
+            ratingScore: p.rating_score || 5,
+          })),
+        }));
+        setViajesHistorial(formateados);
+        setViajeExpandido(formateados[0]?.id || null);
+      }
+    });
+  }, []);
 
   const abrirCalificarPasajero = (pasajero, tripId) => {
     setModalCalificacion({

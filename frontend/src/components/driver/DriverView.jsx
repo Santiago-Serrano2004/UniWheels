@@ -40,14 +40,6 @@ const createCustomPin = (color, emoji) =>
 const pointIcon = createCustomPin('#0284c7', '📍');
 const campusIcon = createCustomPin('#082f49', '🎓');
 
-// Coordenadas oficiales de las sedes
-const SEDES_COORDENADAS = {
-  'Campus El Jardín': [7.1193, -73.1227],
-  'Campus El Bosque': [7.0625, -73.1028],
-  'CSU — Centro de Servicios Universitarios': [7.1145, -73.1189],
-  'Campus La Casona': [7.1245, -73.1215],
-};
-
 // Componente interactivo para capturar clics o arrastre del marcador en Leaflet
 function MapLocationPicker({ position, onPositionChange }) {
   useMapEvents({
@@ -189,8 +181,12 @@ export const DriverView = () => {
     }
   };
 
-  // Coordenadas de la sede seleccionada
-  const coordsSedeActual = SEDES_COORDENADAS[sedeSeleccionada] || [7.1193, -73.1227];
+  // Coordenadas dinámicas de la sede seleccionada desde la base de datos
+  const campusObjActual = sedesInstitucion.find((s) => s.name === sedeSeleccionada);
+  const coordsSedeActual =
+    campusObjActual && campusObjActual.latitude && campusObjActual.longitude
+      ? [campusObjActual.latitude, campusObjActual.longitude]
+      : [7.119346, -73.104278];
 
   // Trazado de ruta
   const trazadoRuta =

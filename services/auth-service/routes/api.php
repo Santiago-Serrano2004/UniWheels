@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\InstitutionController;
+use App\Http\Controllers\Api\V1\TripController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,6 +20,13 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
     Route::post('/auth/send-verification-code', [AuthController::class, 'sendVerificationCode']);
     Route::post('/driver/register', [AuthController::class, 'registerDriver']);
+
+    // Rutas dinámicas de viajes, historial y calificaciones
+    Route::get('/trips/available', [TripController::class, 'getAvailableTrips']);
+    Route::get('/driver/history', [TripController::class, 'getDriverHistory']);
+    Route::get('/passenger/history', [TripController::class, 'getPassengerHistory']);
+    Route::get('/wallet/transactions', [TripController::class, 'getWalletTransactions']);
+    Route::post('/ratings', [TripController::class, 'submitRating']);
 
     // Rutas protegidas por Bearer Token (Sanctum)
     Route::middleware('auth:sanctum')->group(function () {

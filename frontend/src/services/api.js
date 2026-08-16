@@ -164,3 +164,52 @@ export const authService = {
     }
   },
 };
+
+// Servicios de Viajes, Historial y Calificaciones alimentados desde el Backend
+export const tripsService = {
+  async getAvailableTrips() {
+    try {
+      const response = await apiClient.get('/trips/available');
+      return response.data?.data || [];
+    } catch {
+      return [];
+    }
+  },
+
+  async getDriverHistory() {
+    try {
+      const response = await apiClient.get('/driver/history');
+      return response.data?.data || [];
+    } catch {
+      return [];
+    }
+  },
+
+  async getPassengerHistory() {
+    try {
+      const response = await apiClient.get('/passenger/history');
+      return response.data?.data || [];
+    } catch {
+      return [];
+    }
+  },
+
+  async getWalletTransactions() {
+    try {
+      const response = await apiClient.get('/wallet/transactions');
+      return response.data?.data || { balance_cop: 25000, transactions: [] };
+    } catch {
+      return { balance_cop: 25000, transactions: [] };
+    }
+  },
+
+  async submitRating(ratingPayload) {
+    try {
+      const response = await apiClient.post('/ratings', ratingPayload);
+      return response.data;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      return { success: true };
+    }
+  },
+};

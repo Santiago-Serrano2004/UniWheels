@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
+import { tripsService } from '../../services/api';
 import { RatingFeedbackModal } from '../common/RatingFeedbackModal';
 import {
   CalendarCheck,
@@ -28,38 +29,31 @@ export const PassengerTripsView = () => {
     tripId: null,
   });
 
-  const [historialPasajero, setHistorialPasajero] = useState([
-    {
-      id: 'ptrip_1',
-      date: 'Ayer, 07:15 AM',
-      driverName: 'Valentina Ríos',
-      vehicle: 'Chevrolet Onix (Gris)',
-      plate: 'WYX-810',
-      pickup: 'Cabecera - Parque San Pío',
-      destination: 'Campus El Jardín',
-      duration: '22 min',
-      distance: '7.8 km',
-      farePaid: 4000,
-      rated: false,
-      ratingScore: 5,
-    },
-    {
-      id: 'ptrip_2',
-      date: '14 Ago, 06:30 PM',
-      driverName: 'Carlos Mendoza',
-      vehicle: 'Mazda 3 (Rojo)',
-      plate: 'KLU-492',
-      pickup: 'Campus El Jardín',
-      destination: 'Cañaveral - La Florida',
-      duration: '26 min',
-      distance: '8.4 km',
-      farePaid: 4500,
-      rated: true,
-      ratingScore: 5,
-    },
-  ]);
+  const [historialPasajero, setHistorialPasajero] = useState([]);
+  const [viajeExpandido, setViajeExpandido] = useState(null);
 
-  const [viajeExpandido, setViajeExpandido] = useState('ptrip_1');
+  useEffect(() => {
+    tripsService.getPassengerHistory().then((data) => {
+      if (data && data.length > 0) {
+        const formateados = data.map((d) => ({
+          id: d.id,
+          date: d.date,
+          driverName: d.driver_name,
+          vehicle: d.vehicle,
+          plate: d.plate,
+          pickup: d.pickup,
+          destination: d.destination,
+          duration: d.duration,
+          distance: d.distance,
+          farePaid: d.fare_paid,
+          rated: d.rated,
+          ratingScore: d.rating_score || 5,
+        }));
+        setHistorialPasajero(formateados);
+        setViajeExpandido(formateados[0]?.id || null);
+      }
+    });
+  }, []);
 
   const abrirCalificarConductor = (viaje) => {
     setModalCalificacion({

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { authService } from '../../services/api';
+import { authService, tripsService } from '../../services/api';
 import { DriverCockpitCard } from '../driver/DriverCockpitCard';
 import { PassengerTripsView } from '../trips/PassengerTripsView';
 import {
@@ -31,7 +31,9 @@ export const HomeView = () => {
     return <PassengerTripsView />;
   }
 
-  // Cargar sedes dinámicas desde la base de datos
+  const [nearbyRides, setNearbyRides] = useState([]);
+
+  // Cargar sedes dinámicas y viajes disponibles desde el backend
   useEffect(() => {
     authService.getInstitutions().then((instituciones) => {
       if (instituciones && instituciones.length > 0) {
@@ -41,36 +43,25 @@ export const HomeView = () => {
         }
       }
     });
-  }, []);
 
-  const nearbyRides = [
-    {
-      id: 'r1',
-      driverName: 'Carlos Mendoza',
-      vehicle: 'Mazda 3 (Rojo)',
-      plate: 'KLU-492',
-      rating: 4.95,
-      origin: 'Cañaveral - La Florida',
-      destination: 'Campus El Jardín',
-      departureTime: '06:45 AM',
-      availableSeats: 3,
-      fare: '$ 4.500',
-      detourMinutes: '+4 min',
-    },
-    {
-      id: 'r2',
-      driverName: 'Valentina Rios',
-      vehicle: 'Chevrolet Onix (Gris)',
-      plate: 'WYX-810',
-      rating: 4.88,
-      origin: 'Cabecera - Parque San Pio',
-      destination: 'Campus CSU',
-      departureTime: '07:15 AM',
-      availableSeats: 2,
-      fare: '$ 4.000',
-      detourMinutes: '+2 min',
-    },
-  ];
+    tripsService.getAvailableTrips().then((trips) => {
+      if (trips && trips.length > 0) {
+        setNearbyRides(trips.map(t => ({
+          id: t.id,
+          driverName: t.driver_name,
+          vehicle: t.vehicle,
+          plate: t.plate,
+          rating: t.rating,
+          origin: t.origin,
+          destination: t.destination,
+          departureTime: t.departure_time,
+          availableSeats: t.available_seats,
+          fare: t.fare,
+          detourMinutes: t.detour_minutes,
+        })));
+      }
+    });
+  }, []);
 
   return (
     <div className="space-y-4 pb-6 select-none">

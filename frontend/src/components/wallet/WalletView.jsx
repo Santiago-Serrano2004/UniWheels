@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
+import { tripsService } from '../../services/api';
 import {
   Wallet,
   ArrowDownRight,
@@ -20,17 +21,15 @@ export const WalletView = () => {
   const [metodoPago, setMetodoPago] = useState('nequi');
   const [mensajeExito, setMensajeExito] = useState('');
   const [estaProcesando, setEstaProcesando] = useState(false);
+  const [historialMovimientos, setHistorialMovimientos] = useState([]);
 
-  const historialMovimientos = [
-    {
-      id: 'tx_1',
-      title: 'Bono de Activación de Conductor',
-      date: 'Hoy',
-      amount: '+$ 25.000',
-      type: 'credit',
-      desc: 'Saldo inicial para publicación de rutas',
-    },
-  ];
+  useEffect(() => {
+    tripsService.getWalletTransactions().then((res) => {
+      if (res && res.transactions) {
+        setHistorialMovimientos(res.transactions);
+      }
+    });
+  }, []);
 
   const ejecutarRecarga = (e) => {
     e.preventDefault();

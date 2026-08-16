@@ -151,7 +151,7 @@ export const RatingFeedbackModal = ({
                         onClick={() => toggleTag(tag)}
                         className={`text-[10px] font-semibold px-2.5 py-1 rounded-xl border transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
+                            ? 'bg-lochmara-600 text-white border-lochmara-600 shadow-xs'
                             : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                         }`}
                       >
@@ -172,14 +172,14 @@ export const RatingFeedbackModal = ({
                   value={comentario}
                   onChange={(e) => setComentario(e.target.value)}
                   placeholder="Escribe un breve mensaje..."
-                  className="w-full bg-slate-50 text-xs rounded-2xl p-2.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none font-medium"
+                  className="w-full bg-slate-50 text-xs rounded-2xl p-2.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 resize-none font-medium"
                 />
               </div>
 
               {/* Botón de Enviar */}
               <button
                 type="submit"
-                className="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-amber-500/20"
+                className="w-full py-3 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-lochmara-600/20"
               >
                 <ThumbsUp className="w-3.5 h-3.5" />
                 <span>Enviar Calificación</span>
