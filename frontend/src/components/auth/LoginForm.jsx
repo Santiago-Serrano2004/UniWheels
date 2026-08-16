@@ -74,25 +74,14 @@ export const LoginForm = ({ onBack }) => {
       }
     } catch (err) {
       setEstaCargando(false);
-      if (err.message && !err.message.includes('servidor')) {
+      if (err.errors) {
+        const primerError = Object.values(err.errors)[0]?.[0];
+        setMensajeError(primerError || 'Error de autenticación.');
+      } else if (err.message) {
         setMensajeError(err.message);
-        return;
+      } else {
+        setMensajeError('Credenciales incorrectas o correo no registrado.');
       }
-
-      // Modo local simulado para pruebas
-      login({
-        id: 'u_' + Date.now(),
-        name: 'Usuario Universitario',
-        email: correoLimpio,
-        studentCode: 'U00123456',
-        role: 'passenger',
-        institution: 'Universidad Autónoma de Bucaramanga',
-        campus: 'Campus El Jardín',
-        institutionWelcomeImage: '/assets/institutions/unab-mascot.png',
-        rating: 4.95,
-        tripsCount: 12,
-        walletBalance: 35000,
-      });
     }
   };
 

@@ -124,7 +124,7 @@ export const RegisterForm = ({ onBack }) => {
     const correoCompleto = `${usuarioLimpio}@${institucionSeleccionada.domain}`;
 
     try {
-      await authService.register({
+      const res = await authService.register({
         name: nombreCompleto.trim(),
         email: correoCompleto,
         password: clave,
@@ -140,28 +140,37 @@ export const RegisterForm = ({ onBack }) => {
         profile_photo_path: fotoPerfilPreview || null,
         is_driver: false,
       });
-    } catch {}
 
-    setEstaProcesando(false);
-    setRegistroExitoso(true);
+      setEstaProcesando(false);
+      setRegistroExitoso(true);
 
-    setTimeout(() => {
-      const sedeObj = sedesDisponibles.find((s) => s.id === Number(sedeId));
-      login({
-        id: 'u_' + Date.now(),
-        name: nombreCompleto.trim(),
-        email: correoCompleto,
-        studentCode: documentoId.trim(),
-        profilePhoto: fotoPerfilPreview,
-        role: 'passenger',
-        institution: institucionSeleccionada.name,
-        campus: sedeObj?.name || 'Campus Principal',
-        institutionWelcomeImage: institucionSeleccionada?.welcome_image_url || '/assets/institutions/unab-mascot.png',
-        rating: 5.0,
-        tripsCount: 0,
-        walletBalance: 0,
-      });
-    }, 1200);
+      setTimeout(() => {
+        const sedeObj = sedesDisponibles.find((s) => s.id === Number(sedeId));
+        login({
+          id: res.data?.user?.id || 'u_' + Date.now(),
+          name: res.data?.user?.name || nombreCompleto.trim(),
+          email: res.data?.user?.email || correoCompleto,
+          studentCode: res.data?.user?.student_code || documentoId.trim(),
+          profilePhoto: fotoPerfilPreview,
+          role: 'passenger',
+          institution: institucionSeleccionada.name,
+          campus: sedeObj?.name || 'Campus Principal',
+          institutionWelcomeImage: institucionSeleccionada?.welcome_image_url || '/assets/institutions/unab-mascot.png',
+          rating: 5.0,
+          tripsCount: 0,
+          walletBalance: 0,
+          token: res.data?.access_token,
+        });
+      }, 1200);
+    } catch (err) {
+      setEstaProcesando(false);
+      if (err.errors) {
+        const primerError = Object.values(err.errors)[0]?.[0];
+        setMensajeError(primerError || 'Error al validar los datos en el servidor.');
+      } else {
+        setMensajeError(err.message || 'Error al procesar el registro con el servidor.');
+      }
+    }
   };
 
   return (
