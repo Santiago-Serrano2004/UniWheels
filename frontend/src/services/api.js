@@ -340,4 +340,57 @@ export const tripLifecycleService = {
   },
 };
 
+// URL base del Microservicio de Notificaciones Push y Alertas
+const NOTIFICATION_API_BASE_URL = import.meta.env.VITE_NOTIFICATION_API_URL || 'http://localhost:8005/api/v1';
+
+export const notificationApiClient = axios.create({
+  baseURL: NOTIFICATION_API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  },
+  timeout: 6000,
+});
+
+// Servicios de Notificaciones (Fase 06 - notification-service)
+export const notificationsService = {
+  async sendNotification(notificationPayload) {
+    try {
+      const response = await notificationApiClient.post('/notifications/send', notificationPayload);
+      return response.data;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      return { success: true };
+    }
+  },
+
+  async getUserNotifications(userId) {
+    try {
+      const response = await notificationApiClient.get(`/users/${userId}/notifications`);
+      return response.data || { success: true, unread_count: 0, data: [] };
+    } catch {
+      return { success: true, unread_count: 0, data: [] };
+    }
+  },
+
+  async markAsRead(notificationId) {
+    try {
+      const response = await notificationApiClient.post(`/notifications/${notificationId}/read`);
+      return response.data;
+    } catch {
+      return { success: true };
+    }
+  },
+
+  async markAllAsRead(userId) {
+    try {
+      const response = await notificationApiClient.post(`/users/${userId}/notifications/mark-all-read`);
+      return response.data;
+    } catch {
+      return { success: true };
+    }
+  },
+};
+
+
 

@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { Emblem } from './Emblem';
 import { DriverInviteModal } from './DriverInviteModal';
-import { MapPin, UserCheck, Car } from 'lucide-react';
+import { NotificationCenterModal } from './NotificationCenterModal';
+import { MapPin, UserCheck, Car, Bell } from 'lucide-react';
 
 export const Header = () => {
   const { user, activeRole, toggleRole, setActiveTab } = useAppStore();
   const [modalRegistroAbierto, setModalRegistroAbierto] = useState(false);
+  const [modalNotifAbierto, setModalNotifAbierto] = useState(false);
 
   const isDriverVerified = Boolean(user?.isDriver);
 
@@ -36,7 +38,7 @@ export const Header = () => {
         </div>
       </div>
 
-      {/* Acciones de Cabecera: Selector Interactivo de Rol */}
+      {/* Acciones de Cabecera: Rol + Campana de Notificaciones + Perfil */}
       <div className="flex items-center gap-2">
         <button
           onClick={manejarClickRol}
@@ -60,6 +62,17 @@ export const Header = () => {
           )}
         </button>
 
+        {/* Campana de Notificaciones con Badge */}
+        <button
+          type="button"
+          onClick={() => setModalNotifAbierto(true)}
+          className="relative p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+          title="Centro de Notificaciones"
+        >
+          <Bell className="w-4 h-4" />
+          <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-lochmara-600 rounded-full border-2 border-white animate-pulse" />
+        </button>
+
         {/* Foto de Perfil del Usuario */}
         <button
           onClick={() => setActiveTab('profile')}
@@ -80,6 +93,12 @@ export const Header = () => {
         </button>
       </div>
 
+      {/* Modal de Notificaciones */}
+      <NotificationCenterModal
+        isOpen={modalNotifAbierto}
+        onClose={() => setModalNotifAbierto(false)}
+      />
+
       {/* Modal de Invitación a Registro de Conductor si aún no está verificado */}
       <DriverInviteModal
         isOpen={modalRegistroAbierto}
@@ -92,3 +111,4 @@ export const Header = () => {
     </header>
   );
 };
+
