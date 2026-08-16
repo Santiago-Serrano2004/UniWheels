@@ -6,6 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import {
   Car,
+  Bike,
   ShieldCheck,
   CheckCircle2,
   CalendarCheck,
@@ -64,20 +65,89 @@ const MAP_STYLES = [
   },
 ];
 
-// Pines vectoriales personalizados con CSS dinámico
-const createCustomPin = (bgColor, iconText, borderColor = '#ffffff', isVehicle = false, heading = 0) =>
+// Modelo Vectorial SVG Superior de Carro (Alta Definición)
+const createCarVehicleMarker = (heading = 0, isMoving = false, color = '#0284c7') =>
+  L.divIcon({
+    className: 'custom-vehicle-marker',
+    html: `
+      <div style="position: relative; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; transform: rotate(${heading}deg); transition: transform 0.08s linear;">
+        ${isMoving ? '<div class="gps-beacon-ring"></div>' : ''}
+        <svg width="46" height="46" viewBox="0 0 100 100" fill="none" style="filter: drop-shadow(0 6px 12px rgba(0,0,0,0.45));">
+          <!-- Cono de iluminación de faros delanteros -->
+          ${isMoving ? '<polygon points="50,15 18,-15 82,-15" fill="rgba(254,240,138,0.38)"/>' : ''}
+          <!-- Ruedas -->
+          <rect x="22" y="24" width="9" height="18" rx="3.5" fill="#0f172a"/>
+          <rect x="69" y="24" width="9" height="18" rx="3.5" fill="#0f172a"/>
+          <rect x="22" y="62" width="9" height="18" rx="3.5" fill="#0f172a"/>
+          <rect x="69" y="62" width="9" height="18" rx="3.5" fill="#0f172a"/>
+          <!-- Chasis aerodinámico -->
+          <rect x="27" y="14" width="46" height="74" rx="15" fill="${color}" stroke="#ffffff" stroke-width="2.8"/>
+          <!-- Parabrisas Delantero -->
+          <path d="M 33 34 Q 50 28 67 34 L 64 45 Q 50 41 36 45 Z" fill="#e0f2fe" opacity="0.95"/>
+          <!-- Techo panorámico -->
+          <rect x="34" y="45" width="32" height="22" rx="6" fill="rgba(0,0,0,0.18)"/>
+          <!-- Parabrisas Trasero -->
+          <path d="M 36 69 Q 50 66 64 69 L 62 75 Q 50 73 38 75 Z" fill="#bae6fd" opacity="0.9"/>
+          <!-- Faros delanteros LED -->
+          <circle cx="34" cy="18" r="3.5" fill="#fef08a" stroke="#ca8a04" stroke-width="0.8"/>
+          <circle cx="66" cy="18" r="3.5" fill="#fef08a" stroke="#ca8a04" stroke-width="0.8"/>
+          <!-- Luces de freno traseras -->
+          <rect x="32" y="84" width="8" height="3" rx="1.5" fill="#ef4444"/>
+          <rect x="60" y="84" width="8" height="3" rx="1.5" fill="#ef4444"/>
+        </svg>
+      </div>
+    `,
+    iconSize: [48, 48],
+    iconAnchor: [24, 24],
+  });
+
+// Modelo Vectorial SVG Superior de Motocicleta (Alta Definición)
+const createMotoVehicleMarker = (heading = 0, isMoving = false, color = '#f59e0b') =>
+  L.divIcon({
+    className: 'custom-vehicle-marker',
+    html: `
+      <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; transform: rotate(${heading}deg); transition: transform 0.08s linear;">
+        ${isMoving ? '<div class="gps-beacon-ring" style="background: rgba(245, 158, 11, 0.45);"></div>' : ''}
+        <svg width="42" height="42" viewBox="0 0 100 100" fill="none" style="filter: drop-shadow(0 6px 12px rgba(0,0,0,0.45));">
+          <!-- Haz de luz del faro -->
+          ${isMoving ? '<polygon points="50,14 24,-12 76,-12" fill="rgba(254,240,138,0.42)"/>' : ''}
+          <!-- Rueda delantera -->
+          <rect x="46" y="8" width="8" height="22" rx="3.5" fill="#0f172a" stroke="#64748b" stroke-width="1"/>
+          <!-- Manubrio y Espejos -->
+          <rect x="27" y="25" width="46" height="4.5" rx="2" fill="#334155" stroke="#ffffff" stroke-width="1"/>
+          <circle cx="27" cy="27" r="3.5" fill="${color}"/>
+          <circle cx="73" cy="27" r="3.5" fill="${color}"/>
+          <!-- Tanque de combustible y chasis -->
+          <path d="M 43 32 Q 50 26 57 32 L 60 48 Q 50 53 40 48 Z" fill="${color}" stroke="#ffffff" stroke-width="2"/>
+          <!-- Casco del Piloto con Visor -->
+          <circle cx="50" cy="52" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.8"/>
+          <path d="M 43 49 Q 50 45 57 49 L 56 53 Q 50 50 44 53 Z" fill="#38bdf8"/>
+          <!-- Chaqueta / Torso del conductor -->
+          <path d="M 37 61 Q 50 57 63 61 L 59 71 Q 50 68 41 71 Z" fill="#1e293b"/>
+          <!-- Rueda trasera y escape -->
+          <rect x="46" y="70" width="8" height="24" rx="3.5" fill="#0f172a" stroke="#64748b" stroke-width="1"/>
+          <rect x="56" y="72" width="3.5" height="15" rx="1.5" fill="#94a3b8"/>
+          <!-- Luz stop trasera -->
+          <circle cx="50" cy="92" r="3" fill="#ef4444"/>
+        </svg>
+      </div>
+    `,
+    iconSize: [44, 44],
+    iconAnchor: [22, 22],
+  });
+
+const createCustomPin = (bgColor, iconText, borderColor = '#ffffff') =>
   L.divIcon({
     className: 'custom-leaflet-marker',
     html: `
-      <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;">
-        ${isVehicle ? '<div class="gps-beacon-ring"></div>' : ''}
-        <div style="background-color: ${bgColor}; width: 36px; height: 36px; border-radius: 50%; border: 3px solid ${borderColor}; box-shadow: 0 4px 14px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; transform: rotate(${heading}deg); transition: transform 0.3s ease;">
+      <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px;">
+        <div style="background-color: ${bgColor}; width: 36px; height: 36px; border-radius: 50%; border: 3px solid ${borderColor}; box-shadow: 0 4px 14px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer;">
           ${iconText}
         </div>
       </div>
     `,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
   });
 
 const pickupIcon = createCustomPin('#f59e0b', '📍', '#fef3c7');
@@ -86,7 +156,7 @@ const campusIcon = createCustomPin('#082f49', '🎓', '#ffffff');
 
 const TOMTOM_KEY = import.meta.env.VITE_TOMTOM_API_KEY || '';
 
-// Componente para capturar clics en el mapa y mover el punto de recogida
+// Componente para capturar clics en el mapa
 const MapClickHandler = ({ onLocationSelect }) => {
   useMapEvents({
     click(e) {
@@ -120,6 +190,13 @@ async function fetchRoadGeometry(points) {
   return points;
 }
 
+// Suavizado angular de rumbo (Lerp más corto)
+function lerpAngle(current, target, factor = 0.18) {
+  let diff = ((target - current + 180) % 360) - 180;
+  if (diff < -180) diff += 360;
+  return current + diff * factor;
+}
+
 export const TripMapView = () => {
   const {
     user,
@@ -140,6 +217,7 @@ export const TripMapView = () => {
   const [selectedStyleId, setSelectedStyleId] = useState('positron');
   const [showStyleModal, setShowStyleModal] = useState(false);
   const [showTrafficLayer, setShowTrafficLayer] = useState(true);
+  const [vehicleType, setVehicleType] = useState('car'); // 'car' | 'motorcycle'
 
   // Estados de telemetría y ruteo
   const [selectedPickup, setSelectedPickup] = useState([7.1186, -73.1102]); // Parque San Pío
@@ -157,12 +235,18 @@ export const TripMapView = () => {
   });
   const [isLoadingEvaluation, setIsLoadingEvaluation] = useState(false);
 
-  // Simulación de vehículo GPS en movimiento
+  // Animación continua a 60 FPS con Interpolación Lineal (LERP)
   const [isSimulatingGps, setIsSimulatingGps] = useState(false);
   const [vehiclePos, setVehiclePos] = useState(driverOrigin);
   const [vehicleHeading, setVehicleHeading] = useState(0);
-  const simIndexRef = useRef(0);
-  const simTimerRef = useRef(null);
+
+  const animStateRef = useRef({
+    progressIndex: 0,
+    subT: 0,
+    currentHeading: 0,
+    targetHeading: 0,
+    animFrameId: null,
+  });
 
   const activeStyle = MAP_STYLES.find((s) => s.id === selectedStyleId) || MAP_STYLES[0];
 
@@ -209,7 +293,7 @@ export const TripMapView = () => {
           setMatchingData({
             modality: topMatch.modality || 'modalidad_2_desvio',
             detour_minutes: topMatch.detour_minutes ?? 4.0,
-            suggested_fare_cop: topMatch.suggested_fare_cop ?? 4500,
+            suggested_fare_cop: topMatch.suggested_fare_cop ?? (vehicleType === 'motorcycle' ? 3500 : 4500),
             traffic_status: topMatch.traffic_status || 'Telemetría TomTom en vivo',
             traffic_source: topMatch.traffic_source || 'tomtom_live',
             is_viable: topMatch.is_viable !== false,
@@ -217,10 +301,11 @@ export const TripMapView = () => {
           });
         } else {
           const esDirecto = Math.abs(coords[0] - 7.0856) < 0.003;
+          const basePrice = vehicleType === 'motorcycle' ? 3500 : 4500;
           setMatchingData({
             modality: esDirecto ? 'modalidad_1_directa' : 'modalidad_2_desvio',
             detour_minutes: esDirecto ? 0.0 : 4.2,
-            suggested_fare_cop: esDirecto ? 4500 : 5700,
+            suggested_fare_cop: esDirecto ? basePrice : basePrice + 1200,
             traffic_status: 'Tráfico fluido en tiempo real',
             traffic_source: 'tomtom_live',
             is_viable: true,
@@ -233,68 +318,93 @@ export const TripMapView = () => {
         setIsLoadingEvaluation(false);
       }
     },
-    [driverOrigin, campusDestination]
+    [driverOrigin, campusDestination, vehicleType]
   );
 
   useEffect(() => {
     handleSelectPickup(selectedPickup, pickupName);
-  }, []);
+  }, [vehicleType]);
 
-  // 3. Simulación de movimiento GPS fluido sobre la polilínea
-  const toggleGpsSimulation = () => {
-    if (isSimulatingGps) {
-      clearInterval(simTimerRef.current);
-      setIsSimulatingGps(false);
-      return;
-    }
-
+  // 3. Bucle de animación fluida a 60 FPS (Interpolación continua LERP)
+  const startSmoothGpsSimulation = () => {
     const activePath =
-      matchingData.modality === 'modalidad_2_desvio' && detourRouteCoords.length > 0
+      matchingData.modality === 'modalidad_2_desvio' && detourRouteCoords.length > 1
         ? detourRouteCoords
         : mainRouteCoords;
 
     if (!activePath || activePath.length < 2) return;
 
     setIsSimulatingGps(true);
-    simIndexRef.current = 0;
 
-    simTimerRef.current = setInterval(() => {
-      if (simIndexRef.current >= activePath.length - 1) {
-        simIndexRef.current = 0;
-      } else {
-        simIndexRef.current += 1;
+    const stepSpeed = vehicleType === 'motorcycle' ? 0.065 : 0.045; // Velocidad de avance por frame
+
+    const animateFrame = () => {
+      const state = animStateRef.current;
+      state.subT += stepSpeed;
+
+      if (state.subT >= 1.0) {
+        state.subT = 0;
+        state.progressIndex = (state.progressIndex + 1) % (activePath.length - 1);
       }
 
-      const current = activePath[simIndexRef.current];
-      const next = activePath[Math.min(simIndexRef.current + 1, activePath.length - 1)];
+      const p1 = activePath[state.progressIndex];
+      const p2 = activePath[Math.min(state.progressIndex + 1, activePath.length - 1)];
 
-      // Calcular rumbo (heading)
-      const dLat = next[0] - current[0];
-      const dLng = next[1] - current[1];
-      const angle = (Math.atan2(dLng, dLat) * 180) / Math.PI;
+      // Interpolación lineal exacta
+      const lat = p1[0] + (p2[0] - p1[0]) * state.subT;
+      const lng = p1[1] + (p2[1] - p1[1]) * state.subT;
 
-      setVehiclePos(current);
-      setVehicleHeading(angle);
-    }, 280);
+      // Cálculo y suavizado del rumbo (Bearing angle)
+      const dLat = p2[0] - p1[0];
+      const dLng = p2[1] - p1[1];
+      if (Math.abs(dLat) > 0.00001 || Math.abs(dLng) > 0.00001) {
+        state.targetHeading = (Math.atan2(dLng, dLat) * 180) / Math.PI;
+      }
+      state.currentHeading = lerpAngle(state.currentHeading, state.targetHeading, 0.2);
+
+      setVehiclePos([lat, lng]);
+      setVehicleHeading(state.currentHeading);
+
+      state.animFrameId = requestAnimationFrame(animateFrame);
+    };
+
+    animStateRef.current.animFrameId = requestAnimationFrame(animateFrame);
+  };
+
+  const stopSmoothGpsSimulation = () => {
+    if (animStateRef.current.animFrameId) {
+      cancelAnimationFrame(animStateRef.current.animFrameId);
+      animStateRef.current.animFrameId = null;
+    }
+    setIsSimulatingGps(false);
+  };
+
+  const toggleGpsSimulation = () => {
+    if (isSimulatingGps) {
+      stopSmoothGpsSimulation();
+    } else {
+      startSmoothGpsSimulation();
+    }
   };
 
   useEffect(() => {
     return () => {
-      if (simTimerRef.current) clearInterval(simTimerRef.current);
+      if (animStateRef.current.animFrameId) {
+        cancelAnimationFrame(animStateRef.current.animFrameId);
+      }
     };
   }, []);
 
   const manejarReserva = async () => {
     try {
-      // Guardar en trip-service (puerto 8004)
       await tripLifecycleService.bookTrip({
         route_id: '01a00000-0000-0000-0000-000000000001',
         driver_id: '01a00000-0000-0000-0000-000000000002',
         passenger_id: user?.id || '01a00000-0000-0000-0000-000000000003',
-        driver_name: 'Carlos Mendoza',
+        driver_name: vehicleType === 'motorcycle' ? 'Mateo Silva' : 'Carlos Mendoza',
         passenger_name: user?.name || 'Pasajero UniWheels',
-        vehicle_plate: 'KLU-492',
-        vehicle_model: 'Mazda 3 (Rojo)',
+        vehicle_plate: vehicleType === 'motorcycle' ? 'WTR-82F' : 'KLU-492',
+        vehicle_model: vehicleType === 'motorcycle' ? 'Yamaha MT-03 (Negra)' : 'Mazda 3 (Rojo)',
         pickup_address: pickupName,
         dropoff_address: campusName,
         total_fare_cop: matchingData.suggested_fare_cop,
@@ -302,13 +412,13 @@ export const TripMapView = () => {
         boarding_pin: '4829',
       });
     } catch {
-      // Fallback transparente
+      // Fallback
     }
 
     bookPassengerTrip({
-      driverName: 'Carlos Mendoza',
-      vehicle: 'Mazda 3 (Rojo)',
-      plate: 'KLU-492',
+      driverName: vehicleType === 'motorcycle' ? 'Mateo Silva' : 'Carlos Mendoza',
+      vehicle: vehicleType === 'motorcycle' ? 'Yamaha MT-03 (Negra)' : 'Mazda 3 (Rojo)',
+      plate: vehicleType === 'motorcycle' ? 'WTR-82F' : 'KLU-492',
       origin: 'Cañaveral (Floridablanca)',
       pickup: pickupName,
       destination: campusName,
@@ -354,21 +464,21 @@ export const TripMapView = () => {
             <Polyline
               positions={mainRouteCoords}
               pathOptions={{
-                color: '#0284c7',
+                color: vehicleType === 'motorcycle' ? '#f59e0b' : '#0284c7',
                 weight: 6,
-                opacity: 0.45,
+                opacity: 0.4,
                 lineCap: 'round',
                 lineJoin: 'round',
               }}
             />
           )}
 
-          {/* Polilínea Vehicular Real con Flujo Animado (Azul Lochmara) */}
+          {/* Polilínea Vehicular Real con Flujo Animado */}
           {mainRouteCoords.length > 1 && (
             <Polyline
               positions={mainRouteCoords}
               pathOptions={{
-                color: '#0284c7',
+                color: vehicleType === 'motorcycle' ? '#f59e0b' : '#0284c7',
                 weight: 4,
                 opacity: 0.95,
                 dashArray: '10, 10',
@@ -379,7 +489,7 @@ export const TripMapView = () => {
             />
           )}
 
-          {/* Polilínea Vehicular Real del Desvío de IA (Ámbar punteado si aplica Modalidad 2) */}
+          {/* Polilínea Vehicular Real del Desvío de IA */}
           {matchingData.modality === 'modalidad_2_desvio' && detourRouteCoords.length > 1 && (
             <Polyline
               positions={detourRouteCoords}
@@ -394,17 +504,23 @@ export const TripMapView = () => {
             />
           )}
 
-          {/* Marcador del Vehículo en Vivo (Con rumbo y faro de pulsación) */}
+          {/* Marcador del Vehículo en Vivo (Modelo Carro o Moto de Alta Definición) */}
           <Marker
             position={vehiclePos}
-            icon={createCustomPin('#0284c7', '🚗', '#ffffff', isSimulatingGps, vehicleHeading)}
+            icon={
+              vehicleType === 'motorcycle'
+                ? createMotoVehicleMarker(vehicleHeading, isSimulatingGps, '#f59e0b')
+                : createCarVehicleMarker(vehicleHeading, isSimulatingGps, '#0284c7')
+            }
           >
             <Popup>
-              <strong>🚗 Conductor en Vivo: Carlos Mendoza</strong>
+              <strong>{vehicleType === 'motorcycle' ? '🏍️ Moto: Yamaha MT-03' : '🚗 Carro: Mazda 3'}</strong>
               <br />
-              Mazda 3 (Rojo) • <strong>KLU-492</strong>
+              Conductor: <strong>{vehicleType === 'motorcycle' ? 'Mateo Silva' : 'Carlos Mendoza'}</strong>
               <br />
-              {isSimulatingGps ? '⚡ Vehículo en movimiento' : '📍 Punto de partida: Cañaveral'}
+              Placa: <strong>{vehicleType === 'motorcycle' ? 'WTR-82F' : 'KLU-492'}</strong>
+              <br />
+              {isSimulatingGps ? '⚡ En movimiento a 60 FPS' : '📍 Punto de partida: Cañaveral'}
             </Popup>
           </Marker>
 
@@ -442,71 +558,103 @@ export const TripMapView = () => {
             <span className="font-semibold">{matchingData.traffic_status}</span>
           </div>
 
-          {/* Botones de Control: Estilo de Mapa + Simulación GPS + Tráfico TomTom */}
-          <div className="flex items-center gap-1.5">
+          {/* Selector de Tipo de Vehículo: Carro / Moto */}
+          <div className="flex items-center bg-white/90 backdrop-blur-md border border-slate-200/90 rounded-full p-0.5 shadow-md">
+            <button
+              type="button"
+              onClick={() => setVehicleType('car')}
+              className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                vehicleType === 'car'
+                  ? 'bg-lochmara-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Car className="w-3.5 h-3.5" />
+              <span>Carro</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setVehicleType('motorcycle')}
+              className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                vehicleType === 'motorcycle'
+                  ? 'bg-amber-500 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Bike className="w-3.5 h-3.5" />
+              <span>Moto</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Barra de Acciones del Mapa */}
+        <div className="flex items-center justify-between gap-2">
+          {/* Puntos Rápidos de Abordaje */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+            {quickPoints.map((pt) => {
+              const isSelected = pickupName === pt.name;
+              return (
+                <button
+                  key={pt.name}
+                  type="button"
+                  onClick={() => handleSelectPickup(pt.coords, pt.name)}
+                  className={`px-3 py-1 rounded-full text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer shadow-sm border ${
+                    isSelected
+                      ? 'bg-lochmara-600 text-white border-lochmara-500 shadow-lochmara-600/30'
+                      : 'bg-white/90 text-slate-700 border-slate-200/90 hover:bg-white'
+                  }`}
+                >
+                  {pt.name}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Botones de Estilo de Mapa + GPS + Tráfico */}
+          <div className="flex items-center gap-1.5 shrink-0">
             {/* Selector de Estilo de Mapa */}
             <button
               type="button"
               onClick={() => setShowStyleModal(true)}
-              className="p-2 rounded-full bg-white/90 hover:bg-white text-slate-700 border border-slate-200/90 shadow-md backdrop-blur-md transition-all cursor-pointer"
-              title="Cambiar estilo gráfico del mapa"
+              className="p-1.5 rounded-full bg-white/90 hover:bg-white text-slate-700 border border-slate-200/90 shadow-md backdrop-blur-md transition-all cursor-pointer"
+              title="Estilo gráfico del mapa"
             >
               <Layers className="w-3.5 h-3.5" />
             </button>
 
-            {/* Botón Simulación GPS en Vivo */}
+            {/* Botón Simulación GPS Ultra Fluida a 60 FPS */}
             <button
               type="button"
               onClick={toggleGpsSimulation}
-              className={`px-3 py-1.5 rounded-full shadow-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer backdrop-blur-md border ${
+              className={`px-2.5 py-1 rounded-full shadow-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer backdrop-blur-md border ${
                 isSimulatingGps
                   ? 'bg-emerald-600 text-white border-emerald-500 shadow-emerald-600/30'
                   : 'bg-white/90 text-slate-700 border-slate-200 hover:bg-white'
               }`}
             >
               {isSimulatingGps ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
-              <span>{isSimulatingGps ? 'Pausar GPS' : 'GPS en Vivo'}</span>
+              <span>{isSimulatingGps ? 'Pausar' : 'GPS en Vivo'}</span>
             </button>
 
             {/* Toggle Tráfico TomTom */}
             <button
               type="button"
               onClick={() => setShowTrafficLayer(!showTrafficLayer)}
-              className={`px-3 py-1.5 rounded-full shadow-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer backdrop-blur-md border ${
+              className={`p-1.5 rounded-full shadow-md text-xs font-bold flex items-center transition-all cursor-pointer backdrop-blur-md border ${
                 showTrafficLayer
-                  ? 'bg-amber-500 text-white border-amber-400 shadow-amber-500/20'
+                  ? 'bg-amber-500 text-white border-amber-400'
                   : 'bg-white/90 text-slate-700 border-slate-200 hover:bg-white'
               }`}
+              title="Alternar capa de tráfico TomTom"
             >
               <Activity className={`w-3.5 h-3.5 ${showTrafficLayer ? 'animate-pulse' : ''}`} />
-              <span>Tráfico {showTrafficLayer ? 'ON' : 'OFF'}</span>
             </button>
           </div>
         </div>
-
-        {/* Puntos Rápidos de Abordaje */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-          {quickPoints.map((pt) => {
-            const isSelected = pickupName === pt.name;
-            return (
-              <button
-                key={pt.name}
-                type="button"
-                onClick={() => handleSelectPickup(pt.coords, pt.name)}
-                className={`px-3 py-1 rounded-full text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer shadow-sm border ${
-                  isSelected
-                    ? 'bg-lochmara-600 text-white border-lochmara-500 shadow-lochmara-600/30'
-                    : 'bg-white/90 text-slate-700 border-slate-200/90 hover:bg-white'
-                }`}
-              >
-                {pt.name}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
-      {/* Modal / Menú Selector de Estilo de Mapa */}
+      {/* Modal Selector de Estilo de Mapa */}
       <AnimatePresence>
         {showStyleModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
@@ -524,7 +672,7 @@ export const TripMapView = () => {
                 <button
                   type="button"
                   onClick={() => setShowStyleModal(false)}
-                  className="text-slate-400 hover:text-slate-600 text-xs font-bold"
+                  className="text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
                 >
                   ✕
                 </button>
@@ -618,16 +766,20 @@ export const TripMapView = () => {
             {/* Cabecera del Conductor y Tarifa */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-lochmara-100 text-lochmara-800 font-extrabold text-sm flex items-center justify-center border border-lochmara-200">
-                  CM
+                <div className={`w-10 h-10 rounded-2xl ${vehicleType === 'motorcycle' ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-lochmara-100 text-lochmara-800 border-lochmara-200'} font-extrabold text-sm flex items-center justify-center border`}>
+                  {vehicleType === 'motorcycle' ? 'MS' : 'CM'}
                 </div>
                 <div>
                   <div className="flex items-center gap-1">
-                    <span className="text-xs font-bold text-slate-900">Carlos Mendoza</span>
+                    <span className="text-xs font-bold text-slate-900">
+                      {vehicleType === 'motorcycle' ? 'Mateo Silva' : 'Carlos Mendoza'}
+                    </span>
                     <ShieldCheck className="w-3.5 h-3.5 text-lochmara-600" />
                   </div>
                   <p className="text-[11px] text-slate-600">
-                    Mazda 3 • <span className="font-bold">KLU-492</span> (3 cupos libres)
+                    {vehicleType === 'motorcycle' ? 'Yamaha MT-03 • ' : 'Mazda 3 • '}
+                    <span className="font-bold">{vehicleType === 'motorcycle' ? 'WTR-82F' : 'KLU-492'}</span>
+                    <span className="text-slate-400"> ({vehicleType === 'motorcycle' ? '1 cupo libre' : '3 cupos libres'})</span>
                   </p>
                 </div>
               </div>
@@ -676,8 +828,8 @@ export const TripMapView = () => {
               disabled={isLoadingEvaluation}
               className="w-full py-3 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-lochmara-600/30 disabled:opacity-50"
             >
-              <Car className="w-4 h-4" />
-              <span>{isLoadingEvaluation ? 'Calculando con IA...' : 'Confirmar y Reservar Cupo'}</span>
+              {vehicleType === 'motorcycle' ? <Bike className="w-4 h-4" /> : <Car className="w-4 h-4" />}
+              <span>{isLoadingEvaluation ? 'Calculando con IA...' : `Confirmar y Reservar Cupo en ${vehicleType === 'motorcycle' ? 'Moto' : 'Carro'}`}</span>
             </button>
           </>
         )}
