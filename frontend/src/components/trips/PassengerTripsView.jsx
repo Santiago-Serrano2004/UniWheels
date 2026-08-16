@@ -77,21 +77,10 @@ export const PassengerTripsView = () => {
   };
 
   return (
-    <div className="space-y-4 pb-6 select-none">
-      {/* Cabecera */}
-      <div className="bg-gradient-to-br from-[#082f49] via-slate-900 to-slate-950 text-white rounded-3xl p-5 shadow-md space-y-1">
-        <span className="text-[10px] uppercase tracking-wider font-extrabold text-lochmara-300">
-          Mis Reservas y Viajes
-        </span>
-        <h2 className="text-lg font-extrabold">Tus Recorridos Universitarios</h2>
-        <p className="text-xs text-slate-300">
-          Consulta tu reserva activa en vivo y el historial de viajes completados.
-        </p>
-      </div>
-
-      {/* 1. SECCIÓN DE VIAJE ACTIVO SI EXISTE */}
-      {activePassengerBooking ? (
-        <section className="bg-gradient-to-br from-slate-900 via-[#082f49] to-slate-950 text-white rounded-3xl p-5 shadow-lg border border-slate-800 space-y-4">
+    <div className="space-y-3 pb-6 select-none">
+      {/* 1. SECCIÓN DE VIAJE ACTIVO (Solo si existe reserva en curso) */}
+      {activePassengerBooking && (
+        <section className="bg-gradient-to-br from-slate-900 via-[#082f49] to-slate-950 text-white rounded-3xl p-5 shadow-lg border border-slate-800 space-y-4 mb-2">
           <div className="flex items-center justify-between">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[11px] font-bold">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -174,26 +163,6 @@ export const PassengerTripsView = () => {
             <span>Cancelar Mi Reserva de Cupo</span>
           </button>
         </section>
-      ) : (
-        /* Tarjeta de No Viajes Activos con CTA */
-        <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-2xs text-center space-y-3">
-          <div className="w-11 h-11 rounded-2xl bg-lochmara-50 border border-lochmara-200 text-lochmara-600 flex items-center justify-center mx-auto shadow-2xs">
-            <CalendarCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-xs font-bold text-slate-900">No tienes reservas activas</h3>
-            <p className="text-[11px] text-slate-500 max-w-xs mx-auto mt-0.5">
-              Busca conductores de tu institución que compartan ruta hacia tu campus.
-            </p>
-          </div>
-          <button
-            onClick={() => setActiveTab('map')}
-            className="w-full py-2.5 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-bold transition-all shadow-md shadow-lochmara-600/20 cursor-pointer flex items-center justify-center gap-1.5"
-          >
-            <span>Buscar Rutas Disponibles</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
       )}
 
       {/* 2. HISTORIAL DE VIAJES COMPLETADOS DEL PASAJERO */}
