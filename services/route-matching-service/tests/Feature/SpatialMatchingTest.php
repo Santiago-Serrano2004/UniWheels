@@ -359,6 +359,66 @@ class SpatialMatchingTest extends TestCase
     }
 
     /**
+     * 13. Telemetría en Vivo: Detecta vía cerrada por TomTom y rechaza el desvío
+     */
+    public function test_detecta_via_cerrada_en_tiempo_real_y_rechaza_el_desvio(): void
+    {
+        \Illuminate\Support\Facades\Http::fake([
+            'https://api.tomtom.com/*' => \Illuminate\Support\Facades\Http::response([
+                'flowSegmentData' => [
+                    'currentSpeed' => 0.0,
+                    'freeFlowSpeed' => 45.0,
+                    'roadClosure' => true, // VÍA CERRADA EN VIVO
+                    'currentTravelTime' => 9999,
+                    'freeFlowTravelTime' => 100,
+                ],
+            ], 200),
+        ]);
+
+        \Illuminate\Support\Facades\Cache::flush();
+        $trafficService = (new \App\Services\LiveTrafficService())->setApiKey('fake_live_key');
+        $matching = new \App\Services\SpatialMatchingService($this->spatialRepo, app(\App\Services\OsrmRoutingService::class), $trafficService);
+
+        $ruta = $this->crearRutaBase('Cañaveral', 6, 45, 7, 30, 20.0, 4500);
+
+        $evaluacion = $matching->evaluateRouteDetourForPassenger($ruta, 7.1186, -73.1102);
+
+        $this->assertFalse($evaluacion['is_viable']);
+        $this->assertStringContainsString('cerrado por obras o accidente', $evaluacion['rejection_reason']);
+        $this->assertTrue($evaluacion['traffic_info']['has_road_closure']);
+    }
+
+    /**
+     * 14. Telemetría en Vivo: Ingesta de congestión severa en tiempo real (TomTom API)
+     */
+    public function test_ingesta_factor_de_congestion_severa_en_vivo(): void
+    {
+        \Illuminate\Support\Facades\Http::fake([
+            'https://api.tomtom.com/*' => \Illuminate\Support\Facades\Http::response([
+                'flowSegmentData' => [
+                    'currentSpeed' => 15.0,
+                    'freeFlowSpeed' => 45.0,
+                    'roadClosure' => false,
+                    'currentTravelTime' => 200.0,
+                    'freeFlowTravelTime' => 100.0, // Factor de congestión = 2.0x
+                ],
+            ], 200),
+        ]);
+
+        \Illuminate\Support\Facades\Cache::flush();
+        $trafficService = (new \App\Services\LiveTrafficService())->setApiKey('fake_live_key');
+        $matching = new \App\Services\SpatialMatchingService($this->spatialRepo, app(\App\Services\OsrmRoutingService::class), $trafficService);
+
+        $ruta = $this->crearRutaBase('Cañaveral', 10, 0, 11, 0, 20.0, 4500); // 10:00 AM hora valle normalmente 1.05x
+
+        $evaluacion = $matching->evaluateRouteDetourForPassenger($ruta, 7.1186, -73.1102);
+
+        $this->assertTrue($evaluacion['is_viable']);
+        $this->assertEquals(2.0, $evaluacion['traffic_info']['congestion_factor']);
+        $this->assertEquals('tomtom_live', $evaluacion['traffic_info']['source']);
+    }
+
+    /**
      * Helper para crear rutas con geometría en tests
      */
     protected function crearRutaBase(

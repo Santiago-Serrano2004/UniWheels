@@ -9,9 +9,9 @@ use Illuminate\Support\Collection;
 /**
  * Servicio de Emparejamiento Geoespacial e Inteligencia de Desvío (Fase 04)
  * 
- * Orquesta la poda espacial PostGIS, el ruteo topológico OSRM y la evaluación
- * de restricciones duras para clasificar las coincidencias en Modalidad 1
- * (Match en ruta, 0 min) y Modalidad 2 (Desvío optimizado con IA).
+ * Orquesta la poda espacial PostGIS, el ruteo topológico OSRM y la telemetría
+ * en tiempo real de TomTom Traffic API (congestión y vías cerradas) para clasificar
+ * y evaluar coincidencias en Modalidad 1 (En ruta) y Modalidad 2 (Desvío con IA).
  */
 class SpatialMatchingService
 {
@@ -23,7 +23,8 @@ class SpatialMatchingService
 
     public function __construct(
         protected PostGisSpatialRepository $spatialRepo,
-        protected OsrmRoutingService $routingService
+        protected OsrmRoutingService $routingService,
+        protected LiveTrafficService $trafficService
     ) {}
 
     /**
@@ -83,7 +84,7 @@ class SpatialMatchingService
                         ->toISOString(),
                 ];
             } else {
-                // MODALIDAD 2: Desvío asistido por IA
+                // MODALIDAD 2: Desvío asistido por IA con telemetría de tráfico en vivo
                 $evaluacion = $this->evaluateRouteDetourForPassenger($ruta, $pickupLat, $pickupLng);
 
                 if ($evaluacion['is_viable']) {
@@ -103,6 +104,8 @@ class SpatialMatchingService
                         'distance_to_pickup_meters' => round($distanciaMetros, 0),
                         'suggested_fare_cop' => $evaluacion['total_suggested_fare_cop'],
                         'is_viable' => true,
+                        'traffic_status' => $evaluacion['traffic_info']['description'] ?? 'Tráfico normal',
+                        'traffic_source' => $evaluacion['traffic_info']['source'] ?? 'hourly_model',
                         'detour_breakdown' => $evaluacion,
                         'estimated_arrival_time' => $evaluacion['estimated_arrival_time'],
                     ];
@@ -126,19 +129,38 @@ class SpatialMatchingService
      */
     public function evaluateRouteDetourForPassenger(Route $route, float $pickupLat, float $pickupLng): array
     {
+        // 1. Ingesta de Tráfico en Vivo y Verificación de Vías Cerradas (TomTom Traffic)
+        $trafficInfo = $this->trafficService->getTrafficConditions(
+            $pickupLat,
+            $pickupLng,
+            $route->scheduled_departure_time
+        );
+
+        // Si la vía está reportada como cerrada por obras/accidente, rechazar el desvío
+        if (!empty($trafficInfo['has_road_closure'])) {
+            return [
+                'is_viable' => false,
+                'rejection_reason' => 'El punto de recogida seleccionado se encuentra en un tramo vial reportado como cerrado por obras o accidente en tiempo real.',
+                'detour_minutes' => 0.0,
+                'traffic_info' => $trafficInfo,
+            ];
+        }
+
         $coordenadasRuta = $this->spatialRepo->getRouteCoordinates($route->id);
 
         if (!$coordenadasRuta || count($coordenadasRuta) < 2) {
-            // Si no hay polilínea previa, estimar desvío por distancia
             $distanciaMetros = (float) ($route->distance_to_route_meters ?? 500.0);
-            $minutosDesvio = max(1.5, ($distanciaMetros / 1000.0) / 0.45); // ~27 km/h
-            return $this->evaluateDetour($route, $pickupLat, $pickupLng, $minutosDesvio);
+            $minutosDesvio = max(1.5, ($distanciaMetros / 1000.0) / 0.45);
+            $desvioConTrafico = $minutosDesvio * $trafficInfo['congestion_factor'];
+            $res = $this->evaluateDetour($route, $pickupLat, $pickupLng, $desvioConTrafico);
+            $res['traffic_info'] = $trafficInfo;
+            return $res;
         }
 
         $origen = $coordenadasRuta[0];
         $destino = end($coordenadasRuta);
 
-        // 1. Calcular tiempo con la inserción de la parada de recogida
+        // 2. Calcular tiempo con la inserción de la parada de recogida
         $rutaConDesvio = $this->routingService->calculateRoute(
             $origen,
             $destino,
@@ -150,11 +172,13 @@ class SpatialMatchingService
 
         $tiempoDesvioNeto = max(1.0, $duracionConDesvio - $duracionBase);
 
-        // Aplicar factor de tráfico según hora de salida
-        $factorTrafico = $this->getTrafficMultiplier($route->scheduled_departure_time);
-        $tiempoDesvioAjustado = $tiempoDesvioNeto * $factorTrafico;
+        // Aplicar el factor multiplicador de congestión en tiempo real
+        $tiempoDesvioAjustado = $tiempoDesvioNeto * (float) $trafficInfo['congestion_factor'];
 
-        return $this->evaluateDetour($route, $pickupLat, $pickupLng, $tiempoDesvioAjustado);
+        $resultado = $this->evaluateDetour($route, $pickupLat, $pickupLng, $tiempoDesvioAjustado);
+        $resultado['traffic_info'] = $trafficInfo;
+
+        return $resultado;
     }
 
     /**
@@ -208,33 +232,5 @@ class SpatialMatchingService
             'total_suggested_fare_cop' => $tarifaTotalSugerida,
             'estimated_arrival_time' => $horaLlegadaEstimada->toISOString(),
         ];
-    }
-
-    /**
-     * Factor de congestión horaria para Bucaramanga y AMB.
-     */
-    protected function getTrafficMultiplier(Carbon $departureTime): float
-    {
-        $hora = (int) $departureTime->format('H');
-        $minuto = (int) $departureTime->format('i');
-        $tiempoDecimal = $hora + ($minuto / 60.0);
-
-        // Hora pico mañana: 06:45 AM - 08:15 AM
-        if ($tiempoDecimal >= 6.75 && $tiempoDecimal <= 8.25) {
-            return 1.25;
-        }
-
-        // Hora pico mediodía: 11:45 AM - 01:15 PM
-        if ($tiempoDecimal >= 11.75 && $tiempoDecimal <= 13.25) {
-            return 1.20;
-        }
-
-        // Hora pico tarde/noche: 05:30 PM - 07:15 PM
-        if ($tiempoDecimal >= 17.5 && $tiempoDecimal <= 19.25) {
-            return 1.30;
-        }
-
-        // Horario valle estándar
-        return 1.05;
     }
 }
