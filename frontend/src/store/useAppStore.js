@@ -1,70 +1,78 @@
 import { create } from 'zustand';
 
+/**
+ * @file useAppStore.js
+ * @description Gestor de Estado Global para la Aplicación UniWheels (Zustand)
+ * Gestiona autenticación, rol activo (pasajero/conductor), ciclo de vida de viajes activos,
+ * saldo prepago de conductor, reservas y navegación entre vistas.
+ */
+
 // Recuperar sesión previa almacenada localmente en el dispositivo
-const getStoredUser = () => {
+const obtenerSesionAlmacenada = () => {
   try {
-    const data = localStorage.getItem('uniwheels_session');
-    return data ? JSON.parse(data) : null;
+    const sesion = localStorage.getItem('uniwheels_session');
+    return sesion ? JSON.parse(sesion) : null;
   } catch {
     return null;
   }
 };
 
-const initialUser = getStoredUser();
+const usuarioInicial = obtenerSesionAlmacenada();
 
 export const useAppStore = create((set, get) => ({
-  // Estado de Autenticación persistente
-  isAuthenticated: !!initialUser,
-  user: initialUser,
+  // --- AUTENTICACIÓN Y USUARIO ---
+  isAuthenticated: Boolean(usuarioInicial),
+  user: usuarioInicial,
 
-  // Control de Modal de Mascota Institucional de Bienvenida
+  // Modal de Mascota Institucional de Bienvenida
   showWelcomeMascot: false,
   closeWelcomeMascot: () => set({ showWelcomeMascot: false }),
   openWelcomeMascot: () => set({ showWelcomeMascot: true }),
 
-  // Tab activo de navegación: 'home' | 'map' | 'driver' | 'wallet' | 'profile' | 'trips'
+  // --- NAVEGACIÓN Y PESTAÑAS ---
+  // Pestañas disponibles: 'home' | 'map' | 'driver' | 'history' | 'trips' | 'wallet' | 'profile'
   activeTab: 'home',
-  setActiveTab: (tab) => set({ activeTab: tab }),
+  setActiveTab: (pestaña) => set({ activeTab: pestaña }),
 
-  // Rol activo (Solo alternable si el usuario es conductor verificado)
-  activeRole: initialUser?.isDriver ? initialUser?.role || 'passenger' : 'passenger',
+  // --- ROL ACTIVO (Pasajero o Conductor) ---
+  activeRole: usuarioInicial?.isDriver ? usuarioInicial?.role || 'passenger' : 'passenger',
   toggleRole: () =>
     set((state) => {
       if (!state.user?.isDriver) {
         return { activeRole: 'passenger' };
       }
-      const newRole = state.activeRole === 'passenger' ? 'driver' : 'passenger';
-      const updatedUser = { ...state.user, role: newRole };
+      const nuevoRol = state.activeRole === 'passenger' ? 'driver' : 'passenger';
+      const usuarioActualizado = { ...state.user, role: nuevoRol };
       try {
-        localStorage.setItem('uniwheels_session', JSON.stringify(updatedUser));
+        localStorage.setItem('uniwheels_session', JSON.stringify(usuarioActualizado));
       } catch {}
       return {
-        activeRole: newRole,
-        user: updatedUser,
+        activeRole: nuevoRol,
+        user: usuarioActualizado,
         activeTab: 'home', // Al alternar rol, regresar a la pestaña de inicio correspondiente
       };
     }),
 
-  // Estado del Viaje Activo del Conductor (null si no hay viaje publicado)
+  // --- VIAJE ACTIVO DEL CONDUCTOR ---
   activeDriverTrip: null,
 
-  // Estado del Viaje/Reserva Activa del Pasajero (null si no tiene reserva)
+  // --- RESERVA ACTIVA DEL PASAJERO ---
   activePassengerBooking: null,
 
   // Reservar un viaje como pasajero
-  bookPassengerTrip: (tripData) => {
-    const booking = {
+  bookPassengerTrip: (datosViaje) => {
+    const reserva = {
       id: 'book_' + Date.now(),
       bookedAt: new Date().toISOString(),
       status: 'confirmed',
-      boardingPin: '4829', // PIN de abordaje de 4 dígitos para verificación
-      ...tripData,
+      boardingPin: '4829', // PIN de 4 dígitos para verificación en el abordaje
+      ...datosViaje,
     };
     set({
-      activePassengerBooking: booking,
-      activeTab: 'trips',
+      activePassengerBooking: reserva,
+      activeTab: 'history',
     });
-    return booking;
+    return reserva;
   },
 
   // Cancelar reserva de pasajero
@@ -72,60 +80,62 @@ export const useAppStore = create((set, get) => ({
     set({ activePassengerBooking: null });
   },
 
-  // Saldo de Billetera del Conductor (Mínimo requerido para publicar: $ 2.000 COP)
+  // --- BILLETERA PREPAGO DEL CONDUCTOR ---
   driverWalletBalance: 25000,
 
-  // Publicar un nuevo viaje
-  publishDriverTrip: (tripData) => {
-    const newTrip = {
+  // Publicar un nuevo viaje de conductor
+  publishDriverTrip: (datosTrayecto) => {
+    const nuevoViaje = {
       id: 'trip_' + Date.now(),
       createdAt: new Date().toISOString(),
       status: 'active',
-      passengers: [], // Lista de pasajeros confirmados
-      ...tripData,
+      passengers: [], // Pasajeros confirmados
+      ...datosTrayecto,
     };
     set({
-      activeDriverTrip: newTrip,
-      activeTab: 'home', // Llevar al conductor a su panel principal de viaje activo
+      activeDriverTrip: nuevoViaje,
+      activeTab: 'home', // Llevar al conductor a su panel de viaje activo
     });
-    return newTrip;
+    return nuevoViaje;
   },
 
-  // Cancelar viaje del conductor
-  cancelDriverTrip: (applyPenalty = false, penaltyAmount = 3000) => {
-    const currentBalance = get().driverWalletBalance;
-    const newBalance = applyPenalty ? Math.max(0, currentBalance - penaltyAmount) : currentBalance;
+  // Cancelar viaje del conductor (con penalización si tiene pasajeros confirmados)
+  cancelDriverTrip: (aplicarPenalizacion = false, montoPenalizacion = 3000) => {
+    const saldoActual = get().driverWalletBalance;
+    const nuevoSaldo = aplicarPenalizacion
+      ? Math.max(0, saldoActual - montoPenalizacion)
+      : saldoActual;
 
     set({
       activeDriverTrip: null,
-      driverWalletBalance: newBalance,
+      driverWalletBalance: nuevoSaldo,
     });
   },
 
-  // Simular aceptación/adición de pasajero al viaje activo (para pruebas)
-  addPassengerToActiveTrip: (passenger) => {
-    const trip = get().activeDriverTrip;
-    if (!trip) return;
-    const updatedPassengers = [...(trip.passengers || []), passenger];
+  // Simular aceptación de pasajero en el viaje activo (para pruebas)
+  addPassengerToActiveTrip: (pasajero) => {
+    const viaje = get().activeDriverTrip;
+    if (!viaje) return;
+    const pasajerosActualizados = [...(viaje.passengers || []), pasajero];
     set({
       activeDriverTrip: {
-        ...trip,
-        passengers: updatedPassengers,
-        availableSeats: Math.max(0, (trip.seats || trip.availableSeats) - updatedPassengers.length),
+        ...viaje,
+        passengers: pasajerosActualizados,
+        availableSeats: Math.max(0, (viaje.seats || viaje.availableSeats) - pasajerosActualizados.length),
       },
     });
   },
 
   // Recargar Billetera del Conductor
-  rechargeDriverWallet: (amount) => {
+  rechargeDriverWallet: (monto) => {
     set((state) => ({
-      driverWalletBalance: state.driverWalletBalance + Number(amount),
+      driverWalletBalance: state.driverWalletBalance + Number(monto),
     }));
   },
 
   // Iniciar Sesión
-  login: (userData) => {
-    const userToSave = userData || {
+  login: (datosUsuario) => {
+    const usuarioAGuardar = datosUsuario || {
       id: 'u1',
       name: 'Santiago Serrano',
       email: 'sserrano28@unab.edu.co',
@@ -140,42 +150,42 @@ export const useAppStore = create((set, get) => ({
       tripsCount: 0,
     };
 
-    if (!userToSave.isDriver) {
-      userToSave.role = 'passenger';
-      userToSave.driverStatus = userToSave.driverStatus || 'unregistered';
+    if (!usuarioAGuardar.isDriver) {
+      usuarioAGuardar.role = 'passenger';
+      usuarioAGuardar.driverStatus = usuarioAGuardar.driverStatus || 'unregistered';
     }
 
     try {
-      localStorage.setItem('uniwheels_session', JSON.stringify(userToSave));
+      localStorage.setItem('uniwheels_session', JSON.stringify(usuarioAGuardar));
     } catch {}
     set({
       isAuthenticated: true,
-      user: userToSave,
+      user: usuarioAGuardar,
       activeRole: 'passenger',
       activeTab: 'home',
       showWelcomeMascot: true,
     });
   },
 
-  // Actualizar estado de conductor
-  updateDriverStatus: (status, driverData = {}) =>
+  // Actualizar estado de verificación del conductor
+  updateDriverStatus: (estado, datosConductor = {}) =>
     set((state) => {
       if (!state.user) return {};
-      const isApproved = status === 'approved';
-      const updatedUser = {
+      const estaAprobado = estado === 'approved';
+      const usuarioActualizado = {
         ...state.user,
-        isDriver: isApproved,
-        driverStatus: status,
-        driverInfo: driverData,
-        role: isApproved ? 'driver' : 'passenger',
+        isDriver: estaAprobado,
+        driverStatus: estado,
+        driverInfo: datosConductor,
+        role: estaAprobado ? 'driver' : 'passenger',
       };
       try {
-        localStorage.setItem('uniwheels_session', JSON.stringify(updatedUser));
+        localStorage.setItem('uniwheels_session', JSON.stringify(usuarioActualizado));
       } catch {}
       return {
-        user: updatedUser,
-        activeRole: isApproved ? 'driver' : 'passenger',
-        activeTab: isApproved ? 'driver' : 'home',
+        user: usuarioActualizado,
+        activeRole: estaAprobado ? 'driver' : 'passenger',
+        activeTab: estaAprobado ? 'driver' : 'home',
       };
     }),
 
@@ -190,6 +200,7 @@ export const useAppStore = create((set, get) => ({
       activeTab: 'home',
       activeRole: 'passenger',
       activeDriverTrip: null,
+      activePassengerBooking: null,
       showWelcomeMascot: false,
     });
   },
