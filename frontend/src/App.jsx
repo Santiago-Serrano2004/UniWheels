@@ -105,7 +105,7 @@ export default function App() {
   return (
     <div
       data-theme={theme}
-      className={`min-h-[100dvh] w-full max-w-lg mx-auto flex flex-col justify-between overflow-hidden relative transition-colors duration-200 ${
+      className={`h-[100dvh] max-h-[100dvh] w-full max-w-lg mx-auto flex flex-col overflow-hidden relative transition-colors duration-200 select-none ${
         theme === 'dark' ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
       }`}
     >
@@ -123,7 +123,7 @@ export default function App() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="flex-1 flex flex-col items-center justify-center overflow-hidden"
+            className="h-full w-full flex flex-col items-center justify-center overflow-y-auto"
           >
             <AuthGatewayView />
           </motion.div>
@@ -136,16 +136,18 @@ export default function App() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="flex-1 flex flex-col justify-between overflow-hidden relative"
+            className="h-full w-full flex flex-col overflow-hidden relative"
           >
-            {/* Encabezado Móvil */}
-            <Header />
+            {/* TopBar / Encabezado Móvil (FIJO Y SIEMPRE VISIBLE) */}
+            <div className="shrink-0 z-30 w-full">
+              <Header />
+            </div>
 
             {/* Isla Dinámica / Live Activity de Viaje Activo */}
             <LiveTripIslandWidget />
 
-            {/* Contenido Principal */}
-            <main className="flex-1 overflow-y-auto px-4 py-3">
+            {/* Contenido Principal con Scroll Independiente */}
+            <main className="flex-1 overflow-y-auto overscroll-contain px-4 py-3">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
@@ -153,14 +155,17 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.18 }}
+                  className="min-h-full pb-2"
                 >
                   {renderActiveView()}
                 </motion.div>
               </AnimatePresence>
             </main>
 
-            {/* Barra de Navegación Inferior */}
-            <BottomNav />
+            {/* BottomBar / Barra de Navegación Inferior (FIJA Y SIEMPRE VISIBLE) */}
+            <div className="shrink-0 z-40 w-full">
+              <BottomNav />
+            </div>
 
             {/* Modal de Bienvenida con Mascota Institucional (Post-Login / Registro) */}
             <InstitutionalWelcomeModal
