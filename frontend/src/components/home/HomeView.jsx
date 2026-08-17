@@ -253,14 +253,7 @@ export const HomeView = () => {
             <Navigation className="w-3.5 h-3.5 text-emerald-500" />
             <span>Viajes Disponibles ({filteredRides.length})</span>
           </h3>
-          <button
-            type="button"
-            onClick={() => setIsCampusModalOpen(true)}
-            className="text-[10px] text-lochmara-600 dark:text-lochmara-400 font-bold hover:underline cursor-pointer flex items-center gap-1"
-          >
-            <Building2 className="w-3 h-3" />
-            <span>{selectedCampus.replace('Campus ', '')}</span>
-          </button>
+          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Rutas Verificadas</span>
         </div>
 
         {filteredRides.length > 0 ? (

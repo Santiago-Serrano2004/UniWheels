@@ -3,6 +3,22 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Building2, MapPin, Check, X, Search, ShieldCheck } from 'lucide-react';
 
+import jardinImg from '../../assets/institutions/campuses/el-jardin.webp';
+import bosqueImg from '../../assets/institutions/campuses/el-bosque.webp';
+import csuImg from '../../assets/institutions/campuses/csu.webp';
+import casonaImg from '../../assets/institutions/campuses/la-casona.webp';
+
+const CAMPUS_STATIC_IMAGES = {
+  'JARDIN': jardinImg,
+  'BOSQUE': bosqueImg,
+  'CSU': csuImg,
+  'CASONA': casonaImg,
+  'Campus El Jardín': jardinImg,
+  'Campus El Bosque': bosqueImg,
+  'CSU — Centro de Servicios Universitarios': csuImg,
+  'Campus La Casona': casonaImg,
+};
+
 export const CampusSelectorModal = ({
   isOpen,
   onClose,
@@ -20,10 +36,18 @@ export const CampusSelectorModal = ({
     const termino = filtroTexto.toLowerCase();
     return (
       sede.name?.toLowerCase().includes(termino) ||
-      sede.address?.toLowerCase().includes(termino) ||
-      sede.code?.toLowerCase().includes(termino)
+      sede.address?.toLowerCase().includes(termino)
     );
   });
+
+  const getCampusImage = (sede) => {
+    return (
+      CAMPUS_STATIC_IMAGES[sede.code] ||
+      CAMPUS_STATIC_IMAGES[sede.name] ||
+      sede.image_url ||
+      jardinImg
+    );
+  };
 
   const modalContent = (
     <AnimatePresence>
@@ -94,11 +118,13 @@ export const CampusSelectorModal = ({
             </div>
           )}
 
-          {/* Lista de Tarjetas de Sedes con Fotografía y Detalles */}
+          {/* Lista de Tarjetas de Sedes con Fotografía y Detalles Limpios */}
           <div className="flex-1 overflow-y-auto py-3 space-y-2.5 pr-0.5">
             {sedesFiltradas.length > 0 ? (
               sedesFiltradas.map((sede) => {
                 const isSelected = selectedCampus === sede.name;
+                const imgSrc = getCampusImage(sede);
+
                 return (
                   <motion.div
                     key={sede.id}
@@ -118,30 +144,27 @@ export const CampusSelectorModal = ({
                         : 'border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-white'
                     }`}
                   >
-                    {/* Imagen de Portada de la Sede */}
+                    {/* Imagen de Portada de la Sede con Carga Directa */}
                     <div className="h-24 w-full overflow-hidden relative bg-slate-800">
                       <img
-                        src={sede.image_url}
+                        src={imgSrc}
                         alt={sede.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = '/assets/institutions/campuses/el-jardin.webp';
+                          e.target.src = jardinImg;
                         }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
 
-                      {/* Insignia de Código de Sede */}
-                      <div className="absolute top-2 left-2 flex items-center gap-1.5">
-                        <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-900/90 backdrop-blur-xs text-lochmara-300 border border-slate-700/60">
-                          {sede.code}
-                        </span>
-                        {sede.is_main_campus && (
+                      {/* Insignia de Sede Principal (solo si aplica) */}
+                      {sede.is_main_campus && (
+                        <div className="absolute top-2 left-2">
                           <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/90 text-white shadow-xs">
-                            Principal
+                            Sede Principal
                           </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
 
                       {/* Checkmark de Selección */}
                       {isSelected && (

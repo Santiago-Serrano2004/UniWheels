@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, MapPin, Search, ChevronRight, X, Loader2, Building2 } from 'lucide-react';
+import { MapPin, Search, ChevronRight, X, Loader2, Building2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const HomeHeroRouteCard = ({
@@ -20,10 +20,8 @@ export const HomeHeroRouteCard = ({
 }) => {
   const placeholderText =
     directionFilter === 'towards'
-      ? '¿Dónde te recogemos? Barrio, calle...'
-      : '¿A dónde te diriges? Barrio, centro...';
-
-  const sedeObjeto = sedesDisponibles.find((s) => s.name === selectedCampus) || sedesDisponibles[0];
+      ? '¿Dónde te recogemos? Barrio, dirección...'
+      : '¿A dónde te diriges? Barrio, dirección...';
 
   return (
     <section
@@ -31,18 +29,15 @@ export const HomeHeroRouteCard = ({
         isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
       }`}
     >
-      {/* Saludo y Avatar */}
+      {/* Saludo y Avatar Limpio (Sin etiquetas decorativas ni textos redundantes) */}
       <div className="flex items-center justify-between gap-3 mb-3">
-        <div className="space-y-0.5 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-lochmara-500" />
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-lochmara-600 dark:text-lochmara-400">
-              Rutas Universitarias IA
-            </span>
-          </div>
+        <div className="min-w-0">
           <h2 className="text-base sm:text-lg font-black tracking-tight truncate">
             Hola, {user?.name?.split(' ')[0] || 'Estudiante'}
           </h2>
+          <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            ¿Cuál es tu trayecto hoy?
+          </p>
         </div>
 
         <div className="w-10 h-10 rounded-2xl bg-lochmara-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md shadow-lochmara-600/20 overflow-hidden">
@@ -109,20 +104,15 @@ export const HomeHeroRouteCard = ({
               <button
                 type="button"
                 onClick={onOpenCampusModal}
-                className={`w-full mt-0.5 p-1.5 px-2 rounded-xl text-left flex items-center justify-between border transition-all cursor-pointer ${
+                className={`w-full mt-0.5 p-1.5 px-2.5 rounded-xl text-left flex items-center justify-between border transition-all cursor-pointer ${
                   isDark
                     ? 'bg-slate-900 border-slate-800 hover:border-slate-700 text-white'
                     : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-2xs'
                 }`}
               >
-                <div className="flex items-center gap-1.5 truncate">
+                <div className="flex items-center gap-2 truncate">
                   <Building2 className="w-3.5 h-3.5 text-lochmara-500 shrink-0" />
                   <span className="text-xs font-black truncate">{selectedCampus}</span>
-                  {sedeObjeto?.code && (
-                    <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-lochmara-500/10 text-lochmara-600 dark:text-lochmara-400 font-bold shrink-0">
-                      {sedeObjeto.code}
-                    </span>
-                  )}
                 </div>
                 <div className="flex items-center gap-0.5 text-lochmara-500 text-[10px] font-bold shrink-0">
                   <span>Cambiar</span>
@@ -190,20 +180,15 @@ export const HomeHeroRouteCard = ({
               <button
                 type="button"
                 onClick={onOpenCampusModal}
-                className={`w-full mt-0.5 p-1.5 px-2 rounded-xl text-left flex items-center justify-between border transition-all cursor-pointer ${
+                className={`w-full mt-0.5 p-1.5 px-2.5 rounded-xl text-left flex items-center justify-between border transition-all cursor-pointer ${
                   isDark
                     ? 'bg-slate-900 border-slate-800 hover:border-slate-700 text-white'
                     : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-2xs'
                 }`}
               >
-                <div className="flex items-center gap-1.5 truncate">
+                <div className="flex items-center gap-2 truncate">
                   <Building2 className="w-3.5 h-3.5 text-lochmara-500 shrink-0" />
                   <span className="text-xs font-black truncate">{selectedCampus}</span>
-                  {sedeObjeto?.code && (
-                    <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-lochmara-500/10 text-lochmara-600 dark:text-lochmara-400 font-bold shrink-0">
-                      {sedeObjeto.code}
-                    </span>
-                  )}
                 </div>
                 <div className="flex items-center gap-0.5 text-lochmara-500 text-[10px] font-bold shrink-0">
                   <span>Cambiar</span>
