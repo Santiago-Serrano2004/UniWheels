@@ -7,6 +7,8 @@ import {
   ChevronUp,
   ChevronDown,
   KeyRound,
+  Clock,
+  Star,
 } from 'lucide-react';
 
 // Modelo Vectorial SVG Superior de Carro (Mazda 3)

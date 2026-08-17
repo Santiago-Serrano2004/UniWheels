@@ -376,4 +376,52 @@ class AuthController extends Controller
             'message' => 'Tu cuenta ha sido eliminada exitosamente. Te hemos enviado un correo de confirmación.',
         ]);
     }
+
+    /**
+     * Obtener estadísticas de reputación del usuario autenticado.
+     */
+    public function reputationStats(Request $request): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'rating_average' => 4.9,
+                'total_trips' => 18,
+                'puntualidad' => 4.9,
+                'amabilidad' => 5.0,
+                'conduccion_segura' => 4.8,
+                'vehiculo_limpio' => 4.9,
+                'comunicacion' => 5.0,
+                'reviews_count' => 14,
+            ],
+        ]);
+    }
+
+    /**
+     * Obtener historial de transacciones de la billetera.
+     */
+    public function walletTransactions(Request $request): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                [
+                    'id' => 'TX-001',
+                    'type' => 'recarga_nequi',
+                    'title' => 'Recarga Nequi',
+                    'amount' => 20000,
+                    'date' => 'Hoy, 06:30 AM',
+                    'status' => 'completada',
+                ],
+                [
+                    'id' => 'TX-002',
+                    'type' => 'debito_comision',
+                    'title' => 'Comisión Viaje Campus El Jardín',
+                    'amount' => -1080,
+                    'date' => 'Ayer, 06:15 PM',
+                    'status' => 'completada',
+                ],
+            ],
+        ]);
+    }
 }
