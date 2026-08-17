@@ -3,108 +3,54 @@ import { useAppStore } from '../../store/useAppStore';
 import { authService } from '../../services/api';
 import { placesApiService, LUGARES_POPULARES_AMB } from '../../services/placesApiService';
 import { InsufficientBalanceModal } from './InsufficientBalanceModal';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-import {
-  Car,
-  MapPin,
-  Clock,
-  DollarSign,
-  Users,
-  Navigation,
-  ArrowRight,
-  Search,
-  CheckCircle2,
-  AlertCircle,
-  X,
-  Loader2,
-  Building2,
-  CalendarCheck,
-} from 'lucide-react';
+import { DriverLiveNavigationCockpit } from './DriverLiveNavigationCockpit';
+import { LocationPickerModal } from '../map/LocationPickerModal';
+import { DriverRoutePublishForm } from './DriverRoutePublishForm';
+import { Car } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-// Pines vectoriales personalizados para Leaflet
-const createCustomPin = (color, emoji) =>
-  L.divIcon({
-    className: 'custom-leaflet-marker',
-    html: `
-      <div style="background-color: ${color}; width: 34px; height: 34px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; font-size: 15px;">
-        ${emoji}
-      </div>
-    `,
-    iconSize: [34, 34],
-    iconAnchor: [17, 17],
-  });
-
-const pointIcon = createCustomPin('#0284c7', '📍');
-const campusIcon = createCustomPin('#082f49', '🎓');
-
-// Componente interactivo para capturar clics o arrastre del marcador en Leaflet
-function MapLocationPicker({ position, onPositionChange }) {
-  useMapEvents({
-    click(e) {
-      onPositionChange([e.latlng.lat, e.latlng.lng]);
-    },
-  });
-
-  return (
-    <Marker
-      position={position}
-      draggable={true}
-      eventHandlers={{
-        dragend: (e) => {
-          const latlng = e.target.getLatLng();
-          onPositionChange([latlng.lat, latlng.lng]);
-        },
-      }}
-      icon={pointIcon}
-    >
-      <Popup>Punto seleccionado (Toca o arrastra para mover)</Popup>
-    </Marker>
-  );
-}
 
 export const DriverView = () => {
   const {
-    user,
     activeDriverTrip,
     publishDriverTrip,
     driverWalletBalance,
     setActiveTab,
+    theme,
   } = useAppStore();
 
-  // 1. Sentido del Viaje: 'hacia_campus' | 'desde_campus'
+  const isDark = theme === 'dark';
+
+  // 1. Sentido del Viaje
   const [sentidoViaje, setSentidoViaje] = useState('hacia_campus');
 
-  // 2. Lista de sedes oficiales cargadas desde la base de datos
+  // 2. Sedes Universitarias
   const [sedesInstitucion, setSedesInstitucion] = useState([
-    { id: 1, name: 'Campus El Jardín', is_main_campus: true },
-    { id: 2, name: 'Campus El Bosque', is_main_campus: false },
-    { id: 3, name: 'CSU — Centro de Servicios Universitarios', is_main_campus: false },
-    { id: 4, name: 'Campus La Casona', is_main_campus: false },
+    { id: 1, name: 'Campus El Jardín', is_main_campus: true, latitude: 7.119346, longitude: -73.104278 },
+    { id: 2, name: 'Campus El Bosque', is_main_campus: false, latitude: 7.066491, longitude: -73.103789 },
+    { id: 3, name: 'CSU — Centro de Servicios Universitarios', is_main_campus: false, latitude: 7.113821, longitude: -73.106842 },
+    { id: 4, name: 'Campus La Casona', is_main_campus: false, latitude: 7.118210, longitude: -73.116520 },
   ]);
-
-  // Sede seleccionada
   const [sedeSeleccionada, setSedeSeleccionada] = useState('Campus El Jardín');
 
-  // 3. Punto personalizado (Barrio/Lugar en el AMB)
-  const [puntoCoords, setPuntoCoords] = useState([7.0678, -73.1066]); // Cañaveral por defecto
+  // 3. Punto Personalizado
+  const [puntoCoords, setPuntoCoords] = useState([7.0678, -73.1066]);
   const [direccionLugar, setDireccionLugar] = useState('Centro Comercial Cañaveral, Floridablanca');
   const [busquedaTexto, setBusquedaTexto] = useState('');
   const [sugerencias, setSugerencias] = useState([]);
   const [mostrandoSugerencias, setMostrandoSugerencias] = useState(false);
   const [cargandoGeocodificacion, setCargandoGeocodificacion] = useState(false);
 
-  // 4. Parámetros del Viaje
+  // 4. Parámetros
   const [horaSalida, setHoraSalida] = useState('06:45');
   const [cupos, setCupos] = useState(3);
   const [tarifa, setTarifa] = useState('4500');
   const [modalSaldoInsuficiente, setModalSaldoInsuficiente] = useState(false);
+  const [showDriverMapModal, setShowDriverMapModal] = useState(false);
 
   const buscadorRef = useRef(null);
+  const isSelectingRef = useRef(false);
 
-  // Cerrar sugerencias al hacer clic fuera del buscador
+  // Click outside detector
   useEffect(() => {
     const manejarClickFuera = (e) => {
       if (buscadorRef.current && !buscadorRef.current.contains(e.target)) {
@@ -115,23 +61,23 @@ export const DriverView = () => {
     return () => document.removeEventListener('mousedown', manejarClickFuera);
   }, []);
 
-  // Cargar sedes dinámicas desde la base de datos
+  // Cargar sedes dinámicas
   useEffect(() => {
-    authService.getInstitutions().then((instituciones) => {
-      if (instituciones && instituciones.length > 0 && instituciones[0].campuses) {
-        setSedesInstitucion(instituciones[0].campuses);
-        const sedePrincipal = instituciones[0].campuses.find((c) => c.is_main_campus);
-        if (sedePrincipal) {
-          setSedeSeleccionada(sedePrincipal.name);
-        } else if (user?.campus) {
-          setSedeSeleccionada(user.campus);
-        }
+    authService.getInstitutions().then((res) => {
+      if (res?.data?.[0]?.campuses && res.data[0].campuses.length > 0) {
+        setSedesInstitucion(res.data[0].campuses);
+        const sedePrincipal = res.data[0].campuses.find((c) => c.is_main_campus);
+        if (sedePrincipal) setSedeSeleccionada(sedePrincipal.name);
       }
-    });
-  }, [user]);
+    }).catch(() => {});
+  }, []);
 
-  // Buscar sugerencias en vivo con Photon / Nominatim API
+  // Búsqueda reactiva
   useEffect(() => {
+    if (isSelectingRef.current) {
+      isSelectingRef.current = false;
+      return;
+    }
     if (busquedaTexto.trim().length >= 2) {
       setCargandoGeocodificacion(true);
       const timer = setTimeout(() => {
@@ -139,31 +85,22 @@ export const DriverView = () => {
           setSugerencias(res);
           setCargandoGeocodificacion(false);
           setMostrandoSugerencias(true);
-        });
+        }).catch(() => setCargandoGeocodificacion(false));
       }, 250);
-
       return () => clearTimeout(timer);
     } else {
       setSugerencias(LUGARES_POPULARES_AMB.slice(0, 4));
     }
   }, [busquedaTexto]);
 
-  // Manejar selección de lugar desde la lista desplegable
   const seleccionarLugarSugerido = (lugar) => {
+    isSelectingRef.current = true;
     setPuntoCoords(lugar.coords);
     setDireccionLugar(`${lugar.nombre} (${lugar.direccion.split(',')[0]})`);
     setBusquedaTexto('');
     setMostrandoSugerencias(false);
   };
 
-  // Manejar selección en el mapa Leaflet -> Reverse Geocoding automático
-  const manejarCambioPuntoMapa = async (nuevasCoords) => {
-    setPuntoCoords(nuevasCoords);
-    const direccionObtenida = await placesApiService.reverseGeocode(nuevasCoords[0], nuevasCoords[1]);
-    setDireccionLugar(direccionObtenida);
-  };
-
-  // Usar geolocalización actual
   const usarUbicacionActual = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -174,36 +111,23 @@ export const DriverView = () => {
           const dir = await placesApiService.reverseGeocode(lat, lon);
           setDireccionLugar(dir);
         },
-        () => {
-          alert('No se pudo obtener tu ubicación actual.');
-        }
+        () => alert('No se pudo obtener tu ubicación actual.')
       );
     }
   };
 
-  // Coordenadas dinámicas de la sede seleccionada desde la base de datos
   const campusObjActual = sedesInstitucion.find((s) => s.name === sedeSeleccionada);
   const coordsSedeActual =
     campusObjActual && campusObjActual.latitude && campusObjActual.longitude
       ? [campusObjActual.latitude, campusObjActual.longitude]
       : [7.119346, -73.104278];
 
-  // Trazado de ruta
-  const trazadoRuta =
-    sentidoViaje === 'hacia_campus'
-      ? [puntoCoords, coordsSedeActual]
-      : [coordsSedeActual, puntoCoords];
-
-  // Validar y publicar trayecto
   const manejarPublicarTrayecto = (e) => {
     e.preventDefault();
-
-    // 1. Validación de saldo mínimo de conductor ($ 2.000 COP)
     if (driverWalletBalance < 2000) {
       setModalSaldoInsuficiente(true);
       return;
     }
-
     const origenTexto = sentidoViaje === 'hacia_campus' ? direccionLugar : sedeSeleccionada;
     const destinoTexto = sentidoViaje === 'hacia_campus' ? sedeSeleccionada : direccionLugar;
 
@@ -216,337 +140,160 @@ export const DriverView = () => {
       destinationCoords: sentidoViaje === 'hacia_campus' ? coordsSedeActual : puntoCoords,
       departureTime: horaSalida,
       seats: Number(cupos),
-      availableSeats: Number(cupos),
-      price: Number(tarifa),
+      fare: `$ ${Number(tarifa).toLocaleString('es-CO')}`,
+      fare_cop: Number(tarifa),
     });
   };
 
-  // SI YA EXISTE UN VIAJE ACTIVO, MOSTRAR MENSAJE Y BLOQUEAR NUEVA PUBLICACIÓN
   if (activeDriverTrip) {
-    return (
-      <div className="space-y-4 pb-6 select-none">
-        <div className="bg-gradient-to-br from-[#082f49] via-slate-900 to-slate-950 text-white rounded-3xl p-5 shadow-lg space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[11px] font-bold">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Publicación Activa</span>
-            </div>
-            <span className="text-xs font-mono font-bold text-lochmara-300">
-              {activeDriverTrip.departureTime}
-            </span>
-          </div>
-
-          <h2 className="text-base font-extrabold">Ya tienes un viaje publicado</h2>
-          <p className="text-xs text-slate-300">
-            Tu vehículo ya tiene un trayecto activo programado. Para publicar una nueva ruta, primero debes finalizar o cancelar el viaje actual.
-          </p>
-
-          <div className="p-3 bg-white/10 rounded-2xl border border-white/10 text-xs space-y-1">
-            <p className="text-[10px] text-slate-400 uppercase font-bold">Ruta Actual</p>
-            <p className="font-bold text-white truncate">
-              {activeDriverTrip.origin} ➔ {activeDriverTrip.destination}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('home')}
-            className="w-full py-3 rounded-2xl bg-lochmara-500 hover:bg-lochmara-400 active:bg-lochmara-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
-          >
-            <CalendarCheck className="w-4 h-4" />
-            <span>Ir a Mi Panel de Viaje</span>
-          </button>
-        </div>
-      </div>
-    );
+    return <DriverLiveNavigationCockpit activeTrip={activeDriverTrip} />;
   }
 
   return (
     <div className="space-y-4 pb-6 select-none">
-      {/* 1. HERO BANNER CON BOTÓN DESLIZANTE TIPO ON/OFF */}
-      <section className="bg-gradient-to-br from-[#082f49] via-slate-900 to-slate-950 text-white rounded-3xl p-5 shadow-md relative overflow-hidden space-y-3">
+      {/* 1. HERO CARD CON TOGGLE DE SENTIDO Y CORREDOR ORIGEN-DESTINO */}
+      <section
+        className={`rounded-3xl p-5 border shadow-sm space-y-4 transition-colors ${
+          isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
+        }`}
+      >
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[10px] font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Cabina del Conductor</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                Cabina del Conductor
+              </span>
             </div>
-            <h2 className="text-lg font-extrabold tracking-tight">Publicar Nuevo Trayecto</h2>
+            <h2 className="text-xl font-black tracking-tight">Publicar Nuevo Trayecto</h2>
+            <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Comparte tu cupo y reduce costos de movilidad
+            </p>
           </div>
-
-          <div className="w-10 h-10 rounded-2xl bg-lochmara-600/30 border border-lochmara-400/30 flex items-center justify-center text-white">
-            <Car className="w-5 h-5" />
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-emerald-500/20 shrink-0">
+            <Car className="w-6 h-6" />
           </div>
         </div>
 
-        {/* Alternador con Animación Suave de Desplazamiento (Sliding Pill) */}
-        <div className="relative p-1 bg-white/10 backdrop-blur-md rounded-2xl flex items-center border border-white/10 text-xs select-none">
+        {/* Toggle de Sentido */}
+        <div className="flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 relative">
           <button
             type="button"
             onClick={() => setSentidoViaje('hacia_campus')}
-            className={`relative flex-1 py-2 rounded-xl font-bold transition-colors flex items-center justify-center gap-1.5 z-10 cursor-pointer ${
-              sentidoViaje === 'hacia_campus' ? 'text-white' : 'text-slate-300 hover:text-white'
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all relative z-10 cursor-pointer text-center ${
+              sentidoViaje === 'hacia_campus'
+                ? 'text-white'
+                : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             {sentidoViaje === 'hacia_campus' && (
               <motion.div
-                layoutId="pill-direction"
-                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                className="absolute inset-0 bg-lochmara-500 rounded-xl shadow-xs z-[-1]"
+                layoutId="direction-pill-driver"
+                className="absolute inset-0 bg-emerald-600 rounded-xl shadow-md -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}
             <span>Hacia el Campus</span>
-            <ArrowRight className="w-3.5 h-3.5" />
           </button>
 
           <button
             type="button"
             onClick={() => setSentidoViaje('desde_campus')}
-            className={`relative flex-1 py-2 rounded-xl font-bold transition-colors flex items-center justify-center gap-1.5 z-10 cursor-pointer ${
-              sentidoViaje === 'desde_campus' ? 'text-white' : 'text-slate-300 hover:text-white'
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all relative z-10 cursor-pointer text-center ${
+              sentidoViaje === 'desde_campus'
+                ? 'text-white'
+                : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             {sentidoViaje === 'desde_campus' && (
               <motion.div
-                layoutId="pill-direction"
-                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                className="absolute inset-0 bg-lochmara-500 rounded-xl shadow-xs z-[-1]"
+                layoutId="direction-pill-driver"
+                className="absolute inset-0 bg-emerald-600 rounded-xl shadow-md -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}
             <span>Desde el Campus</span>
-            <ArrowRight className="w-3.5 h-3.5" />
           </button>
+        </div>
+
+        {/* Visualización del Corredor Origen-Destino */}
+        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+          <div className="flex items-start gap-2.5">
+            <div className="w-3 h-3 rounded-full bg-lochmara-500 mt-1 shrink-0 ring-4 ring-lochmara-500/20" />
+            <div className="min-w-0">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                Punto de Origen
+              </label>
+              <p className="text-xs font-black truncate">
+                {sentidoViaje === 'hacia_campus' ? direccionLugar : sedeSeleccionada}
+              </p>
+            </div>
+          </div>
+
+          <div className="border-l-2 border-dashed border-slate-300 dark:border-slate-700 h-3 ml-1.5 my-0.5" />
+
+          <div className="flex items-start gap-2.5">
+            <div className="w-3 h-3 rounded-full bg-emerald-500 mt-1 shrink-0 ring-4 ring-emerald-500/20" />
+            <div className="min-w-0">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                Punto de Destino
+              </label>
+              <p className="text-xs font-black truncate">
+                {sentidoViaje === 'hacia_campus' ? sedeSeleccionada : direccionLugar}
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* 2. FORMULARIO ESTRUCTURADO */}
-      <form onSubmit={manejarPublicarTrayecto} className="space-y-4">
-        {/* SELECCIÓN LIMPIA DEL CAMPUS UNIVERSITARIO */}
-        <section className="bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs space-y-2">
-          <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-            <Building2 className="w-3.5 h-3.5 text-lochmara-600" />
-            <span>Campus Universitario</span>
-          </label>
+      {/* 2. FORMULARIO MODULAR DE PUBLICACIÓN */}
+      <DriverRoutePublishForm
+        sedesInstitucion={sedesInstitucion}
+        sedeSeleccionada={sedeSeleccionada}
+        setSedeSeleccionada={setSedeSeleccionada}
+        sentidoViaje={sentidoViaje}
+        direccionLugar={direccionLugar}
+        busquedaTexto={busquedaTexto}
+        setBusquedaTexto={setBusquedaTexto}
+        sugerencias={sugerencias}
+        mostrandoSugerencias={mostrandoSugerencias}
+        cargandoGeocodificacion={cargandoGeocodificacion}
+        seleccionarLugarSugerido={seleccionarLugarSugerido}
+        usarUbicacionActual={usarUbicacionActual}
+        setShowDriverMapModal={setShowDriverMapModal}
+        buscadorRef={buscadorRef}
+        horaSalida={horaSalida}
+        setHoraSalida={setHoraSalida}
+        cupos={cupos}
+        setCupos={setCupos}
+        tarifa={tarifa}
+        setTarifa={setTarifa}
+        manejarPublicarTrayecto={manejarPublicarTrayecto}
+        isDark={isDark}
+      />
 
-          <select
-            value={sedeSeleccionada}
-            onChange={(e) => setSedeSeleccionada(e.target.value)}
-            className="w-full bg-slate-50 text-xs font-bold text-slate-900 rounded-2xl px-3.5 py-3 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 shadow-2xs cursor-pointer"
-          >
-            {sedesInstitucion.map((s) => (
-              <option key={s.id} value={s.name}>
-                {s.name} {s.is_main_campus ? '• (Sede Principal)' : ''}
-              </option>
-            ))}
-          </select>
-        </section>
+      {/* MODAL DE MAPA PARA AJUSTAR PUNTO */}
+      <LocationPickerModal
+        isOpen={showDriverMapModal}
+        onClose={() => setShowDriverMapModal(false)}
+        initialLocation={{ lat: puntoCoords[0], lng: puntoCoords[1] }}
+        title={sentidoViaje === 'hacia_campus' ? 'Selecciona tu Punto de Origen' : 'Selecciona tu Punto de Destino'}
+        onConfirmLocation={(coords, address) => {
+          setPuntoCoords([coords.lat, coords.lng]);
+          setDireccionLugar(address || 'Punto Seleccionado en Mapa');
+          setShowDriverMapModal(false);
+        }}
+      />
 
-        {/* SELECCIÓN DEL PUNTO EN EL AMB (CON DESPLEGABLE EN CAPA SUPERIOR Z-50) */}
-        <section className="relative z-30 bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-              {sentidoViaje === 'hacia_campus' ? 'Desde (Punto de Partida)' : 'Hacia (Punto de Llegada)'}
-            </h3>
-            <button
-              type="button"
-              onClick={usarUbicacionActual}
-              className="inline-flex items-center gap-1 text-[11px] font-bold text-lochmara-600 hover:underline cursor-pointer"
-            >
-              <Navigation className="w-3 h-3" />
-              <span>Mi Ubicación</span>
-            </button>
-          </div>
-
-          {/* Input de Búsqueda de Lugar / Dirección */}
-          <div className="relative" ref={buscadorRef}>
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                value={busquedaTexto}
-                onFocus={() => setMostrandoSugerencias(true)}
-                onChange={(e) => setBusquedaTexto(e.target.value)}
-                placeholder="Buscar barrio, dirección o punto en el AMB..."
-                className="w-full bg-slate-50 text-xs rounded-2xl pl-10 pr-9 py-3 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 font-medium"
-              />
-              {cargandoGeocodificacion ? (
-                <Loader2 className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-lochmara-600 animate-spin" />
-              ) : busquedaTexto ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setBusquedaTexto('');
-                    setMostrandoSugerencias(false);
-                  }}
-                  className="p-1 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              ) : null}
-            </div>
-
-            {/* Menú Desplegable de Sugerencias en Capa Superior z-50 */}
-            {mostrandoSugerencias && (
-              <div className="absolute top-full left-0 right-0 z-50 mt-1.5 bg-white rounded-2xl border border-slate-200 shadow-2xl divide-y divide-slate-100 overflow-hidden max-h-56 overflow-y-auto">
-                <div className="p-2 bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
-                  <span>Sugerencias en Bucaramanga y AMB</span>
-                  <button
-                    type="button"
-                    onClick={() => setMostrandoSugerencias(false)}
-                    className="text-slate-400 hover:text-slate-600 cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                {sugerencias.map((lugar, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => seleccionarLugarSugerido(lugar)}
-                    className="w-full p-2.5 flex items-start gap-2.5 hover:bg-lochmara-50 text-left transition-colors cursor-pointer"
-                  >
-                    <MapPin className="w-3.5 h-3.5 text-lochmara-600 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-bold text-slate-900 leading-tight">{lugar.nombre}</p>
-                      <p className="text-[10px] text-slate-500 truncate">{lugar.direccion}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Dirección Sincronizada Automáticamente con el Mapa */}
-          <div className="p-3 rounded-2xl bg-lochmara-50/80 border border-lochmara-200 flex items-center gap-2.5 text-xs">
-            <div className="w-2.5 h-2.5 rounded-full bg-lochmara-600 shrink-0" />
-            <div className="min-w-0 flex-1 truncate">
-              <span className="text-[10px] text-lochmara-700 font-bold block uppercase">
-                {sentidoViaje === 'hacia_campus' ? 'Desde (Punto de Partida Fijado)' : 'Hacia (Punto de Llegada Fijado)'}
-              </span>
-              <span className="font-bold text-slate-900 truncate block">{direccionLugar}</span>
-            </div>
-          </div>
-        </section>
-
-        {/* 3. SELECTOR DIDÁCTICO EN EL MAPA LEAFLET */}
-        <section className="relative z-10 bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-              Seleccionar en el Mapa
-            </h3>
-            <span className="text-[10px] text-slate-500 font-medium">Toca o arrastra el pin</span>
-          </div>
-
-          <div className="relative w-full h-52 rounded-2xl overflow-hidden border border-slate-200">
-            <MapContainer
-              center={puntoCoords}
-              zoom={14}
-              zoomControl={false}
-              className="w-full h-full"
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-
-              {/* Trazado de Ruta Bidireccional */}
-              <Polyline
-                positions={trazadoRuta}
-                pathOptions={{ color: '#0284c7', weight: 4, opacity: 0.8, dashArray: '6, 6' }}
-              />
-
-              {/* Marcador del Punto en el AMB */}
-              <MapLocationPicker
-                position={puntoCoords}
-                onPositionChange={manejarCambioPuntoMapa}
-              />
-
-              {/* Marcador del Campus Universitario */}
-              <Marker position={coordsSedeActual} icon={campusIcon}>
-                <Popup>{sedeSeleccionada}</Popup>
-              </Marker>
-            </MapContainer>
-          </div>
-        </section>
-
-        {/* 4. PARÁMETROS DE SALIDA, CUPOS Y APORTE */}
-        <section className="bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs space-y-3">
-          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-            Detalles del Trayecto
-          </h3>
-
-          <div className="grid grid-cols-3 gap-2.5">
-            {/* Hora de Salida */}
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
-                <Clock className="w-3 h-3 text-lochmara-600" />
-                <span>Salida</span>
-              </label>
-              <input
-                type="time"
-                required
-                value={horaSalida}
-                onChange={(e) => setHoraSalida(e.target.value)}
-                className="w-full bg-slate-50 text-xs font-bold text-slate-900 rounded-xl px-2.5 py-2.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500"
-              />
-            </div>
-
-            {/* Cupos */}
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
-                <Users className="w-3 h-3 text-lochmara-600" />
-                <span>Cupos</span>
-              </label>
-              <select
-                value={cupos}
-                onChange={(e) => setCupos(Number(e.target.value))}
-                className="w-full bg-slate-50 text-xs font-bold text-slate-900 rounded-xl px-2.5 py-2.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 cursor-pointer"
-              >
-                {[1, 2, 3, 4].map((num) => (
-                  <option key={num} value={num}>
-                    {num} {num === 1 ? 'cupo' : 'cupos'}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Tarifa / Aporte */}
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
-                <DollarSign className="w-3 h-3 text-emerald-600" />
-                <span>Aporte</span>
-              </label>
-              <select
-                value={tarifa}
-                onChange={(e) => setTarifa(e.target.value)}
-                className="w-full bg-slate-50 text-xs font-bold text-emerald-700 rounded-xl px-2 py-2.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 cursor-pointer"
-              >
-                <option value="3500">$ 3.500</option>
-                <option value="4000">$ 4.000</option>
-                <option value="4500">$ 4.500</option>
-                <option value="5000">$ 5.000</option>
-              </select>
-            </div>
-          </div>
-        </section>
-
-        {/* 5. BOTÓN PARA PUBLICAR */}
-        <button
-          type="submit"
-          className="w-full py-3.5 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-lochmara-600/25"
-        >
-          <Car className="w-4 h-4" />
-          <span>Publicar Trayecto en Mi Corredor</span>
-        </button>
-      </form>
-
-      {/* MODAL DE SALDO INSUFICIENTE EN BILLETERA DE CONDUCTOR */}
+      {/* MODAL DE SALDO INSUFICIENTE */}
       <InsufficientBalanceModal
         isOpen={modalSaldoInsuficiente}
         onClose={() => setModalSaldoInsuficiente(false)}
-        currentBalance={driverWalletBalance}
-        minRequired={2000}
-        onGoToRecharge={() => setActiveTab('wallet')}
+        saldoActual={driverWalletBalance}
+        onRecargar={() => {
+          setModalSaldoInsuficiente(false);
+          setActiveTab('wallet');
+        }}
       />
     </div>
   );

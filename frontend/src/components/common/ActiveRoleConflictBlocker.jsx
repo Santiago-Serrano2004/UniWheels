@@ -6,9 +6,7 @@ import {
   ShieldAlert,
   ArrowRight,
   User,
-  AlertCircle,
   MapPin,
-  Clock,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -17,7 +15,8 @@ export const ActiveRoleConflictBlocker = ({
   activeTrip,
   onRedirect,
 }) => {
-  const { setActiveTab } = useAppStore();
+  const { setActiveTab, theme } = useAppStore();
+  const isDark = theme === 'dark';
 
   const isDriverActive = conflictType === 'driver_active';
 
@@ -29,7 +28,13 @@ export const ActiveRoleConflictBlocker = ({
       className="space-y-4 pb-6 select-none"
     >
       {/* Tarjeta de Alerta de Exclusión Mutua */}
-      <section className="bg-gradient-to-br from-slate-900 via-slate-900 to-[#082f49] text-white rounded-3xl p-5 shadow-lg border border-slate-800 space-y-4">
+      <section
+        className={`rounded-3xl p-5 shadow-lg border space-y-4 transition-colors ${
+          isDark
+            ? 'bg-slate-900 border-slate-800 text-white'
+            : 'bg-gradient-to-br from-slate-900 via-slate-900 to-[#082f49] text-white border-slate-800'
+        }`}
+      >
         <div className="flex items-center justify-between">
           <div className="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-400/30 text-amber-300 flex items-center justify-center shadow-xs">
             <ShieldAlert className="w-6 h-6" />
@@ -102,9 +107,13 @@ export const ActiveRoleConflictBlocker = ({
         <button
           type="button"
           onClick={() => setActiveTab('profile')}
-          className="w-full py-2.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+          className={`w-full py-2.5 rounded-2xl border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs ${
+            isDark
+              ? 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-200'
+              : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+          }`}
         >
-          <User className="w-3.5 h-3.5 text-slate-500" />
+          <User className="w-3.5 h-3.5 text-lochmara-500" />
           <span>Ir a Mi Perfil</span>
         </button>
       </div>

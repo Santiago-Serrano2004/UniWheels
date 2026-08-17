@@ -7,11 +7,14 @@ use App\Http\Requests\RegisterVehicleRequest;
 use App\Http\Requests\UploadDocumentRequest;
 use App\Http\Resources\VehicleDocumentResource;
 use App\Http\Resources\VehicleResource;
+use App\Mail\SolicitudVehiculoAdminMail;
 use App\Models\Vehicle;
 use App\Models\VehicleDocument;
 use App\Services\HabeasDataAuditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -68,9 +71,20 @@ class VehicleController extends Controller
 
         $vehiculo->load('documents');
 
+        // Notificar al administrador sobre la nueva solicitud de vehículo con botones de aprobación directa
+        try {
+            $tokenAprobacion = hash_hmac('sha256', $vehiculo->id . ':approve', config('app.key'));
+            $tokenRechazo = hash_hmac('sha256', $vehiculo->id . ':reject', config('app.key'));
+            $adminEmail = env('ADMIN_EMAIL', 'uniwheelscontact@gmail.com');
+
+            Mail::to($adminEmail)->send(new SolicitudVehiculoAdminMail($vehiculo, $tokenAprobacion, $tokenRechazo));
+        } catch (\Throwable $e) {
+            Log::error('Error al enviar correo admin de solicitud vehicular: ' . $e->getMessage());
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Vehículo registrado exitosamente. Por favor adjunta los documentos requeridos para su validación.',
+            'message' => 'Vehículo registrado exitosamente. Se ha enviado la solicitud de validación al equipo de UniWheels.',
             'data' => new VehicleResource($vehiculo),
         ], 201);
     }
@@ -86,6 +100,83 @@ class VehicleController extends Controller
             'success' => true,
             'data' => new VehicleResource($vehiculo),
         ]);
+    }
+
+    /**
+     * Verificar si el usuario tiene un vehículo aprobado para operar y publicar trayectos.
+     * GET /api/v1/vehicles/check-approved?user_id={uuid}
+     */
+    public function checkApprovedVehicle(Request $request): JsonResponse
+    {
+        $userId = $request->query('user_id');
+
+        if (!$userId || !\Illuminate\Support\Str::isUuid($userId)) {
+            return response()->json([
+                'success' => false,
+                'has_approved_vehicle' => false,
+                'message' => 'No tienes un vehículo aprobado para publicar trayectos. Tu vehículo debe estar aprobado por el equipo de UniWheels.',
+            ], 403);
+        }
+
+        $vehiculoAprobado = Vehicle::where('user_id', $userId)
+            ->where('status', 'aprobado')
+            ->with('documents')
+            ->first();
+
+        if (!$vehiculoAprobado) {
+            return response()->json([
+                'success' => false,
+                'has_approved_vehicle' => false,
+                'message' => 'No tienes un vehículo aprobado para publicar trayectos. Tu vehículo debe estar aprobado por el equipo de UniWheels.',
+            ], 403);
+        }
+
+        return response()->json([
+            'success' => true,
+            'has_approved_vehicle' => true,
+            'data' => new VehicleResource($vehiculoAprobado),
+        ]);
+    }
+
+    /**
+     * Actualizar estado del vehículo mediante token seguro desde el correo de administración.
+     * GET /api/v1/vehicles/{id}/status?action=approve|reject&token={token}
+     */
+    public function updateStatusByToken(Request $request, string $id): \Illuminate\Http\Response|JsonResponse
+    {
+        $accion = $request->query('action');
+        $token = $request->query('token');
+        $vehiculo = Vehicle::findOrFail($id);
+
+        $tokenEsperado = hash_hmac('sha256', $vehiculo->id . ':' . $accion, config('app.key'));
+
+        if (!hash_equals($tokenEsperado, $token ?? '')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token de seguridad inválido o expirado.',
+            ], 403);
+        }
+
+        if ($accion === 'approve') {
+            $vehiculo->update(['status' => 'aprobado', 'rejection_reason' => null]);
+            $nuevoEstado = 'aprobado';
+            $mensaje = "El vehículo con placa {$vehiculo->plate_number} ha sido aprobado exitosamente.";
+        } elseif ($accion === 'reject') {
+            $vehiculo->update([
+                'status' => 'rechazado',
+                'rejection_reason' => 'Rechazado por el administrador de UniWheels vía correo.',
+            ]);
+            $nuevoEstado = 'rechazado';
+            $mensaje = "La solicitud del vehículo con placa {$vehiculo->plate_number} ha sido rechazada.";
+        } else {
+            return response()->json(['success' => false, 'message' => 'Acción no válida.'], 400);
+        }
+
+        return response(view('vehicle_status_updated', [
+            'mensaje' => $mensaje,
+            'estado' => $nuevoEstado,
+            'vehiculo' => $vehiculo,
+        ])->render())->header('Content-Type', 'text/html');
     }
 
     /**

@@ -4,6 +4,7 @@ import { authService, parseBackendError, INSTITUCIONES_PREDETERMINADAS } from '.
 import { HabeasDataModal } from '../common/HabeasDataModal';
 import { PhotoPickerModal } from '../common/PhotoPickerModal';
 import { AlertBanner } from '../common/AlertBanner';
+import { FormSelect } from '../common/FormSelect';
 import {
   User,
   School,
@@ -16,17 +17,20 @@ import {
   ArrowLeft,
   ArrowRight,
   ShieldCheck,
-  AlertCircle,
   CheckCircle2,
   Camera,
   Trash2,
+  KeyRound,
+  RotateCw,
+  Sparkles,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const RegisterForm = ({ onBack }) => {
-  const { login } = useAppStore();
+  const { login, theme } = useAppStore();
+  const isDark = theme === 'dark';
 
-  // Paso del formulario: 1 (Datos, Foto & Universidad) | 2 (Credenciales & Seguridad)
+  // Paso del formulario: 1 (Datos & Universidad) | 2 (Credenciales & Seguridad) | 3 (Verificación PIN por Correo)
   const [pasoActual, setPasoActual] = useState(1);
 
   // Lista de instituciones y sedes
@@ -44,13 +48,40 @@ export const RegisterForm = ({ onBack }) => {
   const [documentoId, setDocumentoId] = useState('');
   const [clave, setClave] = useState('');
   const [mostrarClave, setMostrarClave] = useState(false);
+  const [confirmarClave, setConfirmarClave] = useState('');
+  const [mostrarConfirmarClave, setMostrarConfirmarClave] = useState(false);
   const [aceptaHabeasData, setAceptaHabeasData] = useState(false);
+
+  // Campos del Paso 3 (Verificación PIN)
+  const [codigoPin, setCodigoPin] = useState('');
+  const [reenviandoCodigo, setReenviandoCodigo] = useState(false);
+  const [mensajeReenvio, setMensajeReenvio] = useState('');
 
   // Estados de control UX
   const [mensajeError, setMensajeError] = useState('');
   const [modalHabeasAbierto, setModalHabeasAbierto] = useState(false);
   const [estaProcesando, setEstaProcesando] = useState(false);
   const [registroExitoso, setRegistroExitoso] = useState(false);
+
+  // Requisitos individuales de seguridad de contraseña
+  const reqMin8 = clave.length >= 8;
+  const reqMayuscula = /[A-Z]/.test(clave);
+  const reqMinuscula = /[a-z]/.test(clave);
+  const reqNumero = /[0-9]/.test(clave);
+  const reqEspecial = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~`]/.test(clave);
+
+  const requisitosLista = [
+    { id: 'min8', texto: 'Mínimo 8 caracteres', cumplido: reqMin8 },
+    { id: 'mayus', texto: '1 mayúscula (A-Z)', cumplido: reqMayuscula },
+    { id: 'minus', texto: '1 minúscula (a-z)', cumplido: reqMinuscula },
+    { id: 'num', texto: '1 número (0-9)', cumplido: reqNumero },
+    { id: 'esp', texto: '1 símbolo (@$!%*?&#)', cumplido: reqEspecial },
+  ];
+
+  const requisitosCumplidosCount = requisitosLista.filter((r) => r.cumplido).length;
+  const requisitosCompletos = requisitosCumplidosCount === 5;
+
+  const clavesCoinciden = confirmarClave.length > 0 && clave === confirmarClave;
 
   // Cargar catálogo de instituciones
   useEffect(() => {
@@ -95,24 +126,48 @@ export const RegisterForm = ({ onBack }) => {
     setPasoActual(2);
   };
 
-  const procesarRegistro = async (e) => {
+  // Validar Paso 2 y Enviar Código PIN al correo institucional
+  const solicitarCodigoYPasarPasoTres = async (e) => {
     e.preventDefault();
     setMensajeError('');
 
     const usuarioLimpio = usuarioCorreo.trim().toLowerCase().replace(/@.*$/, '');
 
     if (!usuarioLimpio) {
-      setMensajeError('Por favor ingresa tu usuario de correo institucional.');
+      setMensajeError('Por favor ingresa tu usuario de correo institucional (ej: jduque).');
       return;
     }
 
-    if (!documentoId.trim()) {
+    const docLimpio = documentoId.trim().toUpperCase();
+    if (!docLimpio) {
       setMensajeError('Por favor ingresa tu código estudiantil o ID institucional.');
       return;
     }
 
-    if (clave.length < 8) {
-      setMensajeError('La contraseña debe tener al menos 8 caracteres.');
+    if (!docLimpio.startsWith('U') || docLimpio.length < 8) {
+      setMensajeError('El código estudiantil debe iniciar con "U" seguido de tus números (ejemplo: U00123456).');
+      return;
+    }
+
+    if (!requisitosCompletos) {
+      const faltantes = [];
+      if (!reqMin8) faltantes.push('mínimo 8 caracteres');
+      if (!reqMayuscula) faltantes.push('una letra mayúscula');
+      if (!reqMinuscula) faltantes.push('una letra minúscula');
+      if (!reqNumero) faltantes.push('un número');
+      if (!reqEspecial) faltantes.push('un caracter especial (@$!%*?&#)');
+
+      setMensajeError(`Tu contraseña aún no cumple con todos los requisitos de seguridad. Le falta: ${faltantes.join(', ')}.`);
+      return;
+    }
+
+    if (!confirmarClave) {
+      setMensajeError('Por favor confirma tu contraseña en el campo correspondiente.');
+      return;
+    }
+
+    if (clave !== confirmarClave) {
+      setMensajeError('Las contraseñas no coinciden. Por favor asegúrate de escribir la misma contraseña en ambos campos.');
       return;
     }
 
@@ -125,21 +180,67 @@ export const RegisterForm = ({ onBack }) => {
     const correoCompleto = `${usuarioLimpio}@${institucionSeleccionada.domain}`;
 
     try {
+      await authService.sendVerificationCode(correoCompleto);
+      setEstaProcesando(false);
+      setPasoActual(3);
+    } catch (err) {
+      setEstaProcesando(false);
+      setMensajeError(parseBackendError(err));
+    }
+  };
+
+  // Reenviar código PIN
+  const reenviarPin = async () => {
+    const usuarioLimpio = usuarioCorreo.trim().toLowerCase().replace(/@.*$/, '');
+    const correoCompleto = `${usuarioLimpio}@${institucionSeleccionada.domain}`;
+    setReenviandoCodigo(true);
+    setMensajeError('');
+    setMensajeReenvio('');
+
+    try {
+      await authService.sendVerificationCode(correoCompleto);
+      setReenviandoCodigo(false);
+      setMensajeReenvio('¡Nuevo código enviado a tu correo institucional!');
+      setTimeout(() => setMensajeReenvio(''), 4000);
+    } catch (err) {
+      setReenviandoCodigo(false);
+      setMensajeError(parseBackendError(err));
+    }
+  };
+
+  // Validar PIN y Crear la Cuenta definitivamente
+  const procesarRegistroFinal = async (e) => {
+    e.preventDefault();
+    setMensajeError('');
+
+    const pinLimpio = codigoPin.trim();
+    if (pinLimpio.length !== 6) {
+      setMensajeError('El código de verificación PIN debe tener exactamente 6 dígitos.');
+      return;
+    }
+
+    setEstaProcesando(true);
+    const usuarioLimpio = usuarioCorreo.trim().toLowerCase().replace(/@.*$/, '');
+    const docLimpio = documentoId.trim().toUpperCase();
+    const correoCompleto = `${usuarioLimpio}@${institucionSeleccionada.domain}`;
+
+    try {
       const res = await authService.register({
         name: nombreCompleto.trim(),
         email: correoCompleto,
         password: clave,
-        password_confirmation: clave,
+        password_confirmation: confirmarClave,
         institution_id: institucionId,
         campus_id: sedeId,
-        student_code: documentoId.trim(),
-        id_document_number: documentoId.trim(),
+        student_code: docLimpio,
+        id_document_number: docLimpio.replace(/^U/i, ''),
         id_document_type: 'CC',
-        phone_number: '3000000000',
+        phone_number: '3150000000',
         member_type: 'estudiante',
         academic_program_or_department: 'Comunidad Universitaria',
         profile_photo_path: fotoPerfilPreview || null,
         is_driver: false,
+        verification_code: pinLimpio,
       });
 
       setEstaProcesando(false);
@@ -151,7 +252,7 @@ export const RegisterForm = ({ onBack }) => {
           id: res.data?.user?.id || 'u_' + Date.now(),
           name: res.data?.user?.name || nombreCompleto.trim(),
           email: res.data?.user?.email || correoCompleto,
-          studentCode: res.data?.user?.student_code || documentoId.trim(),
+          studentCode: res.data?.user?.student_code || docLimpio,
           profilePhoto: fotoPerfilPreview,
           role: 'passenger',
           institution: institucionSeleccionada.name,
@@ -169,37 +270,54 @@ export const RegisterForm = ({ onBack }) => {
     }
   };
 
+  const usuarioLimpio = usuarioCorreo.trim().toLowerCase().replace(/@.*$/, '');
+  const correoVisual = `${usuarioLimpio || 'tu_usuario'}@${institucionSeleccionada?.domain || 'unab.edu.co'}`;
+
   return (
-    <div className="flex-1 h-full flex flex-col justify-between select-none overflow-hidden bg-slate-50 text-slate-900">
+    <div className={`flex-1 h-full flex flex-col justify-between select-none overflow-hidden transition-colors ${
+      isDark ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'
+    }`}>
       {/* 1. BARRA SUPERIOR DE NAVEGACION */}
-      <div className="pt-6 sm:pt-4 px-6 pb-2 flex items-center justify-between">
+      <div className="pt-4 sm:pt-4 px-6 pb-2 flex items-center justify-between">
         <button
           type="button"
           onClick={() => {
-            if (pasoActual === 2) {
+            if (pasoActual === 3) {
+              setPasoActual(2);
+              setMensajeError('');
+            } else if (pasoActual === 2) {
               setPasoActual(1);
               setMensajeError('');
             } else {
               onBack();
             }
           }}
-          className="w-9 h-9 rounded-full bg-white border border-slate-200/80 shadow-2xs hover:bg-slate-100 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
+          className={`w-9 h-9 rounded-full border shadow-2xs flex items-center justify-center transition-all cursor-pointer ${
+            isDark
+              ? 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
+              : 'bg-white border-slate-200/80 text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
 
-        {/* Indicador de Progreso Segmentado */}
+        {/* Indicador de Progreso Segmentado (3 Pasos) */}
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold text-slate-400">Paso {pasoActual} de 2</span>
+          <span className={`text-[11px] font-bold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Paso {pasoActual} de 3</span>
           <div className="flex items-center gap-1.5">
             <span
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                pasoActual === 1 ? 'w-6 bg-lochmara-600' : 'w-2 bg-slate-300'
+                pasoActual === 1 ? 'w-6 bg-lochmara-600' : isDark ? 'w-2 bg-slate-800' : 'w-2 bg-slate-300'
               }`}
             />
             <span
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                pasoActual === 2 ? 'w-6 bg-lochmara-600' : 'w-2 bg-slate-300'
+                pasoActual === 2 ? 'w-6 bg-lochmara-600' : isDark ? 'w-2 bg-slate-800' : 'w-2 bg-slate-300'
+              }`}
+            />
+            <span
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                pasoActual === 3 ? 'w-6 bg-lochmara-600' : isDark ? 'w-2 bg-slate-800' : 'w-2 bg-slate-300'
               }`}
             />
           </div>
@@ -207,81 +325,75 @@ export const RegisterForm = ({ onBack }) => {
       </div>
 
       {/* 2. CUERPO DEL FORMULARIO */}
-      <div className="flex-1 flex flex-col justify-center px-6 py-2 overflow-y-auto">
-        <div className="w-full max-w-sm mx-auto space-y-4">
-          {/* Titulo y Subtitulo */}
-          <div className="text-center space-y-0.5">
-            <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">
-              {pasoActual === 1 ? 'Crear Cuenta' : 'Credenciales'}
-            </h2>
-            <p className="text-xs text-slate-500">
+      <div className="px-6 flex-1 flex flex-col justify-center max-w-sm mx-auto w-full py-2 overflow-y-auto">
+        <div className="space-y-3.5">
+          {/* Encabezado Dinámico según Paso */}
+          <div className="space-y-1 text-center sm:text-left">
+            <h2 className={`text-xl sm:text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
               {pasoActual === 1
-                ? 'Ingresa tu foto, datos personales y sede'
-                : 'Configura tu acceso institucional seguro'}
+                ? 'Únete a UniWheels'
+                : pasoActual === 2
+                ? 'Seguridad y Acceso'
+                : 'Verifica tu Correo'}
+            </h2>
+            <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              {pasoActual === 1
+                ? 'Completa tu información institucional básica'
+                : pasoActual === 2
+                ? 'Configura tu acceso institucional seguro'
+                : `Ingresa el código PIN de 6 dígitos enviado a ${correoVisual}`}
             </p>
           </div>
 
-          {/* Mensaje de Error */}
-          {mensajeError && (
-            <AlertBanner
-              message={mensajeError}
-              type="error"
-              title="No pudimos completar el registro"
-              onClose={() => setMensajeError('')}
-            />
-          )}
+          {/* Banner de Errores */}
+          <AlertBanner
+            type="error"
+            message={mensajeError}
+            isOpen={!!mensajeError}
+            onClose={() => setMensajeError('')}
+          />
 
-          {/* Notificacion de Bienvenida */}
-          {registroExitoso && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2.5"
-            >
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-              <div>
-                <p className="font-bold">¡Cuenta creada con éxito!</p>
-                <p className="text-[11px] text-emerald-700">
-                  Te hemos enviado un correo de bienvenida con tu código.
-                </p>
-              </div>
-            </motion.div>
-          )}
+          {/* Banner de Reenvío Exitoso */}
+          <AlertBanner
+            type="success"
+            message={mensajeReenvio}
+            isOpen={!!mensajeReenvio}
+            onClose={() => setMensajeReenvio('')}
+          />
 
-          {/* Formularios Segun Paso Actual */}
           <AnimatePresence mode="wait">
-            {pasoActual === 1 ? (
+            {/* PASO 1: DATOS PERSONALES, FOTO & UNIVERSIDAD */}
+            {pasoActual === 1 && (
               <motion.form
-                key="registro-paso-1"
-                initial={{ opacity: 0, x: -16 }}
+                key="paso-1"
+                initial={{ opacity: 0, x: -15 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 16 }}
+                exit={{ opacity: 0, x: 15 }}
                 transition={{ duration: 0.2 }}
                 onSubmit={avanzarPasoDos}
-                className="space-y-3.5"
+                className="space-y-3"
               >
-                {/* Selector de Foto de Perfil con Modal de Camara / Galeria */}
-                <div className="flex flex-col items-center justify-center space-y-1.5 pt-1">
+                {/* Selector de Foto de Perfil */}
+                <div className="flex flex-col items-center justify-center py-1">
                   <div className="relative group">
                     <div
                       onClick={() => setModalFotoAbierto(true)}
-                      className="w-20 h-20 rounded-full bg-lochmara-50 border-2 border-dashed border-lochmara-300 hover:border-lochmara-500 flex items-center justify-center cursor-pointer overflow-hidden shadow-xs transition-all relative"
+                      className={`w-20 h-20 rounded-3xl overflow-hidden border-2 flex items-center justify-center shadow-md cursor-pointer transition-all ${
+                        isDark
+                          ? 'bg-slate-900 border-slate-800 hover:border-lochmara-500'
+                          : 'bg-white border-slate-200 hover:border-lochmara-400'
+                      }`}
                     >
                       {fotoPerfilPreview ? (
-                        <img
-                          src={fotoPerfilPreview}
-                          alt="Previsualización de Perfil"
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={fotoPerfilPreview} alt="Foto de Perfil" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="flex flex-col items-center justify-center text-lochmara-600 space-y-0.5">
-                          <Camera className="w-6 h-6" />
-                          <span className="text-[9px] font-bold">Añadir</span>
+                        <div className="flex flex-col items-center gap-1 text-slate-400">
+                          <Camera className="w-6 h-6 text-lochmara-500" />
+                          <span className="text-[9px] font-bold text-lochmara-500 uppercase">Subir Foto</span>
                         </div>
                       )}
                     </div>
 
-                    {/* Boton para eliminar foto */}
                     {fotoPerfilPreview && (
                       <button
                         type="button"
@@ -289,23 +401,21 @@ export const RegisterForm = ({ onBack }) => {
                           e.stopPropagation();
                           setFotoPerfilPreview(null);
                         }}
-                        className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 shadow-md cursor-pointer transition-transform hover:scale-110"
-                        title="Eliminar foto"
+                        className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-xs hover:bg-red-600 transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
                     )}
                   </div>
-
-                  <p className="text-[10px] text-slate-400 text-center font-medium">
-                    Foto de Perfil (Opcional)
-                  </p>
+                  <span className={`text-[10px] font-medium mt-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Foto de Perfil Universitaria (Opcional)
+                  </span>
                 </div>
 
                 {/* Nombre Completo */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-lochmara-600" />
+                  <label className={`text-xs font-bold flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <User className="w-3.5 h-3.5 text-lochmara-500" />
                     <span>Nombre Completo</span>
                   </label>
                   <input
@@ -313,121 +423,112 @@ export const RegisterForm = ({ onBack }) => {
                     required
                     value={nombreCompleto}
                     onChange={(e) => setNombreCompleto(e.target.value)}
-                    placeholder="ej: Carlos Mendoza"
-                    className="w-full bg-white text-xs rounded-2xl px-4 py-2.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 focus:border-transparent transition-all shadow-2xs"
+                    placeholder="Ej: Santiago Duque Galvis"
+                    className={`w-full text-xs rounded-2xl px-4 py-2.5 border transition-all shadow-2xs focus:outline-none focus:ring-2 focus:ring-lochmara-500 ${
+                      isDark
+                        ? 'bg-slate-900 border-slate-800 text-white placeholder-slate-500'
+                        : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+                    }`}
                   />
                 </div>
 
-                {/* Institución */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <School className="w-3.5 h-3.5 text-lochmara-600" />
-                    <span>Institución Universitaria</span>
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={institucionId}
-                      onChange={(e) => manejarCambioInstitucion(e.target.value)}
-                      className="w-full bg-white text-xs rounded-2xl px-4 py-2.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 focus:border-transparent transition-all appearance-none cursor-pointer pr-10 text-slate-800 font-medium shadow-2xs"
-                    >
-                      {instituciones.map((inst) => (
-                        <option key={inst.id} value={inst.id}>
-                          {inst.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
-                      ▼
-                    </div>
-                  </div>
-                </div>
+                {/* Selección de Universidad */}
+                <FormSelect
+                  label="Universidad / Institución"
+                  icon={School}
+                  value={institucionId}
+                  onChange={(e) => manejarCambioInstitucion(e.target.value)}
+                  options={instituciones.map((inst) => ({
+                    value: inst.id,
+                    label: inst.name,
+                  }))}
+                />
 
-                {/* Sede / Campus (Incluye La Casona) */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-lochmara-600" />
-                    <span>Sede / Campus</span>
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={sedeId}
-                      onChange={(e) => setSedeId(Number(e.target.value))}
-                      className="w-full bg-white text-xs rounded-2xl px-4 py-2.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 focus:border-transparent transition-all appearance-none cursor-pointer pr-10 text-slate-800 font-medium shadow-2xs"
-                    >
-                      {sedesDisponibles.map((sede) => (
-                        <option key={sede.id} value={sede.id}>
-                          {sede.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
-                      ▼
-                    </div>
-                  </div>
-                </div>
+                {/* Selección de Sede */}
+                <FormSelect
+                  label="Sede o Campus Principal"
+                  icon={MapPin}
+                  value={sedeId}
+                  onChange={(e) => setSedeId(Number(e.target.value))}
+                  options={sedesDisponibles.map((sede) => ({
+                    value: sede.id,
+                    label: `${sede.name}${sede.is_main_campus ? ' (Sede Principal)' : ''}`,
+                  }))}
+                />
 
                 {/* Botón Siguiente */}
                 <button
                   type="submit"
                   className="w-full py-3 mt-1 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-lochmara-600/25"
                 >
-                  <span>Continuar</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>Continuar a Seguridad</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </motion.form>
-            ) : (
+            )}
+
+            {/* PASO 2: CREDENCIALES, CODIGO Y REGLAS DE CONTRASEÑA */}
+            {pasoActual === 2 && (
               <motion.form
-                key="registro-paso-2"
-                initial={{ opacity: 0, x: 16 }}
+                key="paso-2"
+                initial={{ opacity: 0, x: -15 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -16 }}
+                exit={{ opacity: 0, x: 15 }}
                 transition={{ duration: 0.2 }}
-                onSubmit={procesarRegistro}
-                className="space-y-3.5"
+                onSubmit={solicitarCodigoYPasarPasoTres}
+                className="space-y-3"
               >
-                {/* Correo con Dominio Fijo */}
+                {/* Correo Institucional */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-lochmara-600" />
+                  <label className={`text-xs font-bold flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <Mail className="w-3.5 h-3.5 text-lochmara-500" />
                     <span>Correo Institucional</span>
                   </label>
-                  <div className="flex items-center rounded-2xl border border-slate-200 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-lochmara-500 focus-within:border-transparent transition-all shadow-2xs">
+                  <div
+                    className={`flex items-center rounded-2xl border px-3 py-1 shadow-2xs transition-all focus-within:ring-2 focus-within:ring-lochmara-500 ${
+                      isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+                    }`}
+                  >
                     <input
                       type="text"
                       required
                       value={usuarioCorreo}
-                      onChange={(e) =>
-                        setUsuarioCorreo(e.target.value.replace(/@.*$/, '').trim())
-                      }
-                      placeholder="ej: usuario"
-                      className="flex-1 min-w-0 bg-transparent text-xs px-4 py-2.5 text-slate-900 focus:outline-none"
+                      onChange={(e) => setUsuarioCorreo(e.target.value.toLowerCase().replace(/@.*$/, ''))}
+                      placeholder="usuario"
+                      className={`flex-1 text-xs py-1.5 bg-transparent border-none focus:outline-none min-w-0 ${
+                        isDark ? 'text-white placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
+                      }`}
                     />
-                    <div className="bg-lochmara-50 text-lochmara-800 text-xs font-bold px-3.5 py-2.5 border-l border-lochmara-100 select-none whitespace-nowrap">
-                      @{institucionSeleccionada.domain}
-                    </div>
+                    <span className="text-xs font-bold text-lochmara-600 dark:text-lochmara-400 select-none pl-1 shrink-0">
+                      @{institucionSeleccionada?.domain || 'unab.edu.co'}
+                    </span>
                   </div>
                 </div>
 
-                {/* ID Estudiante / Docente / Miembro */}
+                {/* Código Estudiantil */}
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5 leading-tight">
-                    <CreditCard className="w-3.5 h-3.5 text-lochmara-600 shrink-0" />
-                    <span>ID Estudiante / Docente / Miembro de la comunidad</span>
+                  <label className={`text-xs font-bold flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <CreditCard className="w-3.5 h-3.5 text-lochmara-500" />
+                    <span>Código Estudiantil (ID Institucional)</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={documentoId}
-                    onChange={(e) => setDocumentoId(e.target.value)}
-                    placeholder="ej: U00123456"
-                    className="w-full bg-white text-xs rounded-2xl px-4 py-2.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 focus:border-transparent transition-all shadow-2xs"
+                    onChange={(e) => setDocumentoId(e.target.value.toUpperCase())}
+                    placeholder="U00123456"
+                    className={`w-full text-xs rounded-2xl px-4 py-2.5 border transition-all shadow-2xs focus:outline-none focus:ring-2 focus:ring-lochmara-500 ${
+                      isDark
+                        ? 'bg-slate-900 border-slate-800 text-white placeholder-slate-500'
+                        : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+                    }`}
                   />
                 </div>
 
                 {/* Contraseña */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5 text-lochmara-600" />
+                  <label className={`text-xs font-bold flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <Lock className="w-3.5 h-3.5 text-lochmara-500" />
                     <span>Contraseña</span>
                   </label>
                   <div className="relative">
@@ -437,21 +538,100 @@ export const RegisterForm = ({ onBack }) => {
                       value={clave}
                       onChange={(e) => setClave(e.target.value)}
                       placeholder="Mínimo 8 caracteres"
-                      className="w-full bg-white text-xs rounded-2xl pl-4 pr-11 py-2.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 focus:border-transparent transition-all shadow-2xs"
+                      className={`w-full text-xs rounded-2xl pl-4 pr-11 py-2.5 border transition-all shadow-2xs focus:outline-none focus:ring-2 focus:ring-lochmara-500 ${
+                        isDark
+                          ? 'bg-slate-900 border-slate-800 text-white placeholder-slate-500'
+                          : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+                      }`}
                     />
                     <button
                       type="button"
                       onClick={() => setMostrarClave(!mostrarClave)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-1"
+                      className={`absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer p-1 ${
+                        isDark ? 'text-slate-400 hover:text-white' : 'text-slate-400 hover:text-slate-600'
+                      }`}
                     >
                       {mostrarClave ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+
+                  {/* Checklist Dinámico de Seguridad */}
+                  <div
+                    className={`p-2.5 rounded-xl border space-y-1.5 transition-colors ${
+                      isDark ? 'bg-slate-900/60 border-slate-800/80' : 'bg-slate-50 border-slate-200/80'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-[10px] font-bold">
+                      <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>Fortaleza de Contraseña</span>
+                      <span className={requisitosCompletos ? 'text-emerald-500' : 'text-amber-500'}>
+                        {requisitosCumplidosCount} de 5 cumplidos
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+                      {requisitosLista.map((req) => (
+                        <div
+                          key={req.id}
+                          className={`flex items-center gap-1 text-[10px] font-medium transition-colors ${
+                            req.cumplido
+                              ? 'text-emerald-500 font-bold'
+                              : isDark
+                              ? 'text-slate-500'
+                              : 'text-slate-400'
+                          }`}
+                        >
+                          {req.cumplido ? (
+                            <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                          ) : (
+                            <div className="w-3 h-3 rounded-full border border-current shrink-0 flex items-center justify-center text-[7px]">
+                              ○
+                            </div>
+                          )}
+                          <span className="truncate">{req.texto}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Confirmar Contraseña */}
+                <div className="space-y-1">
+                  <label className={`text-xs font-bold flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <Lock className="w-3.5 h-3.5 text-lochmara-500" />
+                    <span>Confirmar Contraseña</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={mostrarConfirmarClave ? 'text' : 'password'}
+                      required
+                      value={confirmarClave}
+                      onChange={(e) => setConfirmarClave(e.target.value)}
+                      placeholder="Repite tu contraseña exactamente igual"
+                      className={`w-full text-xs rounded-2xl pl-4 pr-11 py-2.5 border transition-all shadow-2xs focus:outline-none ${
+                        confirmarClave.length > 0
+                          ? clavesCoinciden
+                            ? 'border-emerald-500 focus:ring-2 focus:ring-emerald-500'
+                            : 'border-red-500 focus:ring-2 focus:ring-red-500'
+                          : isDark
+                          ? 'bg-slate-900 border-slate-800 text-white focus:ring-2 focus:ring-lochmara-500'
+                          : 'bg-white border-slate-200 text-slate-900 focus:ring-2 focus:ring-lochmara-500'
+                      } ${isDark ? 'bg-slate-900 text-white placeholder-slate-500' : 'bg-white text-slate-900 placeholder-slate-400'}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setMostrarConfirmarClave(!mostrarConfirmarClave)}
+                      className={`absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer p-1 ${
+                        isDark ? 'text-slate-400 hover:text-white' : 'text-slate-400 hover:text-slate-600'
+                      }`}
+                    >
+                      {mostrarConfirmarClave ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
 
                 {/* Checkbox de Tratamiento de Datos (Ley 1581) */}
                 <div className="pt-0.5">
-                  <label className="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer select-none">
+                  <label className={`flex items-start gap-2.5 text-xs cursor-pointer select-none ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                     <input
                       type="checkbox"
                       checked={aceptaHabeasData}
@@ -466,7 +646,7 @@ export const RegisterForm = ({ onBack }) => {
                           e.preventDefault();
                           setModalHabeasAbierto(true);
                         }}
-                        className="text-lochmara-600 font-bold underline hover:text-lochmara-700 cursor-pointer"
+                        className="text-lochmara-500 font-bold underline hover:text-lochmara-400 cursor-pointer"
                       >
                         tratamiento de datos personales (Ley 1581)
                       </button>
@@ -474,16 +654,108 @@ export const RegisterForm = ({ onBack }) => {
                   </label>
                 </div>
 
-                {/* Botón Registrarse */}
+                {/* Botón Enviar Código y Pasar al Paso 3 */}
                 <button
                   type="submit"
-                  disabled={estaProcesando || registroExitoso}
+                  disabled={estaProcesando}
                   className="w-full py-3 mt-1 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-lochmara-600/25 disabled:opacity-50"
                 >
                   {estaProcesando ? (
-                    <span>Registrando cuenta...</span>
+                    <span>Enviando código PIN a tu correo...</span>
                   ) : (
-                    <span>Crear Cuenta en UniWheels</span>
+                    <>
+                      <span>Verificar Correo Institucional</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </>
+                  )}
+                </button>
+              </motion.form>
+            )}
+
+            {/* PASO 3: VERIFICACIÓN PIN DE CORREO INSTITUCIONAL */}
+            {pasoActual === 3 && (
+              <motion.form
+                key="paso-3"
+                initial={{ opacity: 0, x: -15 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 15 }}
+                transition={{ duration: 0.2 }}
+                onSubmit={procesarRegistroFinal}
+                className="space-y-4"
+              >
+                <div
+                  className={`p-4 rounded-2xl border text-center space-y-2 ${
+                    isDark ? 'bg-slate-900 border-slate-800' : 'bg-lochmara-50/70 border-lochmara-200/80'
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-2xl bg-lochmara-600/10 border border-lochmara-500/20 text-lochmara-600 dark:text-lochmara-400 flex items-center justify-center mx-auto">
+                    <KeyRound className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      Código de 6 dígitos enviado
+                    </p>
+                    <p className={`text-[11px] font-mono text-lochmara-600 dark:text-lochmara-400`}>
+                      {correoVisual}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Input de PIN */}
+                <div className="space-y-1.5">
+                  <label className={`text-xs font-bold text-center block ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    Ingresa tu PIN de Activación
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    autoFocus
+                    value={codigoPin}
+                    onChange={(e) => setCodigoPin(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                    placeholder="• • • • • •"
+                    className={`w-full text-center text-2xl font-mono font-extrabold tracking-widest rounded-2xl py-3 border transition-all shadow-2xs focus:outline-none focus:ring-2 focus:ring-lochmara-500 ${
+                      isDark
+                        ? 'bg-slate-900 border-slate-800 text-white placeholder-slate-600'
+                        : 'bg-white border-slate-200 text-slate-900 placeholder-slate-300'
+                    }`}
+                  />
+                  <p className={`text-[10px] text-center ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Revisa tu bandeja de entrada o carpeta de spam institucional
+                  </p>
+                </div>
+
+                {/* Reenviar código */}
+                <div className="text-center pt-1">
+                  <button
+                    type="button"
+                    disabled={reenviandoCodigo}
+                    onClick={reenviarPin}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-lochmara-600 dark:text-lochmara-400 hover:underline cursor-pointer disabled:opacity-50"
+                  >
+                    <RotateCw className={`w-3 h-3 ${reenviandoCodigo ? 'animate-spin' : ''}`} />
+                    <span>{reenviandoCodigo ? 'Reenviando...' : 'Reenviar código PIN'}</span>
+                  </button>
+                </div>
+
+                {/* Botón Finalizar Registro */}
+                <button
+                  type="submit"
+                  disabled={estaProcesando || codigoPin.length !== 6 || registroExitoso}
+                  className="w-full py-3.5 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-lochmara-600/25 disabled:opacity-50"
+                >
+                  {estaProcesando ? (
+                    <span>Verificando y creando cuenta...</span>
+                  ) : registroExitoso ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                      <span>¡Cuenta Verificada Exitosamente!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      <span>Confirmar y Crear Cuenta</span>
+                    </>
                   )}
                 </button>
               </motion.form>
@@ -493,12 +765,12 @@ export const RegisterForm = ({ onBack }) => {
       </div>
 
       {/* 3. PIE DE SEGURIDAD */}
-      <div className="px-6 pb-6 pt-1 flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+      <div className={`px-6 pb-6 pt-1 flex items-center justify-center gap-1.5 text-[11px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
         <ShieldCheck className="w-3.5 h-3.5 text-lochmara-500" />
         <span>Comunidad Universitaria Verificada</span>
       </div>
 
-      {/* Modal de Opciones de Foto (Cámara / Galería) */}
+      {/* Modal de Opciones de Foto */}
       <PhotoPickerModal
         isOpen={modalFotoAbierto}
         onClose={() => setModalFotoAbierto(false)}

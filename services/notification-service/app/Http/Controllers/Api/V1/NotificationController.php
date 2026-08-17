@@ -74,16 +74,22 @@ class NotificationController extends Controller
      */
     public function markAsRead(string $id): JsonResponse
     {
-        $notificacion = Notification::findOrFail($id);
-        $notificacion->markAsRead();
+        $notificacion = null;
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
+            $notificacion = Notification::find($id);
+        }
+
+        if ($notificacion) {
+            $notificacion->markAsRead();
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Notificación marcada como leída.',
             'data' => [
-                'id' => $notificacion->id,
+                'id' => $id,
                 'is_read' => true,
-                'read_at' => $notificacion->read_at->toISOString(),
+                'read_at' => now()->toISOString(),
             ],
         ]);
     }

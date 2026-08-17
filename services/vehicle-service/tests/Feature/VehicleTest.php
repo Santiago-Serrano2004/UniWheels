@@ -47,7 +47,7 @@ test('un conductor puede registrar un automovil con placa colombiana valida', fu
     $response->assertStatus(201)
         ->assertJson([
             'success' => true,
-            'message' => 'Vehículo registrado exitosamente. Por favor adjunta los documentos requeridos para su validación.',
+            'message' => 'Vehículo registrado exitosamente. Se ha enviado la solicitud de validación al equipo de UniWheels.',
         ])
         ->assertJsonPath('data.plate_number', 'ABC123')
         ->assertJsonPath('data.status', 'pendiente_revision')

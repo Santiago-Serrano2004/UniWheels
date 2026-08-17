@@ -7,16 +7,15 @@ import {
   Lock,
   ArrowLeft,
   ShieldCheck,
-  AlertCircle,
   KeyRound,
-  CheckCircle2,
   Eye,
   EyeOff,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const LoginForm = ({ onBack }) => {
-  const { login } = useAppStore();
+  const { login, theme } = useAppStore();
+  const isDark = theme === 'dark';
 
   const [correo, setCorreo] = useState('');
   const [clave, setClave] = useState('');
@@ -130,7 +129,9 @@ export const LoginForm = ({ onBack }) => {
   };
 
   return (
-    <div className="flex-1 h-full flex flex-col justify-between select-none overflow-hidden bg-slate-50 text-slate-900">
+    <div className={`flex-1 h-full flex flex-col justify-between select-none overflow-hidden transition-colors ${
+      isDark ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'
+    }`}>
       {/* 1. BARRA SUPERIOR DE NAVEGACION */}
       <div className="pt-6 sm:pt-4 px-6 pb-2 flex items-center justify-between">
         <button
@@ -144,12 +145,16 @@ export const LoginForm = ({ onBack }) => {
               onBack();
             }
           }}
-          className="w-9 h-9 rounded-full bg-white border border-slate-200/80 shadow-2xs hover:bg-slate-100 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
+          className={`w-9 h-9 rounded-full border shadow-2xs flex items-center justify-center transition-all cursor-pointer ${
+            isDark
+              ? 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
+              : 'bg-white border-slate-200/80 text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
 
-        <span className="text-xs font-bold text-slate-400">UniWheels</span>
+        <span className={`text-xs font-bold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>UniWheels</span>
       </div>
 
       {/* 2. CUERPO DEL FORMULARIO (Distribuido y centrado) */}
@@ -157,10 +162,10 @@ export const LoginForm = ({ onBack }) => {
         <div className="w-full max-w-sm mx-auto space-y-5">
           {/* Titulo y Subtitulo */}
           <div className="space-y-1">
-            <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">
+            <h2 className={`text-2xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
               {modoRecuperacion ? 'Recuperar Clave' : 'Iniciar Sesión'}
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               {modoRecuperacion
                 ? 'Te enviaremos un código de 6 dígitos'
                 : 'Ingresa con tu correo institucional universitario'}
@@ -201,8 +206,8 @@ export const LoginForm = ({ onBack }) => {
               >
                 {/* Campo Correo */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-lochmara-600" />
+                  <label className={`text-xs font-bold flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <Mail className="w-3.5 h-3.5 text-lochmara-500" />
                     <span>Correo Institucional</span>
                   </label>
                   <input
@@ -211,15 +216,19 @@ export const LoginForm = ({ onBack }) => {
                     value={correo}
                     onChange={(e) => setCorreo(e.target.value)}
                     placeholder="ej: usuario@unab.edu.co"
-                    className="w-full bg-white text-xs rounded-2xl px-4 py-3 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 focus:border-transparent transition-all shadow-2xs"
+                    className={`w-full text-xs rounded-2xl px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-lochmara-500 transition-all shadow-2xs ${
+                      isDark
+                        ? 'bg-slate-900 border-slate-800 text-white placeholder-slate-500'
+                        : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+                    }`}
                   />
                 </div>
 
                 {/* Campo Contraseña */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                      <Lock className="w-3.5 h-3.5 text-lochmara-600" />
+                    <label className={`text-xs font-bold flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                      <Lock className="w-3.5 h-3.5 text-lochmara-500" />
                       <span>Contraseña</span>
                     </label>
                     <button
@@ -231,7 +240,7 @@ export const LoginForm = ({ onBack }) => {
                         setMensajeError('');
                         setMensajeExito('');
                       }}
-                      className="text-[11px] text-lochmara-600 font-bold hover:underline cursor-pointer"
+                      className="text-[11px] text-lochmara-500 font-bold hover:underline cursor-pointer"
                     >
                       ¿Olvidaste tu clave?
                     </button>
@@ -243,12 +252,18 @@ export const LoginForm = ({ onBack }) => {
                       value={clave}
                       onChange={(e) => setClave(e.target.value)}
                       placeholder="••••••••••••"
-                      className="w-full bg-white text-xs rounded-2xl pl-4 pr-11 py-3 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 focus:border-transparent transition-all shadow-2xs"
+                      className={`w-full text-xs rounded-2xl pl-4 pr-11 py-3 border focus:outline-none focus:ring-2 focus:ring-lochmara-500 transition-all shadow-2xs ${
+                        isDark
+                          ? 'bg-slate-900 border-slate-800 text-white placeholder-slate-500'
+                          : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+                      }`}
                     />
                     <button
                       type="button"
                       onClick={() => setMostrarClave(!mostrarClave)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-1"
+                      className={`absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer p-1 ${
+                        isDark ? 'text-slate-400 hover:text-white' : 'text-slate-400 hover:text-slate-600'
+                      }`}
                     >
                       {mostrarClave ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -276,8 +291,8 @@ export const LoginForm = ({ onBack }) => {
                 {pasoRecuperacion === 1 ? (
                   <form onSubmit={solicitarCodigoRecuperacion} className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                        <Mail className="w-3.5 h-3.5 text-lochmara-600" />
+                      <label className={`text-xs font-bold flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                        <Mail className="w-3.5 h-3.5 text-lochmara-500" />
                         <span>Ingresa tu Correo Institucional</span>
                       </label>
                       <input
@@ -286,7 +301,11 @@ export const LoginForm = ({ onBack }) => {
                         value={correoRecuperacion}
                         onChange={(e) => setCorreoRecuperacion(e.target.value)}
                         placeholder="ej: usuario@unab.edu.co"
-                        className="w-full bg-white text-xs rounded-2xl px-4 py-3 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 focus:border-transparent transition-all shadow-2xs"
+                        className={`w-full text-xs rounded-2xl px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-lochmara-500 transition-all shadow-2xs ${
+                          isDark
+                            ? 'bg-slate-900 border-slate-800 text-white placeholder-slate-500'
+                            : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+                        }`}
                       />
                     </div>
 
@@ -301,8 +320,8 @@ export const LoginForm = ({ onBack }) => {
                 ) : (
                   <form onSubmit={procesarRestablecimiento} className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                        <KeyRound className="w-3.5 h-3.5 text-lochmara-600" />
+                      <label className={`text-xs font-bold flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                        <KeyRound className="w-3.5 h-3.5 text-lochmara-500" />
                         <span>Código de 6 Dígitos</span>
                       </label>
                       <input
@@ -312,13 +331,17 @@ export const LoginForm = ({ onBack }) => {
                         value={codigoVerificacion}
                         onChange={(e) => setCodigoVerificacion(e.target.value.trim())}
                         placeholder="123456"
-                        className="w-full bg-white text-center tracking-widest font-mono text-sm rounded-2xl px-4 py-3 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 focus:border-transparent transition-all font-bold text-slate-900 shadow-2xs"
+                        className={`w-full text-center tracking-widest font-mono text-sm rounded-2xl px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-lochmara-500 transition-all font-bold shadow-2xs ${
+                          isDark
+                            ? 'bg-slate-900 border-slate-800 text-white placeholder-slate-500'
+                            : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+                        }`}
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                        <Lock className="w-3.5 h-3.5 text-lochmara-600" />
+                      <label className={`text-xs font-bold flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                        <Lock className="w-3.5 h-3.5 text-lochmara-500" />
                         <span>Nueva Contraseña</span>
                       </label>
                       <input
@@ -327,7 +350,11 @@ export const LoginForm = ({ onBack }) => {
                         value={nuevaClave}
                         onChange={(e) => setNuevaClave(e.target.value)}
                         placeholder="Mínimo 8 caracteres"
-                        className="w-full bg-white text-xs rounded-2xl px-4 py-3 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 focus:border-transparent transition-all shadow-2xs"
+                        className={`w-full text-xs rounded-2xl px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-lochmara-500 transition-all shadow-2xs ${
+                          isDark
+                            ? 'bg-slate-900 border-slate-800 text-white placeholder-slate-500'
+                            : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+                        }`}
                       />
                     </div>
 
@@ -347,7 +374,7 @@ export const LoginForm = ({ onBack }) => {
       </div>
 
       {/* 3. PIE DE SEGURIDAD */}
-      <div className="px-6 pb-6 pt-2 flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+      <div className={`px-6 pb-6 pt-2 flex items-center justify-center gap-1.5 text-[11px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
         <ShieldCheck className="w-3.5 h-3.5 text-lochmara-500" />
         <span>Autenticación Segura Sanctum JWT</span>
       </div>

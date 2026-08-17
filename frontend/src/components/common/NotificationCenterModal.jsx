@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { notificationsService } from '../../services/api';
 import { useAppStore } from '../../store/useAppStore';
@@ -6,16 +7,16 @@ import {
   Bell,
   CheckCheck,
   Car,
-  MapPin,
   ShieldCheck,
-  AlertTriangle,
   Clock,
   Sparkles,
   Send,
+  X,
 } from 'lucide-react';
 
 export const NotificationCenterModal = ({ isOpen, onClose }) => {
-  const { user } = useAppStore();
+  const { user, theme } = useAppStore();
+  const isDark = theme === 'dark';
   const userId = user?.id || '01a00000-0000-0000-0000-000000000001';
 
   const [notifications, setNotifications] = useState([
@@ -46,6 +47,18 @@ export const NotificationCenterModal = ({ isOpen, onClose }) => {
   ]);
 
   const [unreadCount, setUnreadCount] = useState(2);
+
+  // Bloquear scroll del fondo mientras está abierto
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   // Cargar notificaciones desde el backend (puerto 8005)
   useEffect(() => {
@@ -86,109 +99,151 @@ export const NotificationCenterModal = ({ isOpen, onClose }) => {
     setNotifications((prev) => [nueva, ...prev]);
     setUnreadCount((prev) => prev + 1);
 
-    await notificationsService.sendNotification({
+    await notificationsService.broadcastPushNotification({
       user_id: userId,
       title: nueva.title,
       body: nueva.body,
       type: nueva.type,
-      payload_json: { distance_m: 200 },
     });
   };
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm select-none">
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 10 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 10 }}
-        className="bg-white rounded-3xl p-5 w-full max-w-md border border-slate-200 shadow-2xl space-y-4 max-h-[85vh] flex flex-col"
-      >
-        {/* Cabecera del Centro de Notificaciones */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100 shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-2xl bg-lochmara-50 text-lochmara-600 border border-lochmara-100">
-              <Bell className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="text-sm font-extrabold text-slate-900">Notificaciones</h3>
-              <p className="text-[11px] text-slate-500">
-                {unreadCount > 0 ? `${unreadCount} no leídas` : 'Bandeja al día'}
-              </p>
-            </div>
-          </div>
+  return createPortal(
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        {/* Backdrop con desenfoque suave */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
+        />
 
-          <div className="flex items-center gap-2">
-            {unreadCount > 0 && (
+        {/* Modal Contenedor */}
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0, y: 15 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.95, opacity: 0, y: 15 }}
+          transition={{ type: 'spring', duration: 0.35, bounce: 0 }}
+          className={`relative w-full max-w-sm rounded-3xl p-4 border shadow-2xl z-10 max-h-[82vh] flex flex-col transition-colors ${
+            isDark
+              ? 'bg-slate-900 border-slate-800 text-white'
+              : 'bg-white border-slate-200 text-slate-900'
+          }`}
+        >
+          {/* Cabecera */}
+          <div className={`flex items-center justify-between pb-2.5 border-b shrink-0 ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
+            <div className="flex items-center gap-2">
+              <div
+                className={`p-1.5 rounded-xl border ${
+                  isDark
+                    ? 'bg-slate-800 text-lochmara-400 border-slate-700'
+                    : 'bg-lochmara-50 text-lochmara-600 border-lochmara-100'
+                }`}
+              >
+                <Bell className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Notificaciones</h3>
+                <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  {unreadCount > 0 ? `${unreadCount} no leídas` : 'Bandeja al día'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  onClick={marcarTodasLeidas}
+                  className={`text-[10px] font-bold flex items-center gap-0.5 px-2 py-0.5 rounded-md cursor-pointer ${
+                    isDark
+                      ? 'text-lochmara-400 hover:text-lochmara-300 hover:bg-slate-800'
+                      : 'text-lochmara-600 hover:text-lochmara-800 hover:bg-lochmara-50'
+                  }`}
+                  title="Marcar todas como leídas"
+                >
+                  <CheckCheck className="w-3 h-3" />
+                  <span>Leídas</span>
+                </button>
+              )}
               <button
                 type="button"
-                onClick={marcarTodasLeidas}
-                className="text-[11px] text-lochmara-600 hover:text-lochmara-800 font-bold flex items-center gap-1 cursor-pointer transition-colors"
-                title="Marcar todas como leídas"
+                onClick={onClose}
+                className={`p-1 rounded-full transition-colors cursor-pointer ${
+                  isDark ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-700'
+                }`}
               >
-                <CheckCheck className="w-3.5 h-3.5" />
-                <span>Leídas</span>
+                <X className="w-4 h-4" />
               </button>
-            )}
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 text-xs font-bold p-1 cursor-pointer"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-
-        {/* Listado de Notificaciones Desplazable */}
-        <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
-          {notifications.length === 0 ? (
-            <div className="text-center py-10 text-slate-400 space-y-2">
-              <Bell className="w-8 h-8 mx-auto opacity-40 stroke-1" />
-              <p className="text-xs">No tienes notificaciones por el momento</p>
             </div>
-          ) : (
-            notifications.map((notif) => {
-              return (
+          </div>
+
+          {/* Listado con scroll acotado */}
+          <div className="flex-1 overflow-y-auto py-2 space-y-2 min-h-0 pr-0.5">
+            {notifications.length === 0 ? (
+              <div className="text-center py-12 text-slate-400 space-y-2">
+                <Bell className="w-7 h-7 mx-auto opacity-40 stroke-1" />
+                <p className="text-xs font-medium">No tienes notificaciones</p>
+              </div>
+            ) : (
+              notifications.map((notif) => (
                 <div
                   key={notif.id}
                   onClick={() => !notif.is_read && marcarComoLeida(notif.id)}
-                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                  className={`p-2.5 rounded-2xl border transition-all cursor-pointer ${
                     notif.is_read
-                      ? 'bg-slate-50/70 border-slate-200/70 opacity-75'
-                      : 'bg-lochmara-50/40 border-lochmara-200 shadow-xs'
+                      ? isDark
+                        ? 'bg-slate-950/60 border-slate-800/80 opacity-60 text-slate-400'
+                        : 'bg-slate-50/60 border-slate-200/60 opacity-70 text-slate-600'
+                      : isDark
+                      ? 'bg-slate-950 border-lochmara-900/60 text-white shadow-xs'
+                      : 'bg-lochmara-50/40 border-lochmara-200 text-slate-900 shadow-2xs'
                   }`}
                 >
-                  <div className="flex items-start gap-2.5">
-                    <div className={`p-2 rounded-xl shrink-0 ${
-                      notif.is_read ? 'bg-slate-200 text-slate-600' : 'bg-lochmara-600 text-white shadow-xs'
-                    }`}>
+                  <div className="flex items-start gap-2">
+                    <div
+                      className={`p-1.5 rounded-xl shrink-0 ${
+                        notif.is_read
+                          ? isDark
+                            ? 'bg-slate-800 text-slate-400'
+                            : 'bg-slate-200 text-slate-600'
+                          : 'bg-lochmara-600 text-white shadow-2xs'
+                      }`}
+                    >
                       {notif.type === 'conductor_en_camino' ? (
-                        <Car className="w-3.5 h-3.5" />
+                        <Car className="w-3 h-3" />
                       ) : notif.type === 'abordaje_verificado' ? (
-                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <ShieldCheck className="w-3 h-3" />
                       ) : (
-                        <Sparkles className="w-3.5 h-3.5" />
+                        <Sparkles className="w-3 h-3" />
                       )}
                     </div>
 
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <h4 className={`text-xs font-bold ${notif.is_read ? 'text-slate-700' : 'text-slate-900 font-extrabold'}`}>
+                    <div className="flex-1 min-w-0 space-y-0.5">
+                      <div className="flex items-center justify-between gap-1">
+                        <h4
+                          className={`text-[11px] truncate ${
+                            notif.is_read
+                              ? isDark ? 'text-slate-300 font-semibold' : 'text-slate-700 font-semibold'
+                              : isDark ? 'text-white font-bold' : 'text-slate-900 font-bold'
+                          }`}
+                        >
                           {notif.title}
                         </h4>
                         {!notif.is_read && (
-                          <span className="w-2 h-2 rounded-full bg-lochmara-600 shrink-0" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-lochmara-500 shrink-0" />
                         )}
                       </div>
 
-                      <p className="text-[11px] text-slate-600 leading-relaxed">
+                      <p className={`text-[10px] leading-snug break-words ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                         {notif.body}
                       </p>
 
-                      <div className="flex items-center gap-1 text-[10px] text-slate-400 pt-1">
-                        <Clock className="w-3 h-3" />
+                      <div className="flex items-center gap-1 text-[9px] text-slate-400 pt-0.5">
+                        <Clock className="w-2.5 h-2.5" />
                         <span>
                           {new Date(notif.created_at).toLocaleTimeString('es-CO', {
                             hour: '2-digit',
@@ -199,23 +254,24 @@ export const NotificationCenterModal = ({ isOpen, onClose }) => {
                     </div>
                   </div>
                 </div>
-              );
-            })
-          )}
-        </div>
+              ))
+            )}
+          </div>
 
-        {/* Botón de Prueba para Disparar Notificación Asíncrona */}
-        <div className="pt-2 border-t border-slate-100 shrink-0">
-          <button
-            type="button"
-            onClick={simularNotificacionEnVivo}
-            className="w-full py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-          >
-            <Send className="w-3.5 h-3.5 text-lochmara-300" />
-            <span>Simular Alerta de Conductor en Vivo</span>
-          </button>
-        </div>
-      </motion.div>
-    </div>
+          {/* Botón inferior fijo */}
+          <div className={`pt-2 border-t shrink-0 ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
+            <button
+              type="button"
+              onClick={simularNotificacionEnVivo}
+              className="w-full py-2 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 text-white text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+            >
+              <Send className="w-3 h-3 text-white" />
+              <span>Simular Alerta en Vivo</span>
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>,
+    document.body
   );
 };

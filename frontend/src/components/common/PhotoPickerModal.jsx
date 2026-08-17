@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAppStore } from '../../store/useAppStore';
 import { Camera, Image, X, RefreshCw, Check, AlertCircle } from 'lucide-react';
 
 export const PhotoPickerModal = ({
@@ -11,6 +12,8 @@ export const PhotoPickerModal = ({
   cameraLabel = 'Tomar Foto con Cámara',
   galleryLabel = 'Subir desde Galería o Archivos',
 }) => {
+  const { theme } = useAppStore();
+  const isDark = theme === 'dark';
   const [modoCamara, setModoCamara] = useState(false);
   const [errorCamara, setErrorCamara] = useState('');
   const [fotoCapturada, setFotoCapturada] = useState(null);
@@ -35,7 +38,7 @@ export const PhotoPickerModal = ({
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
-    } catch (err) {
+    } catch (_err) {
       setErrorCamara('No se pudo acceder a la cámara del dispositivo. Puedes subir el documento desde tus archivos.');
     }
   };
@@ -109,22 +112,28 @@ export const PhotoPickerModal = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 20 }}
           transition={{ duration: 0.25 }}
-          className="w-full max-w-[340px] max-h-[85vh] bg-white rounded-3xl p-5 shadow-2xl border border-slate-100 overflow-hidden text-slate-900 mx-auto"
+          className={`w-full max-w-[340px] max-h-[85vh] rounded-3xl p-5 shadow-2xl border overflow-hidden mx-auto transition-colors ${
+            isDark
+              ? 'bg-slate-900 border-slate-800 text-white'
+              : 'bg-white border-slate-200 text-slate-900'
+          }`}
         >
           {/* Cabecera */}
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+          <div className={`flex items-center justify-between pb-3 border-b mb-4 ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
             <div>
-              <h3 className="text-sm font-bold text-slate-900">
+              <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {modoCamara ? `Capturar ${title}` : title}
               </h3>
-              <p className="text-[10px] text-slate-500">{subtitle}</p>
+              <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{subtitle}</p>
             </div>
             <button
               onClick={() => {
                 detenerCamara();
                 onClose();
               }}
-              className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-full transition-colors cursor-pointer ${
+                isDark ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-700'
+              }`}
             >
               <X className="w-4 h-4" />
             </button>
@@ -136,28 +145,36 @@ export const PhotoPickerModal = ({
               <button
                 type="button"
                 onClick={iniciarCamara}
-                className="w-full p-4 rounded-2xl bg-lochmara-50/80 hover:bg-lochmara-100 border border-lochmara-200/80 flex items-center gap-3.5 transition-all text-left cursor-pointer shadow-2xs group"
+                className={`w-full p-4 rounded-2xl border flex items-center gap-3.5 transition-all text-left cursor-pointer shadow-2xs group ${
+                  isDark
+                    ? 'bg-slate-950 hover:bg-slate-800/80 border-slate-800 text-white'
+                    : 'bg-lochmara-50/80 hover:bg-lochmara-100 border-lochmara-200/80 text-slate-900'
+                }`}
               >
                 <div className="w-11 h-11 rounded-2xl bg-lochmara-600 text-white flex items-center justify-center shadow-md shadow-lochmara-600/20 group-hover:scale-105 transition-transform">
                   <Camera className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-900">{cameraLabel}</p>
-                  <p className="text-[10px] text-slate-500">Usa la cámara de tu dispositivo</p>
+                  <p className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{cameraLabel}</p>
+                  <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Usa la cámara de tu dispositivo</p>
                 </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 flex items-center gap-3.5 transition-all text-left cursor-pointer shadow-2xs group"
+                className={`w-full p-4 rounded-2xl border flex items-center gap-3.5 transition-all text-left cursor-pointer shadow-2xs group ${
+                  isDark
+                    ? 'bg-slate-950 hover:bg-slate-800/80 border-slate-800 text-white'
+                    : 'bg-slate-50 hover:bg-slate-100 border-slate-200/80 text-slate-900'
+                }`}
               >
                 <div className="w-11 h-11 rounded-2xl bg-slate-800 text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
                   <Image className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-900">{galleryLabel}</p>
-                  <p className="text-[10px] text-slate-500">Selecciona una imagen en JPG o PNG</p>
+                  <p className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{galleryLabel}</p>
+                  <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Selecciona una imagen en JPG o PNG</p>
                 </div>
               </button>
 
@@ -173,7 +190,7 @@ export const PhotoPickerModal = ({
             /* Vista de Cámara en Vivo con Captura y Reintento */
             <div className="space-y-3">
               {errorCamara ? (
-                <div className="p-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+                <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{errorCamara}</span>
                 </div>
@@ -215,7 +232,11 @@ export const PhotoPickerModal = ({
                       <button
                         type="button"
                         onClick={() => setFotoCapturada(null)}
-                        className="flex-1 py-3 rounded-2xl border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        className={`flex-1 py-3 rounded-2xl border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                          isDark
+                            ? 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-slate-300'
+                            : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700'
+                        }`}
                       >
                         <RefreshCw className="w-3.5 h-3.5" />
                         <span>Repetir</span>

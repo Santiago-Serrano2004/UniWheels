@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@yield('title', 'UniWheels — Movilidad Universitaria')</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .email-wrapper {
+            padding: 36px 16px;
+            background-color: #f8fafc !important;
+        }
+
+        .email-container {
+            max-width: 540px;
+            margin: 0 auto;
+            background: #ffffff !important;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        /* HEADER CENTRALIZADO */
+        .email-header {
+            background: #ffffff !important;
+            padding: 32px 32px 20px;
+            text-align: center;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .email-logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .email-logo-text {
+            font-size: 24px;
+            font-weight: 800;
+            color: #0284c7;
+            letter-spacing: -0.5px;
+        }
+        .email-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .email-badge-blue {
+            background: #f0f9ff !important;
+            border: 1px solid #bae6fd;
+            color: #0369a1 !important;
+        }
+        .email-badge-amber {
+            background: #fef3c7 !important;
+            border: 1px solid #fde68a;
+            color: #92400e !important;
+        }
+        .email-badge-emerald {
+            background: #ecfdf5 !important;
+            border: 1px solid #a7f3d0;
+            color: #065f46 !important;
+        }
+        .email-badge-slate {
+            background: #f1f5f9 !important;
+            border: 1px solid #e2e8f0;
+            color: #475569 !important;
+        }
+        .email-header-title {
+            color: #0f172a !important;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-top: 14px;
+            margin-bottom: 4px;
+        }
+        .email-header-subtitle {
+            color: #64748b !important;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* CUERPO DEL CORREO */
+        .email-content {
+            padding: 28px 32px;
+            background: #ffffff !important;
+        }
+        .email-greeting {
+            font-size: 17px;
+            font-weight: 800;
+            color: #0f172a !important;
+            margin-bottom: 8px;
+        }
+        .email-description {
+            font-size: 13px;
+            color: #475569 !important;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        /* PIN / CÓDIGOS */
+        .email-pin-container {
+            border-radius: 18px;
+            padding: 22px 16px;
+            text-align: center;
+            margin: 22px 0;
+        }
+        .email-pin-blue {
+            background: #f0f9ff !important;
+            border: 1.5px solid #bae6fd;
+        }
+        .email-pin-amber {
+            background: #fffbeb !important;
+            border: 1.5px solid #fde68a;
+        }
+        .email-pin-label {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 12px;
+        }
+        .email-pin-digits {
+            display: table;
+            margin: 0 auto;
+        }
+        .email-pin-row {
+            display: table-row;
+        }
+        .email-pin-box {
+            display: table-cell;
+            width: 44px;
+            height: 50px;
+            background: #ffffff !important;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+            font-size: 26px;
+            font-weight: 800;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .email-pin-box-blue {
+            border: 2px solid #0284c7;
+            color: #0369a1 !important;
+            box-shadow: 0 2px 5px rgba(2, 132, 199, 0.12);
+        }
+        .email-pin-box-amber {
+            border: 2px solid #f59e0b;
+            color: #92400e !important;
+            box-shadow: 0 2px 5px rgba(245, 158, 11, 0.12);
+        }
+        .email-pin-spacer {
+            display: table-cell;
+            width: 8px;
+        }
+        .email-pin-timer {
+            margin-top: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* TARJETAS DE CARACTERÍSTICAS */
+        .email-feature-card {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .email-feature-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: #e0f2fe !important;
+            color: #0284c7 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .email-feature-text h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a !important;
+            margin-bottom: 2px;
+        }
+        .email-feature-text p {
+            font-size: 11px;
+            color: #64748b !important;
+        }
+
+        /* AVISOS Y ALERTS */
+        .email-alert-card {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-top: 18px;
+            font-size: 11px;
+            color: #64748b !important;
+            line-height: 1.5;
+        }
+        .email-alert-card strong {
+            color: #334155 !important;
+        }
+        .email-alert-success {
+            background: #f0fdf4 !important;
+            border-color: #bbf7d0;
+            color: #166534 !important;
+        }
+        .email-alert-success strong {
+            color: #14532d !important;
+        }
+
+        /* BOTONES CTA */
+        .email-cta-container {
+            text-align: center;
+            margin: 26px 0 8px;
+        }
+        .email-btn-primary {
+            display: inline-block;
+            background: #0284c7 !important;
+            color: #ffffff !important;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            padding: 14px 30px;
+            border-radius: 14px;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+        }
+        .email-btn-secondary {
+            display: inline-block;
+            background: #f1f5f9 !important;
+            color: #334155 !important;
+            border: 1px solid #cbd5e1;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+        }
+
+        /* FOOTER CENTRALIZADO */
+        .email-footer {
+            background: #f8fafc !important;
+            padding: 20px 32px;
+            text-align: center;
+            border-top: 1px solid #f1f5f9;
+            font-size: 11px;
+            color: #94a3b8 !important;
+            line-height: 1.6;
+        }
+        .email-footer strong {
+            color: #64748b !important;
+        }
+    </style>
+</head>
+<body>
+<div class="email-wrapper">
+    <div class="email-container">
+        <!-- HEADER CENTRALIZADO CON LOGO DE UNIWHEELS -->
+        <div class="email-header">
+            <div class="email-logo-container">
+                <svg width="38" height="26" viewBox="245 85 185 125" style="vertical-align: middle;">
+                    <g fill="#033b6f"><path d="M348.98 192.18 c-2.71 -3.05 -8.02 -13.48 -8.02 -15.65 0 -1.18 0.49 -2.41 1.62 -3.89 0.89 -1.18 3.35 -4.67 5.51 -7.68 3.74 -5.36 3.89 -5.56 5.66 -5.56 l1.82 0 2.56 5.41 c1.43 3.05 2.51 6.10 2.51 6.99 0 0.89 -1.08 4.97 -2.41 9.05 -1.33 4.08 -2.71 8.81 -3.05 10.48 l-0.59 3 -1.82 0 c-1.62 0 -2.16 -0.34 -3.79 -2.16z"/></g>
+                    <g fill="#054d82"><path d="M398.77 194.74 c-0.10 -0.34 -1.13 -3.30 -2.26 -6.54 -1.13 -3.25 -3.44 -9 -5.17 -12.79 -2.46 -5.41 -3.15 -7.38 -3.15 -9.25 l0 -2.41 1.87 0.15 c2.21 0.15 3.05 -0.25 3.05 -1.57 0 -0.74 0.34 -0.93 1.67 -0.93 1.33 0 1.87 0.34 2.90 1.87 0.69 0.98 1.53 2.41 1.87 3.15 0.30 0.74 0.74 1.23 0.98 1.08 0.69 -0.39 2.36 -5.51 2.90 -8.81 1.28 -7.92 -3.59 -17.96 -10.53 -21.65 -1.62 -0.89 -1.82 -1.18 -1.67 -2.71 0.15 -1.67 0.20 -1.72 2.61 -1.87 6.30 -0.44 18.79 1.77 24.40 4.28 2.26 1.03 2.31 1.08 3.44 5.07 0.98 3.54 1.18 5.17 1.18 12.45 0 7.58 -0.15 8.86 -1.38 13.58 -1.48 5.71 -4.33 13.38 -6.74 18.16 -1.92 3.79 -5.07 7.23 -7.63 8.41 -2.31 1.08 -8.02 1.28 -8.36 0.34z"/></g>
+                    <g fill="#0b6094"><path d="M385.24 163.99 c-4.72 -7.68 -8.76 -11.02 -12.30 -9.99 -0.93 0.30 -2.46 0.49 -3.30 0.49 -1.53 0 -1.62 -0.10 -1.62 -1.62 0 -2.21 2.41 -5.85 4.97 -7.58 1.82 -1.18 2.66 -1.38 6.35 -1.53 3.59 -0.15 4.62 0 6.30 0.84 2.61 1.33 3.64 2.71 8.41 11.46 3.74 6.79 4.87 10.23 3.49 10.23 -0.25 0 -0.49 -0.15 -0.49 -0.34 -0.05 -0.25 -0.59 -1.03 -1.28 -1.87 -1.08 -1.23 -1.23 -1.33 -1.03 -0.44 0.34 1.53 -2.02 2.85 -3.84 2.16 -1.28 -0.49 -1.33 -0.44 -1.13 0.98 0.20 1.23 0.05 1.48 -0.84 1.48 -0.84 0 -1.72 -1.03 -3.69 -4.28z"/></g>
+                    <g fill="#0284c7"><path d="M285.86 198.72 c-15.20 -3.99 -26.22 -16.04 -29.82 -32.67 -0.84 -3.89 -1.53 -23.17 -0.98 -26.96 0.59 -3.74 1.77 -3.20 4.43 2.02 3.30 6.35 8.61 12.10 13.48 14.56 1.43 0.74 1.57 0.98 1.57 3.20 0 5.12 2.90 11.12 6.84 14.27 4.62 3.69 11.61 5.46 17.37 4.48 9.25 -1.62 14.66 -6.84 32.87 -31.73 14.27 -19.53 19.04 -24.55 28 -29.18 7.38 -3.89 11.07 -4.72 20.22 -4.77 8.86 0 11.56 0.59 18.45 3.94 5.31 2.61 9.40 5.81 13.23 10.48 2.71 3.35 7.48 11.76 6.99 12.30 -0.15 0.10 -1.33 -0.25 -2.61 -0.79 -5.02 -2.16 -16.33 -4.18 -22.04 -3.99 -1.08 0.05 -3.74 -0.30 -5.85 -0.79 -6.59 -1.48 -12.74 -0.54 -19.39 2.95 -6.40 3.35 -9.45 6.74 -21.25 23.62 -12.64 18.01 -19.58 26.42 -26.03 31.29 -4.28 3.25 -11.17 6.64 -15.99 7.82 -5.31 1.33 -14.32 1.33 -19.48 -0.05z"/><path d="M354.15 193.51 c-0.49 -0.10 -0.89 -0.59 -0.89 -1.08 0 -1.23 1.77 -8.12 3.05 -11.71 1.23 -3.59 2.46 -4.08 4.08 -1.62 1.62 2.41 3.64 3.59 6.54 3.84 3 0.25 3 0.25 0.30 4.33 -1.97 3 -4.13 4.97 -6.45 5.95 -1.53 0.59 -4.87 0.79 -6.64 0.30z"/><path d="M310.46 137.42 l0 -27.21 9.35 0 9.35 0 0 14.17 c0 14.12 0 14.17 -1.23 16.63 -1.03 2.07 -12.60 17.86 -16.19 22.09 l-1.23 1.48 -0.05 -27.16z"/></g>
+                    <g fill="#38bdf8"><path d="M397.54 192.87 c-3.20 -1.67 -4.72 -3.89 -12.84 -18.55 -2.56 -4.67 -4.43 -7.53 -4.92 -7.53 -0.44 0 -2.12 2.51 -4.38 6.54 -6.54 11.71 -6.10 11.17 -8.86 11.17 -3.69 0 -5.07 -0.79 -8.31 -4.67 l-1.18 -1.38 0.89 -2.76 c1.62 -5.12 10.58 -21.89 12.10 -22.73 0.54 -0.25 2.07 -0.64 3.35 -0.79 3.05 -0.34 6.05 0.98 8.76 3.94 2.90 3.15 7.38 10.68 10.77 18.06 3.74 8.17 7.82 19.68 6.94 19.68 -0.30 -0.05 -1.38 -0.44 -2.31 -0.98z"/><path d="M272.08 157.54 c-5.95 -3.44 -10.43 -8.22 -14.37 -15.35 l-2.61 -4.67 0 -13.53 0 -13.53 9.50 -0.15 c7.28 -0.10 9.54 0 9.69 0.49 0.15 0.34 0.20 11.32 0.15 24.35 l-0.15 23.67 -2.21 -1.28z"/></g>
+                </svg>
+                <span class="email-logo-text">UniWheels</span>
+            </div>
+
+            @yield('header_badge')
+
+            <h1 class="email-header-title">@yield('header_title')</h1>
+            <p class="email-header-subtitle">@yield('header_subtitle', 'Comunidad Universitaria de Movilidad Inteligente')</p>
+        </div>
+
+        <!-- CUERPO DINÁMICO DEL CORREO -->
+        <div class="email-content">
+            @yield('content')
+        </div>
+
+        <!-- FOOTER CENTRALIZADO -->
+        <div class="email-footer">
+            © {{ date('Y') }} <strong>UniWheels</strong> — Red Oficial de Movilidad Universitaria Segura.<br>
+            Protegido bajo la Ley Estatutaria 1581 de 2012 (Habeas Data) · Bucaramanga, Colombia.
+        </div>
+    </div>
+</div>
+</body>
+</html>

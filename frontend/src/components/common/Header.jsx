@@ -1,16 +1,27 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { Emblem } from './Emblem';
-import { DriverInviteModal } from './DriverInviteModal';
 import { NotificationCenterModal } from './NotificationCenterModal';
-import { MapPin, UserCheck, Car, Bell } from 'lucide-react';
+import { SosEmergencyModal } from './SosEmergencyModal';
+import { UserCheck, Car, Bell, ShieldAlert, Sun, Moon } from 'lucide-react';
 
 export const Header = () => {
-  const { user, activeRole, toggleRole, setActiveTab } = useAppStore();
-  const [modalRegistroAbierto, setModalRegistroAbierto] = useState(false);
+  const {
+    user,
+    activeRole,
+    toggleRole,
+    setActiveTab,
+    activeDriverTrip,
+    activePassengerBooking,
+    openDriverInviteModal,
+    theme,
+    toggleTheme,
+  } = useAppStore();
   const [modalNotifAbierto, setModalNotifAbierto] = useState(false);
+  const [modalSosAbierto, setModalSosAbierto] = useState(false);
 
   const isDriverVerified = Boolean(user?.isDriver);
+  const hasActiveTrip = Boolean(activeDriverTrip || activePassengerBooking);
 
   const manejarClickRol = () => {
     if (isDriverVerified) {
@@ -21,12 +32,18 @@ export const Header = () => {
         setActiveTab('home');
       }
     } else {
-      setModalRegistroAbierto(true);
+      openDriverInviteModal();
     }
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 pt-4 pb-3 flex items-center justify-between shadow-2xs select-none">
+    <header
+      className={`sticky top-0 z-30 backdrop-blur-md px-4 pt-4 pb-3 flex items-center justify-between shadow-2xs select-none transition-colors border-b ${
+        theme === 'dark'
+          ? 'bg-slate-950/95 border-slate-800/80 text-white'
+          : 'bg-white/95 border-slate-100 text-slate-900'
+      }`}
+    >
       {/* Isotipo / Emblema */}
       <div className="flex items-center gap-2">
         <div
@@ -34,18 +51,53 @@ export const Header = () => {
           className="flex items-center gap-2 cursor-pointer select-none"
         >
           <Emblem className="h-7 w-auto drop-shadow-xs" />
-          <span className="font-extrabold text-slate-900 text-sm tracking-tight">UniWheels</span>
+          <span
+            className={`font-extrabold text-sm tracking-tight ${
+              theme === 'dark' ? 'text-white' : 'text-slate-900'
+            }`}
+          >
+            UniWheels
+          </span>
         </div>
       </div>
 
-      {/* Acciones de Cabecera: Rol + Campana de Notificaciones + Perfil */}
-      <div className="flex items-center gap-2">
+      {/* Acciones de Cabecera: Tema + Rol + SOS + Notificaciones + Perfil */}
+      <div className="flex items-center gap-1.5">
+        {/* Alternador de Tema Rápido en la Cabecera Móvil */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className={`p-1.5 rounded-full transition-all cursor-pointer border ${
+            theme === 'dark'
+              ? 'bg-slate-900 border-slate-800 text-amber-300 hover:bg-slate-800'
+              : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
+          }`}
+          title="Cambiar tema de la app"
+        >
+          {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+        </button>
+
+        {/* Botón de Pánico SOS si hay viaje activo */}
+        {hasActiveTrip && (
+          <button
+            type="button"
+            onClick={() => setModalSosAbierto(true)}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-extrabold shadow-sm shadow-rose-600/30 animate-pulse cursor-pointer"
+            title="Botón de Pánico SOS"
+          >
+            <ShieldAlert className="w-3 h-3" />
+            <span>SOS</span>
+          </button>
+        )}
+
         <button
           onClick={manejarClickRol}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all cursor-pointer border shadow-2xs ${
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-bold transition-all cursor-pointer border shadow-2xs ${
             isDriverVerified && activeRole === 'driver'
               ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500 shadow-emerald-600/20'
-              : 'bg-slate-900 hover:bg-slate-800 text-white border-slate-800'
+              : theme === 'dark'
+              ? 'bg-slate-900 hover:bg-slate-800 text-white border-slate-800'
+              : 'bg-slate-900 hover:bg-slate-800 text-white border-slate-900'
           }`}
           title={isDriverVerified ? 'Cambiar modo de la aplicación' : 'Toca para registrarte como conductor'}
         >
@@ -62,15 +114,18 @@ export const Header = () => {
           )}
         </button>
 
-        {/* Campana de Notificaciones con Badge */}
+        {/* Centro de Notificaciones Institucionales */}
         <button
-          type="button"
           onClick={() => setModalNotifAbierto(true)}
-          className="relative p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
-          title="Centro de Notificaciones"
+          className={`relative p-2 rounded-full border transition-colors cursor-pointer ${
+            theme === 'dark'
+              ? 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300'
+              : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-600'
+          }`}
+          title="Notificaciones"
         >
-          <Bell className="w-4 h-4" />
-          <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-lochmara-600 rounded-full border-2 border-white animate-pulse" />
+          <Bell className="w-3.5 h-3.5" />
+          <span className="absolute top-1 right-1 w-2 h-2 bg-lochmara-500 rounded-full ring-2 ring-white" />
         </button>
 
         {/* Foto de Perfil del Usuario */}
@@ -99,13 +154,13 @@ export const Header = () => {
         onClose={() => setModalNotifAbierto(false)}
       />
 
-      {/* Modal de Invitación a Registro de Conductor si aún no está verificado */}
-      <DriverInviteModal
-        isOpen={modalRegistroAbierto}
-        onClose={() => setModalRegistroAbierto(false)}
-        onRegister={() => {
-          setModalRegistroAbierto(false);
-          setActiveTab('driver');
+      {/* Modal de Emergencia SOS */}
+      <SosEmergencyModal
+        isOpen={modalSosAbierto}
+        onClose={() => setModalSosAbierto(false)}
+        tripInfo={{
+          driverName: activeDriverTrip?.driverName || 'Carlos Mendoza',
+          plate: activeDriverTrip?.plate || 'KLU-492',
         }}
       />
     </header>

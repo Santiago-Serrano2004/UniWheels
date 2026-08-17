@@ -166,4 +166,17 @@ class NotificationTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['user_id', 'title', 'body', 'type']);
     }
+
+    public function test_maneja_correctamente_ids_simulados_de_notificaciones(): void
+    {
+        $simulatedId = 'notif-1786851565644';
+
+        $response = $this->postJson("/api/v1/notifications/{$simulatedId}/read");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Notificación marcada como leída.',
+            ]);
+    }
 }

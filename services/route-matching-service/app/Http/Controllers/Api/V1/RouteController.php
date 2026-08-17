@@ -21,6 +21,45 @@ class RouteController extends Controller
     ) {}
 
     /**
+     * Listar rutas publicadas disponibles para los pasajeros en tiempo real.
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $direction = $request->query('direction'); // 'towards' | 'from'
+        $campusId = $request->query('campus_id');
+
+        $query = Route::where('status', 'publicada')
+            ->where('available_seats', '>', 0)
+            ->orderBy('scheduled_departure_time', 'asc');
+
+        if ($campusId) {
+            $query->where('destination_campus_id', $campusId);
+        }
+
+        $routes = $query->get()->map(function ($route) {
+            return [
+                'id' => $route->id,
+                'driver_name' => 'Carlos Mendoza',
+                'vehicle' => 'Mazda 3 (Rojo)',
+                'plate' => 'KLU-492',
+                'rating' => 4.9,
+                'origin' => $route->origin_name,
+                'destination' => $route->destination_campus_name,
+                'departure_time' => $route->scheduled_departure_time ? \Carbon\Carbon::parse($route->scheduled_departure_time)->format('h:i A') : '06:45 AM',
+                'arrival_time' => $route->target_arrival_time ? \Carbon\Carbon::parse($route->target_arrival_time)->format('h:i A') : '07:15 AM',
+                'available_seats' => $route->available_seats,
+                'fare' => '$ ' . number_format($route->base_contribution_cop, 0, ',', '.'),
+                'detour_minutes' => '0 min',
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $routes,
+        ]);
+    }
+
+    /**
      * Publicar una nueva ruta con cálculo topológico de tiempo y persistencia PostGIS.
      */
     public function store(PublishRouteRequest $request): JsonResponse

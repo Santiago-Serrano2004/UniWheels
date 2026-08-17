@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, X, CheckCircle2, ThumbsUp, ShieldCheck } from 'lucide-react';
+import { useAppStore } from '../../store/useAppStore';
+import { Star, X, CheckCircle2, ThumbsUp } from 'lucide-react';
 
 export const RatingFeedbackModal = ({
   isOpen,
   onClose,
   targetType = 'passenger', // 'passenger' | 'driver'
   targetName = 'Estudiante',
-  targetRoleInfo = 'Ingeniería de Sistemas',
+  _targetRoleInfo = 'Ingeniería de Sistemas',
   onSubmitRating,
 }) => {
+  const { theme } = useAppStore();
+  const isDark = theme === 'dark';
+
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState([]);
@@ -66,25 +70,31 @@ export const RatingFeedbackModal = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 10 }}
           transition={{ duration: 0.22, ease: 'easeOut' }}
-          className="w-full max-w-[340px] max-h-[85vh] bg-white rounded-3xl p-5 shadow-2xl border border-slate-100 overflow-y-auto text-slate-900 mx-auto space-y-4"
+          className={`w-full max-w-[340px] max-h-[85vh] rounded-3xl p-5 shadow-2xl border overflow-y-auto mx-auto space-y-4 transition-colors ${
+            isDark
+              ? 'bg-slate-900 border-slate-800 text-white'
+              : 'bg-white border-slate-200 text-slate-900'
+          }`}
         >
           {/* Cabecera */}
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div className={`flex items-center justify-between pb-2 border-b ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center border border-amber-500/20">
                 <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-slate-900">
+                <h3 className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   {isRatingDriver ? 'Calificar Conductor' : 'Calificar Pasajero'}
                 </h3>
-                <p className="text-[10px] text-slate-500">{targetName}</p>
+                <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{targetName}</p>
               </div>
             </div>
 
             <button
               onClick={onClose}
-              className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+              className={`p-1 rounded-full transition-colors cursor-pointer ${
+                isDark ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-700'
+              }`}
             >
               <X className="w-4 h-4" />
             </button>
@@ -92,11 +102,11 @@ export const RatingFeedbackModal = ({
 
           {enviado ? (
             <div className="py-6 text-center space-y-2">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+              <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto border border-emerald-500/30">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
-              <p className="text-xs font-bold text-slate-900">¡Calificación Enviada!</p>
-              <p className="text-[11px] text-slate-500">
+              <p className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>¡Calificación Enviada!</p>
+              <p className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                 Gracias por contribuir a la reputación y confianza de tu comunidad universitaria.
               </p>
             </div>
@@ -104,7 +114,7 @@ export const RatingFeedbackModal = ({
             <form onSubmit={enviarCalificacion} className="space-y-4">
               {/* Estrellas Interactivas */}
               <div className="text-center space-y-1 py-1">
-                <p className="text-[11px] font-semibold text-slate-600">
+                <p className={`text-[11px] font-semibold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                   ¿Cómo fue tu experiencia en este recorrido?
                 </p>
                 <div className="flex items-center justify-center gap-1.5 pt-1">
@@ -121,13 +131,15 @@ export const RatingFeedbackModal = ({
                         className={`w-7 h-7 transition-colors ${
                           (hoverRating || rating) >= star
                             ? 'fill-amber-400 text-amber-400'
+                            : isDark
+                            ? 'text-slate-800'
                             : 'text-slate-200'
                         }`}
                       />
                     </button>
                   ))}
                 </div>
-                <span className="text-[11px] font-bold text-amber-700 block">
+                <span className="text-[11px] font-bold text-amber-500 block">
                   {rating === 5 && '🌟 ¡Excelente viaje!'}
                   {rating === 4 && '👍 Muy buen servicio'}
                   {rating === 3 && '🙂 Viaje promedio'}
@@ -138,7 +150,7 @@ export const RatingFeedbackModal = ({
 
               {/* Etiquetas de Cumplidos */}
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-700 block">
+                <label className={`text-[11px] font-bold block ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                   ¿Qué deseas destacar?
                 </label>
                 <div className="flex flex-wrap gap-1.5">
@@ -152,6 +164,8 @@ export const RatingFeedbackModal = ({
                         className={`text-[10px] font-semibold px-2.5 py-1 rounded-xl border transition-all cursor-pointer ${
                           isSelected
                             ? 'bg-lochmara-600 text-white border-lochmara-600 shadow-xs'
+                            : isDark
+                            ? 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
                             : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                         }`}
                       >
@@ -164,7 +178,7 @@ export const RatingFeedbackModal = ({
 
               {/* Comentario Opcional */}
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-700 block">
+                <label className={`text-[11px] font-bold block ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                   Comentario (Opcional):
                 </label>
                 <textarea
@@ -172,7 +186,11 @@ export const RatingFeedbackModal = ({
                   value={comentario}
                   onChange={(e) => setComentario(e.target.value)}
                   placeholder="Escribe un breve mensaje..."
-                  className="w-full bg-slate-50 text-xs rounded-2xl p-2.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lochmara-500 resize-none font-medium"
+                  className={`w-full text-xs rounded-2xl p-2.5 border focus:outline-none focus:ring-2 focus:ring-lochmara-500 resize-none font-medium ${
+                    isDark
+                      ? 'bg-slate-950 border-slate-800 text-white placeholder-slate-500'
+                      : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'
+                  }`}
                 />
               </div>
 

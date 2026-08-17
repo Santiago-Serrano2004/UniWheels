@@ -68,6 +68,7 @@ class RegisterRequest extends FormRequest
             'profile_photo' => ['nullable'],
             'profile_photo_path' => ['nullable', 'string'],
             'is_driver' => ['boolean'],
+            'verification_code' => ['required', 'string', 'size:6'],
         ];
     }
 
@@ -81,6 +82,8 @@ class RegisterRequest extends FormRequest
             'email.required' => 'El correo o prefijo institucional es obligatorio.',
             'email.unique' => 'Ya existe una cuenta registrada con este correo institucional.',
             'password.required' => 'La contraseña es obligatoria.',
+            'verification_code.required' => 'El código de verificación PIN es obligatorio.',
+            'verification_code.size' => 'El código de verificación debe tener exactamente 6 dígitos.',
         ];
     }
 }

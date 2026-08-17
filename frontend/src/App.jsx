@@ -3,6 +3,7 @@ import { useAppStore } from './store/useAppStore';
 import { SplashScreen } from './components/common/SplashScreen';
 import { AuthGatewayView } from './components/auth/AuthGatewayView';
 import { InstitutionalWelcomeModal } from './components/common/InstitutionalWelcomeModal';
+import { DriverInviteModal } from './components/common/DriverInviteModal';
 import { Header } from './components/common/Header';
 import { BottomNav } from './components/common/BottomNav';
 import { HomeView } from './components/home/HomeView';
@@ -14,7 +15,8 @@ import { ProfileView } from './components/profile/ProfileView';
 import { PassengerTripsView } from './components/trips/PassengerTripsView';
 import { DriverHistoryView } from './components/driver/DriverHistoryView';
 import { ActiveRoleConflictBlocker } from './components/common/ActiveRoleConflictBlocker';
-import { RotateCcw, Smartphone, LogOut } from 'lucide-react';
+import { LiveTripIslandWidget } from './components/common/LiveTripIslandWidget';
+import { RotateCcw, Smartphone, LogOut, Sun, Moon } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export default function App() {
@@ -31,7 +33,21 @@ export default function App() {
     logout,
     showWelcomeMascot,
     closeWelcomeMascot,
+    showDriverInviteModal,
+    closeDriverInviteModal,
+    theme,
+    toggleTheme,
   } = useAppStore();
+
+  React.useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }, [theme]);
 
   const renderActiveView = () => {
     // 1. La pestaña de Perfil SIEMPRE es accesible independientemente del rol o estado
@@ -90,18 +106,56 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-0 sm:p-6 selection:bg-lochmara-500 selection:text-white">
-      {/* Controles flotantes de desarrollo en Desktop */}
-      <div className="hidden sm:flex items-center gap-3 mb-3">
-        <div className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-900/90 border border-slate-800 px-3 py-1 rounded-full backdrop-blur-md">
-          <Smartphone className="w-3.5 h-3.5 text-lochmara-400" />
+    <div
+      className={`min-h-screen transition-colors duration-300 flex flex-col items-center justify-center p-0 sm:p-6 selection:bg-lochmara-500 selection:text-white ${
+        theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-slate-200/70 text-slate-800'
+      }`}
+    >
+      {/* Controles flotantes de desarrollo en Desktop / Web Wrapper */}
+      <div className="hidden sm:flex items-center gap-2.5 mb-3 select-none">
+        <div
+          className={`flex items-center gap-1.5 text-xs px-3 py-1 rounded-full backdrop-blur-md border transition-colors ${
+            theme === 'dark'
+              ? 'text-slate-400 bg-slate-900/90 border-slate-800'
+              : 'text-slate-600 bg-white/90 border-slate-300 shadow-2xs'
+          }`}
+        >
+          <Smartphone className="w-3.5 h-3.5 text-lochmara-500" />
           <span>Vista Móvil (390 x 844)</span>
         </div>
+
+        {/* Alternador Global de Tema de la App (Light / Dark) */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border transition-all cursor-pointer shadow-xs ${
+            theme === 'dark'
+              ? 'bg-slate-800 hover:bg-slate-700 text-amber-300 border-slate-700'
+              : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-300'
+          }`}
+          title="Alternar entre modo Claro y Oscuro de UniWheels"
+        >
+          {theme === 'dark' ? (
+            <>
+              <Sun className="w-3.5 h-3.5 text-amber-400" />
+              <span>Tema Claro</span>
+            </>
+          ) : (
+            <>
+              <Moon className="w-3.5 h-3.5 text-slate-600" />
+              <span>Tema Oscuro</span>
+            </>
+          )}
+        </button>
 
         {isAuthenticated && (
           <button
             onClick={logout}
-            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all cursor-pointer"
+            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border transition-all cursor-pointer ${
+              theme === 'dark'
+                ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-300 shadow-2xs'
+            }`}
           >
             <LogOut className="w-3 h-3" />
             <span>Cerrar Sesión</span>
@@ -118,7 +172,14 @@ export default function App() {
       </div>
 
       {/* Marco de Smartphone Móvil */}
-      <div className="relative w-full sm:max-w-[392px] h-[100dvh] sm:h-[844px] bg-slate-50 text-slate-900 sm:rounded-[44px] sm:border-[8px] sm:border-slate-900 shadow-2xl overflow-hidden flex flex-col justify-between">
+      <div
+        data-theme={theme}
+        className={`relative w-full sm:max-w-[392px] h-[100dvh] sm:h-[844px] transition-all overflow-hidden flex flex-col justify-between sm:rounded-[44px] sm:border-[8px] ${
+          theme === 'dark'
+            ? 'dark bg-slate-950 text-slate-100 sm:border-slate-900 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)]'
+            : 'bg-slate-100 text-slate-900 sm:border-slate-800 shadow-[0_25px_60px_-15px_rgba(15,23,42,0.25)]'
+        }`}
+      >
         {/* Dynamic Island simulada en Desktop */}
         <div className="hidden sm:flex absolute top-2.5 left-1/2 -translate-x-1/2 z-40 w-24 h-4 bg-black rounded-full items-center justify-end px-2.5">
           <div className="w-2 h-2 rounded-full bg-[#0a192f] border border-slate-800" />
@@ -156,6 +217,9 @@ export default function App() {
               {/* Encabezado Móvil */}
               <Header />
 
+              {/* Isla Dinámica / Live Activity de Viaje Activo */}
+              <LiveTripIslandWidget />
+
               {/* Contenido Principal */}
               <main className="flex-1 overflow-y-auto px-4 py-3">
                 <AnimatePresence mode="wait">
@@ -178,6 +242,16 @@ export default function App() {
               <InstitutionalWelcomeModal
                 isOpen={showWelcomeMascot}
                 onClose={closeWelcomeMascot}
+              />
+
+              {/* Modal de Invitación a Conductor Centrado en Pantalla */}
+              <DriverInviteModal
+                isOpen={showDriverInviteModal}
+                onClose={closeDriverInviteModal}
+                onRegister={() => {
+                  closeDriverInviteModal();
+                  setActiveTab('driver');
+                }}
               />
             </motion.div>
           )}

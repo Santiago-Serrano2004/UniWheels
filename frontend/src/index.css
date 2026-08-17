@@ -61,6 +61,33 @@ body {
   animation: routeFlow 2s linear infinite;
 }
 
+/* Soporte de calendario nativo oscuro */
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.85);
+  cursor: pointer;
+}
+
+/* Filtro de Mapa Minimalista para Modo Oscuro en Escala de Grises / Slate Elegante */
+.dark .leaflet-tile-pane,
+[data-theme="dark"] .leaflet-tile-pane {
+  filter: brightness(1.7) contrast(0.9) saturate(0.6) !important;
+}
+
+.dark .leaflet-container,
+[data-theme="dark"] .leaflet-container {
+  background-color: #1e293b !important;
+}
+
+.leaflet-tile-pane {
+  filter: none;
+}
+
+/* Ocultar marca de agua y atribución de copyright de Leaflet para un mapa 100% limpio y minimalista */
+.leaflet-control-attribution {
+  display: none !important;
+}
+
 /* Faro de pulsación GPS en vivo */
 @keyframes gpsPulse {
   0% {
@@ -85,4 +112,5 @@ body {
   animation: gpsPulse 2s cubic-bezier(0.25, 1, 0.5, 1) infinite;
   pointer-events: none;
 }
+
 

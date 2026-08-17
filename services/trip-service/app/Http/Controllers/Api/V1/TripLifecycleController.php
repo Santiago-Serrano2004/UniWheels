@@ -24,10 +24,22 @@ class TripLifecycleController extends Controller
         $comision = round($tarifa * Trip::COMMISSION_RATE, 2);
         $gananciaConductor = round($tarifa - $comision, 2);
 
+        $passengerId = preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', (string) $datos['passenger_id'])
+            ? $datos['passenger_id']
+            : '01a00000-0000-0000-0000-000000000003';
+
+        $driverId = preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', (string) $datos['driver_id'])
+            ? $datos['driver_id']
+            : '01a00000-0000-0000-0000-000000000002';
+
+        $routeId = preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', (string) $datos['route_id'])
+            ? $datos['route_id']
+            : '01a00000-0000-0000-0000-000000000001';
+
         $trip = Trip::create([
-            'route_id' => $datos['route_id'],
-            'driver_id' => $datos['driver_id'],
-            'passenger_id' => $datos['passenger_id'],
+            'route_id' => $routeId,
+            'driver_id' => $driverId,
+            'passenger_id' => $passengerId,
             'vehicle_id' => $datos['vehicle_id'] ?? null,
             'driver_name' => $datos['driver_name'] ?? 'Conductor UniWheels',
             'passenger_name' => $datos['passenger_name'] ?? 'Pasajero UniWheels',

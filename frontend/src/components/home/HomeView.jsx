@@ -1,236 +1,317 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { authService, tripsService } from '../../services/api';
-import { DriverCockpitCard } from '../driver/DriverCockpitCard';
-import { PassengerActiveTripCard } from '../trips/PassengerActiveTripCard';
-import {
-  Search,
-  MapPin,
-  Clock,
-  ArrowRight,
-  ShieldCheck,
-  Users,
-  Navigation,
-  Car,
-  ChevronRight,
-} from 'lucide-react';
-import { motion } from 'framer-motion';
+import { authService } from '../../services/api';
+import { placesApiService } from '../../services/placesApiService';
+import { LocationPickerModal } from '../map/LocationPickerModal';
+import { ActiveTripCompactBanner } from './ActiveTripCompactBanner';
+import { HomeHeroRouteCard } from './HomeHeroRouteCard';
+import { CampusQuickSelectorGrid } from './CampusQuickSelectorGrid';
+import { AvailableRideCard } from './AvailableRideCard';
+import { Navigation } from 'lucide-react';
+
+const SECTOR_COORDINATES = {
+  'cañaveral': [7.0678, -73.1066],
+  'floridablanca': [7.0645, -73.0988],
+  'cabecera': [7.1186, -73.1102],
+  'san pío': [7.1186, -73.1102],
+  'san pio': [7.1186, -73.1102],
+  'provenza': [7.0856, -73.1142],
+  'piedecuesta': [7.0012, -73.0489],
+  'girón': [7.0725, -73.1698],
+  'giron': [7.0725, -73.1698],
+  'centro': [7.1193, -73.1227],
+  'mutis': [7.1085, -73.1312],
+  'real de minas': [7.1080, -73.1250],
+  'minas': [7.1080, -73.1250],
+  'jardín': [7.1193, -73.1042],
+  'jardin': [7.1193, -73.1042],
+  'bosque': [7.0664, -73.1037],
+  'csu': [7.1138, -73.1068],
+  'casona': [7.1182, -73.1165],
+};
+
+
 
 export const HomeView = () => {
-  const { user, activeRole, activePassengerBooking, setActiveTab } = useAppStore();
-  const [destination, setDestination] = useState('');
-  const [campuses, setCampuses] = useState([]);
-  const [nearbyRides, setNearbyRides] = useState([]);
+  const {
+    user,
+    setSelectedSearchRoute,
+    activePassengerBooking,
+    cancelPassengerBooking,
+    setActiveTab,
+    theme,
+  } = useAppStore();
 
-  // Cargar sedes dinámicas y viajes disponibles desde el backend
+  const isDark = theme === 'dark';
+
+  // 1. Sentido del viaje
+  const [directionFilter, setDirectionFilter] = useState('towards'); // 'towards' | 'from'
+
+  // 2. Campus Seleccionado
+  const [selectedCampus, setSelectedCampus] = useState('Campus El Jardín');
+  const [sedesDisponibles, setSedesDisponibles] = useState([
+    {
+      id: 1,
+      name: 'Campus El Jardín',
+      code: 'JARDIN',
+      address: 'Avenida 42 No. 48 - 11, Bucaramanga',
+      image_url: '/assets/institutions/campuses/el-jardin.webp',
+      latitude: 7.119346,
+      longitude: -73.104278,
+    },
+    {
+      id: 2,
+      name: 'Campus El Bosque',
+      code: 'BOSQUE',
+      address: 'Calle 158 No. 20 - 40, Cañaveral, Floridablanca',
+      image_url: '/assets/institutions/campuses/el-bosque.webp',
+      latitude: 7.066491,
+      longitude: -73.103789,
+    },
+    {
+      id: 3,
+      name: 'CSU — Centro de Servicios Universitarios',
+      code: 'CSU',
+      address: 'Carrera 45 No. 44 - 15, Terrazas, Bucaramanga',
+      image_url: '/assets/institutions/campuses/csu.webp',
+      latitude: 7.113821,
+      longitude: -73.106842,
+    },
+    {
+      id: 4,
+      name: 'Campus La Casona',
+      code: 'CASONA',
+      address: 'Calle 42 No. 34 - 14, Bucaramanga',
+      image_url: '/assets/institutions/campuses/la-casona.webp',
+      latitude: 7.118210,
+      longitude: -73.116520,
+    },
+  ]);
+
+  // 3. Punto Editable (Origen si directionFilter==='towards', Destino si directionFilter==='from')
+  const [editablePointName, setEditablePointName] = useState('');
+  const [editableCoords, setEditableCoords] = useState(null);
+  const [isSelectingPointOnMap, setIsSelectingPointOnMap] = useState(false);
+
+  // 4. Búsqueda y Sugerencias
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // 5. Lista de Viajes
+  const [allAvailableRides] = useState([
+    {
+      id: 'ride_101',
+      driver_name: 'Carlos Mendoza',
+      vehicle: 'Mazda 3 (Rojo)',
+      plate: 'KLU-492',
+      rating: 4.95,
+      origin: 'Cañaveral - C.C. Cañaveral',
+      destination: 'Campus El Jardín',
+      departure_time: '06:45 AM',
+      available_seats: 3,
+      fare: '$ 4.500',
+      fare_cop: 4500,
+      detour_minutes: '+4 min',
+      driver_avatar_initials: 'CM',
+    },
+    {
+      id: 'ride_102',
+      driver_name: 'Valentina Ríos',
+      vehicle: 'Chevrolet Onix (Gris)',
+      plate: 'WYX-810',
+      rating: 4.88,
+      origin: 'Cabecera - Parque San Pío',
+      destination: 'CSU — Centro de Servicios Universitarios',
+      departure_time: '07:15 AM',
+      available_seats: 2,
+      fare: '$ 4.000',
+      fare_cop: 4000,
+      detour_minutes: '+2 min',
+      driver_avatar_initials: 'VR',
+    },
+    {
+      id: 'ride_103',
+      driver_name: 'Juan Pablo Duarte',
+      vehicle: 'Renault Duster (Blanco)',
+      plate: 'LMN-304',
+      rating: 4.92,
+      origin: 'Provenza - Estación Metrolínea',
+      destination: 'Campus El Bosque',
+      departure_time: '06:30 AM',
+      available_seats: 4,
+      fare: '$ 4.500',
+      fare_cop: 4500,
+      detour_minutes: '+3 min',
+      driver_avatar_initials: 'JD',
+    },
+    {
+      id: 'ride_104',
+      driver_name: 'Mateo Silva',
+      vehicle: 'Yamaha MT-03 (Negro)',
+      plate: 'WTR-82F',
+      rating: 4.97,
+      origin: 'Piedecuesta - Centro',
+      destination: 'Campus El Jardín',
+      departure_time: '06:15 AM',
+      available_seats: 1,
+      fare: '$ 3.500',
+      fare_cop: 3500,
+      detour_minutes: '+1 min',
+      driver_avatar_initials: 'MS',
+    },
+  ]);
+
+  // Cargar sedes desde la API de instituciones si están disponibles
   useEffect(() => {
-    authService.getInstitutions().then((instituciones) => {
-      if (instituciones && instituciones.length > 0) {
-        const inst = instituciones[0];
-        if (inst.campuses && inst.campuses.length > 0) {
-          setCampuses(inst.campuses);
-        }
+    authService.getInstitutions().then((res) => {
+      if (res?.data?.[0]?.campuses && res.data[0].campuses.length > 0) {
+        setSedesDisponibles(res.data[0].campuses);
       }
-    });
-
-    tripsService.getAvailableTrips().then((trips) => {
-      if (trips && trips.length > 0) {
-        setNearbyRides(
-          trips.map((t) => ({
-            id: t.id,
-            driverName: t.driver_name,
-            vehicle: t.vehicle,
-            plate: t.plate,
-            rating: t.rating,
-            origin: t.origin,
-            destination: t.destination,
-            departureTime: t.departure_time,
-            availableSeats: t.available_seats,
-            fare: t.fare,
-            detourMinutes: t.detour_minutes,
-          }))
-        );
-      }
-    });
+    }).catch(() => {});
   }, []);
 
-  // Si el rol activo es CONDUCTOR, mostrar su panel de conductor
-  if (activeRole === 'driver') {
-    return <DriverCockpitCard />;
-  }
+  // Búsqueda de lugares reactiva
+  useEffect(() => {
+    if (!searchQuery || searchQuery.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const results = await placesApiService.searchPlaces(searchQuery);
+        setSuggestions(results.slice(0, 5));
+      } catch (e) {
+        console.warn('Error en búsqueda de lugares:', e);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-  // Si es PASAJERO y tiene una reserva activa, mostrar ÚNICAMENTE su tarjeta de viaje activo
-  if (activePassengerBooking) {
-    return <PassengerActiveTripCard />;
-  }
+  const handleSelectSuggestion = (item) => {
+    setEditablePointName(item.name);
+    setEditableCoords([item.latitude, item.longitude]);
+    setSearchQuery('');
+    setSuggestions([]);
+  };
+
+  const handleSelectCampusCard = (sede) => {
+    setSelectedCampus(sede.name);
+  };
+
+  const handleLocationPickedOnMap = (coords, addressName) => {
+    setEditableCoords([coords.lat, coords.lng]);
+    setEditablePointName(addressName || 'Punto Seleccionado en Mapa');
+    setIsSelectingPointOnMap(false);
+  };
+
+  const handleSelectRide = (ride) => {
+    setSelectedSearchRoute({
+      id: ride.id,
+      driverName: ride.driver_name,
+      vehicle: ride.vehicle,
+      plate: ride.plate,
+      origin: ride.origin,
+      destination: ride.destination,
+      departureTime: ride.departure_time,
+      availableSeats: ride.available_seats,
+      fare: ride.fare,
+      fare_cop: ride.fare_cop,
+    });
+    setActiveTab('map');
+  };
+
+  // Filtrar viajes según el campus seleccionado y el sentido
+  const filteredRides = allAvailableRides.filter((ride) => {
+    if (directionFilter === 'towards') {
+      return ride.destination.toLowerCase().includes(selectedCampus.toLowerCase().replace('campus ', ''));
+    } else {
+      return ride.origin.toLowerCase().includes(selectedCampus.toLowerCase().replace('campus ', ''));
+    }
+  });
 
   return (
     <div className="space-y-4 pb-6 select-none">
-      {/* Tarjeta de Bienvenida y Busqueda Rapida */}
-      <section className="bg-gradient-to-br from-[#082f49] to-slate-900 text-white rounded-3xl p-5 shadow-md relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-lochmara-500/20 rounded-full blur-2xl pointer-events-none" />
+      {/* 1. BANNER COMPACTO DE VIAJE ACTIVO */}
+      <ActiveTripCompactBanner
+        activePassengerBooking={activePassengerBooking}
+        isDark={isDark}
+        setActiveTab={setActiveTab}
+        cancelPassengerBooking={cancelPassengerBooking}
+      />
 
-        <div className="relative z-10 space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-lochmara-300 font-medium">
-                Hola, {user?.name ? user.name.split(' ')[0] : 'Estudiante'}
-              </p>
-              <h2 className="text-lg font-extrabold tracking-tight">¿A dónde viajas hoy?</h2>
-            </div>
-            <div className="w-11 h-11 rounded-2xl bg-lochmara-500/20 border border-lochmara-400/30 flex items-center justify-center overflow-hidden shadow-xs">
-              {user?.profilePhoto ? (
-                <img src={user.profilePhoto} alt={user.name} className="w-full h-full object-cover" />
-              ) : (
-                <Navigation className="w-5 h-5 text-lochmara-300" />
-              )}
-            </div>
-          </div>
+      {/* 2. HERO CARD: CORREDOR ORIGEN-DESTINO Y BUSCADOR */}
+      <HomeHeroRouteCard
+        user={user}
+        isDark={isDark}
+        directionFilter={directionFilter}
+        setDirectionFilter={setDirectionFilter}
+        selectedCampus={selectedCampus}
+        setSelectedCampus={setSelectedCampus}
+        sedesDisponibles={sedesDisponibles}
+        editablePointName={editablePointName}
+        setEditablePointName={setEditablePointName}
+        setIsSelectingPointOnMap={setIsSelectingPointOnMap}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        suggestions={suggestions}
+        isSearching={isSearching}
+        handleSelectSuggestion={handleSelectSuggestion}
+      />
 
-          {/* Input de Busqueda de Destino */}
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              placeholder="Buscar punto de encuentro o campus..."
-              className="w-full bg-white/10 text-white placeholder-slate-400 text-xs rounded-2xl pl-10 pr-4 py-3 border border-white/15 focus:outline-none focus:ring-2 focus:ring-lochmara-400 focus:bg-white/15 transition-all"
-            />
-          </div>
-        </div>
-      </section>
+      {/* 3. GRID DE SEDES UNIVERSITARIAS */}
+      <CampusQuickSelectorGrid
+        sedesDisponibles={sedesDisponibles}
+        selectedCampus={selectedCampus}
+        handleSelectCampusCard={handleSelectCampusCard}
+        isDark={isDark}
+      />
 
-      {/* Sedes Oficiales Dinámicas desde Base de Datos */}
-      <section className="space-y-2">
-        <div className="flex items-center justify-between px-1">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Sedes Principales</h3>
-          <span
-            onClick={() => setActiveTab('map')}
-            className="text-[11px] text-lochmara-600 font-semibold cursor-pointer hover:underline"
-          >
-            Ver mapa
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2.5">
-          {campuses.map((campus) => (
-            <button
-              key={campus.id}
-              onClick={() => setActiveTab('map')}
-              className="bg-white border border-slate-200/80 rounded-2xl p-2.5 flex flex-col items-start justify-between shadow-2xs hover:border-lochmara-300 hover:shadow-xs transition-all text-left cursor-pointer"
-            >
-              <div className="w-6 h-6 rounded-xl bg-lochmara-50 text-lochmara-600 flex items-center justify-center mb-2">
-                <MapPin className="w-3.5 h-3.5" />
-              </div>
-              <div className="w-full">
-                <p className="text-[11px] font-bold text-slate-800 leading-tight truncate">
-                  {campus.name.replace('Campus ', '')}
-                </p>
-                <p className="text-[10px] text-slate-500 mt-0.5 truncate">
-                  {campus.code}
-                </p>
-              </div>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* Rutas Compartidas Disponibles en tu Corredor */}
+      {/* 4. VIAJES DISPONIBLES */}
       <section className="space-y-2.5">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Rutas Disponibles</h3>
-          <span className="text-[11px] text-slate-400 font-medium">Bucaramanga y AMB</span>
+          <h3 className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            <Navigation className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Viajes Disponibles ({filteredRides.length})</span>
+          </h3>
+          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Rutas Verificadas</span>
         </div>
 
-        <div className="space-y-2.5">
-          {nearbyRides.map((ride) => (
-            <motion.div
-              key={ride.id}
-              whileTap={{ scale: 0.98 }}
-              className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-2xs space-y-3 hover:border-lochmara-200 transition-all cursor-pointer"
-            >
-              {/* Conductor y Vehiculo */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-2xl bg-lochmara-100 text-lochmara-800 font-extrabold text-xs flex items-center justify-center border border-lochmara-200">
-                    {ride.driverName.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-slate-900">{ride.driverName}</span>
-                      <ShieldCheck className="w-3.5 h-3.5 text-lochmara-600" />
-                    </div>
-                    <p className="text-[11px] text-slate-600 font-medium">
-                      {ride.vehicle} • <span className="font-semibold">{ride.plate}</span>
-                    </p>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <span className="text-sm font-extrabold text-lochmara-700">{ride.fare}</span>
-                  <p className="text-[10px] text-emerald-600 font-bold">{ride.detourMinutes} desvío</p>
-                </div>
-              </div>
-
-              {/* Trazado Origen - Destino */}
-              <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 flex items-center justify-between text-[11px]">
-                <div className="flex items-center gap-2 truncate">
-                  <div className="w-2 h-2 rounded-full bg-lochmara-500" />
-                  <span className="text-slate-700 font-medium truncate">{ride.origin}</span>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0 mx-1.5" />
-                <div className="flex items-center gap-2 truncate">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span className="text-slate-900 font-bold truncate">{ride.destination}</span>
-                </div>
-              </div>
-
-              {/* Footer con Cupos y Hora */}
-              <div className="flex items-center justify-between pt-0.5 text-[11px] text-slate-500">
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-slate-400" />
-                    Salida: <strong className="text-slate-700">{ride.departureTime}</strong>
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Users className="w-3.5 h-3.5 text-lochmara-500" />
-                    <strong className="text-slate-700">{ride.availableSeats} cupos</strong>
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1 text-lochmara-600 font-bold text-xs">
-                  <span>Solicitar</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        {filteredRides.length > 0 ? (
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            {filteredRides.map((ride) => (
+              <AvailableRideCard
+                key={ride.id}
+                ride={ride}
+                onSelectRide={handleSelectRide}
+                isDark={isDark}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className={`p-6 rounded-2xl border text-center space-y-2 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+            <Car className="w-8 h-8 mx-auto text-slate-400" />
+            <p className={`text-xs font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+              No hay conductores saliendo hacia {selectedCampus} en este momento.
+            </p>
+            <p className="text-[11px] text-slate-400">
+              Prueba seleccionando otra sede o publicando tu propia ruta si tienes vehículo.
+            </p>
+          </div>
+        )}
       </section>
 
-      {/* Invitación a Registrarse como Conductor (Solo para Pasajeros) */}
-      {!user?.isDriver && (
-        <section
-          onClick={() => setActiveTab('driver')}
-          className="bg-lochmara-50/80 hover:bg-lochmara-100 border border-lochmara-200/80 rounded-3xl p-4 shadow-2xs transition-all cursor-pointer text-left group"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-2xl bg-lochmara-600 text-white flex items-center justify-center shadow-md shadow-lochmara-600/20 group-hover:scale-105 transition-transform shrink-0">
-                <Car className="w-5 h-5" />
-              </div>
-              <div className="space-y-0.5">
-                <p className="text-xs font-bold text-slate-900">¿Tienes vehículo propio?</p>
-                <p className="text-[11px] text-slate-600">
-                  Regístrate como conductor para compartir tus gastos de transporte
-                </p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-lochmara-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
-          </div>
-        </section>
-      )}
+      {/* MODAL DE SELECCIÓN EN MAPA */}
+      <LocationPickerModal
+        isOpen={isSelectingPointOnMap}
+        onClose={() => setIsSelectingPointOnMap(false)}
+        initialLocation={editableCoords ? { lat: editableCoords[0], lng: editableCoords[1] } : { lat: 7.1193, lng: -73.1042 }}
+        title={directionFilter === 'towards' ? 'Selecciona tu Punto de Partida' : 'Selecciona tu Punto de Llegada'}
+        onConfirmLocation={handleLocationPickedOnMap}
+      />
     </div>
   );
 };

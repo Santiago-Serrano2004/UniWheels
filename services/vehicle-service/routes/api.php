@@ -16,6 +16,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/vehicles/catalog/models', [VehicleCatalogController::class, 'models']);
 
     // Gestión de Vehículos
+    Route::get('/vehicles/check-approved', [VehicleController::class, 'checkApprovedVehicle']);
+    Route::get('/vehicles/{id}/status', [VehicleController::class, 'updateStatusByToken']);
     Route::get('/vehicles', [VehicleController::class, 'index']);
     Route::post('/vehicles', [VehicleController::class, 'store']);
     Route::get('/vehicles/{id}', [VehicleController::class, 'show']);

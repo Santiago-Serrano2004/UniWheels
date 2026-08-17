@@ -24,15 +24,48 @@ export const useAppStore = create((set, get) => ({
   isAuthenticated: Boolean(usuarioInicial),
   user: usuarioInicial,
 
+  // --- TEMA VISUAL DE LA APLICACIÓN (Light / Dark) ---
+  theme: (() => {
+    try {
+      return localStorage.getItem('uniwheels_app_theme') || 'light';
+    } catch {
+      return 'light';
+    }
+  })(),
+  toggleTheme: () =>
+    set((state) => {
+      const nuevoTema = state.theme === 'dark' ? 'light' : 'dark';
+      try {
+        localStorage.setItem('uniwheels_app_theme', nuevoTema);
+      } catch {}
+      return { theme: nuevoTema };
+    }),
+  setTheme: (nuevoTema) => {
+    try {
+      localStorage.setItem('uniwheels_app_theme', nuevoTema);
+    } catch {}
+    set({ theme: nuevoTema });
+  },
+
   // Modal de Mascota Institucional de Bienvenida
   showWelcomeMascot: false,
   closeWelcomeMascot: () => set({ showWelcomeMascot: false }),
   openWelcomeMascot: () => set({ showWelcomeMascot: true }),
 
+  // Modal de Invitación a Registro de Conductor
+  showDriverInviteModal: false,
+  closeDriverInviteModal: () => set({ showDriverInviteModal: false }),
+  openDriverInviteModal: () => set({ showDriverInviteModal: true }),
+
   // --- NAVEGACIÓN Y PESTAÑAS ---
   // Pestañas disponibles: 'home' | 'map' | 'driver' | 'history' | 'trips' | 'wallet' | 'profile'
   activeTab: 'home',
   setActiveTab: (pestaña) => set({ activeTab: pestaña }),
+
+  // Ruta seleccionada desde la búsqueda para visualizar en el mapa
+  selectedSearchRoute: null,
+  setSelectedSearchRoute: (route) => set({ selectedSearchRoute: route, activeTab: 'map' }),
+  clearSelectedSearchRoute: () => set({ selectedSearchRoute: null }),
 
   // --- ROL ACTIVO (Pasajero o Conductor) ---
   activeRole: usuarioInicial?.isDriver ? usuarioInicial?.role || 'passenger' : 'passenger',
@@ -80,8 +113,61 @@ export const useAppStore = create((set, get) => ({
     set({ activePassengerBooking: null });
   },
 
-  // --- BILLETERA PREPAGO DEL CONDUCTOR ---
+  // --- BILLETERA PREPAGO Y MÉTODOS DE PAGO ---
   driverWalletBalance: 25000,
+  passengerWalletBalance: 18500,
+  savedCards: [
+    {
+      id: 'card-1',
+      brand: 'visa',
+      last4: '4829',
+      expMonth: '09',
+      expYear: '28',
+      holderName: 'Santiago Serrano',
+      bank: 'Bancolombia',
+      isDefault: true,
+      color: 'from-blue-600 to-indigo-900',
+    },
+    {
+      id: 'card-2',
+      brand: 'mastercard',
+      last4: '9012',
+      expMonth: '11',
+      expYear: '27',
+      holderName: 'Santiago Serrano',
+      bank: 'Nu Colombia',
+      isDefault: false,
+      color: 'from-purple-600 to-slate-900',
+    },
+  ],
+  linkedNequi: '315 892 4410',
+
+  addCard: (nuevaTarjeta) => {
+    set((state) => ({
+      savedCards: [
+        ...state.savedCards.map((c) => (nuevaTarjeta.isDefault ? { ...c, isDefault: false } : c)),
+        {
+          id: 'card-' + Date.now(),
+          ...nuevaTarjeta,
+        },
+      ],
+    }));
+  },
+
+  deleteCard: (cardId) => {
+    set((state) => ({
+      savedCards: state.savedCards.filter((c) => c.id !== cardId),
+    }));
+  },
+
+  setDefaultCard: (cardId) => {
+    set((state) => ({
+      savedCards: state.savedCards.map((c) => ({
+        ...c,
+        isDefault: c.id === cardId,
+      })),
+    }));
+  },
 
   // Publicar un nuevo viaje de conductor
   publishDriverTrip: (datosTrayecto) => {

@@ -16,6 +16,7 @@ class InstitutionCampus extends Model
         'name',
         'code',
         'address',
+        'image_url',
         'latitude',
         'longitude',
         'is_main_campus',

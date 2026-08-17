@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAppStore } from '../../store/useAppStore';
 import {
   Star,
   X,
@@ -15,6 +16,8 @@ export const ReputationStatsModal = ({
   isDriverVerified,
   estadisticasData,
 }) => {
+  const { theme } = useAppStore();
+  const isDark = theme === 'dark';
   const [rolEstadisticas, setRolEstadisticas] = useState('passenger');
 
   if (!isOpen) return null;
@@ -54,23 +57,29 @@ export const ReputationStatsModal = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 12 }}
           transition={{ duration: 0.22, ease: 'easeOut' }}
-          className="w-full max-w-[340px] max-h-[85vh] bg-white rounded-3xl p-5 shadow-2xl border border-slate-100 overflow-y-auto text-slate-900 mx-auto space-y-4"
+          className={`w-full max-w-[340px] max-h-[85vh] rounded-3xl p-5 shadow-2xl border overflow-y-auto mx-auto space-y-4 transition-colors ${
+            isDark
+              ? 'bg-slate-900 border-slate-800 text-white'
+              : 'bg-white border-slate-200 text-slate-900'
+          }`}
         >
           {/* Cabecera */}
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div className={`flex items-center justify-between pb-2 border-b ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center border border-amber-500/30">
                 <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-slate-900">Reputación y Desempeño</h3>
-                <p className="text-[10px] text-slate-400">Evaluaciones universitarias</p>
+                <h3 className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Reputación y Desempeño</h3>
+                <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Evaluaciones universitarias</p>
               </div>
             </div>
 
             <button
               onClick={onClose}
-              className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+              className={`p-1 rounded-full transition-colors cursor-pointer ${
+                isDark ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-700'
+              }`}
             >
               <X className="w-4 h-4" />
             </button>
@@ -78,14 +87,14 @@ export const ReputationStatsModal = ({
 
           {/* Selector de Rol con Iconos Vectoriales */}
           {isDriverVerified && (
-            <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 text-[10px] font-bold">
+            <div className={`flex p-1 rounded-2xl border text-[10px] font-bold ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'}`}>
               <button
                 type="button"
                 onClick={() => setRolEstadisticas('passenger')}
                 className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   rolEstadisticas === 'passenger'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? isDark ? 'bg-slate-800 text-white shadow-xs' : 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <User className="w-3.5 h-3.5" />
@@ -97,7 +106,7 @@ export const ReputationStatsModal = ({
                 className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   rolEstadisticas === 'driver'
                     ? 'bg-lochmara-600 text-white shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <Car className="w-3.5 h-3.5" />
@@ -106,10 +115,10 @@ export const ReputationStatsModal = ({
             </div>
           )}
 
-          {/* Tarjeta de Resumen de Puntuación (Sin carta de nivel/ejemplar) */}
-          <div className="bg-gradient-to-br from-slate-900 to-[#082f49] text-white rounded-2xl p-4 shadow-xs">
+          {/* Tarjeta de Resumen de Puntuación */}
+          <div className={`rounded-2xl p-4 shadow-xs border ${isDark ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-900 text-white border-slate-800'}`}>
             <div className="space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-lochmara-300">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-lochmara-400">
                 {rolEstadisticas === 'driver' && isDriverVerified
                   ? 'Puntaje de Conductor'
                   : 'Puntaje de Pasajero'}
@@ -132,7 +141,7 @@ export const ReputationStatsModal = ({
 
           {/* Gráfico Estético de Variables Evaluadas */}
           <div className="space-y-3 pt-1">
-            <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
+            <div className={`flex items-center justify-between text-[11px] font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
               <span>Variables de Calificación</span>
               <span className="text-[10px] text-slate-400">Satisfacción</span>
             </div>
@@ -141,17 +150,17 @@ export const ReputationStatsModal = ({
               {statsActuales.metrics.map((metrica, idx) => (
                 <div key={idx} className="space-y-1">
                   <div className="flex items-center justify-between text-[11px]">
-                    <span className="font-semibold text-slate-800">{metrica.label}</span>
+                    <span className={`font-semibold ${isDark ? 'text-slate-300' : 'text-slate-800'}`}>{metrica.label}</span>
                     <div className="flex items-center gap-1.5">
                       <span className="text-[10px] text-slate-400 font-medium">
                         ({metrica.positive_count} votos)
                       </span>
-                      <span className="font-extrabold text-lochmara-700">{metrica.score_pct}%</span>
+                      <span className={`font-extrabold ${isDark ? 'text-lochmara-400' : 'text-lochmara-700'}`}>{metrica.score_pct}%</span>
                     </div>
                   </div>
 
                   {/* Barra de Progreso con Gradiente Suave */}
-                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className={`w-full h-2 rounded-full overflow-hidden ${isDark ? 'bg-slate-950 border border-slate-800' : 'bg-slate-100'}`}>
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${metrica.score_pct}%` }}
@@ -168,7 +177,11 @@ export const ReputationStatsModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-full py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+            className={`w-full py-2.5 rounded-2xl border text-xs font-bold transition-all cursor-pointer ${
+              isDark
+                ? 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-slate-300'
+                : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+            }`}
           >
             Cerrar Estadísticas
           </button>

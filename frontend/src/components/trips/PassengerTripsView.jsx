@@ -13,8 +13,9 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const PassengerTripsView = () => {
-  const { activePassengerBooking } = useAppStore();
+  const { activePassengerBooking, theme } = useAppStore();
 
+  const isDark = theme === 'dark';
   const [modalCalificacion, setModalCalificacion] = useState({
     abierto: false,
     conductor: null,
@@ -78,8 +79,8 @@ export const PassengerTripsView = () => {
       {/* HISTORIAL DE VIAJES COMPLETADOS DEL PASAJERO */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-            <History className="w-3.5 h-3.5 text-lochmara-600" />
+          <h3 className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            <History className="w-3.5 h-3.5 text-lochmara-500" />
             <span>Historial de Viajes Pasajeros</span>
           </h3>
           <span className="text-[10px] font-bold text-slate-400">
@@ -94,32 +95,38 @@ export const PassengerTripsView = () => {
             return (
               <div
                 key={viaje.id}
-                className="bg-white rounded-3xl border border-slate-200 shadow-2xs overflow-hidden transition-all"
+                className={`rounded-3xl border overflow-hidden transition-all ${
+                  isDark
+                    ? 'bg-slate-900 border-slate-800 text-white shadow-md'
+                    : 'bg-white border-slate-200 text-slate-900 shadow-sm'
+                }`}
               >
                 {/* Cabecera del Viaje */}
                 <div
                   onClick={() => setViajeExpandido(isExpanded ? null : viaje.id)}
-                  className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors"
+                  className={`p-4 flex items-center justify-between cursor-pointer transition-colors ${
+                    isDark ? 'hover:bg-slate-800/60' : 'hover:bg-slate-50'
+                  }`}
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-bold text-slate-900">{viaje.date}</span>
-                      <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                      <span className={`text-[11px] font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{viaje.date}</span>
+                      <span className="text-[10px] font-semibold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
                         Completado
                       </span>
                     </div>
 
-                    <p className="text-xs font-bold text-slate-700 truncate max-w-[200px]">
+                    <p className={`text-xs font-bold truncate max-w-[200px] ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                       {viaje.pickup.split('-')[0]} ➔ {viaje.destination}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <span className="text-sm font-extrabold text-slate-900">
+                      <span className={`text-sm font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>
                         $ {viaje.farePaid.toLocaleString('es-CO')}
                       </span>
-                      <p className="text-[10px] text-slate-400 font-medium">
+                      <p className={`text-[10px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>
                         {viaje.duration} • {viaje.distance}
                       </p>
                     </div>
@@ -139,24 +146,34 @@ export const PassengerTripsView = () => {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="px-4 pb-4 pt-1 border-t border-slate-100 space-y-3"
+                      className={`px-4 pb-4 pt-1 border-t space-y-3 ${isDark ? 'border-slate-800' : 'border-slate-100'}`}
                     >
                       {/* Datos del Conductor y Vehículo */}
-                      <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between text-xs">
+                      <div
+                        className={`p-3 rounded-2xl border flex items-center justify-between text-xs ${
+                          isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-100'
+                        }`}
+                      >
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-xl bg-lochmara-100 text-lochmara-800 font-bold text-xs flex items-center justify-center">
+                          <div
+                            className={`w-8 h-8 rounded-xl font-bold text-xs flex items-center justify-center border ${
+                              isDark
+                                ? 'bg-slate-800 text-lochmara-400 border-slate-700'
+                                : 'bg-lochmara-50 text-lochmara-700 border-lochmara-200'
+                            }`}
+                          >
                             <Car className="w-4 h-4" />
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900 leading-tight">{viaje.driverName}</p>
-                            <p className="text-[10px] text-slate-500">
-                              {viaje.vehicle} • <strong className="font-mono text-slate-700">{viaje.plate}</strong>
+                            <p className={`font-bold leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{viaje.driverName}</p>
+                            <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                              {viaje.vehicle} • <strong className={`font-mono ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{viaje.plate}</strong>
                             </p>
                           </div>
                         </div>
 
                         {viaje.rated ? (
-                          <div className="flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200 font-bold">
+                          <div className="flex items-center gap-1 text-[11px] text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/30 font-bold">
                             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                             <span>{viaje.ratingScore || 5}.0</span>
                           </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAppStore } from '../../store/useAppStore';
 import { Emblem } from '../common/Emblem';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
@@ -6,6 +7,8 @@ import { ShieldCheck, UserPlus, LogIn } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const AuthGatewayView = () => {
+  const { theme } = useAppStore();
+  const isDark = theme === 'dark';
   const [pasoAutenticacion, setPasoAutenticacion] = useState('bienvenida'); // 'bienvenida' | 'login' | 'registro'
 
   if (pasoAutenticacion === 'login') {
@@ -22,7 +25,9 @@ export const AuthGatewayView = () => {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.97 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className="flex-1 h-full flex flex-col justify-between p-6 text-slate-900 select-none bg-slate-50"
+      className={`flex-1 h-full flex flex-col justify-between p-6 select-none transition-colors ${
+        isDark ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'
+      }`}
     >
       {/* 1. ESPACIO SUPERIOR LIMPIO */}
       <div className="pt-4" />
@@ -39,13 +44,13 @@ export const AuthGatewayView = () => {
         </motion.div>
 
         <div className="space-y-2">
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 leading-tight">
+          <h1 className={`text-3xl font-extrabold tracking-tight leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
             UniWheels
           </h1>
-          <p className="text-sm font-semibold text-lochmara-600">
+          <p className="text-sm font-semibold text-lochmara-500">
             Movilidad Inteligente
           </p>
-          <p className="text-xs text-slate-500 pt-0.5">
+          <p className={`text-xs pt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             Comparte tus rutas universitarias.
           </p>
         </div>
@@ -66,15 +71,19 @@ export const AuthGatewayView = () => {
           <motion.button
             whileTap={{ scale: 0.98 }}
             onClick={() => setPasoAutenticacion('registro')}
-            className="w-full py-3.5 rounded-2xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+            className={`w-full py-3.5 rounded-2xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs ${
+              isDark
+                ? 'bg-slate-900 hover:bg-slate-800 active:bg-slate-850 text-white border-slate-800'
+                : 'bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-800 border-slate-200'
+            }`}
           >
-            <UserPlus className="w-4 h-4 text-lochmara-600" />
+            <UserPlus className="w-4 h-4 text-lochmara-500" />
             <span>Registrarse</span>
           </motion.button>
         </div>
 
         {/* Sello Institucional */}
-        <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 text-center">
+        <div className={`flex items-center justify-center gap-1.5 text-[11px] text-center ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
           <ShieldCheck className="w-3.5 h-3.5 text-lochmara-500 shrink-0" />
           <span>Acceso exclusivo para comunidad universitaria</span>
         </div>

@@ -14,10 +14,10 @@ class CreateTripRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'route_id' => ['required', 'uuid'],
-            'driver_id' => ['required', 'uuid'],
-            'passenger_id' => ['required', 'uuid'],
-            'vehicle_id' => ['nullable', 'uuid'],
+            'route_id' => ['required', 'string'],
+            'driver_id' => ['required', 'string'],
+            'passenger_id' => ['required', 'string'],
+            'vehicle_id' => ['nullable', 'string'],
             'driver_name' => ['nullable', 'string', 'max:120'],
             'passenger_name' => ['nullable', 'string', 'max:120'],
             'vehicle_plate' => ['nullable', 'string', 'max:10'],

@@ -8,7 +8,9 @@ use App\Http\Requests\RegisterDriverRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Mail\BienvenidaUsuarioMail;
+use App\Mail\CuentaEliminadaMail;
 use App\Mail\RecuperacionClaveMail;
+use App\Mail\VerificacionCorreoMail;
 use App\Models\User;
 use App\Models\UserReputationStats;
 use App\Models\UserWallet;
@@ -29,6 +31,18 @@ class AuthController extends Controller
     public function register(RegisterRequest $request): JsonResponse
     {
         $datosValidados = $request->validated();
+        $correo = $request->input('email');
+        $codigoIngresado = $datosValidados['verification_code'] ?? null;
+
+        // Validar que el código PIN coincida con el almacenado en Cache
+        $codigoAlmacenado = Cache::get('email_verification_' . $correo);
+
+        if (!$codigoAlmacenado || $codigoAlmacenado !== $codigoIngresado) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El código de verificación PIN es inválido o ha expirado. Por favor solicita uno nuevo.',
+            ], 422);
+        }
 
         $usuario = DB::transaction(function () use ($datosValidados, $request) {
             $nuevoUsuario = User::create([
@@ -64,7 +78,10 @@ class AuthController extends Controller
             return $nuevoUsuario;
         });
 
-        // Enviar correo de bienvenida con código de activación
+        // Limpiar código de verificación usado de la caché
+        Cache::forget('email_verification_' . $correo);
+
+        // Enviar correo de bienvenida
         try {
             $codigoActivacion = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
             Mail::to($usuario->email)->send(new BienvenidaUsuarioMail($usuario, $codigoActivacion));
@@ -77,7 +94,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Usuario registrado exitosamente. Se ha enviado un correo de bienvenida.',
+            'message' => 'Usuario registrado y verificado exitosamente. Se ha enviado un correo de bienvenida.',
             'data' => [
                 'user' => new UserResource($usuario),
                 'access_token' => $tokenAcceso,
@@ -228,9 +245,16 @@ class AuthController extends Controller
         $codigoVerificacion = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
         Cache::put('email_verification_' . $correo, $codigoVerificacion, now()->addMinutes(15));
 
+        // Enviar correo electrónico con el código PIN de verificación
+        try {
+            Mail::to($correo)->send(new VerificacionCorreoMail($correo, $codigoVerificacion));
+        } catch (\Throwable $e) {
+            Log::error('Error al enviar correo de verificación institucional: ' . $e->getMessage());
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Código de verificación institucional enviado.',
+            'message' => 'Código de verificación institucional enviado exitosamente a tu correo.',
             'data' => [
                 'email' => $correo,
                 'debug_code' => config('app.debug') ? $codigoVerificacion : null,
@@ -305,11 +329,51 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        if ($request->user() && $request->user()->currentAccessToken()) {
+            $request->user()->currentAccessToken()->delete();
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Sesión cerrada exitosamente. Token revocado.',
+        ]);
+    }
+
+    /**
+     * Eliminar la cuenta del usuario (Habeas Data Ley 1581) y enviar correo de despedida.
+     */
+    public function deleteAccount(Request $request): JsonResponse
+    {
+        $usuario = $request->user();
+
+        if (!$usuario && $request->has('email')) {
+            $usuario = User::where('email', $request->input('email'))->first();
+        }
+
+        if (!$usuario) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuario no encontrado o sesión no válida.',
+            ], 404);
+        }
+
+        // Enviar correo de confirmación de eliminación con mensaje de despedida
+        try {
+            Mail::to($usuario->email)->send(new CuentaEliminadaMail($usuario));
+        } catch (\Throwable $e) {
+            Log::error('Error al enviar correo de cuenta eliminada: ' . $e->getMessage());
+        }
+
+        // Revocar todos los tokens de acceso activos
+        $usuario->tokens()->delete();
+
+        // Desactivar y soft-delete de la cuenta
+        $usuario->update(['is_active' => false]);
+        $usuario->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tu cuenta ha sido eliminada exitosamente. Te hemos enviado un correo de confirmación.',
         ]);
     }
 }

@@ -10,13 +10,15 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->group(function () {
-    // Rutas de Carpooling (Conductor)
-    Route::post('/routes', [RouteController::class, 'store']);
-    Route::get('/routes/{id}', [RouteController::class, 'show']);
-
     // Búsqueda y Emparejamiento Geoespacial (Pasajero)
     Route::post('/routes/search-match', [RouteController::class, 'searchMatches']);
 
     // Evaluación de Desvío Asistido por IA (Modalidad 2)
     Route::post('/routes/{id}/evaluate-detour', [RouteController::class, 'evaluateDetour']);
+    Route::post('/routes/evaluate-detour', [RouteController::class, 'evaluateDetour']);
+
+    // Rutas de Carpooling (Conductor y Pasajero)
+    Route::get('/routes', [RouteController::class, 'index']);
+    Route::post('/routes', [RouteController::class, 'store']);
+    Route::get('/routes/{id}', [RouteController::class, 'show']);
 });
