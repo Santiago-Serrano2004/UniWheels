@@ -192,37 +192,43 @@ export const WalletView = () => {
               : 'bg-white border-slate-200 divide-slate-100 shadow-sm'
           }`}
         >
-          {historialMovimientos.map((tx) => (
-            <div key={tx.id} className="p-3.5 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2.5">
-                <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center border ${
-                    tx.type === 'credit'
-                      ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
-                      : 'bg-rose-500/10 text-rose-500 border-rose-500/30'
+          {historialMovimientos.length > 0 ? (
+            historialMovimientos.map((tx) => (
+              <div key={tx.id} className="p-3.5 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center border ${
+                      tx.type === 'credit'
+                        ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+                        : 'bg-rose-500/10 text-rose-500 border-rose-500/30'
+                    }`}
+                  >
+                    {tx.type === 'credit' ? (
+                      <ArrowDownRight className="w-4 h-4" />
+                    ) : (
+                      <ArrowUpRight className="w-4 h-4" />
+                    )}
+                  </div>
+                  <div>
+                    <p className={`font-bold leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{tx.title || tx.desc}</p>
+                    <p className={`text-[10px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{tx.date || tx.desc}</p>
+                  </div>
+                </div>
+
+                <span
+                  className={`font-extrabold ${
+                    tx.type === 'credit' ? 'text-emerald-500' : 'text-rose-500'
                   }`}
                 >
-                  {tx.type === 'credit' ? (
-                    <ArrowDownRight className="w-4 h-4" />
-                  ) : (
-                    <ArrowUpRight className="w-4 h-4" />
-                  )}
-                </div>
-                <div>
-                  <p className={`font-bold leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{tx.title}</p>
-                  <p className={`text-[10px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{tx.desc}</p>
-                </div>
+                  {typeof tx.amount === 'number' ? `$ ${tx.amount.toLocaleString('es-CO')}` : tx.amount}
+                </span>
               </div>
-
-              <span
-                className={`font-extrabold ${
-                  tx.type === 'credit' ? 'text-emerald-500' : 'text-rose-500'
-                }`}
-              >
-                {tx.amount}
-              </span>
+            ))
+          ) : (
+            <div className="p-4 text-center text-xs text-slate-400">
+              No hay movimientos recientes en tu billetera.
             </div>
-          ))}
+          )}
         </div>
       </section>
     </div>

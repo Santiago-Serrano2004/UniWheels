@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAppStore } from '../../store/useAppStore';
 import { tripsService } from '../../services/api';
 import { RatingFeedbackModal } from '../common/RatingFeedbackModal';
 import {
