@@ -44,18 +44,22 @@ UniWheels/
    * Registro con correos institucionales validados por dominio (`@unab.edu.co`).
    * Envío obligatorio de PIN de 6 dígitos antes de crear la cuenta.
    * Eliminación voluntaria de cuenta con revocación de tokens y correo de despedida.
-2. **Registro de Conductores con NHTSA vPIC API y Caché de 24h:**
+2. **Modalidades de Trayecto Universitarias:**
+   * **Hacia Campus:** Punto de partida en la ciudad $\rightarrow$ Sede universitaria.
+   * **Desde Campus:** Sede universitaria $\rightarrow$ Punto de destino en la ciudad (con punto de encuentro textual obligatorio en la sede).
+   * **Entre Sedes (Inter-Campus):** Conexión directa entre campus de la institución con punto de encuentro en la sede de origen.
+3. **Poda Espacial y Filtro de Horario:**
+   * Evaluación de proximidad geoespacial entre el punto del pasajero y la trayectoria del conductor.
+   * Filtrado temporal automático en una ventana de menos de 1 hora ($\pm 60\text{ min}$).
+   * Insignias del modelo de IA: `Ruta directa`, `Desvío viable (+X min)` y `Desvío no disponible`.
+4. **Registro de Conductores con NHTSA vPIC API y Caché de 24h:**
    * Conexión en vivo con la API oficial internacional de la NHTSA para la carga dinámica de modelos por marca.
    * Caché local con recarga diaria de 24 horas (`vehicleApiService.js`).
    * Visualizador de placa colombiana reflectiva con remaches y repujado oficial (`ColombianPlateInput.jsx`).
-3. **Cumplimiento Normativo Colombiano de Tránsito y Transporte:**
+5. **Cumplimiento Normativo Colombiano de Tránsito y Transporte:**
    * **Revisión Técnico-Mecánica (Ley 2294 de 2023 / Ley 1964 de 2019):** Exigible a automóviles particulares a partir de los 5 años de matrícula. Motocicletas a partir de los 2 años.
    * **Póliza SOAT y Licencia de Conducción:** Validación estricta de formatos numéricos colombianos y verificación de vigencia activa.
    * **Habeas Data (Ley 1581 de 2012):** Autorización expresa, almacenamiento seguro en disco privado y URLs firmadas de 10 minutos para auditoría institucional.
-4. **Motor de Inteligencia Artificial Geoespacial:**
-   * Evaluación de desvío vehicular en menos de 50 ms mediante OSRM local.
-   * Penalización dinámica por congestión y giros a la izquierda.
-   * Cálculo de huella de carbono evitada ($g\text{CO}_2$).
 
 ---
 
@@ -73,6 +77,9 @@ cd UniWheels/services/trip-service && ./vendor/bin/pest
 
 # Pruebas en ai-route-service
 cd UniWheels/services/ai-route-service && pytest tests/
+
+# Compilación Frontend
+cd UniWheels/frontend && npm run build
 ```
 
 ---
