@@ -90,7 +90,7 @@ export const RegistrationSuccessStep = ({
       </div>
 
       <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs text-left">
-        <strong>⏳ Notificación al Administrador:</strong> Hemos enviado una ficha técnica detallada al correo administrativo para la validación de tus pólizas.
+        <strong>Notificación al Administrador:</strong> Hemos enviado una ficha técnica detallada al correo administrativo para la validación de tus pólizas.
       </div>
 
       <button

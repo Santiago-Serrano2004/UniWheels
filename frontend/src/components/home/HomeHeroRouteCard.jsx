@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, MapPin, Search, ChevronDown, X, Loader2 } from 'lucide-react';
+import { Sparkles, MapPin, Search, ChevronDown, X, Loader2, Navigation } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const HomeHeroRouteCard = ({
@@ -11,7 +11,6 @@ export const HomeHeroRouteCard = ({
   setSelectedCampus,
   sedesDisponibles,
   editablePointName,
-  _setEditablePointName,
   setIsSelectingPointOnMap,
   searchQuery,
   setSearchQuery,
@@ -19,30 +18,32 @@ export const HomeHeroRouteCard = ({
   isSearching,
   handleSelectSuggestion,
 }) => {
+  const placeholderText =
+    directionFilter === 'towards'
+      ? '¿Dónde te recogemos? Barrio, calle...'
+      : '¿A dónde te diriges? Barrio, centro...';
+
   return (
     <section
-      className={`rounded-3xl p-5 border shadow-sm relative overflow-hidden transition-colors ${
+      className={`rounded-3xl p-4 border shadow-sm relative overflow-hidden transition-colors ${
         isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
       }`}
     >
       {/* Saludo y Avatar */}
-      <div className="flex items-center justify-between gap-3 mb-4">
+      <div className="flex items-center justify-between gap-3 mb-3">
         <div className="space-y-0.5 min-w-0">
           <div className="flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-lochmara-500" />
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-lochmara-600 dark:text-lochmara-400">
+            <Sparkles className="w-3.5 h-3.5 text-lochmara-500" />
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-lochmara-600 dark:text-lochmara-400">
               Rutas Universitarias IA
             </span>
           </div>
-          <h2 className="text-lg sm:text-xl font-black tracking-tight truncate">
-            ¡Hola, {user?.name?.split(' ')[0] || 'Estudiante'}! 👋
+          <h2 className="text-base sm:text-lg font-black tracking-tight truncate">
+            Hola, {user?.name?.split(' ')[0] || 'Estudiante'}
           </h2>
-          <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            ¿Cuál es tu trayecto universitario hoy?
-          </p>
         </div>
 
-        <div className="w-12 h-12 rounded-2xl bg-lochmara-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-md shadow-lochmara-600/20 overflow-hidden">
+        <div className="w-10 h-10 rounded-2xl bg-lochmara-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md shadow-lochmara-600/20 overflow-hidden">
           {user?.profilePhoto ? (
             <img src={user.profilePhoto} alt={user.name} className="w-full h-full object-cover" />
           ) : (
@@ -52,11 +53,11 @@ export const HomeHeroRouteCard = ({
       </div>
 
       {/* Pill Toggle de Sentido: Hacia el Campus vs Desde el Campus */}
-      <div className={`flex p-1 rounded-2xl border mb-4 relative ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'}`}>
+      <div className={`flex p-1 rounded-2xl border mb-3 relative ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'}`}>
         <button
           type="button"
           onClick={() => setDirectionFilter('towards')}
-          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all relative z-10 cursor-pointer text-center ${
+          className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all relative z-10 cursor-pointer text-center ${
             directionFilter === 'towards'
               ? 'text-white'
               : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
@@ -75,7 +76,7 @@ export const HomeHeroRouteCard = ({
         <button
           type="button"
           onClick={() => setDirectionFilter('from')}
-          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all relative z-10 cursor-pointer text-center ${
+          className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all relative z-10 cursor-pointer text-center ${
             directionFilter === 'from'
               ? 'text-white'
               : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
@@ -92,22 +93,22 @@ export const HomeHeroRouteCard = ({
         </button>
       </div>
 
-      {/* CORREDOR ORIGEN / DESTINO CON CAMPUS BLOQUEADO SEGÚN SENTIDO */}
-      <div className={`space-y-2 p-3.5 rounded-2xl border mb-3.5 ${isDark ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+      {/* CORREDOR ORIGEN / DESTINO UNIFICADO CON BÚSQUEDA INTEGRADA */}
+      <div className={`p-3 rounded-2xl border relative ${isDark ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
         {/* ORIGEN */}
-        <div className="flex items-start gap-2.5">
-          <div className="w-3 h-3 rounded-full bg-lochmara-500 mt-1 shrink-0 ring-4 ring-lochmara-500/20" />
+        <div className="flex items-center gap-2.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-lochmara-500 shrink-0 ring-4 ring-lochmara-500/20" />
           <div className="flex-1 min-w-0">
-            <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
-              Punto de Origen
-            </label>
+            <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block">
+              Origen
+            </span>
             {directionFilter === 'from' ? (
-              /* ORIGEN ES EL CAMPUS (BLOQUEADO EN SELECTOR) */
+              /* ORIGEN ES EL CAMPUS */
               <div className="relative mt-0.5">
                 <select
                   value={selectedCampus}
                   onChange={(e) => setSelectedCampus(e.target.value)}
-                  className={`w-full py-1.5 px-2.5 pr-8 rounded-xl text-xs font-bold appearance-none cursor-pointer border ${
+                  className={`w-full py-1 px-2 pr-7 rounded-xl text-xs font-bold appearance-none cursor-pointer border ${
                     isDark
                       ? 'bg-slate-900 border-slate-700 text-white'
                       : 'bg-white border-slate-300 text-slate-900'
@@ -119,40 +120,71 @@ export const HomeHeroRouteCard = ({
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               </div>
             ) : (
-              /* ORIGEN ES EDITABLE */
-              <div
-                onClick={() => setIsSelectingPointOnMap(true)}
-                className={`mt-0.5 text-xs font-bold truncate cursor-pointer hover:underline flex items-center justify-between ${
-                  editablePointName ? (isDark ? 'text-white' : 'text-slate-900') : 'text-slate-400'
-                }`}
-              >
-                <span className="truncate">{editablePointName || 'Selecciona tu punto de salida...'}</span>
-                <span className="text-[10px] font-normal text-lochmara-500 underline ml-1 shrink-0">Ajustar</span>
+              /* ORIGEN ES EDITABLE CON INPUT DE BÚSQUEDA INTEGRADO */
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="relative flex-1 flex items-center">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={searchQuery || editablePointName}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                    }}
+                    placeholder={placeholderText}
+                    className={`w-full py-1 pl-7 pr-7 rounded-xl text-xs font-bold border transition-all focus:outline-hidden ${
+                      isDark
+                        ? 'bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 focus:border-lochmara-500'
+                        : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-lochmara-500'
+                    }`}
+                  />
+                  {isSearching ? (
+                    <Loader2 className="w-3 h-3 animate-spin text-lochmara-500 absolute right-2" />
+                  ) : (searchQuery || editablePointName) ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery('');
+                      }}
+                      className="absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSelectingPointOnMap(true)}
+                  className="px-2 py-1 rounded-xl bg-lochmara-500/10 hover:bg-lochmara-500/20 text-lochmara-600 dark:text-lochmara-400 text-[10px] font-extrabold transition-colors cursor-pointer flex items-center gap-1 shrink-0"
+                  title="Seleccionar en el mapa"
+                >
+                  <MapPin className="w-3 h-3" />
+                  <span>Mapa</span>
+                </button>
               </div>
             )}
           </div>
         </div>
 
         {/* Línea conectora */}
-        <div className={`border-l-2 border-dashed h-3 ml-1.5 my-0.5 ${isDark ? 'border-slate-700' : 'border-slate-300'}`} />
+        <div className={`border-l-2 border-dashed h-2.5 ml-1 my-1 ${isDark ? 'border-slate-700' : 'border-slate-300'}`} />
 
         {/* DESTINO */}
-        <div className="flex items-start gap-2.5">
-          <div className="w-3 h-3 rounded-full bg-emerald-500 mt-1 shrink-0 ring-4 ring-emerald-500/20" />
+        <div className="flex items-center gap-2.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0 ring-4 ring-emerald-500/20" />
           <div className="flex-1 min-w-0">
-            <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
-              Punto de Destino
-            </label>
+            <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block">
+              Destino
+            </span>
             {directionFilter === 'towards' ? (
-              /* DESTINO ES EL CAMPUS (BLOQUEADO EN SELECTOR) */
+              /* DESTINO ES EL CAMPUS */
               <div className="relative mt-0.5">
                 <select
                   value={selectedCampus}
                   onChange={(e) => setSelectedCampus(e.target.value)}
-                  className={`w-full py-1.5 px-2.5 pr-8 rounded-xl text-xs font-bold appearance-none cursor-pointer border ${
+                  className={`w-full py-1 px-2 pr-7 rounded-xl text-xs font-bold appearance-none cursor-pointer border ${
                     isDark
                       ? 'bg-slate-900 border-slate-700 text-white'
                       : 'bg-white border-slate-300 text-slate-900'
@@ -164,67 +196,61 @@ export const HomeHeroRouteCard = ({
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               </div>
             ) : (
-              /* DESTINO ES EDITABLE */
-              <div
-                onClick={() => setIsSelectingPointOnMap(true)}
-                className={`mt-0.5 text-xs font-bold truncate cursor-pointer hover:underline flex items-center justify-between ${
-                  editablePointName ? (isDark ? 'text-white' : 'text-slate-900') : 'text-slate-400'
-                }`}
-              >
-                <span className="truncate">{editablePointName || 'Selecciona tu punto de llegada...'}</span>
-                <span className="text-[10px] font-normal text-lochmara-500 underline ml-1 shrink-0">Ajustar</span>
+              /* DESTINO ES EDITABLE CON INPUT DE BÚSQUEDA INTEGRADO */
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="relative flex-1 flex items-center">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={searchQuery || editablePointName}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                    }}
+                    placeholder={placeholderText}
+                    className={`w-full py-1 pl-7 pr-7 rounded-xl text-xs font-bold border transition-all focus:outline-hidden ${
+                      isDark
+                        ? 'bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 focus:border-lochmara-500'
+                        : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-lochmara-500'
+                    }`}
+                  />
+                  {isSearching ? (
+                    <Loader2 className="w-3 h-3 animate-spin text-lochmara-500 absolute right-2" />
+                  ) : (searchQuery || editablePointName) ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery('');
+                      }}
+                      className="absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSelectingPointOnMap(true)}
+                  className="px-2 py-1 rounded-xl bg-lochmara-500/10 hover:bg-lochmara-500/20 text-lochmara-600 dark:text-lochmara-400 text-[10px] font-extrabold transition-colors cursor-pointer flex items-center gap-1 shrink-0"
+                  title="Seleccionar en el mapa"
+                >
+                  <MapPin className="w-3 h-3" />
+                  <span>Mapa</span>
+                </button>
               </div>
             )}
           </div>
         </div>
-      </div>
 
-      {/* Buscador de Lugar con Autocompletado */}
-      <div className="relative">
-        <div
-          className={`flex items-center gap-2.5 px-3 py-2.5 rounded-2xl border transition-all ${
-            isDark
-              ? 'bg-slate-950 border-slate-800 focus-within:border-lochmara-500'
-              : 'bg-slate-50 border-slate-200 focus-within:border-lochmara-500'
-          }`}
-        >
-          <Search className="w-4 h-4 text-slate-400 shrink-0" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={
-              directionFilter === 'towards'
-                ? '¿De dónde sales? (Barrio, calle, parque...)'
-                : '¿A dónde vas? (Barrio, centro comercial...)'
-            }
-            className={`w-full bg-transparent text-xs font-medium focus:outline-hidden placeholder:text-slate-400 ${
-              isDark ? 'text-white' : 'text-slate-900'
-            }`}
-          />
-          {isSearching ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-lochmara-500 shrink-0" />
-          ) : searchQuery ? (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className="text-slate-400 hover:text-slate-600 cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          ) : null}
-        </div>
-
-        {/* Dropdown de Sugerencias */}
+        {/* Dropdown flotante de sugerencias conectado directamente a la caja */}
         <AnimatePresence>
           {suggestions.length > 0 && (
             <motion.div
-              initial={{ opacity: 0, y: 5 }}
+              initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 5 }}
+              exit={{ opacity: 0, y: 4 }}
               className={`absolute top-full left-0 right-0 z-30 mt-1 rounded-2xl border shadow-xl overflow-hidden divide-y ${
                 isDark
                   ? 'bg-slate-900 border-slate-800 divide-slate-800 text-white'
@@ -243,7 +269,7 @@ export const HomeHeroRouteCard = ({
                   <MapPin className="w-3.5 h-3.5 text-lochmara-500 shrink-0" />
                   <div className="truncate">
                     <p className="font-bold truncate">{item.name}</p>
-                    <p className="text-[10px] text-slate-400 truncate">{item.category}</p>
+                    <p className="text-[10px] text-slate-400 truncate">{item.category || item.address}</p>
                   </div>
                 </button>
               ))}

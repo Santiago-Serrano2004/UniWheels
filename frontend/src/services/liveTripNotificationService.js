@@ -29,7 +29,7 @@ export const liveTripNotificationService = {
     }
 
     const title = `UniWheels • ${driverName} (${plate})`;
-    const body = `⏱️ Llega en ${etaMinutes} min | 🔐 PIN: ${boardingPin}\n📍 Destino: ${destination}`;
+    const body = `Llega en ${etaMinutes} min | PIN: ${boardingPin}\nDestino: ${destination}`;
 
     try {
       // Si el navegador soporta Service Worker (PWA instalable)

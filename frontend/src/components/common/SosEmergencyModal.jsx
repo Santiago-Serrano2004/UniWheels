@@ -28,7 +28,7 @@ export const SosEmergencyModal = ({ isOpen, onClose, currentCoords = [7.1193, -7
 
   const compartirSosWhatsApp = () => {
     const texto = encodeURIComponent(
-      `🚨 ALERTA DE EMERGENCIA UNIWHEELS UNAB 🚨\nMe encuentro en trayecto y necesito asistencia.\n📍 Mi ubicación en vivo: https://www.google.com/maps?q=${lat},${lng}\n🚗 Conductor/Vehículo: ${tripInfo?.driverName || 'Carlos Mendoza'} (${tripInfo?.plate || 'KLU-492'})\n🛡️ Central de Seguridad UNAB informada.`
+      `[ALERTA DE EMERGENCIA UNIWHEELS]\nMe encuentro en trayecto y necesito asistencia.\nUbicacion en vivo: https://www.google.com/maps?q=${lat},${lng}\nConductor/Vehiculo: ${tripInfo?.driverName || 'Carlos Mendoza'} (${tripInfo?.plate || 'KLU-492'})\nCentral de Seguridad Universitaria informada.`
     );
     window.open(`https://wa.me/?text=${texto}`, '_blank');
   };

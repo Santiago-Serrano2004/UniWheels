@@ -140,11 +140,11 @@ export const RatingFeedbackModal = ({
                   ))}
                 </div>
                 <span className="text-[11px] font-bold text-amber-500 block">
-                  {rating === 5 && '🌟 ¡Excelente viaje!'}
-                  {rating === 4 && '👍 Muy buen servicio'}
-                  {rating === 3 && '🙂 Viaje promedio'}
-                  {rating === 2 && '😕 Regular'}
-                  {rating === 1 && '⚠️ Mala experiencia'}
+                  {rating === 5 && 'Excelente viaje'}
+                  {rating === 4 && 'Muy buen servicio'}
+                  {rating === 3 && 'Viaje promedio'}
+                  {rating === 2 && 'Regular'}
+                  {rating === 1 && 'Mala experiencia'}
                 </span>
               </div>
 

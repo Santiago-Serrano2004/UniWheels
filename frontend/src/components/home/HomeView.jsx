@@ -9,29 +9,6 @@ import { CampusQuickSelectorGrid } from './CampusQuickSelectorGrid';
 import { AvailableRideCard } from './AvailableRideCard';
 import { Navigation, Car } from 'lucide-react';
 
-const SECTOR_COORDINATES = {
-  'cañaveral': [7.0678, -73.1066],
-  'floridablanca': [7.0645, -73.0988],
-  'cabecera': [7.1186, -73.1102],
-  'san pío': [7.1186, -73.1102],
-  'san pio': [7.1186, -73.1102],
-  'provenza': [7.0856, -73.1142],
-  'piedecuesta': [7.0012, -73.0489],
-  'girón': [7.0725, -73.1698],
-  'giron': [7.0725, -73.1698],
-  'centro': [7.1193, -73.1227],
-  'mutis': [7.1085, -73.1312],
-  'real de minas': [7.1080, -73.1250],
-  'minas': [7.1080, -73.1250],
-  'jardín': [7.1193, -73.1042],
-  'jardin': [7.1193, -73.1042],
-  'bosque': [7.0664, -73.1037],
-  'csu': [7.1138, -73.1068],
-  'casona': [7.1182, -73.1165],
-};
-
-
-
 export const HomeView = () => {
   const {
     user,
@@ -162,16 +139,17 @@ export const HomeView = () => {
     },
   ]);
 
-  // Cargar sedes desde la API de instituciones si están disponibles
+  // Cargar sedes desde la API de instituciones de forma resiliente
   useEffect(() => {
     authService.getInstitutions().then((res) => {
-      if (res?.data?.[0]?.campuses && res.data[0].campuses.length > 0) {
-        setSedesDisponibles(res.data[0].campuses);
+      const campuses = Array.isArray(res) ? res[0]?.campuses : res?.data?.[0]?.campuses;
+      if (campuses && campuses.length > 0) {
+        setSedesDisponibles(campuses);
       }
     }).catch(() => {});
   }, []);
 
-  // Búsqueda de lugares reactiva
+  // Búsqueda de lugares reactiva con debounce de 300ms
   useEffect(() => {
     if (!searchQuery || searchQuery.length < 2) {
       setSuggestions([]);
@@ -205,6 +183,7 @@ export const HomeView = () => {
   const handleLocationPickedOnMap = (coords, addressName) => {
     setEditableCoords([coords.lat, coords.lng]);
     setEditablePointName(addressName || 'Punto Seleccionado en Mapa');
+    setSearchQuery('');
     setIsSelectingPointOnMap(false);
   };
 
@@ -226,15 +205,16 @@ export const HomeView = () => {
 
   // Filtrar viajes según el campus seleccionado y el sentido
   const filteredRides = allAvailableRides.filter((ride) => {
+    const campusKey = selectedCampus.toLowerCase().replace('campus ', '');
     if (directionFilter === 'towards') {
-      return ride.destination.toLowerCase().includes(selectedCampus.toLowerCase().replace('campus ', ''));
+      return ride.destination.toLowerCase().includes(campusKey);
     } else {
-      return ride.origin.toLowerCase().includes(selectedCampus.toLowerCase().replace('campus ', ''));
+      return ride.origin.toLowerCase().includes(campusKey);
     }
   });
 
   return (
-    <div className="space-y-4 pb-6 select-none">
+    <div className="space-y-3 pb-6 select-none">
       {/* 1. BANNER COMPACTO DE VIAJE ACTIVO */}
       <ActiveTripCompactBanner
         activePassengerBooking={activePassengerBooking}
@@ -243,7 +223,7 @@ export const HomeView = () => {
         cancelPassengerBooking={cancelPassengerBooking}
       />
 
-      {/* 2. HERO CARD: CORREDOR ORIGEN-DESTINO Y BUSCADOR */}
+      {/* 2. HERO CARD: CORREDOR ORIGEN-DESTINO CON BÚSQUEDA INTEGRADA */}
       <HomeHeroRouteCard
         user={user}
         isDark={isDark}
@@ -253,7 +233,6 @@ export const HomeView = () => {
         setSelectedCampus={setSelectedCampus}
         sedesDisponibles={sedesDisponibles}
         editablePointName={editablePointName}
-        setEditablePointName={setEditablePointName}
         setIsSelectingPointOnMap={setIsSelectingPointOnMap}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -262,7 +241,7 @@ export const HomeView = () => {
         handleSelectSuggestion={handleSelectSuggestion}
       />
 
-      {/* 3. GRID DE SEDES UNIVERSITARIAS */}
+      {/* 3. BARRA HORIZONTAL DE SEDES UNIVERSITARIAS */}
       <CampusQuickSelectorGrid
         sedesDisponibles={sedesDisponibles}
         selectedCampus={selectedCampus}
@@ -270,8 +249,8 @@ export const HomeView = () => {
         isDark={isDark}
       />
 
-      {/* 4. VIAJES DISPONIBLES */}
-      <section className="space-y-2.5">
+      {/* 4. VIAJES DISPONIBLES (INMEDIATAMENTE VISIBLES) */}
+      <section className="space-y-2">
         <div className="flex items-center justify-between px-1">
           <h3 className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             <Navigation className="w-3.5 h-3.5 text-emerald-500" />
@@ -292,12 +271,12 @@ export const HomeView = () => {
             ))}
           </div>
         ) : (
-          <div className={`p-6 rounded-2xl border text-center space-y-2 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-            <Car className="w-8 h-8 mx-auto text-slate-400" />
+          <div className={`p-5 rounded-2xl border text-center space-y-1.5 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+            <Car className="w-6 h-6 mx-auto text-slate-400" />
             <p className={`text-xs font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
               No hay conductores saliendo hacia {selectedCampus} en este momento.
             </p>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[10px] text-slate-400">
               Prueba seleccionando otra sede o publicando tu propia ruta si tienes vehículo.
             </p>
           </div>

@@ -280,16 +280,16 @@ export const InAppGpsNavigator = ({ _trip, onExit, onComplete }) => {
 
           {/* Parada: Parque San Pío */}
           <Marker position={[7.1186, -73.1102]} icon={L.divIcon({
-            html: '<div style="background:#f59e0b; width:38px; height:38px; border-radius:50%; border:3px solid white; display:flex; align-items:center; justify-content:center; font-size:18px; box-shadow:0 4px 14px rgba(0,0,0,0.5);">📍</div>',
-            iconSize: [38, 38],
-            iconAnchor: [19, 19],
+            html: '<div style="background:#f59e0b; width:34px; height:34px; border-radius:50%; border:2.5px solid white; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,0.4);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>',
+            iconSize: [34, 34],
+            iconAnchor: [17, 17],
           })} />
 
-          {/* Destino: Campus UNAB */}
+          {/* Destino: Campus */}
           <Marker position={[7.1193, -73.1042]} icon={L.divIcon({
-            html: '<div style="background:#082f49; width:38px; height:38px; border-radius:50%; border:3px solid white; display:flex; align-items:center; justify-content:center; font-size:18px; box-shadow:0 4px 14px rgba(0,0,0,0.5);">🎓</div>',
-            iconSize: [38, 38],
-            iconAnchor: [19, 19],
+            html: '<div style="background:#082f49; width:34px; height:34px; border-radius:50%; border:2.5px solid white; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,0.4);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg></div>',
+            iconSize: [34, 34],
+            iconAnchor: [17, 17],
           })} />
         </MapContainer>
       </div>
