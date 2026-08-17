@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { routesService, tripLifecycleService } from '../../services/api';
 import { MapContainer, Marker, Popup, Polyline, useMapEvents } from 'react-leaflet';
@@ -54,17 +54,21 @@ export const TripMapView = () => {
   const tripDirection = initialDirection;
   const isTowardsCampus = tripDirection === 'towards_campus';
 
-  const driverOrigin = selectedSearchRoute
-    ? getPlaceCoordinates(selectedSearchRoute.origin, false)
-    : isTowardsCampus
-    ? [7.0678, -73.1066]
-    : [7.1193, -73.1042];
+  const driverOrigin = useMemo(() => {
+    return selectedSearchRoute
+      ? getPlaceCoordinates(selectedSearchRoute.origin, false)
+      : isTowardsCampus
+      ? [7.0678, -73.1066]
+      : [7.1193, -73.1042];
+  }, [selectedSearchRoute, isTowardsCampus]);
 
-  const campusDestination = selectedSearchRoute
-    ? getPlaceCoordinates(selectedSearchRoute.destination, true)
-    : isTowardsCampus
-    ? [7.1193, -73.1042]
-    : [7.0678, -73.1066];
+  const campusDestination = useMemo(() => {
+    return selectedSearchRoute
+      ? getPlaceCoordinates(selectedSearchRoute.destination, true)
+      : isTowardsCampus
+      ? [7.1193, -73.1042]
+      : [7.0678, -73.1066];
+  }, [selectedSearchRoute, isTowardsCampus]);
 
   const initialVehicle = selectedSearchRoute
     ? selectedSearchRoute.vehicle?.toLowerCase().includes('moto') ||

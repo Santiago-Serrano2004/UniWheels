@@ -22,6 +22,7 @@ import {
   Lock,
   Mail,
   X,
+  BookOpen,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
