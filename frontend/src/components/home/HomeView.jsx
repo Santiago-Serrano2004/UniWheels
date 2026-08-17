@@ -7,7 +7,7 @@ import { ActiveTripCompactBanner } from './ActiveTripCompactBanner';
 import { HomeHeroRouteCard } from './HomeHeroRouteCard';
 import { CampusQuickSelectorGrid } from './CampusQuickSelectorGrid';
 import { AvailableRideCard } from './AvailableRideCard';
-import { Navigation } from 'lucide-react';
+import { Navigation, Car } from 'lucide-react';
 
 const SECTOR_COORDINATES = {
   'cañaveral': [7.0678, -73.1066],

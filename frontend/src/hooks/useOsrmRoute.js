@@ -50,3 +50,13 @@ export async function fetchRoadGeometry(points) {
 
   return points;
 }
+
+export function useOsrmRoute() {
+  return {
+    fetchRoadGeometry,
+    lerpAngle,
+    getPlaceCoordinates,
+  };
+}
+
+export default useOsrmRoute;
