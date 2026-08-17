@@ -7,6 +7,7 @@ import {
   MapPin,
   Clock,
   Car,
+  Navigation,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -48,7 +49,7 @@ export const PassengerActiveTripCard = () => {
                   : 'bg-lochmara-50 text-lochmara-700 border-lochmara-200'
               }`}
             >
-              CM
+              {activePassengerBooking.driverName?.charAt(0) || 'C'}
             </div>
             <div>
               <div className="flex items-center gap-1">
@@ -102,9 +103,9 @@ export const PassengerActiveTripCard = () => {
           </div>
         </div>
 
-        {/* Puntos de Ruta */}
+        {/* Puntos de Ruta e Información de Encuentro */}
         <div
-          className={`space-y-2 rounded-2xl p-3 border text-xs ${
+          className={`space-y-2.5 rounded-2xl p-3 border text-xs ${
             isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200/80'
           }`}
         >
@@ -112,11 +113,17 @@ export const PassengerActiveTripCard = () => {
             <div className="w-2.5 h-2.5 rounded-full bg-lochmara-400 mt-1 shrink-0" />
             <div>
               <span className={`text-[10px] block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                Tu Punto de Abordaje
+                Punto de Abordaje (Origen)
               </span>
               <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                {activePassengerBooking.pickup || 'Parque San Pío'}
+                {activePassengerBooking.origin || activePassengerBooking.pickup || 'Parque San Pío'}
               </p>
+              {activePassengerBooking.meeting_point && (
+                <p className="text-[10px] font-bold text-lochmara-600 dark:text-lochmara-400 mt-0.5 flex items-center gap-1">
+                  <Navigation className="w-3 h-3 shrink-0" />
+                  <span>Punto de encuentro: {activePassengerBooking.meeting_point}</span>
+                </p>
+              )}
             </div>
           </div>
 
@@ -124,7 +131,7 @@ export const PassengerActiveTripCard = () => {
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 mt-1 shrink-0" />
             <div>
               <span className={`text-[10px] block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                Campus Universitario
+                Punto de Llegada (Destino)
               </span>
               <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {activePassengerBooking.destination || 'Campus El Jardín'}

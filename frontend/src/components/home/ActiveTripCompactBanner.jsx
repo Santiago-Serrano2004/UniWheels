@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarCheck, X } from 'lucide-react';
+import { CalendarCheck, X, Navigation } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const ActiveTripCompactBanner = ({
@@ -36,6 +36,12 @@ export const ActiveTripCompactBanner = ({
           <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
             PIN: <strong className="font-mono text-emerald-600 dark:text-emerald-400">{activePassengerBooking.boardingPin}</strong> • Salida: {activePassengerBooking.departureTime || '06:45 AM'}
           </p>
+          {activePassengerBooking.meeting_point && (
+            <p className="text-[10px] text-lochmara-600 dark:text-lochmara-400 font-bold truncate flex items-center gap-1 mt-0.5">
+              <Navigation className="w-2.5 h-2.5 shrink-0" />
+              <span>Encuentro: {activePassengerBooking.meeting_point}</span>
+            </p>
+          )}
         </div>
       </div>
 

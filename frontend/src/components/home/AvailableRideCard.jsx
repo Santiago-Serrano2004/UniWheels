@@ -4,6 +4,9 @@ import {
   Clock,
   ArrowRight,
   Sparkles,
+  Navigation,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -11,11 +14,16 @@ export const AvailableRideCard = ({
   ride,
   onSelectRide,
   isDark,
+  directionFilter = 'towards',
 }) => {
   const isMoto =
     ride.vehicle?.toLowerCase().includes('moto') ||
     ride.vehicle?.toLowerCase().includes('yamaha') ||
     ride.vehicle?.toLowerCase().includes('mt-03');
+
+  // Evaluar estado de desvío IA
+  const isDetourFeasible = ride.is_detour_feasible !== false;
+  const isDirectRoute = ride.detour_minutes === '+0 min' || ride.is_direct;
 
   return (
     <motion.div
@@ -28,7 +36,7 @@ export const AvailableRideCard = ({
           : 'bg-white border-slate-200 hover:border-lochmara-400 text-slate-900'
       }`}
     >
-      {/* Cabecera: Conductor y Tarifa */}
+      {/* Cabecera: Conductor, Vehículo y Tarifa */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div
@@ -45,18 +53,18 @@ export const AvailableRideCard = ({
             {ride.driver_avatar_initials || ride.driver_name?.charAt(0) || 'U'}
           </div>
 
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-1">
               <span className="text-xs font-black truncate">{ride.driver_name}</span>
               <ShieldCheck className="w-3.5 h-3.5 text-lochmara-500 shrink-0" />
             </div>
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[10px] text-slate-400 truncate">
               {ride.vehicle} • <strong className={`font-mono ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{ride.plate}</strong>
             </p>
           </div>
         </div>
 
-        <div className="text-right">
+        <div className="text-right shrink-0">
           <span className="text-sm font-black text-lochmara-600 dark:text-lochmara-400">
             {ride.fare}
           </span>
@@ -66,7 +74,7 @@ export const AvailableRideCard = ({
         </div>
       </div>
 
-      {/* Itinerario del Viaje (Adaptado 100% al Tema) */}
+      {/* Itinerario del Viaje */}
       <div
         className={`p-2.5 rounded-xl border text-xs space-y-1.5 transition-colors ${
           isDark
@@ -92,23 +100,52 @@ export const AvailableRideCard = ({
             {ride.destination}
           </span>
         </div>
+
+        {/* Punto de Encuentro en el Campus (para salidas desde campus o inter-campus) */}
+        {(directionFilter === 'from' || directionFilter === 'inter_campus' || ride.meeting_point) && (
+          <div className="pt-1 border-t dark:border-slate-800/80 border-slate-200/80 flex items-center gap-1.5 text-[10px]">
+            <Navigation className="w-3 h-3 text-lochmara-500 shrink-0" />
+            <span className="text-slate-400 font-bold shrink-0">Punto de encuentro:</span>
+            <span className="font-extrabold text-lochmara-600 dark:text-lochmara-400 truncate">
+              {ride.meeting_point || 'Portería Principal'}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Footer del Card: Horario, Desvío y Botón */}
-      <div className="flex items-center justify-between text-[11px] pt-0.5">
-        <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400 font-medium">
-            <Clock className="w-3 h-3" />
-            {ride.departure_time}
-          </span>
+      {/* Footer del Card: Horarios Explícitos y Evaluación IA de Desvío */}
+      <div className="flex items-center justify-between text-[11px] pt-0.5 gap-2">
+        <div className="flex items-center gap-2 truncate min-w-0">
+          {/* Horario Explícito según Sentido */}
+          <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 font-bold shrink-0">
+            <Clock className="w-3 h-3 text-lochmara-500" />
+            <span>
+              {directionFilter === 'towards'
+                ? `Llegada: ${ride.arrival_time || '07:00 AM'}`
+                : `Salida: ${ride.departure_time}`}
+            </span>
+          </div>
 
-          <span className="px-1.5 py-0.2 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold text-[10px] flex items-center gap-0.5">
-            <Sparkles className="w-2.5 h-2.5" />
-            {ride.detour_minutes}
-          </span>
+          {/* Insignia de Evaluación de Desvío IA */}
+          {isDirectRoute ? (
+            <span className="px-1.5 py-0.2 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-[9px] flex items-center gap-0.5 shrink-0">
+              <CheckCircle2 className="w-2.5 h-2.5" />
+              <span>Ruta directa</span>
+            </span>
+          ) : isDetourFeasible ? (
+            <span className="px-1.5 py-0.2 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold text-[9px] flex items-center gap-0.5 shrink-0">
+              <Sparkles className="w-2.5 h-2.5" />
+              <span>Desvío viable ({ride.detour_minutes})</span>
+            </span>
+          ) : (
+            <span className="px-1.5 py-0.2 rounded-md bg-slate-500/10 text-slate-500 dark:text-slate-400 font-bold text-[9px] flex items-center gap-0.5 shrink-0">
+              <AlertCircle className="w-2.5 h-2.5" />
+              <span>Desvío no disponible</span>
+            </span>
+          )}
         </div>
 
-        <span className="text-xs font-bold text-lochmara-600 dark:text-lochmara-400 flex items-center gap-0.5 hover:translate-x-0.5 transition-transform">
+        <span className="text-xs font-bold text-lochmara-600 dark:text-lochmara-400 flex items-center gap-0.5 hover:translate-x-0.5 transition-transform shrink-0">
           <span>Ver Ruta</span>
           <ArrowRight className="w-3 h-3" />
         </span>
