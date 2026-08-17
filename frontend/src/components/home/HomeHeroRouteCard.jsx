@@ -52,7 +52,7 @@ export const HomeHeroRouteCard = ({
       </div>
 
       {/* Pill Toggle de Sentido: Hacia el Campus vs Desde el Campus */}
-      <div className="flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mb-4 relative">
+      <div className={`flex p-1 rounded-2xl border mb-4 relative ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'}`}>
         <button
           type="button"
           onClick={() => setDirectionFilter('towards')}
@@ -93,7 +93,7 @@ export const HomeHeroRouteCard = ({
       </div>
 
       {/* CORREDOR ORIGEN / DESTINO CON CAMPUS BLOQUEADO SEGÚN SENTIDO */}
-      <div className="space-y-2 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mb-3.5">
+      <div className={`space-y-2 p-3.5 rounded-2xl border mb-3.5 ${isDark ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
         {/* ORIGEN */}
         <div className="flex items-start gap-2.5">
           <div className="w-3 h-3 rounded-full bg-lochmara-500 mt-1 shrink-0 ring-4 ring-lochmara-500/20" />
@@ -114,7 +114,7 @@ export const HomeHeroRouteCard = ({
                   }`}
                 >
                   {sedesDisponibles.map((sede) => (
-                    <option key={sede.id} value={sede.name}>
+                    <option key={sede.id} value={sede.name} className={isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
                       {sede.name}
                     </option>
                   ))}
@@ -126,7 +126,7 @@ export const HomeHeroRouteCard = ({
               <div
                 onClick={() => setIsSelectingPointOnMap(true)}
                 className={`mt-0.5 text-xs font-bold truncate cursor-pointer hover:underline flex items-center justify-between ${
-                  editablePointName ? 'text-slate-900 dark:text-white' : 'text-slate-400'
+                  editablePointName ? (isDark ? 'text-white' : 'text-slate-900') : 'text-slate-400'
                 }`}
               >
                 <span className="truncate">{editablePointName || 'Selecciona tu punto de salida...'}</span>
@@ -137,7 +137,7 @@ export const HomeHeroRouteCard = ({
         </div>
 
         {/* Línea conectora */}
-        <div className="border-l-2 border-dashed border-slate-300 dark:border-slate-700 h-3 ml-1.5 my-0.5" />
+        <div className={`border-l-2 border-dashed h-3 ml-1.5 my-0.5 ${isDark ? 'border-slate-700' : 'border-slate-300'}`} />
 
         {/* DESTINO */}
         <div className="flex items-start gap-2.5">
@@ -159,7 +159,7 @@ export const HomeHeroRouteCard = ({
                   }`}
                 >
                   {sedesDisponibles.map((sede) => (
-                    <option key={sede.id} value={sede.name}>
+                    <option key={sede.id} value={sede.name} className={isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
                       {sede.name}
                     </option>
                   ))}
@@ -171,7 +171,7 @@ export const HomeHeroRouteCard = ({
               <div
                 onClick={() => setIsSelectingPointOnMap(true)}
                 className={`mt-0.5 text-xs font-bold truncate cursor-pointer hover:underline flex items-center justify-between ${
-                  editablePointName ? 'text-slate-900 dark:text-white' : 'text-slate-400'
+                  editablePointName ? (isDark ? 'text-white' : 'text-slate-900') : 'text-slate-400'
                 }`}
               >
                 <span className="truncate">{editablePointName || 'Selecciona tu punto de llegada...'}</span>

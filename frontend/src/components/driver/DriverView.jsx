@@ -176,7 +176,7 @@ export const DriverView = () => {
         </div>
 
         {/* Toggle de Sentido */}
-        <div className="flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 relative">
+        <div className={`flex p-1 rounded-2xl border relative ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'}`}>
           <button
             type="button"
             onClick={() => setSentidoViaje('hacia_campus')}
@@ -217,20 +217,20 @@ export const DriverView = () => {
         </div>
 
         {/* Visualización del Corredor Origen-Destino */}
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+        <div className={`p-3.5 rounded-2xl border space-y-2 ${isDark ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
           <div className="flex items-start gap-2.5">
             <div className="w-3 h-3 rounded-full bg-lochmara-500 mt-1 shrink-0 ring-4 ring-lochmara-500/20" />
             <div className="min-w-0">
               <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
                 Punto de Origen
               </label>
-              <p className="text-xs font-black truncate">
+              <p className={`text-xs font-black truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {sentidoViaje === 'hacia_campus' ? direccionLugar : sedeSeleccionada}
               </p>
             </div>
           </div>
 
-          <div className="border-l-2 border-dashed border-slate-300 dark:border-slate-700 h-3 ml-1.5 my-0.5" />
+          <div className={`border-l-2 border-dashed h-3 ml-1.5 my-0.5 ${isDark ? 'border-slate-700' : 'border-slate-300'}`} />
 
           <div className="flex items-start gap-2.5">
             <div className="w-3 h-3 rounded-full bg-emerald-500 mt-1 shrink-0 ring-4 ring-emerald-500/20" />
@@ -238,7 +238,7 @@ export const DriverView = () => {
               <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
                 Punto de Destino
               </label>
-              <p className="text-xs font-black truncate">
+              <p className={`text-xs font-black truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {sentidoViaje === 'hacia_campus' ? sedeSeleccionada : direccionLugar}
               </p>
             </div>
