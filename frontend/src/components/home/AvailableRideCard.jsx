@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   ShieldCheck,
-  MapPin,
   Clock,
   ArrowRight,
   Sparkles,
@@ -25,7 +24,7 @@ export const AvailableRideCard = ({
       onClick={() => onSelectRide(ride)}
       className={`rounded-2xl p-3.5 border transition-all cursor-pointer shadow-2xs hover:shadow-md space-y-3 ${
         isDark
-          ? 'bg-slate-900/90 border-slate-800 hover:border-lochmara-500/50 text-white'
+          ? 'bg-slate-900 border-slate-800 hover:border-lochmara-500/50 text-white'
           : 'bg-white border-slate-200 hover:border-lochmara-400 text-slate-900'
       }`}
     >
@@ -33,7 +32,7 @@ export const AvailableRideCard = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div
-            className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
+            className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
               isMoto
                 ? isDark
                   ? 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
@@ -52,7 +51,7 @@ export const AvailableRideCard = ({
               <ShieldCheck className="w-3.5 h-3.5 text-lochmara-500 shrink-0" />
             </div>
             <p className="text-[10px] text-slate-400">
-              {ride.vehicle} • <strong className="text-slate-600 dark:text-slate-300">{ride.plate}</strong>
+              {ride.vehicle} • <strong className={`font-mono ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{ride.plate}</strong>
             </p>
           </div>
         </div>
@@ -62,26 +61,40 @@ export const AvailableRideCard = ({
             {ride.fare}
           </span>
           <p className="text-[9px] text-slate-400 font-medium">
-            {ride.available_seats} cupo(s) libre(s)
+            {ride.available_seats} cupo(s)
           </p>
         </div>
       </div>
 
-      {/* Itinerario del Viaje */}
-      <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800/80 text-xs space-y-1">
-        <div className="flex items-center gap-1.5 truncate">
-          <MapPin className="w-3 h-3 text-lochmara-500 shrink-0" />
-          <span className="text-slate-500 dark:text-slate-400 text-[11px] truncate">De:</span>
-          <strong className="text-[11px] truncate">{ride.origin}</strong>
+      {/* Itinerario del Viaje (Adaptado 100% al Tema) */}
+      <div
+        className={`p-2.5 rounded-xl border text-xs space-y-1.5 transition-colors ${
+          isDark
+            ? 'bg-slate-950 border-slate-800 text-white'
+            : 'bg-slate-50 border-slate-200 text-slate-900'
+        }`}
+      >
+        <div className="flex items-center gap-2 truncate">
+          <div className="w-2 h-2 rounded-full bg-lochmara-500 shrink-0 ring-2 ring-lochmara-500/20" />
+          <span className={`text-[10px] font-extrabold uppercase tracking-wider shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            De:
+          </span>
+          <span className={`text-xs font-black truncate ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+            {ride.origin}
+          </span>
         </div>
-        <div className="flex items-center gap-1.5 truncate">
-          <MapPin className="w-3 h-3 text-emerald-500 shrink-0" />
-          <span className="text-slate-500 dark:text-slate-400 text-[11px] truncate">A:</span>
-          <strong className="text-[11px] truncate">{ride.destination}</strong>
+        <div className="flex items-center gap-2 truncate">
+          <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 ring-2 ring-emerald-500/20" />
+          <span className={`text-[10px] font-extrabold uppercase tracking-wider shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            A:
+          </span>
+          <span className={`text-xs font-black truncate ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+            {ride.destination}
+          </span>
         </div>
       </div>
 
-      {/* Footer del Card: Horario, Desvío IA y Botón */}
+      {/* Footer del Card: Horario, Desvío y Botón */}
       <div className="flex items-center justify-between text-[11px] pt-0.5">
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400 font-medium">
@@ -96,7 +109,8 @@ export const AvailableRideCard = ({
         </div>
 
         <span className="text-xs font-bold text-lochmara-600 dark:text-lochmara-400 flex items-center gap-0.5 hover:translate-x-0.5 transition-transform">
-          Ver Ruta <ArrowRight className="w-3 h-3" />
+          <span>Ver Ruta</span>
+          <ArrowRight className="w-3 h-3" />
         </span>
       </div>
     </motion.div>
