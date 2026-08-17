@@ -17,6 +17,11 @@ import {
   Trash2,
   AlertTriangle,
   Loader2,
+  Star,
+  FileText,
+  Lock,
+  Mail,
+  X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
