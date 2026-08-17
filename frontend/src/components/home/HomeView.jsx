@@ -3,11 +3,11 @@ import { useAppStore } from '../../store/useAppStore';
 import { authService } from '../../services/api';
 import { placesApiService } from '../../services/placesApiService';
 import { LocationPickerModal } from '../map/LocationPickerModal';
+import { CampusSelectorModal } from './CampusSelectorModal';
 import { ActiveTripCompactBanner } from './ActiveTripCompactBanner';
 import { HomeHeroRouteCard } from './HomeHeroRouteCard';
-import { CampusQuickSelectorGrid } from './CampusQuickSelectorGrid';
 import { AvailableRideCard } from './AvailableRideCard';
-import { Navigation, Car } from 'lucide-react';
+import { Navigation, Car, Building2 } from 'lucide-react';
 
 export const HomeView = () => {
   const {
@@ -24,8 +24,9 @@ export const HomeView = () => {
   // 1. Sentido del viaje
   const [directionFilter, setDirectionFilter] = useState('towards'); // 'towards' | 'from'
 
-  // 2. Campus Seleccionado
+  // 2. Campus Seleccionado y Modal Popup
   const [selectedCampus, setSelectedCampus] = useState('Campus El Jardín');
+  const [isCampusModalOpen, setIsCampusModalOpen] = useState(false);
   const [sedesDisponibles, setSedesDisponibles] = useState([
     {
       id: 1,
@@ -35,6 +36,7 @@ export const HomeView = () => {
       image_url: '/assets/institutions/campuses/el-jardin.webp',
       latitude: 7.119346,
       longitude: -73.104278,
+      is_main_campus: true,
     },
     {
       id: 2,
@@ -44,6 +46,7 @@ export const HomeView = () => {
       image_url: '/assets/institutions/campuses/el-bosque.webp',
       latitude: 7.066491,
       longitude: -73.103789,
+      is_main_campus: false,
     },
     {
       id: 3,
@@ -53,6 +56,7 @@ export const HomeView = () => {
       image_url: '/assets/institutions/campuses/csu.webp',
       latitude: 7.113821,
       longitude: -73.106842,
+      is_main_campus: false,
     },
     {
       id: 4,
@@ -62,6 +66,7 @@ export const HomeView = () => {
       image_url: '/assets/institutions/campuses/la-casona.webp',
       latitude: 7.118210,
       longitude: -73.116520,
+      is_main_campus: false,
     },
   ]);
 
@@ -139,7 +144,7 @@ export const HomeView = () => {
     },
   ]);
 
-  // Cargar sedes desde la API de instituciones de forma resiliente
+  // Cargar sedes dinámicas desde la API institucional
   useEffect(() => {
     authService.getInstitutions().then((res) => {
       const campuses = Array.isArray(res) ? res[0]?.campuses : res?.data?.[0]?.campuses;
@@ -176,7 +181,7 @@ export const HomeView = () => {
     setSuggestions([]);
   };
 
-  const handleSelectCampusCard = (sede) => {
+  const handleSelectCampus = (sede) => {
     setSelectedCampus(sede.name);
   };
 
@@ -223,14 +228,14 @@ export const HomeView = () => {
         cancelPassengerBooking={cancelPassengerBooking}
       />
 
-      {/* 2. HERO CARD: CORREDOR ORIGEN-DESTINO CON BÚSQUEDA INTEGRADA */}
+      {/* 2. HERO CARD: CORREDOR ORIGEN-DESTINO CON BÚSQUEDA Y SELECTOR DE CAMPUS INTEGRADOS */}
       <HomeHeroRouteCard
         user={user}
         isDark={isDark}
         directionFilter={directionFilter}
         setDirectionFilter={setDirectionFilter}
         selectedCampus={selectedCampus}
-        setSelectedCampus={setSelectedCampus}
+        onOpenCampusModal={() => setIsCampusModalOpen(true)}
         sedesDisponibles={sedesDisponibles}
         editablePointName={editablePointName}
         setIsSelectingPointOnMap={setIsSelectingPointOnMap}
@@ -241,22 +246,21 @@ export const HomeView = () => {
         handleSelectSuggestion={handleSelectSuggestion}
       />
 
-      {/* 3. BARRA HORIZONTAL DE SEDES UNIVERSITARIAS */}
-      <CampusQuickSelectorGrid
-        sedesDisponibles={sedesDisponibles}
-        selectedCampus={selectedCampus}
-        handleSelectCampusCard={handleSelectCampusCard}
-        isDark={isDark}
-      />
-
-      {/* 4. VIAJES DISPONIBLES (INMEDIATAMENTE VISIBLES) */}
+      {/* 3. VIAJES DISPONIBLES (INMEDIATAMENTE VISIBLES ABOVE THE FOLD) */}
       <section className="space-y-2">
         <div className="flex items-center justify-between px-1">
           <h3 className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             <Navigation className="w-3.5 h-3.5 text-emerald-500" />
             <span>Viajes Disponibles ({filteredRides.length})</span>
           </h3>
-          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Rutas Verificadas</span>
+          <button
+            type="button"
+            onClick={() => setIsCampusModalOpen(true)}
+            className="text-[10px] text-lochmara-600 dark:text-lochmara-400 font-bold hover:underline cursor-pointer flex items-center gap-1"
+          >
+            <Building2 className="w-3 h-3" />
+            <span>{selectedCampus.replace('Campus ', '')}</span>
+          </button>
         </div>
 
         {filteredRides.length > 0 ? (
@@ -283,7 +287,18 @@ export const HomeView = () => {
         )}
       </section>
 
-      {/* MODAL DE SELECCIÓN EN MAPA */}
+      {/* 4. MODAL POP-UP DE SELECCIÓN DINÁMICA DE SEDES */}
+      <CampusSelectorModal
+        isOpen={isCampusModalOpen}
+        onClose={() => setIsCampusModalOpen(false)}
+        sedesDisponibles={sedesDisponibles}
+        selectedCampus={selectedCampus}
+        onSelectCampus={handleSelectCampus}
+        isDark={isDark}
+        institutionName={user?.institution?.name || user?.institution || 'Universidad Autónoma de Bucaramanga'}
+      />
+
+      {/* 5. MODAL DE SELECCIÓN EN MAPA */}
       <LocationPickerModal
         isOpen={isSelectingPointOnMap}
         onClose={() => setIsSelectingPointOnMap(false)}

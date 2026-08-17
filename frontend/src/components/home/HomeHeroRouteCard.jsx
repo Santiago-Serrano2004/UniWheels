@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, MapPin, Search, ChevronDown, X, Loader2, Navigation } from 'lucide-react';
+import { Sparkles, MapPin, Search, ChevronRight, X, Loader2, Building2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const HomeHeroRouteCard = ({
@@ -8,8 +8,8 @@ export const HomeHeroRouteCard = ({
   directionFilter,
   setDirectionFilter,
   selectedCampus,
-  setSelectedCampus,
-  sedesDisponibles,
+  onOpenCampusModal,
+  sedesDisponibles = [],
   editablePointName,
   setIsSelectingPointOnMap,
   searchQuery,
@@ -22,6 +22,8 @@ export const HomeHeroRouteCard = ({
     directionFilter === 'towards'
       ? '¿Dónde te recogemos? Barrio, calle...'
       : '¿A dónde te diriges? Barrio, centro...';
+
+  const sedeObjeto = sedesDisponibles.find((s) => s.name === selectedCampus) || sedesDisponibles[0];
 
   return (
     <section
@@ -93,7 +95,7 @@ export const HomeHeroRouteCard = ({
         </button>
       </div>
 
-      {/* CORREDOR ORIGEN / DESTINO UNIFICADO CON BÚSQUEDA INTEGRADA */}
+      {/* CORREDOR ORIGEN / DESTINO UNIFICADO */}
       <div className={`p-3 rounded-2xl border relative ${isDark ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
         {/* ORIGEN */}
         <div className="flex items-center gap-2.5">
@@ -103,25 +105,30 @@ export const HomeHeroRouteCard = ({
               Origen
             </span>
             {directionFilter === 'from' ? (
-              /* ORIGEN ES EL CAMPUS */
-              <div className="relative mt-0.5">
-                <select
-                  value={selectedCampus}
-                  onChange={(e) => setSelectedCampus(e.target.value)}
-                  className={`w-full py-1 px-2 pr-7 rounded-xl text-xs font-bold appearance-none cursor-pointer border ${
-                    isDark
-                      ? 'bg-slate-900 border-slate-700 text-white'
-                      : 'bg-white border-slate-300 text-slate-900'
-                  }`}
-                >
-                  {sedesDisponibles.map((sede) => (
-                    <option key={sede.id} value={sede.name} className={isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                      {sede.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-              </div>
+              /* ORIGEN ES EL CAMPUS (Abre Popup de Sedes) */
+              <button
+                type="button"
+                onClick={onOpenCampusModal}
+                className={`w-full mt-0.5 p-1.5 px-2 rounded-xl text-left flex items-center justify-between border transition-all cursor-pointer ${
+                  isDark
+                    ? 'bg-slate-900 border-slate-800 hover:border-slate-700 text-white'
+                    : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-2xs'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 truncate">
+                  <Building2 className="w-3.5 h-3.5 text-lochmara-500 shrink-0" />
+                  <span className="text-xs font-black truncate">{selectedCampus}</span>
+                  {sedeObjeto?.code && (
+                    <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-lochmara-500/10 text-lochmara-600 dark:text-lochmara-400 font-bold shrink-0">
+                      {sedeObjeto.code}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-0.5 text-lochmara-500 text-[10px] font-bold shrink-0">
+                  <span>Cambiar</span>
+                  <ChevronRight className="w-3 h-3" />
+                </div>
+              </button>
             ) : (
               /* ORIGEN ES EDITABLE CON INPUT DE BÚSQUEDA INTEGRADO */
               <div className="flex items-center gap-1.5 mt-0.5">
@@ -179,25 +186,30 @@ export const HomeHeroRouteCard = ({
               Destino
             </span>
             {directionFilter === 'towards' ? (
-              /* DESTINO ES EL CAMPUS */
-              <div className="relative mt-0.5">
-                <select
-                  value={selectedCampus}
-                  onChange={(e) => setSelectedCampus(e.target.value)}
-                  className={`w-full py-1 px-2 pr-7 rounded-xl text-xs font-bold appearance-none cursor-pointer border ${
-                    isDark
-                      ? 'bg-slate-900 border-slate-700 text-white'
-                      : 'bg-white border-slate-300 text-slate-900'
-                  }`}
-                >
-                  {sedesDisponibles.map((sede) => (
-                    <option key={sede.id} value={sede.name} className={isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                      {sede.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-              </div>
+              /* DESTINO ES EL CAMPUS (Abre Popup de Sedes) */
+              <button
+                type="button"
+                onClick={onOpenCampusModal}
+                className={`w-full mt-0.5 p-1.5 px-2 rounded-xl text-left flex items-center justify-between border transition-all cursor-pointer ${
+                  isDark
+                    ? 'bg-slate-900 border-slate-800 hover:border-slate-700 text-white'
+                    : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-2xs'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 truncate">
+                  <Building2 className="w-3.5 h-3.5 text-lochmara-500 shrink-0" />
+                  <span className="text-xs font-black truncate">{selectedCampus}</span>
+                  {sedeObjeto?.code && (
+                    <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-lochmara-500/10 text-lochmara-600 dark:text-lochmara-400 font-bold shrink-0">
+                      {sedeObjeto.code}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-0.5 text-lochmara-500 text-[10px] font-bold shrink-0">
+                  <span>Cambiar</span>
+                  <ChevronRight className="w-3 h-3" />
+                </div>
+              </button>
             ) : (
               /* DESTINO ES EDITABLE CON INPUT DE BÚSQUEDA INTEGRADO */
               <div className="flex items-center gap-1.5 mt-0.5">
