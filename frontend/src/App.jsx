@@ -121,7 +121,7 @@ export default function App() {
           }`}
         >
           <Smartphone className="w-3.5 h-3.5 text-lochmara-500" />
-          <span>Vista Móvil (390 x 844)</span>
+          <span>Vista Móvil (393 x 852)</span>
         </div>
 
         {/* Alternador Global de Tema de la App (Light / Dark) */}
@@ -171,18 +171,18 @@ export default function App() {
         </button>
       </div>
 
-      {/* Marco de Smartphone Móvil */}
+      {/* Marco de Smartphone Móvil Estándar Actual (393 x 852 px) */}
       <div
         data-theme={theme}
-        className={`relative w-full sm:max-w-[392px] h-[100dvh] sm:h-[844px] transition-all overflow-hidden flex flex-col justify-between sm:rounded-[44px] sm:border-[8px] ${
+        className={`relative w-full sm:max-w-[400px] h-[100dvh] sm:h-[852px] sm:max-h-[min(852px,calc(100vh-60px))] transition-all overflow-hidden flex flex-col justify-between sm:rounded-[48px] sm:border-[8px] ${
           theme === 'dark'
             ? 'dark bg-slate-950 text-slate-100 sm:border-slate-900 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)]'
             : 'bg-slate-100 text-slate-900 sm:border-slate-800 shadow-[0_25px_60px_-15px_rgba(15,23,42,0.25)]'
         }`}
       >
         {/* Dynamic Island simulada en Desktop */}
-        <div className="hidden sm:flex absolute top-2.5 left-1/2 -translate-x-1/2 z-40 w-24 h-4 bg-black rounded-full items-center justify-end px-2.5">
-          <div className="w-2 h-2 rounded-full bg-[#0a192f] border border-slate-800" />
+        <div className="hidden sm:flex absolute top-2.5 left-1/2 -translate-x-1/2 z-40 w-28 h-4.5 bg-black rounded-full items-center justify-end px-2.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#0a192f] border border-slate-800" />
         </div>
 
         {/* 1. Splash Screen Animada con Salida hacia la Derecha */}
