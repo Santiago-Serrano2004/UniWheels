@@ -340,21 +340,25 @@ class AuthController extends Controller
     }
 
     /**
-     * Eliminar la cuenta del usuario (Habeas Data Ley 1581) y enviar correo de despedida.
+     * Eliminar la cuenta del usuario autenticado (Habeas Data Ley 1581) y enviar correo de despedida.
      */
     public function deleteAccount(Request $request): JsonResponse
     {
         $usuario = $request->user();
 
-        if (!$usuario && $request->has('email')) {
-            $usuario = User::where('email', $request->input('email'))->first();
-        }
-
         if (!$usuario) {
             return response()->json([
                 'success' => false,
-                'message' => 'Usuario no encontrado o sesión no válida.',
-            ], 404);
+                'message' => 'No autorizado. Debes iniciar sesión para eliminar tu cuenta.',
+            ], 401);
+        }
+
+        // Si se provee contraseña para confirmación, verificarla
+        if ($request->filled('password') && !Hash::check($request->input('password'), $usuario->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La contraseña ingresada es incorrecta.',
+            ], 422);
         }
 
         // Enviar correo de confirmación de eliminación con mensaje de despedida

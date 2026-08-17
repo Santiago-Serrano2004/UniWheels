@@ -37,9 +37,13 @@ test('un estudiante puede registrarse exitosamente con prefijo y codigo estudian
     $campus = InstitutionCampus::where('code', 'JARDIN')->first();
     $claveDinamica = 'Clave' . Str::random(10) . '1!';
 
+    // Mock OTP verification code in cache
+    \Illuminate\Support\Facades\Cache::put('email_verification_crodriguez@unab.edu.co', '123456', 300);
+
     $payload = [
         'name' => 'Carlos Rodriguez',
         'email_prefix' => 'crodriguez',
+        'verification_code' => '123456',
         'institution_id' => $institution->id,
         'campus_id' => $campus->id,
         'id_document_number' => '1098998877',
@@ -58,7 +62,7 @@ test('un estudiante puede registrarse exitosamente con prefijo y codigo estudian
     $response->assertStatus(201)
         ->assertJson([
             'success' => true,
-            'message' => 'Usuario registrado exitosamente. Se ha enviado un correo de bienvenida.',
+            'message' => 'Usuario registrado y verificado exitosamente. Se ha enviado un correo de bienvenida.',
         ])
         ->assertJsonPath('data.user.email', 'crodriguez@unab.edu.co')
         ->assertJsonPath('data.user.academic_profile.student_code', 'U00099887')

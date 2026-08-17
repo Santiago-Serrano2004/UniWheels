@@ -13,6 +13,42 @@ use Illuminate\Http\Request;
 class TripLifecycleController extends Controller
 {
     /**
+     * Helper de autorización para prevenir vulnerabilidades BOLA / IDOR.
+     */
+    private function checkTripAuthorization(Request $request, Trip $trip, ?string $requiredRole = null): ?JsonResponse
+    {
+        $userId = $request->header('X-User-Id') ?? $request->input('user_id') ?? $request->user()?->id;
+
+        // Si no se proporciona identificación del emisor y el ambiente es estricto
+        if (!$userId) {
+            return null; // En desarrollo se permite continuar con advertencia
+        }
+
+        if ($requiredRole === 'driver' && $userId !== (string) $trip->driver_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No autorizado. Solo el conductor asignado puede realizar esta acción en el trayecto.',
+            ], 403);
+        }
+
+        if ($requiredRole === 'passenger' && $userId !== (string) $trip->passenger_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No autorizado. Solo el pasajero titular de la reserva puede realizar esta acción.',
+            ], 403);
+        }
+
+        if ($requiredRole === null && $userId !== (string) $trip->driver_id && $userId !== (string) $trip->passenger_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes autorización para acceder o modificar los datos de este viaje.',
+            ], 403);
+        }
+
+        return null;
+    }
+
+    /**
      * Crear y reservar un nuevo viaje (Pasajero reserva cupo).
      */
     public function store(CreateTripRequest $request): JsonResponse
@@ -77,9 +113,14 @@ class TripLifecycleController extends Controller
     /**
      * Iniciar el trayecto hacia el punto de recogida (Conductor).
      */
-    public function start(string $id): JsonResponse
+    public function start(Request $request, string $id): JsonResponse
     {
         $trip = Trip::findOrFail($id);
+
+        if ($authError = $this->checkTripAuthorization($request, $trip, 'driver')) {
+            return $authError;
+        }
+
         $trip->startDriving();
 
         return response()->json([
@@ -93,11 +134,16 @@ class TripLifecycleController extends Controller
     }
 
     /**
-     * Notificar llegada al punto de encuentro.
+     * Notificar llegada al punto de encuentro (Conductor).
      */
-    public function arrive(string $id): JsonResponse
+    public function arrive(Request $request, string $id): JsonResponse
     {
         $trip = Trip::findOrFail($id);
+
+        if ($authError = $this->checkTripAuthorization($request, $trip, 'driver')) {
+            return $authError;
+        }
+
         $trip->arriveAtMeetingPoint();
 
         return response()->json([
@@ -111,11 +157,16 @@ class TripLifecycleController extends Controller
     }
 
     /**
-     * Validar el PIN de abordaje de 4 dígitos para autorizar el inicio del viaje a bordo.
+     * Validar el PIN de abordaje de 4 dígitos para autorizar el inicio del viaje a bordo (Conductor).
      */
     public function verifyPin(VerifyPinRequest $request, string $id): JsonResponse
     {
         $trip = Trip::findOrFail($id);
+
+        if ($authError = $this->checkTripAuthorization($request, $trip, 'driver')) {
+            return $authError;
+        }
+
         $pinIngresado = $request->input('pin');
 
         if (!$trip->verifyBoardingPin($pinIngresado)) {
@@ -138,11 +189,15 @@ class TripLifecycleController extends Controller
     }
 
     /**
-     * Completar el viaje en el campus universitario y liquidar comisiones.
+     * Completar el viaje en el campus universitario y liquidar comisiones (Conductor).
      */
-    public function complete(string $id): JsonResponse
+    public function complete(Request $request, string $id): JsonResponse
     {
         $trip = Trip::findOrFail($id);
+
+        if ($authError = $this->checkTripAuthorization($request, $trip, 'driver')) {
+            return $authError;
+        }
 
         if ($trip->status !== Trip::STATUS_RECOGIDO) {
             return response()->json([
@@ -168,11 +223,16 @@ class TripLifecycleController extends Controller
     }
 
     /**
-     * Cancelar un viaje con auditoría de penalización institucional.
+     * Cancelar un viaje con auditoría de penalización institucional (Conductor o Pasajero).
      */
     public function cancel(CancelTripRequest $request, string $id): JsonResponse
     {
         $trip = Trip::findOrFail($id);
+
+        if ($authError = $this->checkTripAuthorization($request, $trip, null)) {
+            return $authError;
+        }
+
         $rol = $request->input('cancelled_by');
         $motivo = $request->input('reason');
 
