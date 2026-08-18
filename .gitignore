@@ -14,7 +14,8 @@ env/
 venv/
 .venv/
 ENV/
-# Compilacion y Paquetes Frontend
+
+# Compilación y Paquetes Frontend
 dist/
 **/dist/
 frontend/dist/
@@ -33,7 +34,7 @@ wheels/
 .installed.cfg
 *.egg
 
-# Pruebas y Cobertura de Codigo
+# Pruebas y Cobertura de Código
 .phpunit.result.cache
 .pest/
 coverage/
@@ -50,12 +51,12 @@ coverage/
 .env.test.local
 .env.production.local
 
-# Registros de Logs y Bases de Datos Locales
+# Registros de Logs y Archivos Temporales de Ejecución
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 *.log
-*.sqlite
+.uniwheels/
 
 # Archivos del Editor y Sistema Operativo
 .DS_Store
@@ -71,7 +72,7 @@ ehthumbs.db
 *.sln
 *.sw?
 
-# Almacenamiento y Cache Temporal de Microservicios
+# Almacenamiento y Caché Temporal de Microservicios Laravel
 services/*/storage/*.key
 services/*/storage/framework/cache/*
 services/*/storage/framework/sessions/*
