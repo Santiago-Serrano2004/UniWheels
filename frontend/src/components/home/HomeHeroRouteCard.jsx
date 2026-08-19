@@ -383,23 +383,20 @@ export const HomeHeroRouteCard = ({
           </label>
         </div>
 
-        {/* Columna Derecha: Selector de Hora */}
+        {/* Columna Derecha: Selector de Hora (Solo icono del reloj y selector) */}
         <div
-          className={`p-1 px-2 rounded-xl border flex items-center justify-between gap-1 transition-colors ${
+          className={`p-1 px-2.5 rounded-xl border flex items-center justify-between gap-2 transition-colors ${
             isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
           }`}
         >
-          <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 truncate min-w-0">
-            <Clock className="w-3 h-3 text-lochmara-500 shrink-0" />
-            <span className="truncate">{timeLabel}</span>
-          </div>
+          <Clock className="w-3.5 h-3.5 text-lochmara-500 shrink-0" />
 
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-1.5 flex-1 justify-end">
             <input
               type="time"
               value={passengerTimeFilter || ''}
               onChange={(e) => setPassengerTimeFilter(e.target.value)}
-              className={`py-0.5 px-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
+              className={`w-full py-0.5 px-2 rounded-lg text-xs font-bold border transition-colors cursor-pointer text-center ${
                 isDark
                   ? 'bg-slate-900 border-slate-700 text-white focus:border-lochmara-500'
                   : 'bg-white border-slate-300 text-slate-900 focus:border-lochmara-500 shadow-2xs'
@@ -409,8 +406,8 @@ export const HomeHeroRouteCard = ({
               <button
                 type="button"
                 onClick={() => setPassengerTimeFilter('')}
-                className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 text-[10px] font-bold flex items-center justify-center cursor-pointer transition-colors"
-                title="Mostrar todas las horas"
+                className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 text-[10px] font-bold flex items-center justify-center cursor-pointer transition-colors shrink-0"
+                title="Limpiar filtro de hora"
               >
                 <X className="w-2.5 h-2.5" />
               </button>
