@@ -82,22 +82,17 @@ export const DriverOnboardingView = ({ onBack }) => {
 
       {/* Hero Banner */}
       <section
-        className={`rounded-3xl p-5 border shadow-md relative overflow-hidden space-y-3 transition-colors ${
+        className={`rounded-3xl p-5 border shadow-sm relative overflow-hidden space-y-3 transition-colors ${
           isDark
             ? 'bg-slate-900 border-slate-800 text-white'
-            : 'bg-gradient-to-br from-[#082f49] to-slate-900 text-white border-slate-800'
+            : 'bg-white border-slate-200 text-slate-900'
         }`}
       >
         <div className="relative z-10 space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-lochmara-400/20 border border-lochmara-400/30 text-lochmara-200 text-[11px] font-bold">
-            <Sparkles className="w-3 h-3 text-lochmara-300" />
-            <span>Conductores Verificados {institutionCode}</span>
-          </div>
-
-          <h2 className="text-xl font-extrabold tracking-tight">
+          <h2 className={`text-xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
             Comparte tu ruta, ahorra y viaja seguro
           </h2>
-          <p className="text-xs text-slate-300 leading-relaxed">
+          <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
             Publica tus recorridos hacia o desde {institutionName}, divide los gastos de gasolina y ayuda a otros miembros de tu comunidad.
           </p>
         </div>

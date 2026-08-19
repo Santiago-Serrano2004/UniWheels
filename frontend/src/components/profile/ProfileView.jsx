@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { tripsService, authService } from '../../services/api';
+import { tripsService, authService, vehicleService } from '../../services/api';
 import { ReputationStatsModal } from './ReputationStatsModal';
 import { PaymentMethodsManagerModal } from './PaymentMethodsManagerModal';
+import { SetHomeLocationModal } from '../common/SetHomeLocationModal';
 import {
   ShieldCheck,
   Award,
   CreditCard,
   LogOut,
-  Moon,
-  Sun,
   ChevronRight,
   GraduationCap,
   Car,
@@ -23,21 +22,70 @@ import {
   Mail,
   X,
   BookOpen,
+  Home,
+  MapPin,
+  Search,
+  Clock,
+  RefreshCw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const ProfileView = () => {
-  const { user, logout, setActiveTab, savedCards, theme } = useAppStore();
+  const {
+    user,
+    logout,
+    setActiveTab,
+    updateDriverStatus,
+    savedCards,
+    theme,
+    savedHomeLocation,
+    pendingOpenPaymentManagerModal,
+    setPendingOpenPaymentManagerModal,
+  } = useAppStore();
   const isDark = theme === 'dark';
   const isDriverVerified = Boolean(user?.isDriver);
 
   const [modalReputacionAbierto, setModalReputacionAbierto] = useState(false);
   const [modalPagosAbierto, setModalPagosAbierto] = useState(false);
+  const [modalCasaAbierto, setModalCasaAbierto] = useState(false);
   const [modalEliminarAbierto, setModalEliminarAbierto] = useState(false);
   const [eliminandoCuenta, setEliminandoCuenta] = useState(false);
   const [estadisticasData, setEstadisticasData] = useState(null);
+  const [verificandoEstado, setVerificandoEstado] = useState(false);
 
   const institutionLabel = user?.institution?.code || user?.institution || 'Universitaria';
+
+  const consultarEstadoConductor = async () => {
+    setVerificandoEstado(true);
+    try {
+      const plate = user?.driverApplication?.plate_number || user?.driverInfo?.plate_number;
+      const res = await vehicleService.checkApprovedVehicle(user?.id, plate);
+      if (res?.has_approved_vehicle || res?.status === 'aprobado') {
+        updateDriverStatus('approved', res.data || user?.driverApplication);
+      }
+    } catch (err) {
+      console.warn('Error al verificar estado de conductor:', err);
+    } finally {
+      setVerificandoEstado(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isDriverVerified && (user?.driverStatus === 'pending' || user?.driverApplication)) {
+      consultarEstadoConductor();
+      const interval = setInterval(() => {
+        consultarEstadoConductor();
+      }, 4000);
+      return () => clearInterval(interval);
+    }
+  }, [isDriverVerified, user?.driverStatus, user?.driverApplication]);
+
+  useEffect(() => {
+    if (pendingOpenPaymentManagerModal) {
+      setModalPagosAbierto(true);
+      setPendingOpenPaymentManagerModal(false);
+    }
+  }, [pendingOpenPaymentManagerModal]);
 
   useEffect(() => {
     tripsService.getUserReputationStats().then((data) => {
@@ -61,6 +109,17 @@ export const ProfileView = () => {
   };
 
   const menuOptions = [
+    {
+      id: 'home_location',
+      title: 'Ubicación Favorita (Casa)',
+      subtitle: savedHomeLocation?.address || 'Configura tu dirección habitual de recogida',
+      icon: Home,
+      iconBg: isDark ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-700 border border-amber-200',
+      action: () => {
+        setDireccionCasaInput(savedHomeLocation?.address || '');
+        setModalCasaAbierto(true);
+      },
+    },
     {
       id: 'payments',
       title: 'Métodos de Pago y Tarjetas',
@@ -170,8 +229,80 @@ export const ProfileView = () => {
         </div>
       </section>
 
-      {/* 2. REGISTRO DE CONDUCTOR SI ES SOLO PASAJERO */}
-      {!isDriverVerified && (
+      {/* 2. ESTADO DE LA SOLICITUD DE CONDUCTOR O INVITACIÓN A REGISTRARSE */}
+      {(user?.driverStatus === 'pending' || user?.driverApplication) && !isDriverVerified ? (
+        <section
+          className={`border rounded-3xl p-4 shadow-sm transition-all space-y-3 ${
+            isDark
+              ? 'bg-slate-900 border-slate-800 text-white'
+              : 'bg-amber-50/70 border-amber-200/80 text-slate-900'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-500 flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black">Solicitud de Conductor</h4>
+                <p className="text-[10px] text-slate-400">En revisión administrativa</p>
+              </div>
+            </div>
+
+            <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              Pendiente
+            </span>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800 text-xs space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-400">Vehículo Postulado:</span>
+              <span className="font-mono font-black text-lochmara-500">
+                {user?.driverApplication?.plate_number || user?.driverInfo?.plate_number || 'Vehículo Registrado'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-400">Marca / Modelo:</span>
+              <strong className="text-slate-700 dark:text-slate-200">
+                {user?.driverApplication?.brand || user?.driverInfo?.brand} {user?.driverApplication?.model_line || user?.driverInfo?.model_line}
+              </strong>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-400">Cupos Ofertados:</span>
+              <strong className="text-slate-700 dark:text-slate-200">
+                {user?.driverApplication?.available_seats || user?.driverInfo?.available_seats || 3} cupos
+              </strong>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+            Tu documentación ha sido radicada exitosamente. El equipo administrativo revisará tus pólizas y te notificará por correo una vez aprobada tu cuenta.
+          </p>
+
+          <div className="flex items-center justify-between pt-1 border-t border-amber-200/50 dark:border-slate-800/80">
+            <span className="text-[10px] text-slate-400">Sincronización en vivo</span>
+            <button
+              type="button"
+              onClick={consultarEstadoConductor}
+              disabled={verificandoEstado}
+              className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              {verificandoEstado ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span>Verificando...</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Consultar Estado</span>
+                </>
+              )}
+            </button>
+          </div>
+        </section>
+      ) : !isDriverVerified && (
         <section
           onClick={() => setActiveTab('driver')}
           className={`border rounded-3xl p-4 shadow-sm transition-all cursor-pointer text-left group ${
@@ -331,6 +462,13 @@ export const ProfileView = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* MODAL DE UBICACIÓN FAVORITA (CASA) */}
+      <SetHomeLocationModal
+        isOpen={modalCasaAbierto}
+        onClose={() => setModalCasaAbierto(false)}
+        initialAddress={savedHomeLocation?.address || ''}
+      />
 
       {/* MODAL DE MÉTODOS DE PAGO Y TARJETAS */}
       <PaymentMethodsManagerModal

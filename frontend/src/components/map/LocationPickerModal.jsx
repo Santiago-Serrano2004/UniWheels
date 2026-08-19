@@ -14,8 +14,21 @@ import {
   MapPin,
   CheckCircle2,
   Sparkles,
+  Loader2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Helper para normalizar coordenadas entrantes (array u objeto)
+function normalizarCoordsEntrantes(raw) {
+  if (!raw) return [7.1193, -73.1042];
+  if (Array.isArray(raw) && raw.length >= 2) {
+    return [Number(raw[0]), Number(raw[1])];
+  }
+  if (typeof raw === 'object' && raw.lat !== undefined) {
+    return [Number(raw.lat), Number(raw.lng ?? raw.lon)];
+  }
+  return [7.1193, -73.1042];
+}
 
 // Componente interactivo para capturar clics y arrastres en el mapa Leaflet
 function MapInteractivePin({ coords, label, onCoordsChange }) {
@@ -28,14 +41,12 @@ function MapInteractivePin({ coords, label, onCoordsChange }) {
   });
 
   useEffect(() => {
-    if (map) {
+    if (map && coords) {
       map.invalidateSize();
       const timer = setTimeout(() => {
         map.invalidateSize();
-        if (coords) {
-          map.setView(coords, 16, { animate: true });
-        }
-      }, 150);
+        map.setView(coords, map.getZoom() || 16, { animate: true });
+      }, 100);
       return () => clearTimeout(timer);
     }
   }, [coords, map]);
@@ -43,7 +54,7 @@ function MapInteractivePin({ coords, label, onCoordsChange }) {
   const customMarkerIcon = createTeardropPin(
     '#0284c7',
     '#ffffff',
-    label || 'Punto seleccionado',
+    label || 'Punto fijado',
     false,
     isUniversityCampusLocation(label)
   );
@@ -68,64 +79,103 @@ export const LocationPickerModal = ({
   isOpen,
   onClose,
   initialCoords,
+  initialLocation,
   initialPlaceName = '',
+  initialAddress = '',
   title = 'Ajustar Punto en el Mapa',
   subtitle = 'Punto seleccionado',
   confirmButtonText = 'Confirmar ubicación',
   onConfirm,
+  onConfirmLocation,
   destinationCoords = null,
   destinationName = '',
 }) => {
   const { theme } = useAppStore();
   const isDark = theme === 'dark';
 
-  const [coords, setCoords] = useState(initialCoords || [7.0678, -73.1066]);
-  const [placeName, setPlaceName] = useState(initialPlaceName || '');
+  const defaultCoords = normalizarCoordsEntrantes(initialCoords || initialLocation);
+  const defaultName = initialPlaceName || initialAddress || '';
+
+  const [coords, setCoords] = useState(defaultCoords);
+  const [placeName, setPlaceName] = useState(defaultName);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [showHint, setShowHint] = useState(true);
 
   useEffect(() => {
-    if (initialCoords) {
-      setCoords(initialCoords);
-    }
-    if (initialPlaceName) {
-      setPlaceName(initialPlaceName);
-    }
-  }, [initialCoords, initialPlaceName, isOpen]);
-
-  useEffect(() => {
     if (isOpen) {
+      const freshCoords = normalizarCoordsEntrantes(initialCoords || initialLocation);
+      const freshName = initialPlaceName || initialAddress || '';
+      setCoords(freshCoords);
+      setPlaceName(freshName);
       setShowHint(true);
-      const timer = setTimeout(() => setShowHint(false), 3000);
+
+      // Si no hay nombre pero hay coordenadas, geocodificar de inmediato
+      if (!freshName && freshCoords) {
+        placesApiService.reverseGeocode(freshCoords[0], freshCoords[1]).then((res) => {
+          if (res) setPlaceName(res);
+        });
+      }
+
+      const timer = setTimeout(() => setShowHint(false), 3500);
       return () => clearTimeout(timer);
     }
-  }, [isOpen]);
+  }, [isOpen, initialCoords, initialLocation, initialPlaceName, initialAddress]);
 
   if (!isOpen) return null;
 
   const handleCoordsChange = async (newCoords) => {
-    setCoords(newCoords);
+    const lat = Number(Array.isArray(newCoords) ? newCoords[0] : newCoords.lat);
+    const lng = Number(Array.isArray(newCoords) ? newCoords[1] : newCoords.lng);
+    const pos = [lat, lng];
+
+    setCoords(pos);
     setIsGeocoding(true);
     try {
-      const name = await placesApiService.reverseGeocode(newCoords[0], newCoords[1]);
+      const name = await placesApiService.reverseGeocode(lat, lng);
       if (name) {
         setPlaceName(name);
       }
+    } catch (err) {
+      console.warn('Error en reverse geocoding:', err);
     } finally {
       setIsGeocoding(false);
     }
   };
 
   const handleConfirm = () => {
-    if (onConfirm) {
-      onConfirm(coords, placeName);
+    const coordsObj = { lat: coords[0], lng: coords[1] };
+    const coordsArr = [coords[0], coords[1]];
+    const resolvedName = placeName || `Sector (${coords[0].toFixed(4)}, ${coords[1].toFixed(4)})`;
+
+    // Soporte para firma onConfirmLocation(coordsObj, name)
+    if (onConfirmLocation) {
+      onConfirmLocation(coordsObj, resolvedName);
     }
+
+    // Soporte para firma onConfirm(payload, name)
+    if (onConfirm) {
+      onConfirm(
+        {
+          coords: coordsArr,
+          lat: coords[0],
+          lng: coords[1],
+          latitude: coords[0],
+          longitude: coords[1],
+          address: resolvedName,
+          title: resolvedName,
+          name: resolvedName,
+          nombre: resolvedName,
+          direccion: resolvedName,
+        },
+        resolvedName
+      );
+    }
+
     onClose();
   };
 
-  const campusDestIcon = destinationName
-    ? createCampusMarker(destinationName)
-    : null;
+  const campusDestCoords = destinationCoords ? normalizarCoordsEntrantes(destinationCoords) : null;
+  const campusDestIcon = destinationName ? createCampusMarker(destinationName) : null;
 
   return (
     <div
@@ -153,14 +203,14 @@ export const LocationPickerModal = ({
           />
 
           {/* Destino / Campus Secundario si aplica */}
-          {destinationCoords && campusDestIcon && (
-            <Marker position={destinationCoords} icon={campusDestIcon} />
+          {campusDestCoords && campusDestIcon && (
+            <Marker position={campusDestCoords} icon={campusDestIcon} />
           )}
 
           {/* Línea de Trayecto Conectora si aplica */}
-          {destinationCoords && (
+          {campusDestCoords && (
             <Polyline
-              positions={[coords, destinationCoords]}
+              positions={[coords, campusDestCoords]}
               pathOptions={{ color: '#0284c7', weight: 4, opacity: 0.8, dashArray: '6, 6' }}
             />
           )}
@@ -171,8 +221,8 @@ export const LocationPickerModal = ({
       <div
         className={`relative z-20 p-3.5 m-3 rounded-2xl flex items-center justify-between shadow-xl transition-colors border ${
           isDark
-            ? 'bg-slate-900 border-slate-800 text-white'
-            : 'bg-white/95 border-slate-200/90 text-slate-900'
+            ? 'bg-slate-900/95 border-slate-800 text-white backdrop-blur-md'
+            : 'bg-white/95 border-slate-200/90 text-slate-900 backdrop-blur-md'
         }`}
       >
         <button
@@ -192,13 +242,16 @@ export const LocationPickerModal = ({
           <h3 className={`text-xs font-black uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-800'}`}>
             {title}
           </h3>
-          <p
-            className={`text-[10px] font-bold truncate max-w-[180px] mx-auto ${
-              isDark ? 'text-lochmara-400' : 'text-lochmara-600'
-            }`}
-          >
-            {isGeocoding ? 'Actualizando dirección...' : placeName || 'Ubicación seleccionada'}
-          </p>
+          <div className="flex items-center justify-center gap-1">
+            {isGeocoding && <Loader2 className="w-3 h-3 animate-spin text-lochmara-500" />}
+            <p
+              className={`text-[10px] font-bold truncate max-w-[200px] ${
+                isDark ? 'text-lochmara-400' : 'text-lochmara-600'
+              }`}
+            >
+              {isGeocoding ? 'Detectando dirección...' : placeName || 'Punto fijado'}
+            </p>
+          </div>
         </div>
 
         <div
@@ -225,12 +278,12 @@ export const LocationPickerModal = ({
             <div
               className={`text-[11px] font-medium py-1.5 px-3.5 rounded-full shadow-lg border text-center flex items-center justify-center gap-1.5 ${
                 isDark
-                  ? 'bg-slate-900 text-slate-200 border-slate-700/80'
-                  : 'bg-white/95 text-slate-800 border-slate-200/90'
+                  ? 'bg-slate-900/95 text-slate-200 border-slate-700/80 backdrop-blur-sm'
+                  : 'bg-white/95 text-slate-800 border-slate-200/90 backdrop-blur-sm'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5 text-lochmara-400 animate-pulse" />
-              <span>Toca en la calle o arrastra el pin para moverlo</span>
+              <span>Toca en cualquier calle o arrastra el pin</span>
             </div>
           </motion.div>
         )}
@@ -240,8 +293,8 @@ export const LocationPickerModal = ({
       <div
         className={`relative z-20 p-4 m-3 rounded-3xl space-y-3 shadow-2xl transition-colors border ${
           isDark
-            ? 'bg-slate-900 border-slate-800 text-white'
-            : 'bg-white/98 border-slate-200/90 text-slate-900'
+            ? 'bg-slate-900/95 border-slate-800 text-white backdrop-blur-md'
+            : 'bg-white/98 border-slate-200/90 text-slate-900 backdrop-blur-md'
         }`}
       >
         <div className="flex items-center justify-between text-xs px-1">
@@ -249,7 +302,7 @@ export const LocationPickerModal = ({
             Ubicación fijada:
           </span>
           <span className={`font-bold truncate max-w-[220px] ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            {isGeocoding ? 'Actualizando dirección...' : placeName || 'Punto fijado en el mapa'}
+            {isGeocoding ? 'Detectando dirección...' : placeName || 'Punto fijado en el mapa'}
           </span>
         </div>
 

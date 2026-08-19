@@ -354,6 +354,32 @@ export const placesApiService = {
       } catch {}
     }
 
+function normalizarItemLugar(raw) {
+  if (!raw) return null;
+  const nombre = raw.nombre || raw.name || raw.direccion || 'Ubicación';
+  const direccion = raw.direccion || raw.address || raw.detalles || raw.municipio || 'Área Metropolitana de Bucaramanga';
+  const coords = raw.coords || (raw.latitude && raw.longitude ? [raw.latitude, raw.longitude] : (raw.lat && raw.lng ? [raw.lat, raw.lng] : [7.1193, -73.1042]));
+  const lat = Number(coords[0]);
+  const lng = Number(coords[1]);
+
+  return {
+    nombre,
+    name: nombre,
+    direccion,
+    address: direccion,
+    tipo: raw.tipo || raw.category || 'lugar',
+    category: raw.tipo || raw.category || 'lugar',
+    municipio: raw.municipio || 'Bucaramanga',
+    coords: [lat, lng],
+    latitude: lat,
+    longitude: lng,
+    lat,
+    lng,
+    lon: lng,
+    source: raw.source || 'catalogo_local',
+  };
+}
+
     // 5. Fusión Inteligente y Desduplicación por Coordenadas o Nombre
     const listaCompleta = [
       ...tomtomResults,
@@ -369,7 +395,7 @@ export const placesApiService = {
       const clave = `${item.nombre.toLowerCase().trim()}_${item.municipio?.toLowerCase() || ''}`;
       if (!vistos.has(clave)) {
         vistos.add(clave);
-        resultadosUnicos.push(item);
+        resultadosUnicos.push(normalizarItemLugar(item));
       }
     }
 
@@ -381,48 +407,78 @@ export const placesApiService = {
     // Generar la sugerencia calculada en Bucaramanga
     if (/\b(calle|carrera|diagonal|transversal|avenida)\b/i.test(textoNormalizado)) {
       return [
-        {
+        normalizarItemLugar({
           nombre: textoNormalizado,
           direccion: 'Dirección calculada en Bucaramanga, Santander',
           tipo: 'direccion_exacta',
           municipio: 'Bucaramanga',
           coords: [7.1193, -73.1102],
           source: 'interpolador_vial',
-        },
-        ...LUGARES_POPULARES_AMB.slice(0, 5),
+        }),
+        ...LUGARES_POPULARES_AMB.slice(0, 5).map(normalizarItemLugar),
       ];
     }
 
-    return LUGARES_POPULARES_AMB.slice(0, 8);
+    return LUGARES_POPULARES_AMB.slice(0, 8).map(normalizarItemLugar);
+  },
+
+  /**
+   * Alias de compatibilidad global
+   */
+  async buscarLugares(query) {
+    return this.searchPlaces(query);
   },
 
   /**
    * Geocodificación Inversa Universal
    */
   async reverseGeocode(lat, lon) {
+    const numLat = Number(lat);
+    const numLon = Number(lon);
+    if (isNaN(numLat) || isNaN(numLon)) return 'Punto en el mapa';
+
     try {
-      const urlReverse = `https://api.tomtom.com/search/2/reverseGeocode/${lat},${lon}.json?key=${TOMTOM_API_KEY}`;
+      const urlReverse = `https://api.tomtom.com/search/2/reverseGeocode/${numLat},${numLon}.json?key=${TOMTOM_API_KEY}`;
       const res = await axios.get(urlReverse, { timeout: 2500 });
       if (res.data?.addresses && res.data.addresses.length > 0) {
         const addr = res.data.addresses[0].address;
-        return addr.freeformAddress || `${addr.streetName || 'Vía'}, ${addr.municipality || 'Bucaramanga'}`;
+        const street = addr.streetName ? `${addr.streetName} ${addr.streetNumber || ''}`.trim() : '';
+        const neighborhood = addr.municipalitySubdivision || '';
+        const city = addr.municipality || 'Bucaramanga';
+
+        const parts = [street || addr.freeformAddress, neighborhood, city].filter(Boolean);
+        const uniqueParts = parts.filter((v, i, a) => a.indexOf(v) === i);
+        return uniqueParts.join(', ') || addr.freeformAddress;
       }
     } catch {}
 
     try {
       const res = await axios.get(PHOTON_REVERSE_URL, {
-        params: { lat, lon },
+        params: { lat: numLat, lon: numLon },
         timeout: 2500,
       });
 
       if (res.data?.features && res.data.features.length > 0) {
         const props = res.data.features[0].properties;
-        const nombre = props.name || props.street || 'Punto vial';
-        const ciudad = props.city || props.district || 'Bucaramanga';
-        return `${nombre}, ${ciudad}`;
+        const nombre = props.name || props.street || '';
+        const barrio = props.district || '';
+        const ciudad = props.city || 'Bucaramanga';
+        const finalParts = [nombre, barrio, ciudad].filter(Boolean);
+        if (finalParts.length > 0) {
+          return finalParts.join(', ');
+        }
       }
     } catch {}
 
-    return `Ubicación (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+    // Si está cerca de algún lugar conocido del catálogo
+    for (const lugar of LUGARES_POPULARES_AMB) {
+      const dLat = Math.abs(lugar.coords[0] - numLat);
+      const dLon = Math.abs(lugar.coords[1] - numLon);
+      if (dLat < 0.003 && dLon < 0.003) {
+        return `Cerca de ${lugar.nombre}`;
+      }
+    }
+
+    return `Sector Bucaramanga (${numLat.toFixed(4)}, ${numLon.toFixed(4)})`;
   },
 };

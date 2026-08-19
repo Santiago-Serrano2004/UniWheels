@@ -25,15 +25,15 @@ export const AuthGatewayView = () => {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.97 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className={`flex-1 h-full flex flex-col justify-between p-6 select-none transition-colors ${
+      className={`flex-1 h-full w-full flex flex-col justify-between p-5 sm:p-6 select-none transition-colors ${
         isDark ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'
       }`}
     >
       {/* 1. ESPACIO SUPERIOR LIMPIO */}
-      <div className="pt-4" />
+      <div className="pt-2 sm:pt-4" />
 
-      {/* 2. ZONA CENTRAL CON EL ISOTIPO Y TÍTULO (Espacioso y aireado) */}
-      <div className="flex flex-col items-center text-center space-y-6 max-w-xs mx-auto">
+      {/* 2. ZONA CENTRAL CON EL ISOTIPO Y TÍTULO (Espacioso y fluido) */}
+      <div className="flex flex-col items-center text-center space-y-6 w-full max-w-md mx-auto px-2">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -57,7 +57,7 @@ export const AuthGatewayView = () => {
       </div>
 
       {/* 3. ZONA INFERIOR DE ACCIÓN (Botones en alcance ergonómico del pulgar) */}
-      <div className="space-y-4 max-w-xs w-full mx-auto pb-4">
+      <div className="space-y-4 w-full max-w-md mx-auto pb-4 px-2">
         <div className="space-y-3">
           <motion.button
             whileTap={{ scale: 0.98 }}

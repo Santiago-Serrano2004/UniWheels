@@ -18,6 +18,8 @@ Route::prefix('v1')->group(function () {
     Route::post('/trips/{id}/complete', [TripLifecycleController::class, 'complete']);
     Route::post('/trips/{id}/cancel', [TripLifecycleController::class, 'cancel']);
 
-    // Consultas de estado activo
+    // Consultas de estado activo e historial
     Route::get('/passenger/{passengerId}/active-trip', [TripLifecycleController::class, 'activePassengerTrip']);
+    Route::get('/passenger/history', [TripLifecycleController::class, 'passengerHistory']);
+    Route::get('/driver/history', [TripLifecycleController::class, 'driverHistory']);
 });

@@ -129,11 +129,11 @@ export const LoginForm = ({ onBack }) => {
   };
 
   return (
-    <div className={`flex-1 h-full flex flex-col justify-between select-none overflow-hidden transition-colors ${
+    <div className={`flex-1 h-full w-full flex flex-col justify-between select-none overflow-hidden transition-colors ${
       isDark ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'
     }`}>
       {/* 1. BARRA SUPERIOR DE NAVEGACION */}
-      <div className="pt-6 sm:pt-4 px-6 pb-2 flex items-center justify-between">
+      <div className="pt-4 px-4 sm:px-6 pb-2 flex items-center justify-between">
         <button
           type="button"
           onClick={() => {
@@ -157,9 +157,9 @@ export const LoginForm = ({ onBack }) => {
         <span className={`text-xs font-bold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>UniWheels</span>
       </div>
 
-      {/* 2. CUERPO DEL FORMULARIO (Distribuido y centrado) */}
-      <div className="flex-1 flex flex-col justify-center px-6 py-2 overflow-y-auto">
-        <div className="w-full max-w-sm mx-auto space-y-5">
+      {/* 2. CUERPO DEL FORMULARIO (Distribuido y con padding lateral elegante) */}
+      <div className="flex-1 flex flex-col justify-center px-6 sm:px-8 py-2 overflow-y-auto w-full">
+        <div className="w-full max-w-md mx-auto space-y-5">
           {/* Titulo y Subtitulo */}
           <div className="space-y-1">
             <h2 className={`text-2xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>

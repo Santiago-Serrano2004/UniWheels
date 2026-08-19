@@ -22,7 +22,11 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
   const [tipoVehiculo, setTipoVehiculo] = useState('carro');
   const [placa, setPlaca] = useState('');
   const [marca, setMarca] = useState('Chevrolet');
+  const [marcaPersonalizada, setMarcaPersonalizada] = useState('');
+  const [marcasDisponibles, setMarcasDisponibles] = useState([]);
+  const [cargandoMarcas, setCargandoMarcas] = useState(false);
   const [modelo, setModelo] = useState('');
+  const [modeloPersonalizado, setModeloPersonalizado] = useState('');
   const [modelosDisponibles, setModelosDisponibles] = useState([]);
   const [cargandoModelos, setCargandoModelos] = useState(false);
   const [ano, setAno] = useState('2022');
@@ -61,10 +65,35 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
 
   const requiereTecno = requiereTecnomecanica(tipoVehiculo, ano);
 
+  // Cargar TODAS las marcas dinámicamente según el tipo de vehículo
+  useEffect(() => {
+    let activo = true;
+    setCargandoMarcas(true);
+    vehicleApiService.getAllMakes(tipoVehiculo).then((marcas) => {
+      if (!activo) return;
+      setCargandoMarcas(false);
+      if (marcas && marcas.length > 0) {
+        setMarcasDisponibles(marcas);
+        const marcaDefault = tipoVehiculo === 'moto' ? 'Yamaha' : 'Chevrolet';
+        if (!marcas.includes(marca)) {
+          setMarca(marcaDefault);
+        }
+      }
+    });
+    return () => {
+      activo = false;
+    };
+  }, [tipoVehiculo]);
+
+  // Cargar TODOS los modelos dinámicamente según la marca seleccionada
   useEffect(() => {
     let activo = true;
     setCargandoModelos(true);
-    vehicleApiService.getModelsForMake(marca).then((modelos) => {
+    const marcaConsulta = (marca === 'Otra Marca / Personalizada' || marca === 'Otra Marca')
+      ? marcaPersonalizada
+      : marca;
+
+    vehicleApiService.getModelsForMake(marcaConsulta, tipoVehiculo).then((modelos) => {
       if (!activo) return;
       setCargandoModelos(false);
       if (modelos && modelos.length > 0) {
@@ -75,7 +104,7 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
     return () => {
       activo = false;
     };
-  }, [marca]);
+  }, [marca, marcaPersonalizada, tipoVehiculo]);
 
   useEffect(() => {
     setCategoriaLicencia(tipoVehiculo === 'moto' ? 'A2' : 'B1');
@@ -121,35 +150,57 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
     setMensajeError('');
     if (pasoActual === 1) {
       if (!placa || placa.length < 5) {
-        setMensajeError('Por favor ingresa una placa válida.');
+        setMensajeError('Por favor ingresa una placa vehicular válida (ej: ABC-123 o ABC-12D).');
         return false;
       }
-      if (!modelo) {
-        setMensajeError('Por favor selecciona la línea o modelo de tu vehículo.');
+      if ((marca === 'Otra Marca / Personalizada' || marca === 'Otra Marca') && !marcaPersonalizada.trim()) {
+        setMensajeError('Por favor escribe la marca de tu vehículo.');
+        return false;
+      }
+      if (!modelo || (modelo.startsWith('Otro') && !modeloPersonalizado.trim())) {
+        setMensajeError('Por favor selecciona o escribe el modelo de tu vehículo.');
         return false;
       }
     }
     if (pasoActual === 2) {
-      if (!numeroSoat || !vencimientoSoat) {
-        setMensajeError('Debes ingresar el número y la fecha de vencimiento del SOAT.');
+      if (!numeroSoat || numeroSoat.trim().length < 3) {
+        setMensajeError('Debes ingresar el número de tu póliza SOAT.');
+        return false;
+      }
+      if (!vencimientoSoat) {
+        setMensajeError('Debes seleccionar la fecha de vencimiento de tu póliza SOAT.');
         return false;
       }
       if (haExpiradoFecha(vencimientoSoat)) {
-        setMensajeError('La póliza SOAT ingresada se encuentra vencida.');
+        setMensajeError('La póliza SOAT ingresada se encuentra vencida. Debe tener fecha de vigencia futura.');
         return false;
       }
-      if (requiereTecno && (!numeroTecno || !vencimientoTecno)) {
-        setMensajeError('Tu vehículo requiere Revisión Técnico-Mecánica obligatoria.');
-        return false;
+      if (requiereTecno) {
+        if (!numeroTecno || numeroTecno.trim().length < 3) {
+          setMensajeError('Debes ingresar el número de certificado de la Revisión Técnico-Mecánica (RTM).');
+          return false;
+        }
+        if (!vencimientoTecno) {
+          setMensajeError('Debes seleccionar la fecha de vencimiento de la Revisión Técnico-Mecánica (RTM).');
+          return false;
+        }
+        if (haExpiradoFecha(vencimientoTecno)) {
+          setMensajeError('El certificado de Revisión Técnico-Mecánica (RTM) se encuentra vencido. Debe tener fecha futura.');
+          return false;
+        }
       }
     }
     if (pasoActual === 3) {
-      if (!numeroLicencia || !vencimientoLicencia) {
-        setMensajeError('Debes ingresar el número y fecha de vencimiento de tu licencia.');
+      if (!numeroLicencia || numeroLicencia.trim().length < 3) {
+        setMensajeError('Debes ingresar el número de tu licencia de conducción.');
+        return false;
+      }
+      if (!vencimientoLicencia) {
+        setMensajeError('Debes seleccionar la fecha de vencimiento de tu licencia de conducción.');
         return false;
       }
       if (haExpiradoFecha(vencimientoLicencia)) {
-        setMensajeError('Tu licencia de conducción se encuentra vencida.');
+        setMensajeError('Tu licencia de conducción se encuentra vencida. Debe tener vigencia activa.');
         return false;
       }
     }
@@ -180,12 +231,67 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
     setEstaEnviando(true);
     setMensajeError('');
 
+    const marcaFinal = (marca === 'Otra Marca / Personalizada' || marca === 'Otra Marca')
+      ? (marcaPersonalizada.trim() || 'Marca Particular')
+      : marca;
+    const modeloFinal = modelo.startsWith('Otro')
+      ? (modeloPersonalizado.trim() || 'Modelo Particular')
+      : modelo;
+
     try {
-      await authService.registerDriver({
+      try {
+        await authService.registerDriver({
+          vehicle_type: tipoVehiculo,
+          plate_number: placa.toUpperCase(),
+          brand: marcaFinal,
+          model_line: modeloFinal,
+          year: parseInt(ano, 10),
+          color,
+          propulsion_type: tipoPropulsion,
+          available_seats: cupos,
+          soat_number: numeroSoat,
+          soat_expires_at: vencimientoSoat,
+          rtm_number: requiereTecno ? numeroTecno : null,
+          rtm_expires_at: requiereTecno ? vencimientoTecno : null,
+          driver_license_number: numeroLicencia,
+          driver_license_category: categoriaLicencia,
+          driver_license_expires_at: vencimientoLicencia,
+        });
+      } catch (authErr) {
+        console.warn('Auth registerDriver notice:', authErr);
+      }
+
+      try {
+        await vehicleService.registerVehicle({
+          user_id: user?.id,
+          vehicle_type: tipoVehiculo,
+          plate_number: placa.toUpperCase(),
+          brand: marcaFinal,
+          model_line: modeloFinal,
+          year: parseInt(ano, 10),
+          color,
+          propulsion_type: tipoPropulsion,
+          available_seats: cupos,
+          soat_number: numeroSoat,
+          soat_expires_at: vencimientoSoat,
+          soat_photo: fotoSoat,
+          rtm_number: requiereTecno ? numeroTecno : null,
+          rtm_expires_at: requiereTecno ? vencimientoTecno : null,
+          rtm_photo: requiereTecno ? fotoTecno : null,
+          driver_license_number: numeroLicencia,
+          driver_license_category: categoriaLicencia,
+          driver_license_expires_at: vencimientoLicencia,
+          driver_license_photo: fotoLicencia,
+        });
+      } catch (vehErr) {
+        console.warn('Vehicle register notice:', vehErr);
+      }
+
+      updateDriverStatus('pending', {
         vehicle_type: tipoVehiculo,
         plate_number: placa.toUpperCase(),
-        brand: marca,
-        model_line: modelo,
+        brand: marcaFinal,
+        model_line: modeloFinal,
         year: parseInt(ano, 10),
         color,
         propulsion_type: tipoPropulsion,
@@ -199,19 +305,6 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
         driver_license_expires_at: vencimientoLicencia,
       });
 
-      await vehicleService.registerVehicle({
-        user_id: user?.id,
-        vehicle_type: tipoVehiculo,
-        plate_number: placa.toUpperCase(),
-        brand: marca,
-        model_line: modelo,
-        year: parseInt(ano, 10),
-        color,
-        propulsion_type: tipoPropulsion,
-        available_seats: cupos,
-      });
-
-      updateDriverStatus(true);
       setPasoActual(5);
     } catch (err) {
       setMensajeError(parseBackendError(err));
@@ -221,11 +314,11 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
   };
 
   return (
-    <div className={`flex-1 h-full flex flex-col justify-between select-none overflow-hidden transition-colors ${
+    <div className={`flex-1 h-full w-full flex flex-col justify-between select-none overflow-hidden transition-colors ${
       isDark ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'
     }`}>
       {/* 1. BARRA SUPERIOR */}
-      <div className="pt-4 px-6 pb-2 flex items-center justify-between">
+      <div className="pt-4 px-4 sm:px-6 pb-2 flex items-center justify-between">
         <button
           type="button"
           onClick={retrocederPaso}
@@ -252,7 +345,7 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
       </div>
 
       {/* 2. CUERPO DEL ASISTENTE */}
-      <div className="px-6 flex-1 flex flex-col justify-center max-w-sm mx-auto w-full py-2 overflow-y-auto">
+      <div className="px-6 sm:px-8 flex-1 flex flex-col justify-center max-w-md mx-auto w-full py-2 overflow-y-auto">
         <div className="space-y-3.5">
           <div className="space-y-0.5 text-center sm:text-left">
             <h2 className="text-xl font-black tracking-tight">
@@ -263,7 +356,7 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
               {pasoActual === 5 && '¡Solicitud Registrada!'}
             </h2>
             <p className="text-xs text-slate-400">
-              {pasoActual === 1 && 'Información básica de tu carro o motocicleta'}
+              {pasoActual === 1 && 'Información básica de tu carro o moto'}
               {pasoActual === 2 && 'Validación de SOAT y Revisión Técnico-Mecánica'}
               {pasoActual === 3 && 'Documento de identidad de conducción vigente'}
               {pasoActual === 4 && 'Aceptación de protocolo de seguridad universitaria'}
@@ -285,8 +378,14 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
               setPlaca={setPlaca}
               marca={marca}
               setMarca={setMarca}
+              marcaPersonalizada={marcaPersonalizada}
+              setMarcaPersonalizada={setMarcaPersonalizada}
+              marcasDisponibles={marcasDisponibles}
+              cargandoMarcas={cargandoMarcas}
               modelo={modelo}
               setModelo={setModelo}
+              modeloPersonalizado={modeloPersonalizado}
+              setModeloPersonalizado={setModeloPersonalizado}
               modelosDisponibles={modelosDisponibles}
               cargandoModelos={cargandoModelos}
               ano={ano}
@@ -338,13 +437,23 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
 
           {pasoActual === 4 && (
             <HabeasDataSignatureStep
+              tipoVehiculo={tipoVehiculo}
               placa={placa}
               marca={marca}
+              marcaPersonalizada={marcaPersonalizada}
               modelo={modelo}
+              modeloPersonalizado={modeloPersonalizado}
               ano={ano}
               color={color}
+              tipoPropulsion={tipoPropulsion}
               cupos={cupos}
+              numeroSoat={numeroSoat}
               vencimientoSoat={vencimientoSoat}
+              numeroTecno={numeroTecno}
+              vencimientoTecno={vencimientoTecno}
+              requiereTecno={requiereTecno}
+              numeroLicencia={numeroLicencia}
+              categoriaLicencia={categoriaLicencia}
               vencimientoLicencia={vencimientoLicencia}
               aceptaTerminos={aceptaTerminos}
               setAceptaTerminos={setAceptaTerminos}
@@ -363,7 +472,7 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
 
       {/* 3. BOTONES DE NAVEGACIÓN INFERIOR */}
       {pasoActual < 5 && (
-        <div className="p-4 px-6 max-w-sm mx-auto w-full">
+        <div className="p-4 px-4 sm:px-6 max-w-md mx-auto w-full">
           {pasoActual < 4 ? (
             <button
               type="button"

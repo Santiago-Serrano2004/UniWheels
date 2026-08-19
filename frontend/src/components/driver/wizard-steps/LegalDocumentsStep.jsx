@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileCheck, Camera, CheckCircle2, AlertCircle, Info } from 'lucide-react';
+import { FileCheck, Camera, CheckCircle2, ShieldCheck, Info, Calendar, Hash } from 'lucide-react';
 import { FormDatePicker } from '../../common/FormDatePicker';
 
 export const LegalDocumentsStep = ({
@@ -20,140 +20,160 @@ export const LegalDocumentsStep = ({
   isDark,
 }) => {
   return (
-    <div className="space-y-4">
-      {/* SECCIÓN 1: PÓLIZA SOAT */}
-      <div className={`p-4 rounded-2xl border space-y-3 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+    <div className="space-y-3.5">
+      {/* 1. TARJETA PÓLIZA SOAT */}
+      <section
+        className={`p-4 rounded-3xl border shadow-xs transition-colors space-y-3 ${
+          isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
+        }`}
+      >
+        {/* Cabecera SOAT */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FileCheck className="w-4 h-4 text-lochmara-500" />
-            <h4 className="text-xs font-black">Póliza SOAT Vigente</h4>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-lochmara-500/10 border border-lochmara-500/25 flex items-center justify-center text-lochmara-500 shrink-0">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                Póliza SOAT Vigente
+              </h4>
+              <p className="text-[10px] text-slate-400">Seguro obligatorio de accidentes</p>
+            </div>
           </div>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+
+          <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400">
             Obligatorio
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5">
+        {/* Campos SOAT */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 block">Número de Póliza:</label>
+            <label className={`text-[10px] font-bold flex items-center gap-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+              <Hash className="w-3 h-3 text-lochmara-500" />
+              <span>Número de Póliza:</span>
+            </label>
             <input
               type="text"
               value={numeroSoat}
               onChange={(e) => setNumeroSoat(e.target.value.toUpperCase())}
               placeholder="Ej: 9820491024"
-              className={`w-full py-2 px-3 rounded-xl text-xs font-bold border ${
-                isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'
+              className={`w-full py-2 px-3 rounded-2xl text-xs font-bold border transition-colors ${
+                isDark
+                  ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-500'
+                  : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'
               }`}
             />
           </div>
 
           <FormDatePicker
-            label="Fecha de Vencimiento:"
+            label="Vencimiento SOAT:"
             value={vencimientoSoat}
             onChange={(val) => setVencimientoSoat(val)}
+            min={new Date().toISOString().split('T')[0]}
           />
         </div>
 
-        {/* Botón de Carga de Foto SOAT */}
+        {/* Botón de Carga Foto SOAT */}
         <button
           type="button"
           onClick={() => abrirSelectorFoto('soat')}
-          className={`w-full py-2.5 px-3 rounded-xl border border-dashed flex items-center justify-center gap-2 text-xs font-bold transition-all cursor-pointer ${
+          className={`w-full py-2.5 px-3 rounded-2xl border-2 border-dashed flex items-center justify-center gap-2 text-xs font-bold transition-all cursor-pointer ${
             fotoSoat
-              ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400'
+              ? isDark
+                ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300'
+                : 'bg-emerald-50 border-emerald-400 text-emerald-800'
               : isDark
-              ? 'bg-slate-950 border-slate-700 text-slate-300 hover:border-lochmara-500'
-              : 'bg-white border-slate-300 text-slate-700 hover:border-lochmara-500'
+              ? 'bg-slate-950 border-slate-800 text-slate-300 hover:border-lochmara-500 hover:bg-slate-800/40'
+              : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-lochmara-500 hover:bg-lochmara-50/40'
           }`}
         >
           {fotoSoat ? (
-            <>
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              <span>Foto del SOAT Cargada</span>
-            </>
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
           ) : (
-            <>
-              <Camera className="w-4 h-4 text-lochmara-500" />
-              <span>Tomar / Subir Foto del SOAT</span>
-            </>
+            <Camera className="w-4 h-4 text-lochmara-500" />
           )}
+          <span>{fotoSoat ? 'Foto de póliza SOAT cargada' : 'Subir foto o PDF del SOAT'}</span>
         </button>
-      </div>
+      </section>
 
-      {/* SECCIÓN 2: REVISIÓN TÉCNICO-MECÁNICA (RTM) */}
-      <div className={`p-4 rounded-2xl border space-y-3 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FileCheck className="w-4 h-4 text-amber-500" />
-            <h4 className="text-xs font-black">Revisión Técnico-Mecánica (RTM)</h4>
-          </div>
-          <span
-            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-              requiereTecno
-                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-            }`}
-          >
-            {requiereTecno ? 'Exigible por Ley' : 'Exento por Modelo Reciente'}
-          </span>
-        </div>
-
-        {requiereTecno ? (
-          <>
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 block">Número de Certificado:</label>
-                <input
-                  type="text"
-                  value={numeroTecno}
-                  onChange={(e) => setNumeroTecno(e.target.value.toUpperCase())}
-                  placeholder="Ej: CDA-89210"
-                  className={`w-full py-2 px-3 rounded-xl text-xs font-bold border ${
-                    isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'
-                  }`}
-                />
+      {/* 2. TARJETA REVISIÓN TÉCNICO-MECÁNICA (RTM) - SOLO SI EL VEHÍCULO LA REQUIERE */}
+      {requiereTecno && (
+        <section
+          className={`p-4 rounded-3xl border shadow-xs transition-colors space-y-3 ${
+            isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
+          }`}
+        >
+          {/* Cabecera RTM */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border bg-amber-500/10 border-amber-500/25 text-amber-500">
+                <FileCheck className="w-4 h-4" />
               </div>
+              <div>
+                <h4 className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  Revisión Técnico-Mecánica
+                </h4>
+                <p className="text-[10px] text-slate-400">Certificado CDA autorizado</p>
+              </div>
+            </div>
 
-              <FormDatePicker
-                label="Fecha de Vencimiento:"
-                value={vencimientoTecno}
-                onChange={(val) => setVencimientoTecno(val)}
+            <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400">
+              Por Ley
+            </span>
+          </div>
+
+          {/* Campos RTM */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="space-y-1">
+              <label className={`text-[10px] font-bold flex items-center gap-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                <Hash className="w-3 h-3 text-amber-500" />
+                <span>Número de Certificado:</span>
+              </label>
+              <input
+                type="text"
+                value={numeroTecno}
+                onChange={(e) => setNumeroTecno(e.target.value.toUpperCase())}
+                placeholder="Ej: CDA-89210"
+                className={`w-full py-2 px-3 rounded-2xl text-xs font-bold border transition-colors ${
+                  isDark
+                    ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-500'
+                    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'
+                }`}
               />
             </div>
 
-            <button
-              type="button"
-              onClick={() => abrirSelectorFoto('tecno')}
-              className={`w-full py-2.5 px-3 rounded-xl border border-dashed flex items-center justify-center gap-2 text-xs font-bold transition-all cursor-pointer ${
-                fotoTecno
-                  ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400'
-                  : isDark
-                  ? 'bg-slate-950 border-slate-700 text-slate-300 hover:border-amber-500'
-                  : 'bg-white border-slate-300 text-slate-700 hover:border-amber-500'
-              }`}
-            >
-              {fotoTecno ? (
-                <>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>Certificado RTM Cargado</span>
-                </>
-              ) : (
-                <>
-                  <Camera className="w-4 h-4 text-amber-500" />
-                  <span>Tomar / Subir Foto de la RTM</span>
-                </>
-              )}
-            </button>
-          </>
-        ) : (
-          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs flex items-start gap-2.5 text-emerald-700 dark:text-emerald-300">
-            <Info className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-            <p className="text-[11px] leading-relaxed">
-              Tu vehículo modelo <strong>{ano}</strong> ({tipoVehiculo === 'carro' ? 'menor a 5 años' : 'menor a 2 años'}) está legalmente <strong>exento de Revisión Técnico-Mecánica</strong> según la Ley 2294 de 2023.
-            </p>
+            <FormDatePicker
+              label="Vencimiento RTM:"
+              value={vencimientoTecno}
+              onChange={(val) => setVencimientoTecno(val)}
+              min={new Date().toISOString().split('T')[0]}
+            />
           </div>
-        )}
-      </div>
+
+          {/* Botón de Carga Foto RTM */}
+          <button
+            type="button"
+            onClick={() => abrirSelectorFoto('tecno')}
+            className={`w-full py-2.5 px-3 rounded-2xl border-2 border-dashed flex items-center justify-center gap-2 text-xs font-bold transition-all cursor-pointer ${
+              fotoTecno
+                ? isDark
+                  ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300'
+                  : 'bg-emerald-50 border-emerald-400 text-emerald-800'
+                : isDark
+                ? 'bg-slate-950 border-slate-800 text-slate-300 hover:border-amber-500 hover:bg-slate-800/40'
+                : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-amber-500 hover:bg-amber-50/40'
+            }`}
+          >
+            {fotoTecno ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            ) : (
+              <Camera className="w-4 h-4 text-amber-500" />
+            )}
+            <span>{fotoTecno ? 'Certificado RTM cargado' : 'Subir foto del certificado RTM'}</span>
+          </button>
+        </section>
+      )}
     </div>
   );
 };

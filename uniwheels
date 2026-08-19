@@ -36,7 +36,7 @@ SERVICES=(
 # Imprimir banner oficial
 print_banner() {
     echo -e "${CYAN}${BOLD}"
-    echo "  🚗  UniWheels — Control Maestro del Ecosistema"
+    echo "  UniWheels — Control Maestro del Ecosistema"
     echo "  Universidad Autónoma de Bucaramanga (UNAB)"
     echo -e "${NC}"
 }
@@ -79,13 +79,13 @@ start_infrastructure() {
     fi
 
     if command -v podman >/dev/null 2>&1; then
-        echo -e "  ${YELLOW}⚡ Levantando contenedores con Podman Compose...${NC}"
+        echo -e "  ${YELLOW} Levantando contenedores con Podman Compose...${NC}"
         podman compose -f "${ROOT_DIR}/docker/docker-compose.yml" up -d >/dev/null 2>&1 || true
     elif command -v docker >/dev/null 2>&1; then
-        echo -e "  ${YELLOW}⚡ Levantando contenedores con Docker Compose...${NC}"
+        echo -e "  ${YELLOW} Levantando contenedores con Docker Compose...${NC}"
         docker compose -f "${ROOT_DIR}/docker/docker-compose.yml" up -d >/dev/null 2>&1 || true
     else
-        echo -e "  ${YELLOW}⚠ Podman/Docker no detectado. Asumiendo servicios locales de PostgreSQL y Redis.${NC}"
+        echo -e "  ${YELLOW} Podman/Docker no detectado. Asumiendo servicios locales de PostgreSQL y Redis.${NC}"
     fi
 
     sleep 2
@@ -108,7 +108,7 @@ cmd_start() {
             continue
         fi
 
-        echo -ne "  ${CYAN}⚡${NC} Arrancando ${BOLD}${name}${NC} (: ${port} )... "
+        echo -ne "  ${CYAN}${NC} Arrancando ${BOLD}${name}${NC} (: ${port} )... "
         
         # Ejecutar en subshell en background
         (

@@ -12,10 +12,16 @@ export const VehicleSpecsStep = ({
   setPlaca,
   marca,
   setMarca,
+  marcaPersonalizada,
+  setMarcaPersonalizada,
+  marcasDisponibles = [],
+  cargandoMarcas = false,
   modelo,
   setModelo,
-  modelosDisponibles,
-  cargandoModelos,
+  modeloPersonalizado,
+  setModeloPersonalizado,
+  modelosDisponibles = [],
+  cargandoModelos = false,
   ano,
   setAno,
   color,
@@ -26,7 +32,12 @@ export const VehicleSpecsStep = ({
   setCupos,
   isDark,
 }) => {
-  const marcas = tipoVehiculo === 'carro' ? MARCAS_COLOMBIA_CARROS : MARCAS_COLOMBIA_MOTOS;
+  const marcas = marcasDisponibles.length > 0
+    ? marcasDisponibles
+    : (tipoVehiculo === 'carro' ? MARCAS_COLOMBIA_CARROS : MARCAS_COLOMBIA_MOTOS);
+
+  const esMarcaPersonalizada = marca === 'Otra Marca / Personalizada' || marca === 'Otra Marca';
+  const esModeloPersonalizado = typeof modelo === 'string' && modelo.startsWith('Otro');
 
   return (
     <div className="space-y-4">
@@ -46,7 +57,7 @@ export const VehicleSpecsStep = ({
           }`}
         >
           <Car className="w-4 h-4" />
-          <span>Automóvil / Camioneta</span>
+          <span>Carro</span>
         </button>
 
         <button
@@ -63,7 +74,7 @@ export const VehicleSpecsStep = ({
           }`}
         >
           <Bike className="w-4 h-4" />
-          <span>Motocicleta</span>
+          <span>Moto</span>
         </button>
       </div>
 
@@ -81,12 +92,28 @@ export const VehicleSpecsStep = ({
 
       {/* Marca y Modelo */}
       <div className="grid grid-cols-2 gap-2.5">
-        <FormSelect
-          label="Marca:"
-          value={marca}
-          onChange={(e) => setMarca(e.target.value)}
-          options={marcas.map((m) => ({ value: m, label: m }))}
-        />
+        <div className="space-y-1">
+          <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block flex items-center justify-between">
+            <span>Marca:</span>
+            {cargandoMarcas && <Loader2 className="w-3 h-3 animate-spin text-lochmara-500" />}
+          </label>
+          <select
+            value={marca}
+            onChange={(e) => setMarca(e.target.value)}
+            disabled={cargandoMarcas || marcas.length === 0}
+            className={`w-full py-2 px-3 rounded-2xl text-xs font-bold border transition-colors cursor-pointer ${
+              isDark
+                ? 'bg-slate-900 border-slate-700 text-white'
+                : 'bg-white border-slate-300 text-slate-900'
+            }`}
+          >
+            {marcas.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div className="space-y-1">
           <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block flex items-center justify-between">
@@ -111,6 +138,45 @@ export const VehicleSpecsStep = ({
           </select>
         </div>
       </div>
+
+      {/* Campos de Entrada Manual si seleccionó "Otra Marca" o "Otro modelo" */}
+      {(esMarcaPersonalizada || esModeloPersonalizado) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 rounded-2xl border bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+          {esMarcaPersonalizada && (
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                Escribe tu Marca:
+              </label>
+              <input
+                type="text"
+                value={marcaPersonalizada}
+                onChange={(e) => setMarcaPersonalizada(e.target.value)}
+                placeholder="Ej. BYD, Changan, Starker..."
+                className={`w-full py-1.5 px-2.5 rounded-xl text-xs font-bold border transition-colors ${
+                  isDark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'
+                }`}
+              />
+            </div>
+          )}
+
+          {esModeloPersonalizado && (
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                Escribe tu Modelo / Línea:
+              </label>
+              <input
+                type="text"
+                value={modeloPersonalizado}
+                onChange={(e) => setModeloPersonalizado(e.target.value)}
+                placeholder="Ej. Dolphin Mini, MRX 150..."
+                className={`w-full py-1.5 px-2.5 rounded-xl text-xs font-bold border transition-colors ${
+                  isDark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'
+                }`}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Año, Color y Propulsión */}
       <div className="grid grid-cols-3 gap-2">

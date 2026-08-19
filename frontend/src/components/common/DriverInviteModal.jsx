@@ -72,10 +72,6 @@ export const DriverInviteModal = ({ isOpen, onClose, onRegister }) => {
               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
               <span>100% estudiantes y docentes verificados</span>
             </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span>Gana EcoPoints por huella de CO₂ mitigada</span>
-            </div>
           </div>
 
           {/* Botones de Acción */}

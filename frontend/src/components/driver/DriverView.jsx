@@ -134,7 +134,9 @@ export const DriverView = () => {
   };
 
   const manejarCambioPuntoMapa = (coords, direccion) => {
-    setPuntoCoords([coords.lat, coords.lng]);
+    const lat = Number(Array.isArray(coords) ? coords[0] : coords?.lat);
+    const lng = Number(Array.isArray(coords) ? coords[1] : (coords?.lng ?? coords?.lon));
+    setPuntoCoords([lat, lng]);
     setDireccionLugar(direccion || 'Punto en el mapa');
   };
 
@@ -210,7 +212,7 @@ export const DriverView = () => {
       >
         <div className="flex items-center justify-between">
           <div>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold flex items-center gap-1.5 w-fit mb-1 border border-emerald-500/20">
+            <span className="px-2.5 py-0.5 rounded-full bg-lochmara-500/10 text-lochmara-600 dark:text-lochmara-400 text-[10px] font-extrabold flex items-center gap-1.5 w-fit mb-1 border border-lochmara-500/20">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Cabina del Conductor
             </span>
@@ -219,8 +221,8 @@ export const DriverView = () => {
               Comparte tu cupo y reduce costos de movilidad
             </p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-600/10 text-emerald-500 flex items-center justify-center shrink-0">
-            <Car className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-2xl bg-lochmara-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-lochmara-600/20">
+            <Car className="w-5 h-5" />
           </div>
         </div>
 
@@ -229,7 +231,7 @@ export const DriverView = () => {
           <button
             type="button"
             onClick={() => setSentidoViaje('hacia_campus')}
-            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all relative z-10 cursor-pointer text-center ${
+            className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all relative z-10 cursor-pointer text-center ${
               sentidoViaje === 'hacia_campus'
                 ? 'text-white'
                 : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
@@ -238,7 +240,7 @@ export const DriverView = () => {
             {sentidoViaje === 'hacia_campus' && (
               <motion.div
                 layoutId="driver-direction-pill"
-                className="absolute inset-0 bg-emerald-600 rounded-xl shadow-md -z-10"
+                className="absolute inset-0 bg-lochmara-600 rounded-xl shadow-md -z-10"
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}
@@ -248,7 +250,7 @@ export const DriverView = () => {
           <button
             type="button"
             onClick={() => setSentidoViaje('desde_campus')}
-            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all relative z-10 cursor-pointer text-center ${
+            className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all relative z-10 cursor-pointer text-center ${
               sentidoViaje === 'desde_campus'
                 ? 'text-white'
                 : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
@@ -257,7 +259,7 @@ export const DriverView = () => {
             {sentidoViaje === 'desde_campus' && (
               <motion.div
                 layoutId="driver-direction-pill"
-                className="absolute inset-0 bg-emerald-600 rounded-xl shadow-md -z-10"
+                className="absolute inset-0 bg-lochmara-600 rounded-xl shadow-md -z-10"
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}
@@ -267,7 +269,7 @@ export const DriverView = () => {
           <button
             type="button"
             onClick={() => setSentidoViaje('entre_campus')}
-            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all relative z-10 cursor-pointer text-center ${
+            className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all relative z-10 cursor-pointer text-center ${
               sentidoViaje === 'entre_campus'
                 ? 'text-white'
                 : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
@@ -276,7 +278,7 @@ export const DriverView = () => {
             {sentidoViaje === 'entre_campus' && (
               <motion.div
                 layoutId="driver-direction-pill"
-                className="absolute inset-0 bg-emerald-600 rounded-xl shadow-md -z-10"
+                className="absolute inset-0 bg-lochmara-600 rounded-xl shadow-md -z-10"
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}
@@ -356,8 +358,13 @@ export const DriverView = () => {
       <LocationPickerModal
         isOpen={showDriverMapModal}
         onClose={() => setShowDriverMapModal(false)}
-        initialLocation={{ lat: puntoCoords[0], lng: puntoCoords[1] }}
+        initialCoords={puntoCoords}
+        initialPlaceName={direccionLugar}
         title="Selecciona el punto de tu trayecto"
+        onConfirm={(c, dir) => {
+          manejarCambioPuntoMapa(c, dir);
+          setShowDriverMapModal(false);
+        }}
         onConfirmLocation={(c, dir) => {
           manejarCambioPuntoMapa(c, dir);
           setShowDriverMapModal(false);

@@ -3,7 +3,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { Emblem } from './Emblem';
 import { NotificationCenterModal } from './NotificationCenterModal';
 import { SosEmergencyModal } from './SosEmergencyModal';
-import { UserCheck, Car, Bell, ShieldAlert, Sun, Moon } from 'lucide-react';
+import { UserCheck, Car, Bell, ShieldAlert } from 'lucide-react';
 
 export const Header = () => {
   const {
@@ -15,7 +15,6 @@ export const Header = () => {
     activePassengerBooking,
     openDriverInviteModal,
     theme,
-    toggleTheme,
   } = useAppStore();
   const [modalNotifAbierto, setModalNotifAbierto] = useState(false);
   const [modalSosAbierto, setModalSosAbierto] = useState(false);
@@ -61,21 +60,8 @@ export const Header = () => {
         </div>
       </div>
 
-      {/* Acciones de Cabecera: Tema + Rol + SOS + Notificaciones + Perfil */}
+      {/* Acciones de Cabecera: Rol + SOS + Notificaciones + Perfil */}
       <div className="flex items-center gap-1.5">
-        {/* Alternador de Tema Rápido en la Cabecera Móvil */}
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className={`p-1.5 rounded-full transition-all cursor-pointer border ${
-            theme === 'dark'
-              ? 'bg-slate-900 border-slate-800 text-amber-300 hover:bg-slate-800'
-              : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
-          }`}
-          title="Cambiar tema de la app"
-        >
-          {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-        </button>
 
         {/* Botón de Pánico SOS si hay viaje activo */}
         {hasActiveTrip && (
@@ -159,8 +145,9 @@ export const Header = () => {
         isOpen={modalSosAbierto}
         onClose={() => setModalSosAbierto(false)}
         tripInfo={{
-          driverName: activeDriverTrip?.driverName || 'Carlos Mendoza',
-          plate: activeDriverTrip?.plate || 'KLU-492',
+          driverName: activePassengerBooking?.driverName || activeDriverTrip?.driverName || user?.name || 'Carlos Mendoza',
+          plate: activePassengerBooking?.plate || activeDriverTrip?.plate || 'KLU-492',
+          vehicle: activePassengerBooking?.vehicle || activeDriverTrip?.vehicle || 'Mazda 3 (Rojo)',
         }}
       />
     </header>

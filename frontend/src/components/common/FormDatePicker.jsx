@@ -19,12 +19,29 @@ export const FormDatePicker = ({
   const { theme } = useAppStore();
   const isDark = theme === 'dark';
 
+  const stringValue = typeof value === 'string' ? value : (value?.target?.value || '');
+
+  const handleChange = (e) => {
+    const val = e.target ? e.target.value : e;
+    if (typeof onChange === 'function') {
+      onChange(val);
+    }
+  };
+
+  const handleOpenPicker = (e) => {
+    try {
+      if (typeof e.currentTarget.showPicker === 'function') {
+        e.currentTarget.showPicker();
+      }
+    } catch {}
+  };
+
   return (
     <div className={`space-y-1 ${className}`}>
       {label && (
-        <label className={`text-xs font-bold flex items-center justify-between ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-          <span className="flex items-center gap-1.5">
-            {Icon && <Icon className="w-3.5 h-3.5 text-lochmara-500" />}
+        <label className={`text-[10px] font-bold flex items-center justify-between ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+          <span className="flex items-center gap-1">
+            {Icon && <Icon className="w-3 h-3 text-lochmara-500" />}
             <span>{label}</span>
           </span>
           {required && <span className="text-[10px] text-rose-500 font-semibold">*</span>}
@@ -34,15 +51,17 @@ export const FormDatePicker = ({
       <div className="relative flex items-center">
         <input
           type="date"
-          value={value}
-          onChange={onChange}
+          value={stringValue}
+          onChange={handleChange}
+          onClick={handleOpenPicker}
+          onFocus={handleOpenPicker}
           min={min}
           max={max}
           disabled={disabled}
           required={required}
-          className={`w-full text-xs rounded-2xl px-3.5 py-2.5 border font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-lochmara-500 cursor-pointer disabled:opacity-50 shadow-2xs ${
+          className={`w-full text-xs rounded-2xl px-3 py-2 border font-bold transition-all focus:outline-none focus:ring-2 focus:ring-lochmara-500 cursor-pointer disabled:opacity-50 shadow-2xs ${
             isDark
-              ? 'bg-slate-950 border-slate-800 text-white placeholder-slate-500'
+              ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-500'
               : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'
           } ${error ? 'border-rose-500 focus:ring-rose-500' : ''} ${inputClassName}`}
         />

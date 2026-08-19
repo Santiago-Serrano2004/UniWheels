@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { routesService, tripLifecycleService } from '../../services/api';
-import { MapContainer, Marker, Popup, Polyline, useMapEvents } from 'react-leaflet';
+import { MapContainer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { AppMapTileLayer } from './AppMapTileLayer';
 import {
@@ -13,20 +14,103 @@ import {
 import { createCarVehicleMarker, createMotoVehicleMarker } from './VehicleGpsMarker';
 import { fetchRoadGeometry, lerpAngle, getPlaceCoordinates } from '../../hooks/useOsrmRoute';
 import { TripMapOverlayControls } from './TripMapOverlayControls';
+import { Route, Search, Calendar } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const pickupIcon = createPickupMarker('Punto de recogida');
 const directPickupIcon = createDirectPickupMarker('En ruta');
 const campusIcon = createCampusMarker('Campus');
 
-// Capturar clics en el mapa
-const MapClickHandler = ({ onLocationSelect }) => {
-  useMapEvents({
-    click(e) {
-      onLocationSelect([e.latlng.lat, e.latlng.lng]);
-    },
-  });
+// Componente para auto-ajustar el zoom y encuadre del mapa de forma dinámica con auto-reset
+function MapAutoBounds({ routeCoords, origin, destination, isExpanded }) {
+  const map = useMap();
+  const resetTimerRef = useRef(null);
+  const isProgrammaticMoveRef = useRef(false);
+
+  const getRouteBounds = () => {
+    const points = [];
+    if (origin && Array.isArray(origin) && origin.length >= 2) points.push(origin);
+    if (destination && Array.isArray(destination) && destination.length >= 2) points.push(destination);
+    if (routeCoords && Array.isArray(routeCoords) && routeCoords.length > 0) {
+      routeCoords.forEach((p) => {
+        if (Array.isArray(p) && p.length >= 2) points.push(p);
+      });
+    }
+    return points.length >= 2 ? L.latLngBounds(points) : null;
+  };
+
+  const fitRouteToScreen = (duration = 0.5) => {
+    if (!map) return;
+    const bounds = getRouteBounds();
+    if (bounds) {
+      try {
+        const paddingBottom = isExpanded ? 360 : 230;
+        const paddingTop = 70;
+        const paddingSide = 35;
+
+        isProgrammaticMoveRef.current = true;
+        map.fitBounds(bounds, {
+          paddingTopLeft: [paddingSide, paddingTop],
+          paddingBottomRight: [paddingSide, paddingBottom],
+          maxZoom: 16,
+          animate: true,
+          duration,
+        });
+
+        setTimeout(() => {
+          isProgrammaticMoveRef.current = false;
+        }, duration * 1000 + 100);
+      } catch (err) {
+        console.warn('Ajuste de bounds:', err);
+      }
+    } else if (origin) {
+      isProgrammaticMoveRef.current = true;
+      map.setView(origin, 14, { animate: true });
+      setTimeout(() => {
+        isProgrammaticMoveRef.current = false;
+      }, 500);
+    }
+  };
+
+  // Auto-fit inicial y cuando cambia la ruta o expansión de la tarjeta
+  useEffect(() => {
+    if (!map) return;
+    map.invalidateSize();
+    fitRouteToScreen(0.45);
+  }, [map, routeCoords, origin, destination, isExpanded]);
+
+  // Si el usuario hace zoom o mueve el mapa, esperar 4.5 segundos de inactividad y resetear a la vista normal
+  useEffect(() => {
+    if (!map) return;
+
+    const handleUserInteraction = () => {
+      if (isProgrammaticMoveRef.current) return;
+
+      if (resetTimerRef.current) {
+        clearTimeout(resetTimerRef.current);
+      }
+
+      resetTimerRef.current = setTimeout(() => {
+        fitRouteToScreen(0.65);
+      }, 4500);
+    };
+
+    map.on('dragstart', handleUserInteraction);
+    map.on('zoomstart', handleUserInteraction);
+    map.on('movestart', handleUserInteraction);
+
+    return () => {
+      if (resetTimerRef.current) {
+        clearTimeout(resetTimerRef.current);
+      }
+      map.off('dragstart', handleUserInteraction);
+      map.off('zoomstart', handleUserInteraction);
+      map.off('movestart', handleUserInteraction);
+    };
+  }, [map, routeCoords, origin, destination, isExpanded]);
+
   return null;
-};
+}
 
 export const TripMapView = () => {
   const {
@@ -34,6 +118,7 @@ export const TripMapView = () => {
     activePassengerBooking,
     bookPassengerTrip,
     cancelPassengerBooking,
+    startPassengerTrip,
     setActiveTab,
     selectedSearchRoute,
     clearSelectedSearchRoute,
@@ -41,12 +126,15 @@ export const TripMapView = () => {
   } = useAppStore();
 
   const isDark = theme === 'dark';
+  const [isCardExpanded, setIsCardExpanded] = useState(false);
+  const hasRouteToDisplay = Boolean(selectedSearchRoute || activePassengerBooking);
+
   const isBooked = Boolean(activePassengerBooking);
   const campusName = user?.campus?.name || user?.campus || 'Campus El Jardín';
 
   const initialDirection = selectedSearchRoute
-    ? selectedSearchRoute.destination.toLowerCase().includes('campus') ||
-      selectedSearchRoute.destination.toLowerCase().includes('unab')
+    ? selectedSearchRoute.destination?.toLowerCase().includes('campus') ||
+      selectedSearchRoute.destination?.toLowerCase().includes('unab')
       ? 'towards_campus'
       : 'from_campus'
     : 'towards_campus';
@@ -154,6 +242,7 @@ export const TripMapView = () => {
   useEffect(() => {
     let isMounted = true;
     async function loadGeometries() {
+      if (!hasRouteToDisplay) return;
       const main = await fetchRoadGeometry([driverOrigin, campusDestination]);
       if (isMounted) setMainRouteCoords(main);
 
@@ -165,11 +254,12 @@ export const TripMapView = () => {
     return () => {
       isMounted = false;
     };
-  }, [driverOrigin, campusDestination, selectedPickup]);
+  }, [hasRouteToDisplay, driverOrigin, campusDestination, selectedPickup]);
 
   useEffect(() => {
     let isMounted = true;
     async function evaluateDetour() {
+      if (!hasRouteToDisplay) return;
       setIsLoadingEvaluation(true);
       try {
         const response = await routesService.evaluateDetourWithAI({
@@ -191,7 +281,7 @@ export const TripMapView = () => {
     return () => {
       isMounted = false;
     };
-  }, [driverOrigin, campusDestination, selectedPickup, vehicleType]);
+  }, [hasRouteToDisplay, driverOrigin, campusDestination, selectedPickup, vehicleType]);
 
   const activePath = pickupMode === 'on_route' ? mainRouteCoords : detourRouteCoords;
 
@@ -283,9 +373,67 @@ export const TripMapView = () => {
     }
   };
 
+  // SI NO HAY RUTA QUE MOSTRAR (Se retorna DESPUÉS de declarar todos los hooks)
+  if (!hasRouteToDisplay) {
+    return (
+      <div className="h-full min-h-[460px] flex flex-col items-center justify-center p-4 text-center select-none">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className={`w-full max-w-sm p-6 rounded-3xl border shadow-xl space-y-5 ${
+            isDark
+              ? 'bg-slate-900/90 border-slate-800 text-white'
+              : 'bg-white border-slate-200 text-slate-900 shadow-sm'
+          }`}
+        >
+          {/* Icono con resplandor */}
+          <div className="w-16 h-16 rounded-3xl bg-lochmara-500/10 border border-lochmara-500/20 text-lochmara-500 flex items-center justify-center mx-auto shadow-inner">
+            <Route className="w-8 h-8" />
+          </div>
+
+          {/* Textos */}
+          <div className="space-y-1.5">
+            <h3 className="text-base font-black tracking-tight">
+              No tienes ninguna ruta activa
+            </h3>
+            <p className="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
+              Aún no has seleccionado una ruta para explorar ni tienes un viaje en curso. Elige un trayecto en el inicio para ver el mapa y la navegación GPS en vivo.
+            </p>
+          </div>
+
+          {/* Acciones */}
+          <div className="space-y-2 pt-1">
+            <button
+              type="button"
+              onClick={() => setActiveTab('home')}
+              className="w-full py-3.5 px-4 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-black transition-all flex items-center justify-center gap-2 shadow-md shadow-lochmara-600/30 cursor-pointer"
+            >
+              <Search className="w-4 h-4" />
+              <span>Explorar Viajes en Inicio</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('history')}
+              className={`w-full py-3 px-4 rounded-2xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                isDark
+                  ? 'bg-slate-800/80 hover:bg-slate-800 border-slate-700 text-slate-300'
+                  : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span>Ver Mis Rutinas Semanales</span>
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative w-full h-[calc(100vh-140px)] min-h-[500px] flex flex-col justify-between overflow-hidden rounded-3xl border select-none shadow-inner">
-      {/* MAPA LEAFLET */}
+    <div className="relative w-full h-full flex flex-col justify-between overflow-hidden select-none">
+      {/* MAPA LEAFLET A PANTALLA COMPLETA */}
       <MapContainer
         center={driverOrigin}
         zoom={13}
@@ -294,7 +442,14 @@ export const TripMapView = () => {
         className="absolute inset-0 w-full h-full z-0"
       >
         <AppMapTileLayer isDark={isDark} />
-        <MapClickHandler onLocationSelect={(coords) => handleSelectPickup(coords, 'Punto Personalizado')} />
+
+        {/* Dynamic Auto-Fit Bounds Handler con Auto-Recenter */}
+        <MapAutoBounds
+          routeCoords={activePath}
+          origin={driverOrigin}
+          destination={campusDestination}
+          isExpanded={isCardExpanded}
+        />
 
         <Marker position={driverOrigin} icon={createTeardropPin(isTowardsCampus ? 'Origen Conductor' : campusName, '#0284c7')}>
           <Popup>Punto de partida del conductor</Popup>
@@ -351,6 +506,7 @@ export const TripMapView = () => {
         activePassengerBooking={activePassengerBooking}
         setActiveTab={setActiveTab}
         cancelPassengerBooking={cancelPassengerBooking}
+        startPassengerTrip={startPassengerTrip}
         selectedSearchRoute={selectedSearchRoute}
         clearSelectedSearchRoute={clearSelectedSearchRoute}
         vehicleType={vehicleType}
@@ -374,6 +530,8 @@ export const TripMapView = () => {
         setSelectedPaymentMethod={setSelectedPaymentMethod}
         manejarReserva={manejarReserva}
         isLoadingEvaluation={isLoadingEvaluation}
+        isCardExpanded={isCardExpanded}
+        setIsCardExpanded={setIsCardExpanded}
       />
     </div>
   );

@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
+import { useAppStore } from '../../store/useAppStore';
+import { SetHomeLocationModal } from '../common/SetHomeLocationModal';
 import {
   Car,
   MapPin,
@@ -9,7 +11,9 @@ import {
   Building2,
   Navigation,
   Calendar,
+  Home,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { FormSelect } from '../common/FormSelect';
 
 export const DriverRoutePublishForm = ({
@@ -44,10 +48,29 @@ export const DriverRoutePublishForm = ({
   manejarPublicarTrayecto,
   isDark,
 }) => {
+  const { savedHomeLocation } = useAppStore();
+  const [modalConfigurarCasa, setModalConfigurarCasa] = useState(false);
+
+  const manejarClickCasa = () => {
+    if (savedHomeLocation) {
+      if (seleccionarLugarSugerido) {
+        seleccionarLugarSugerido({
+          nombre: savedHomeLocation.name,
+          direccion: savedHomeLocation.address,
+          coords: savedHomeLocation.coords,
+        });
+      }
+    } else {
+      setModalConfigurarCasa(true);
+    }
+  };
+
   const opcionesSedes = sedesInstitucion.map((sede) => ({
     value: sede.name,
     label: `${sede.name} ${sede.is_main_campus ? '(Principal)' : ''}`,
   }));
+
+  const dateInputRef = useRef(null);
 
   const isToday = fechaSalida === todayStr || !fechaSalida;
   const isTomorrow = fechaSalida === tomorrowStr;
@@ -162,13 +185,28 @@ export const DriverRoutePublishForm = ({
                 {sentidoViaje === 'hacia_campus' ? 'Desde (Punto de Partida)' : 'Hacia (Punto de Llegada)'}
               </h3>
             </div>
-            <button
-              type="button"
-              onClick={usarUbicacionActual}
-              className="text-[10px] font-bold text-lochmara-500 hover:text-lochmara-400 hover:underline cursor-pointer"
-            >
-              Usar mi ubicación GPS
-            </button>
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={manejarClickCasa}
+                className={`text-[10px] font-bold cursor-pointer flex items-center gap-1 transition-colors px-2 py-0.5 rounded-lg border ${
+                  savedHomeLocation
+                    ? 'text-amber-500 hover:text-amber-400 bg-amber-500/10 border-amber-500/20'
+                    : 'text-slate-500 hover:text-slate-400 bg-slate-500/10 border-slate-500/20'
+                }`}
+                title={savedHomeLocation ? `Usar ${savedHomeLocation.address}` : 'Configurar ubicación de Casa'}
+              >
+                <Home className="w-3 h-3" />
+                <span>Usar Casa</span>
+              </button>
+              <button
+                type="button"
+                onClick={usarUbicacionActual}
+                className="text-[10px] font-bold text-lochmara-500 hover:text-lochmara-400 hover:underline cursor-pointer"
+              >
+                Usar mi ubicación GPS
+              </button>
+            </div>
           </div>
 
           {/* Campo de búsqueda con autocompletado */}
@@ -250,43 +288,76 @@ export const DriverRoutePublishForm = ({
             <h3 className="text-xs font-black truncate">Detalles del Trayecto</h3>
           </div>
 
-          {/* Selector de Día (Pill Segmented Control) */}
-          <div className={`p-0.5 rounded-xl border flex items-center gap-0.5 ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+          {/* Selector de Día (Pill Segmented Control con Animación Fluida Spring) */}
+          <div className={`p-1 rounded-2xl border flex items-center relative transition-colors ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'}`}>
             <button
               type="button"
               onClick={() => setFechaSalida(todayStr)}
-              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                isToday ? 'bg-emerald-600 text-white shadow-xs' : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              className={`px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all cursor-pointer relative z-10 ${
+                isToday ? 'text-white' : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Hoy
+              {isToday && (
+                <motion.div
+                  layoutId="date-pill-driver"
+                  className="absolute inset-0 bg-emerald-600 rounded-xl shadow-xs -z-10"
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                />
+              )}
+              <span>Hoy</span>
             </button>
             <button
               type="button"
               onClick={() => setFechaSalida(tomorrowStr)}
-              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                isTomorrow ? 'bg-emerald-600 text-white shadow-xs' : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              className={`px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all cursor-pointer relative z-10 ${
+                isTomorrow ? 'text-white' : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Mañana
+              {isTomorrow && (
+                <motion.div
+                  layoutId="date-pill-driver"
+                  className="absolute inset-0 bg-emerald-600 rounded-xl shadow-xs -z-10"
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                />
+              )}
+              <span>Mañana</span>
             </button>
-            <label
-              className={`relative px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                isCustomDate ? 'bg-emerald-600 text-white shadow-xs' : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+            <button
+              type="button"
+              onClick={() => {
+                if (dateInputRef.current) {
+                  try {
+                    dateInputRef.current.showPicker();
+                  } catch {
+                    dateInputRef.current.focus();
+                  }
+                }
+              }}
+              className={`relative px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 z-10 ${
+                isCustomDate ? 'text-white' : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
+              {isCustomDate && (
+                <motion.div
+                  layoutId="date-pill-driver"
+                  className="absolute inset-0 bg-emerald-600 rounded-xl shadow-xs -z-10"
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                />
+              )}
               <Calendar className="w-2.5 h-2.5 shrink-0" />
               <span>{isCustomDate ? formatCustomDateLabel(fechaSalida) : 'Fecha'}</span>
               <input
+                ref={dateInputRef}
                 type="date"
                 min={todayStr}
                 value={isCustomDate ? fechaSalida : ''}
                 onChange={(e) => {
                   if (e.target.value) setFechaSalida(e.target.value);
                 }}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                className="sr-only"
+                tabIndex={-1}
               />
-            </label>
+            </button>
           </div>
         </div>
 
@@ -296,9 +367,10 @@ export const DriverRoutePublishForm = ({
             <label className="text-[10px] font-bold text-slate-400 block">Hora de Salida:</label>
             <input
               type="time"
+              step="60"
               value={horaSalida}
               onChange={(e) => setHoraSalida(e.target.value)}
-              className={`w-full py-2 px-2.5 rounded-xl text-xs font-bold border cursor-pointer ${
+              className={`w-full py-2 px-2 rounded-xl text-xs font-black border cursor-pointer text-center [color-scheme:dark] dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none ${
                 isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'
               }`}
             />
@@ -341,6 +413,21 @@ export const DriverRoutePublishForm = ({
         <Car className="w-4 h-4" />
         <span>Publicar Trayecto Universitario</span>
       </button>
+
+      {/* Modal de Configuración de Casa si no ha sido guardada */}
+      <SetHomeLocationModal
+        isOpen={modalConfigurarCasa}
+        onClose={() => setModalConfigurarCasa(false)}
+        onLocationSaved={(loc) => {
+          if (seleccionarLugarSugerido) {
+            seleccionarLugarSugerido({
+              nombre: loc.name,
+              direccion: loc.address,
+              coords: loc.coords,
+            });
+          }
+        }}
+      />
     </form>
   );
 };

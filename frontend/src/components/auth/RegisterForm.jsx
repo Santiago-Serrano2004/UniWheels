@@ -274,11 +274,11 @@ export const RegisterForm = ({ onBack }) => {
   const correoVisual = `${usuarioLimpio || 'tu_usuario'}@${institucionSeleccionada?.domain || 'unab.edu.co'}`;
 
   return (
-    <div className={`flex-1 h-full flex flex-col justify-between select-none overflow-hidden transition-colors ${
+    <div className={`flex-1 h-full w-full flex flex-col justify-between select-none overflow-hidden transition-colors ${
       isDark ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'
     }`}>
       {/* 1. BARRA SUPERIOR DE NAVEGACION */}
-      <div className="pt-4 sm:pt-4 px-6 pb-2 flex items-center justify-between">
+      <div className="pt-4 px-4 sm:px-6 pb-2 flex items-center justify-between">
         <button
           type="button"
           onClick={() => {
@@ -325,7 +325,7 @@ export const RegisterForm = ({ onBack }) => {
       </div>
 
       {/* 2. CUERPO DEL FORMULARIO */}
-      <div className="px-6 flex-1 flex flex-col justify-center max-w-sm mx-auto w-full py-2 overflow-y-auto">
+      <div className="px-6 sm:px-8 flex-1 flex flex-col justify-center max-w-md mx-auto w-full py-2 overflow-y-auto">
         <div className="space-y-3.5">
           {/* Encabezado Dinámico según Paso */}
           <div className="space-y-1 text-center sm:text-left">

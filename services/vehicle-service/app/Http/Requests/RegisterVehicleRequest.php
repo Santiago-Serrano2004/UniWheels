@@ -35,7 +35,6 @@ class RegisterVehicleRequest extends FormRequest
                 'min:5',
                 'max:7',
                 'regex:/^[A-Z]{3}\d{2}[A-Z\d]$/', // Formatos válidos: AAA123 (Carros) o AAA12D (Motos)
-                'unique:vehicles,plate_number',
             ],
             'brand' => ['required', 'string', 'max:80'],
             'model_line' => ['required', 'string', 'max:100'],

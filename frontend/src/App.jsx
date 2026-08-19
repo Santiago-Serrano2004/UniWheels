@@ -16,10 +16,14 @@ import { PassengerTripsView } from './components/trips/PassengerTripsView';
 import { DriverHistoryView } from './components/driver/DriverHistoryView';
 import { ActiveRoleConflictBlocker } from './components/common/ActiveRoleConflictBlocker';
 import { LiveTripIslandWidget } from './components/common/LiveTripIslandWidget';
+import { DriverApprovedCelebrationModal } from './components/common/DriverApprovedCelebrationModal';
 import { AnimatePresence, motion } from 'framer-motion';
+
+import { vehicleService } from './services/api';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
   const {
     user,
     isAuthenticated,
@@ -27,6 +31,7 @@ export default function App() {
     setActiveTab,
     activeRole,
     toggleRole,
+    updateDriverStatus,
     activeDriverTrip,
     activePassengerBooking,
     showWelcomeMascot,
@@ -35,6 +40,34 @@ export default function App() {
     closeDriverInviteModal,
     theme,
   } = useAppStore();
+
+  useEffect(() => {
+    if (user?.isDriver && user?.id) {
+      const ackKey = `driver_approved_ack_${user.id}`;
+      const hasAcknowledged = localStorage.getItem(ackKey);
+      if (!hasAcknowledged) {
+        setShowApprovalModal(true);
+      }
+    }
+  }, [user?.isDriver, user?.id]);
+
+  useEffect(() => {
+    if (user?.id && !user?.isDriver && (user?.driverStatus === 'pending' || user?.driverApplication)) {
+      const verificarConductor = async () => {
+        try {
+          const plate = user?.driverApplication?.plate_number || user?.driverInfo?.plate_number;
+          const res = await vehicleService.checkApprovedVehicle(user?.id, plate);
+          if (res?.has_approved_vehicle || res?.status === 'aprobado') {
+            updateDriverStatus('approved', res.data || user?.driverApplication);
+          }
+        } catch {}
+      };
+
+      verificarConductor();
+      const interval = setInterval(verificarConductor, 4000);
+      return () => clearInterval(interval);
+    }
+  }, [user?.id, user?.isDriver, user?.driverStatus, user?.driverApplication]);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -102,6 +135,24 @@ export default function App() {
     }
   };
 
+  const handleCloseApprovalModal = () => {
+    if (user?.id) {
+      localStorage.setItem(`driver_approved_ack_${user.id}`, 'true');
+    }
+    setShowApprovalModal(false);
+  };
+
+  const handleGoToDriverFromApproval = () => {
+    if (user?.id) {
+      localStorage.setItem(`driver_approved_ack_${user.id}`, 'true');
+    }
+    setShowApprovalModal(false);
+    if (activeRole !== 'driver') {
+      toggleRole();
+    }
+    setActiveTab('driver');
+  };
+
   return (
     <div
       data-theme={theme}
@@ -147,7 +198,15 @@ export default function App() {
             <LiveTripIslandWidget />
 
             {/* Contenido Principal con Scroll Independiente */}
-            <main className="flex-1 overflow-y-auto overscroll-contain px-4 py-3">
+            <main
+              className={`flex-1 min-h-0 overscroll-contain ${
+                activeTab === 'map'
+                  ? 'p-0 overflow-hidden flex flex-col'
+                  : activeTab === 'home'
+                  ? 'px-4 py-2.5 overflow-hidden flex flex-col'
+                  : 'px-4 py-2.5 overflow-y-auto'
+              }`}
+            >
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
@@ -155,7 +214,11 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.18 }}
-                  className="min-h-full pb-2"
+                  className={
+                    activeTab === 'home' || activeTab === 'map'
+                      ? 'h-full w-full flex flex-col min-h-0 overflow-hidden'
+                      : 'min-h-full pb-2'
+                  }
                 >
                   {renderActiveView()}
                 </motion.div>
@@ -166,6 +229,13 @@ export default function App() {
             <div className="shrink-0 z-40 w-full">
               <BottomNav />
             </div>
+
+            {/* Modal Pop-up de Aprobación de Conductor */}
+            <DriverApprovedCelebrationModal
+              isOpen={showApprovalModal}
+              onClose={handleCloseApprovalModal}
+              onGoToDriver={handleGoToDriverFromApproval}
+            />
 
             {/* Modal de Bienvenida con Mascota Institucional (Post-Login / Registro) */}
             <InstitutionalWelcomeModal

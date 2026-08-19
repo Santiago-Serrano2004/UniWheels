@@ -294,8 +294,79 @@ class TripLifecycleController extends Controller
                 'status' => $trip->status,
                 'is_pin_verified' => $trip->is_pin_verified,
                 'total_fare_cop' => (float) $trip->total_fare_cop,
-                'scheduled_pickup_time' => $trip->scheduled_pickup_time->toISOString(),
+                'scheduled_pickup_time' => $trip->scheduled_pickup_time?->toISOString() ?? now()->toISOString(),
             ] : null,
+        ]);
+    }
+
+    /**
+     * Obtener el historial de viajes como pasajero.
+     */
+    public function passengerHistory(Request $request): JsonResponse
+    {
+        $passengerId = $request->header('X-User-Id') ?? $request->query('passenger_id');
+
+        $query = Trip::query();
+        if ($passengerId) {
+            $query->where('passenger_id', $passengerId);
+        }
+
+        $history = $query->latest()
+            ->limit(20)
+            ->get()
+            ->map(function ($trip) {
+                return [
+                    'id' => $trip->id,
+                    'driver_name' => $trip->driver_name,
+                    'vehicle_model' => $trip->vehicle_model,
+                    'vehicle_plate' => $trip->vehicle_plate,
+                    'origin' => $trip->pickup_address,
+                    'destination' => $trip->dropoff_address,
+                    'fare_cop' => (float) $trip->total_fare_cop,
+                    'status' => $trip->status,
+                    'date' => $trip->created_at?->format('d/m/Y') ?? 'Hoy',
+                    'time' => $trip->created_at?->format('h:i A') ?? '07:00 AM',
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $history,
+        ]);
+    }
+
+    /**
+     * Obtener el historial de viajes como conductor.
+     */
+    public function driverHistory(Request $request): JsonResponse
+    {
+        $driverId = $request->header('X-User-Id') ?? $request->query('driver_id');
+
+        $query = Trip::query();
+        if ($driverId) {
+            $query->where('driver_id', $driverId);
+        }
+
+        $history = $query->latest()
+            ->limit(20)
+            ->get()
+            ->map(function ($trip) {
+                return [
+                    'id' => $trip->id,
+                    'driver_name' => $trip->driver_name,
+                    'origin' => $trip->pickup_address,
+                    'destination' => $trip->dropoff_address,
+                    'fare_cop' => (float) $trip->total_fare_cop,
+                    'earnings_cop' => (float) $trip->driver_earnings_cop,
+                    'status' => $trip->status,
+                    'date' => $trip->created_at?->format('d/m/Y') ?? 'Hoy',
+                    'time' => $trip->created_at?->format('h:i A') ?? '07:00 AM',
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $history,
         ]);
     }
 }

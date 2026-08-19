@@ -16,7 +16,8 @@ class SolicitudVehiculoAdminMail extends Mailable
     public function __construct(
         public Vehicle $vehiculo,
         public string $tokenAprobacion,
-        public string $tokenRechazo
+        public string $tokenRechazo,
+        public array $datosDocumentos = []
     ) {}
 
     public function envelope(): Envelope

@@ -304,10 +304,13 @@ export const vehicleService = {
   },
 
   // Verificar si el conductor tiene un vehículo aprobado
-  async checkApprovedVehicle(userId) {
+  async checkApprovedVehicle(userId, plateNumber) {
     try {
       const response = await vehicleApiClient.get('/vehicles/check-approved', {
-        params: { user_id: userId },
+        params: {
+          user_id: userId,
+          plate_number: plateNumber,
+        },
       });
       return response.data;
     } catch (error) {
@@ -521,25 +524,27 @@ export const routesService = {
   async evaluateDetourWithAI({ driver_origin, campus_destination, passenger_pickup, vehicle_type = 'car' }) {
     try {
       const aiResponse = await axios.post(
-        'http://localhost:8006/api/v1/optimize/detour-evaluation',
+        'http://localhost:8006/api/v1/optimize/match',
         {
-          driver_origin_lat: driver_origin[0],
-          driver_origin_lng: driver_origin[1],
-          destination_campus_lat: campus_destination[0],
-          destination_campus_lng: campus_destination[1],
-          passenger_pickup_lat: passenger_pickup[0],
-          passenger_pickup_lng: passenger_pickup[1],
-          vehicle_type: vehicle_type === 'motorcycle' ? 'motorcycle' : 'car',
-          max_allowed_detour_minutes: 15.0,
+          driver_route: {
+            origin: { lat: driver_origin[0], lng: driver_origin[1] },
+            destination: { lat: campus_destination[0], lng: campus_destination[1] },
+            vehicle_type: vehicle_type === 'motorcycle' ? 'motorcycle' : 'car',
+          },
+          passenger_request: {
+            pickup_location: { lat: passenger_pickup[0], lng: passenger_pickup[1] },
+            destination_campus: { lat: campus_destination[0], lng: campus_destination[1] },
+            max_walking_distance_meters: 500,
+          },
         },
-        { timeout: 4000 }
+        { timeout: 2500 }
       );
 
-      if (aiResponse.data?.data) {
-        return aiResponse.data;
+      if (aiResponse.data) {
+        return { success: true, data: aiResponse.data };
       }
     } catch {
-      // Fallback a cálculo predictivo
+      // Fallback local instantáneo sin error de consola
     }
 
     const latDiff = Math.abs(driver_origin[0] - passenger_pickup[0]) + Math.abs(campus_destination[0] - passenger_pickup[0]);

@@ -1,27 +1,27 @@
 import React from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { Home, Map, Wallet, User, PlusCircle, History } from 'lucide-react';
+import { Home, Map, Wallet, User, PlusCircle, Route } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const BottomNav = () => {
   const { activeTab, setActiveTab, activeRole, activeDriverTrip, theme } = useAppStore();
 
   // Configuración estricta de pestañas según el ROL ACTIVO:
-  // 1. CONDUCTOR: Inicio (Panel), Publicar, Historial de Conducción, Billetera, Perfil
-  // 2. PASAJERO: Inicio, Buscar Ruta, Historial de Viajes / Reservas, Perfil
+  // 1. CONDUCTOR: Inicio (Panel), Publicar, Viajes de Conducción, Billetera, Perfil
+  // 2. PASAJERO: Inicio, Buscar Ruta, Viajes / Reservas, Perfil
   const navItems =
     activeRole === 'driver'
       ? [
           { id: 'home', label: 'Mi Panel', icon: Home, badge: activeDriverTrip ? 'En curso' : null },
           { id: 'driver', label: 'Publicar', icon: PlusCircle },
-          { id: 'history', label: 'Historial', icon: History },
+          { id: 'history', label: 'Viajes', icon: Route },
           { id: 'wallet', label: 'Billetera', icon: Wallet },
           { id: 'profile', label: 'Perfil', icon: User },
         ]
       : [
           { id: 'home', label: 'Inicio', icon: Home },
-          { id: 'map', label: 'Buscar Ruta', icon: Map },
-          { id: 'history', label: 'Historial', icon: History },
+          { id: 'map', label: 'Ruta', icon: Map },
+          { id: 'history', label: 'Viajes', icon: Route },
           { id: 'profile', label: 'Perfil', icon: User },
         ];
 
