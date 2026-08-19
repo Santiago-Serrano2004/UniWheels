@@ -7,6 +7,7 @@ import {
   Navigation,
   CheckCircle2,
   AlertCircle,
+  Calendar,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -15,6 +16,9 @@ export const AvailableRideCard = ({
   onSelectRide,
   isDark,
   directionFilter = 'towards',
+  selectedDate,
+  todayStr,
+  tomorrowStr,
 }) => {
   const isMoto =
     ride.vehicle?.toLowerCase().includes('moto') ||
@@ -24,6 +28,13 @@ export const AvailableRideCard = ({
   // Evaluar estado de desvío IA
   const isDetourFeasible = ride.is_detour_feasible !== false;
   const isDirectRoute = ride.detour_minutes === '+0 min' || ride.is_direct;
+
+  // Formato de badge de fecha
+  const isForTomorrow = ride.scheduled_date === tomorrowStr;
+  const isCustomFuture =
+    ride.scheduled_date &&
+    ride.scheduled_date !== todayStr &&
+    ride.scheduled_date !== tomorrowStr;
 
   return (
     <motion.div
@@ -113,9 +124,22 @@ export const AvailableRideCard = ({
         )}
       </div>
 
-      {/* Footer del Card: Horarios Explícitos y Evaluación IA de Desvío */}
+      {/* Footer del Card: Horarios Explícitos, Insignia de Fecha y Evaluación IA */}
       <div className="flex items-center justify-between text-[11px] pt-0.5 gap-2">
-        <div className="flex items-center gap-2 truncate min-w-0">
+        <div className="flex items-center gap-2 truncate min-w-0 flex-wrap">
+          {/* Badge de Fecha Programada si es Mañana o Futura */}
+          {isForTomorrow ? (
+            <span className="px-1.5 py-0.5 rounded-md bg-lochmara-500/10 text-lochmara-600 dark:text-lochmara-400 font-extrabold text-[9px] flex items-center gap-0.5 shrink-0">
+              <Calendar className="w-2.5 h-2.5" />
+              <span>Mañana</span>
+            </span>
+          ) : isCustomFuture ? (
+            <span className="px-1.5 py-0.5 rounded-md bg-lochmara-500/10 text-lochmara-600 dark:text-lochmara-400 font-extrabold text-[9px] flex items-center gap-0.5 shrink-0">
+              <Calendar className="w-2.5 h-2.5" />
+              <span>{ride.scheduled_date}</span>
+            </span>
+          ) : null}
+
           {/* Horario Explícito según Sentido */}
           <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 font-bold shrink-0">
             <Clock className="w-3 h-3 text-lochmara-500" />

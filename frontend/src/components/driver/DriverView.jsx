@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { authService } from '../../services/api';
 import { placesApiService, LUGARES_POPULARES_AMB } from '../../services/placesApiService';
@@ -18,6 +18,14 @@ export const DriverView = () => {
   } = useAppStore();
 
   const isDark = theme === 'dark';
+
+  // Fechas dinámicas
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const tomorrowStr = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  }, []);
 
   // 1. Sentido del Viaje: 'hacia_campus' | 'desde_campus' | 'entre_campus'
   const [sentidoViaje, setSentidoViaje] = useState('hacia_campus');
@@ -43,7 +51,8 @@ export const DriverView = () => {
   const [mostrandoSugerencias, setMostrandoSugerencias] = useState(false);
   const [cargandoGeocodificacion, setCargandoGeocodificacion] = useState(false);
 
-  // 5. Parámetros
+  // 5. Parámetros y Fecha Programada
+  const [fechaSalida, setFechaSalida] = useState(todayStr);
   const [horaSalida, setHoraSalida] = useState('06:45');
   const [cupos, setCupos] = useState(3);
   const [tarifa, setTarifa] = useState('4500');
@@ -119,84 +128,93 @@ export const DriverView = () => {
           const dir = await placesApiService.reverseGeocode(lat, lon);
           setDireccionLugar(dir);
         },
-        () => alert('No se pudo obtener tu ubicación actual.')
+        () => {}
       );
     }
   };
 
-  const campusOrigenObj = sedesInstitucion.find((s) => s.name === sedeSeleccionada);
-  const coordsSedeOrigen =
-    campusOrigenObj && campusOrigenObj.latitude && campusOrigenObj.longitude
-      ? [campusOrigenObj.latitude, campusOrigenObj.longitude]
-      : [7.119346, -73.104278];
+  const manejarCambioPuntoMapa = (coords, direccion) => {
+    setPuntoCoords([coords.lat, coords.lng]);
+    setDireccionLugar(direccion || 'Punto en el mapa');
+  };
 
-  const campusDestinoObj = sedesInstitucion.find((s) => s.name === sedeDestinoSeleccionada);
-  const coordsSedeDestino =
-    campusDestinoObj && campusDestinoObj.latitude && campusDestinoObj.longitude
-      ? [campusDestinoObj.latitude, campusDestinoObj.longitude]
-      : [7.066491, -73.103789];
+  // Coordenadas calculadas de la sede seleccionada
+  const sedeActual = sedesInstitucion.find((s) => s.name === sedeSeleccionada) || sedesInstitucion[0];
+  const sedeDestinoActual = sedesInstitucion.find((s) => s.name === sedeDestinoSeleccionada) || sedesInstitucion[1] || sedesInstitucion[0];
 
+  const coordsSedeActual = [sedeActual?.latitude || 7.1193, sedeActual?.longitude || -73.1042];
+  const coordsSedeDestino = [sedeDestinoActual?.latitude || 7.0664, sedeDestinoActual?.longitude || -73.1037];
+
+  // Configuración de origen/destino según sentido
+  const { origenTexto, destinoTexto, trazadoRuta } = useMemo(() => {
+    if (sentidoViaje === 'hacia_campus') {
+      return {
+        origenTexto: direccionLugar,
+        destinoTexto: sedeSeleccionada,
+        trazadoRuta: [puntoCoords, coordsSedeActual],
+      };
+    } else if (sentidoViaje === 'desde_campus') {
+      return {
+        origenTexto: sedeSeleccionada,
+        destinoTexto: direccionLugar,
+        trazadoRuta: [coordsSedeActual, puntoCoords],
+      };
+    } else {
+      return {
+        origenTexto: sedeSeleccionada,
+        destinoTexto: sedeDestinoSeleccionada,
+        trazadoRuta: [coordsSedeActual, coordsSedeDestino],
+      };
+    }
+  }, [sentidoViaje, direccionLugar, sedeSeleccionada, sedeDestinoSeleccionada, puntoCoords, coordsSedeActual, coordsSedeDestino]);
+
+  // Manejar publicación del trayecto
   const manejarPublicarTrayecto = (e) => {
     e.preventDefault();
-    if (driverWalletBalance < 2000) {
+
+    if (driverWalletBalance < 1500) {
       setModalSaldoInsuficiente(true);
       return;
     }
 
-    let origenTexto = direccionLugar;
-    let destinoTexto = sedeSeleccionada;
-    let coordsOrigen = puntoCoords;
-    let coordsDestino = coordsSedeOrigen;
-
-    if (sentidoViaje === 'desde_campus') {
-      origenTexto = sedeSeleccionada;
-      destinoTexto = direccionLugar;
-      coordsOrigen = coordsSedeOrigen;
-      coordsDestino = puntoCoords;
-    } else if (sentidoViaje === 'entre_campus') {
-      origenTexto = sedeSeleccionada;
-      destinoTexto = sedeDestinoSeleccionada;
-      coordsOrigen = coordsSedeOrigen;
-      coordsDestino = coordsSedeDestino;
-    }
-
-    publishDriverTrip({
+    const nuevoViaje = {
+      id: `TRIP-${Date.now().toString().slice(-4)}`,
       direction: sentidoViaje,
-      campus: sedeSeleccionada,
-      destinationCampus: sentidoViaje === 'entre_campus' ? sedeDestinoSeleccionada : null,
-      meetingPoint: (sentidoViaje === 'desde_campus' || sentidoViaje === 'entre_campus') ? puntoEncuentroCampus : null,
       origin: origenTexto,
       destination: destinoTexto,
-      originCoords: coordsOrigen,
-      destinationCoords: coordsDestino,
-      departureTime: horaSalida,
-      seats: Number(cupos),
-      fare: `$ ${Number(tarifa).toLocaleString('es-CO')}`,
-      fare_cop: Number(tarifa),
-    });
+      meeting_point: (sentidoViaje === 'desde_campus' || sentidoViaje === 'entre_campus') ? puntoEncuentroCampus : null,
+      departure_date: fechaSalida,
+      departure_time: horaSalida,
+      available_seats: cupos,
+      fare_cop: parseInt(tarifa, 10),
+      route_path: trazadoRuta,
+      status: 'publicado',
+      passengers: [],
+    };
+
+    publishDriverTrip(nuevoViaje);
   };
 
+  // Si el conductor tiene un viaje activo en curso, renderiza la cabina de navegación GPS en vivo
   if (activeDriverTrip) {
-    return <DriverLiveNavigationCockpit activeTrip={activeDriverTrip} />;
+    return <DriverLiveNavigationCockpit />;
   }
 
   return (
-    <div className="space-y-4 pb-6 select-none">
-      {/* 1. HERO CARD CON TOGGLE DE SENTIDO Y CORREDOR ORIGEN-DESTINO */}
+    <div className="space-y-4 pb-12 select-none">
+      {/* 1. HERO CARD DEL CONDUCTOR: SENTIDO Y CORREDOR */}
       <section
-        className={`rounded-3xl p-5 border shadow-sm space-y-4 transition-colors ${
+        className={`rounded-3xl p-4 border shadow-sm space-y-3 transition-colors ${
           isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
         }`}
       >
         <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                Cabina del Conductor
-              </span>
-            </div>
-            <h2 className="text-xl font-black tracking-tight">Publicar Nuevo Trayecto</h2>
+          <div>
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold flex items-center gap-1.5 w-fit mb-1 border border-emerald-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Cabina del Conductor
+            </span>
+            <h2 className="text-base font-black">Publicar Nuevo Trayecto</h2>
             <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               Comparte tu cupo y reduce costos de movilidad
             </p>
@@ -278,17 +296,12 @@ export const DriverView = () => {
                 Punto de Origen (Partida)
               </span>
               <p className="text-xs font-black truncate">
-                {sentidoViaje === 'hacia_campus' ? direccionLugar : sedeSeleccionada}
+                {origenTexto}
               </p>
-              {(sentidoViaje === 'desde_campus' || sentidoViaje === 'entre_campus') && (
-                <p className="text-[10px] text-lochmara-600 dark:text-lochmara-400 font-bold truncate mt-0.5">
-                  Punto de Encuentro: {puntoEncuentroCampus}
-                </p>
-              )}
             </div>
           </div>
 
-          <div className={`border-l-2 border-dashed h-3 ml-1 ${isDark ? 'border-slate-700' : 'border-slate-300'}`} />
+          <div className={`border-l-2 border-dashed h-3 ml-1.5 ${isDark ? 'border-slate-800' : 'border-slate-300'}`} />
 
           {/* DESTINO */}
           <div className="flex items-start gap-2.5">
@@ -298,18 +311,14 @@ export const DriverView = () => {
                 Punto de Destino (Llegada)
               </span>
               <p className="text-xs font-black truncate">
-                {sentidoViaje === 'hacia_campus'
-                  ? sedeSeleccionada
-                  : sentidoViaje === 'desde_campus'
-                  ? direccionLugar
-                  : sedeDestinoSeleccionada}
+                {destinoTexto}
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 2. FORMULARIO PRINCIPAL */}
+      {/* 2. FORMULARIO MODULAR DEL CONDUCTOR */}
       <DriverRoutePublishForm
         sedesInstitucion={sedesInstitucion}
         sedeSeleccionada={sedeSeleccionada}
@@ -329,6 +338,10 @@ export const DriverView = () => {
         usarUbicacionActual={usarUbicacionActual}
         setShowDriverMapModal={setShowDriverMapModal}
         buscadorRef={buscadorRef}
+        fechaSalida={fechaSalida}
+        setFechaSalida={setFechaSalida}
+        todayStr={todayStr}
+        tomorrowStr={tomorrowStr}
         horaSalida={horaSalida}
         setHoraSalida={setHoraSalida}
         cupos={cupos}
@@ -339,24 +352,22 @@ export const DriverView = () => {
         isDark={isDark}
       />
 
-      {/* 3. MODAL DE AJUSTE EN MAPA */}
+      {/* 3. MODAL SELECTOR DE PUNTO EN MAPA */}
       <LocationPickerModal
         isOpen={showDriverMapModal}
         onClose={() => setShowDriverMapModal(false)}
         initialLocation={{ lat: puntoCoords[0], lng: puntoCoords[1] }}
-        title={sentidoViaje === 'hacia_campus' ? 'Selecciona tu Punto de Salida' : 'Selecciona tu Punto de Llegada'}
-        onConfirmLocation={(coords, address) => {
-          setPuntoCoords([coords.lat, coords.lng]);
-          setDireccionLugar(address || 'Ubicación seleccionada en el mapa');
+        title="Selecciona el punto de tu trayecto"
+        onConfirmLocation={(c, dir) => {
+          manejarCambioPuntoMapa(c, dir);
           setShowDriverMapModal(false);
         }}
       />
 
-      {/* 4. MODAL DE SALDO INSUFICIENTE */}
+      {/* 4. MODAL SALDO INSUFICIENTE */}
       <InsufficientBalanceModal
         isOpen={modalSaldoInsuficiente}
         onClose={() => setModalSaldoInsuficiente(false)}
-        balance={driverWalletBalance}
       />
     </div>
   );

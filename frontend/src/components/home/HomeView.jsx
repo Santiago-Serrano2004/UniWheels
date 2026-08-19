@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { authService } from '../../services/api';
 import { placesApiService } from '../../services/placesApiService';
@@ -7,7 +7,7 @@ import { CampusSelectorModal } from './CampusSelectorModal';
 import { ActiveTripCompactBanner } from './ActiveTripCompactBanner';
 import { HomeHeroRouteCard } from './HomeHeroRouteCard';
 import { AvailableRideCard } from './AvailableRideCard';
-import { Navigation, Car, Building2, Clock } from 'lucide-react';
+import { Navigation, Car } from 'lucide-react';
 
 export const HomeView = () => {
   const {
@@ -21,10 +21,21 @@ export const HomeView = () => {
 
   const isDark = theme === 'dark';
 
+  // Fechas de referencia dinámica (Hoy y Mañana)
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const tomorrowStr = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  }, []);
+
   // 1. Sentido del viaje: 'towards' | 'from' | 'inter_campus'
   const [directionFilter, setDirectionFilter] = useState('towards');
 
-  // 2. Campus Seleccionados y Modal
+  // 2. Programación de Fecha: 'todayStr', 'tomorrowStr', o 'YYYY-MM-DD'
+  const [selectedDate, setSelectedDate] = useState(todayStr);
+
+  // 3. Campus Seleccionados y Modal
   const [selectedCampus, setSelectedCampus] = useState('Campus El Jardín');
   const [selectedDestinationCampus, setSelectedDestinationCampus] = useState('Campus El Bosque');
   const [modalCampusTarget, setModalCampusTarget] = useState('origin'); // 'origin' | 'destination'
@@ -73,20 +84,20 @@ export const HomeView = () => {
     },
   ]);
 
-  // 3. Punto Personalizado (Origen si 'towards', Destino si 'from')
+  // 4. Punto Personalizado (Origen si 'towards', Destino si 'from')
   const [editablePointName, setEditablePointName] = useState('');
   const [editableCoords, setEditableCoords] = useState(null);
   const [isSelectingPointOnMap, setIsSelectingPointOnMap] = useState(false);
 
-  // 4. Búsqueda y Sugerencias
+  // 5. Búsqueda y Sugerencias
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // 5. Filtro de Horario del Pasajero (Ventana < 1 hora)
+  // 6. Filtro de Horario del Pasajero (Ventana < 1 hora)
   const [passengerTimeFilter, setPassengerTimeFilter] = useState('');
 
-  // 6. Catálogo Dinámico de Viajes
+  // 7. Catálogo Dinámico de Viajes (Con soporte multi-día y recurrencia)
   const [allAvailableRides] = useState([
     {
       id: 'ride_101',
@@ -98,6 +109,8 @@ export const HomeView = () => {
       origin: 'Cañaveral - C.C. Cañaveral',
       destination: 'Campus El Jardín',
       meeting_point: null,
+      scheduled_date: todayStr,
+      is_recurring_daily: true,
       departure_time: '06:30 AM',
       arrival_time: '06:55 AM',
       available_seats: 3,
@@ -118,6 +131,8 @@ export const HomeView = () => {
       origin: 'Cabecera - Parque San Pío',
       destination: 'CSU — Centro de Servicios Universitarios',
       meeting_point: null,
+      scheduled_date: todayStr,
+      is_recurring_daily: true,
       departure_time: '07:05 AM',
       arrival_time: '07:20 AM',
       available_seats: 2,
@@ -138,6 +153,8 @@ export const HomeView = () => {
       origin: 'Campus El Jardín',
       destination: 'Provenza - Estación Metrolínea',
       meeting_point: 'Portería Principal Calle 48',
+      scheduled_date: todayStr,
+      is_recurring_daily: true,
       departure_time: '05:15 PM',
       arrival_time: '05:40 PM',
       available_seats: 4,
@@ -158,6 +175,8 @@ export const HomeView = () => {
       origin: 'Piedecuesta - Centro',
       destination: 'Campus El Jardín',
       meeting_point: null,
+      scheduled_date: todayStr,
+      is_recurring_daily: true,
       departure_time: '06:10 AM',
       arrival_time: '06:45 AM',
       available_seats: 1,
@@ -178,6 +197,8 @@ export const HomeView = () => {
       origin: 'Campus El Jardín',
       destination: 'Campus El Bosque',
       meeting_point: 'Bahía de Parqueadero Edificio Central',
+      scheduled_date: todayStr,
+      is_recurring_daily: true,
       departure_time: '11:30 AM',
       arrival_time: '11:55 AM',
       available_seats: 3,
@@ -198,6 +219,8 @@ export const HomeView = () => {
       origin: 'Campus El Bosque',
       destination: 'Campus El Jardín',
       meeting_point: 'Portería Principal Cañaveral',
+      scheduled_date: todayStr,
+      is_recurring_daily: true,
       departure_time: '01:45 PM',
       arrival_time: '02:10 PM',
       available_seats: 2,
@@ -218,6 +241,8 @@ export const HomeView = () => {
       origin: 'Campus El Bosque',
       destination: 'Cabecera del Llano',
       meeting_point: 'Kiosco Cafetería Central',
+      scheduled_date: todayStr,
+      is_recurring_daily: true,
       departure_time: '06:00 PM',
       arrival_time: '06:30 PM',
       available_seats: 3,
@@ -227,6 +252,50 @@ export const HomeView = () => {
       is_detour_feasible: true,
       is_direct: false,
       driver_avatar_initials: 'DT',
+    },
+    {
+      id: 'ride_108',
+      driver_name: 'Santiago Serrano',
+      vehicle: 'Mazda CX-30 (Gris)',
+      plate: 'GHT-921',
+      rating: 5.0,
+      direction: 'towards',
+      origin: 'Girón - Casco Antiguo',
+      destination: 'Campus El Jardín',
+      meeting_point: null,
+      scheduled_date: tomorrowStr,
+      is_recurring_daily: true,
+      departure_time: '06:15 AM',
+      arrival_time: '06:50 AM',
+      available_seats: 3,
+      fare: '$ 4.500',
+      fare_cop: 4500,
+      detour_minutes: '+2 min',
+      is_detour_feasible: true,
+      is_direct: false,
+      driver_avatar_initials: 'SS',
+    },
+    {
+      id: 'ride_109',
+      driver_name: 'Natalia Castro',
+      vehicle: 'Renault Kwid (Naranja)',
+      plate: 'KPB-714',
+      rating: 4.94,
+      direction: 'from',
+      origin: 'Campus El Jardín',
+      destination: 'Floridablanca - Cañaveral',
+      meeting_point: 'Portería Principal Calle 48',
+      scheduled_date: tomorrowStr,
+      is_recurring_daily: true,
+      departure_time: '06:15 PM',
+      arrival_time: '06:45 PM',
+      available_seats: 2,
+      fare: '$ 4.000',
+      fare_cop: 4000,
+      detour_minutes: '+0 min',
+      is_detour_feasible: true,
+      is_direct: true,
+      driver_avatar_initials: 'NC',
     },
   ]);
 
@@ -296,6 +365,7 @@ export const HomeView = () => {
       origin: ride.origin,
       destination: ride.destination,
       meeting_point: ride.meeting_point,
+      scheduled_date: ride.scheduled_date || selectedDate,
       departureTime: ride.departure_time,
       arrivalTime: ride.arrival_time,
       availableSeats: ride.available_seats,
@@ -329,9 +399,18 @@ export const HomeView = () => {
     return diff <= 60;
   };
 
-  // Filtrar viajes disponibles según Modalidad, Sedes y Ventana de Tiempo (< 1 hr)
+  // Filtrar viajes disponibles según Fecha Programada, Modalidad, Sedes y Ventana de Tiempo (< 1 hr)
   const filteredRides = allAvailableRides.filter((ride) => {
-    // 1. Filtro por sentido
+    // 1. Filtro por Fecha (Coincidencia de fecha específica o rutas rutinarias recurrentes)
+    if (selectedDate) {
+      const matchExactDate = ride.scheduled_date === selectedDate;
+      const isRecurring = Boolean(ride.is_recurring_daily);
+      if (!matchExactDate && !isRecurring) {
+        return false;
+      }
+    }
+
+    // 2. Filtro por sentido
     if (directionFilter === 'towards') {
       if (ride.direction !== 'towards') return false;
       const campusKey = selectedCampus.toLowerCase().replace('campus ', '');
@@ -349,7 +428,7 @@ export const HomeView = () => {
       }
     }
 
-    // 2. Filtro de rango de tiempo (< 1 hora)
+    // 3. Filtro de rango de tiempo (< 1 hora)
     if (passengerTimeFilter) {
       const timeToCheck = directionFilter === 'towards' ? ride.arrival_time : ride.departure_time;
       if (!isWithinOneHour(timeToCheck, passengerTimeFilter)) {
@@ -370,7 +449,7 @@ export const HomeView = () => {
         cancelPassengerBooking={cancelPassengerBooking}
       />
 
-      {/* 2. HERO CARD CON 3 SENTIDOS, CORREDOR Y FILTRO DE HORARIO */}
+      {/* 2. HERO CARD CON 3 SENTIDOS, CORREDOR, SELECTOR DE DÍA Y HORA */}
       <HomeHeroRouteCard
         user={user}
         isDark={isDark}
@@ -388,6 +467,10 @@ export const HomeView = () => {
         handleSelectSuggestion={handleSelectSuggestion}
         passengerTimeFilter={passengerTimeFilter}
         setPassengerTimeFilter={setPassengerTimeFilter}
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+        todayStr={todayStr}
+        tomorrowStr={tomorrowStr}
       />
 
       {/* 3. VIAJES DISPONIBLES */}
@@ -398,7 +481,7 @@ export const HomeView = () => {
             <span>Viajes Disponibles ({filteredRides.length})</span>
           </h3>
           <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
-            {passengerTimeFilter ? 'Ventana < 1 hora activa' : 'Rutas Verificadas'}
+            {selectedDate === tomorrowStr ? 'Programados para Mañana' : passengerTimeFilter ? 'Ventana < 1h activa' : 'Rutas Verificadas'}
           </span>
         </div>
 
@@ -411,6 +494,9 @@ export const HomeView = () => {
                 onSelectRide={handleSelectRide}
                 isDark={isDark}
                 directionFilter={directionFilter}
+                selectedDate={selectedDate}
+                todayStr={todayStr}
+                tomorrowStr={tomorrowStr}
               />
             ))}
           </div>
@@ -418,12 +504,12 @@ export const HomeView = () => {
           <div className={`p-5 rounded-2xl border text-center space-y-1.5 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
             <Car className="w-6 h-6 mx-auto text-slate-400" />
             <p className={`text-xs font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-              No hay viajes disponibles para este trayecto u horario.
+              No hay viajes disponibles para este día u horario.
             </p>
             <p className="text-[10px] text-slate-400">
               {passengerTimeFilter
                 ? 'Prueba ampliando el filtro de hora o seleccionando "Todas".'
-                : 'Prueba cambiando el sentido o la sede seleccionada.'}
+                : 'Prueba cambiando la fecha o el sentido del trayecto.'}
             </p>
           </div>
         )}

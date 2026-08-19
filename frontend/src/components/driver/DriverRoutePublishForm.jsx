@@ -7,8 +7,8 @@ import {
   CheckCircle2,
   Loader2,
   Building2,
-  ChevronRight,
   Navigation,
+  Calendar,
 } from 'lucide-react';
 import { FormSelect } from '../common/FormSelect';
 
@@ -31,6 +31,10 @@ export const DriverRoutePublishForm = ({
   usarUbicacionActual,
   setShowDriverMapModal,
   buscadorRef,
+  fechaSalida,
+  setFechaSalida,
+  todayStr,
+  tomorrowStr,
   horaSalida,
   setHoraSalida,
   cupos,
@@ -44,6 +48,22 @@ export const DriverRoutePublishForm = ({
     value: sede.name,
     label: `${sede.name} ${sede.is_main_campus ? '(Principal)' : ''}`,
   }));
+
+  const isToday = fechaSalida === todayStr || !fechaSalida;
+  const isTomorrow = fechaSalida === tomorrowStr;
+  const isCustomDate = !isToday && !isTomorrow;
+
+  // Formatear etiqueta de fecha personalizada
+  const formatCustomDateLabel = (dateStr) => {
+    if (!dateStr) return 'Otra fecha';
+    try {
+      const [year, month, day] = dateStr.split('-');
+      const d = new Date(year, month - 1, day);
+      return d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' });
+    } catch {
+      return dateStr;
+    }
+  };
 
   return (
     <form onSubmit={manejarPublicarTrayecto} className="space-y-4">
@@ -139,44 +159,43 @@ export const DriverRoutePublishForm = ({
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-emerald-500" />
               <h3 className="text-xs font-black">
-                {sentidoViaje === 'hacia_campus' ? '¿Desde dónde sales? (Punto de Partida)' : '¿Hacia dónde te diriges? (Punto de Llegada)'}
+                {sentidoViaje === 'hacia_campus' ? 'Desde (Punto de Partida)' : 'Hacia (Punto de Llegada)'}
               </h3>
             </div>
             <button
               type="button"
               onClick={usarUbicacionActual}
-              className="text-[11px] font-bold text-lochmara-500 hover:text-lochmara-400 cursor-pointer"
+              className="text-[10px] font-bold text-lochmara-500 hover:text-lochmara-400 hover:underline cursor-pointer"
             >
-              Mi GPS Actual
+              Usar mi ubicación GPS
             </button>
           </div>
 
-          {/* Buscador y dropdown de sugerencias */}
+          {/* Campo de búsqueda con autocompletado */}
           <div ref={buscadorRef} className="relative">
-            <div
-              className={`flex items-center gap-2 px-3 py-2 rounded-2xl border ${
-                isDark
-                  ? 'bg-slate-950 border-slate-800 focus-within:border-lochmara-500'
-                  : 'bg-slate-50 border-slate-200 focus-within:border-lochmara-500'
-              }`}
-            >
-              <Search className="w-4 h-4 text-slate-400 shrink-0" />
+            <div className="relative flex items-center">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
               <input
                 type="text"
                 value={busquedaTexto}
                 onChange={(e) => setBusquedaTexto(e.target.value)}
-                placeholder="Buscar barrio, conjunto o sector..."
-                className={`w-full bg-transparent text-xs font-bold focus:outline-hidden ${
-                  isDark ? 'text-white' : 'text-slate-900'
+                onFocus={() => setMostrandoSugerencias(true)}
+                placeholder="Busca tu barrio, centro comercial o dirección..."
+                className={`w-full pl-9 pr-8 py-2.5 rounded-2xl text-xs font-bold border transition-colors focus:outline-hidden ${
+                  isDark
+                    ? 'bg-slate-950 border-slate-700 text-white placeholder:text-slate-500 focus:border-lochmara-500'
+                    : 'bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-lochmara-500'
                 }`}
               />
-              {cargandoGeocodificacion && <Loader2 className="w-3.5 h-3.5 animate-spin text-lochmara-500" />}
+              {cargandoGeocodificacion && (
+                <Loader2 className="w-4 h-4 text-lochmara-500 animate-spin absolute right-3 pointer-events-none" />
+              )}
             </div>
 
-            {/* Sugerencias */}
+            {/* Sugerencias desplegables */}
             {mostrandoSugerencias && sugerencias.length > 0 && (
               <div
-                className={`absolute top-full left-0 right-0 z-30 mt-1 rounded-2xl border shadow-xl overflow-hidden divide-y ${
+                className={`absolute z-30 w-full mt-1.5 rounded-2xl shadow-xl border overflow-hidden divide-y ${
                   isDark
                     ? 'bg-slate-900 border-slate-800 divide-slate-800 text-white'
                     : 'bg-white border-slate-200 divide-slate-100 text-slate-900'
@@ -187,15 +206,15 @@ export const DriverRoutePublishForm = ({
                     key={idx}
                     type="button"
                     onClick={() => seleccionarLugarSugerido(sug)}
-                    className={`w-full p-2.5 text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                    className={`w-full text-left px-3.5 py-2.5 text-xs flex items-center gap-2.5 transition-colors cursor-pointer ${
                       isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-50'
                     }`}
                   >
+                    <MapPin className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                     <div className="truncate">
                       <p className="font-bold truncate">{sug.nombre}</p>
                       <p className="text-[10px] text-slate-400 truncate">{sug.direccion}</p>
                     </div>
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   </button>
                 ))}
               </div>
@@ -219,15 +238,71 @@ export const DriverRoutePublishForm = ({
         </section>
       )}
 
-      {/* 4. PARÁMETROS DEL VIAJE: HORA, CUPOS Y TARIFA */}
+      {/* 4. PARÁMETROS DEL VIAJE: FECHA, HORA, CUPOS Y TARIFA */}
       <section
         className={`rounded-3xl p-4 border shadow-sm space-y-3 transition-colors ${
           isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
         }`}
       >
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-lochmara-500" />
-          <h3 className="text-xs font-black">Detalles del Trayecto</h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-lochmara-500" />
+            <h3 className="text-xs font-black">Detalles del Trayecto</h3>
+          </div>
+
+          {/* Selector de Día (Hoy / Mañana / Otra Fecha) */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setFechaSalida(todayStr)}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer border ${
+                isToday
+                  ? 'bg-emerald-600 border-emerald-500 text-white shadow-2xs'
+                  : isDark
+                  ? 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                  : 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Hoy
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setFechaSalida(tomorrowStr)}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer border ${
+                isTomorrow
+                  ? 'bg-emerald-600 border-emerald-500 text-white shadow-2xs'
+                  : isDark
+                  ? 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                  : 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Mañana
+            </button>
+
+            <label
+              className={`relative px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer border flex items-center gap-1 ${
+                isCustomDate
+                  ? 'bg-emerald-600 border-emerald-500 text-white shadow-2xs'
+                  : isDark
+                  ? 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                  : 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <span>{isCustomDate ? formatCustomDateLabel(fechaSalida) : 'Fecha'}</span>
+              <input
+                type="date"
+                min={todayStr}
+                value={isCustomDate ? fechaSalida : ''}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setFechaSalida(e.target.value);
+                  }
+                }}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              />
+            </label>
+          </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2.5">
