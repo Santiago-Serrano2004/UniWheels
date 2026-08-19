@@ -29,20 +29,19 @@ export const HomeHeroRouteCard = ({
       ? '¿Dónde te recogemos? Barrio, dirección...'
       : '¿A dónde te diriges? Barrio, dirección...';
 
-  const timeLabel =
-    directionFilter === 'towards' ? 'Llegada deseada:' : 'Salida deseada:';
+  const timeLabel = directionFilter === 'towards' ? 'Llegada:' : 'Salida:';
 
   const isToday = selectedDate === todayStr || !selectedDate;
   const isTomorrow = selectedDate === tomorrowStr;
   const isCustomDate = !isToday && !isTomorrow;
 
-  // Formatear fecha personalizada (ej: "Jue, 21 Ago")
+  // Formatear fecha personalizada de forma compacta (ej: "21 Ago")
   const formatCustomDateLabel = (dateStr) => {
-    if (!dateStr) return 'Otro día';
+    if (!dateStr) return 'Fecha';
     try {
       const [year, month, day] = dateStr.split('-');
       const d = new Date(year, month - 1, day);
-      return d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' });
+      return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }).replace('.', '');
     } catch {
       return dateStr;
     }
@@ -331,85 +330,78 @@ export const HomeHeroRouteCard = ({
         </AnimatePresence>
       </div>
 
-      {/* 4. PROGRAMACIÓN MULTIDÍA Y FILTRO HORARIO */}
-      <div className="mt-3 pt-2.5 border-t dark:border-slate-800/80 border-slate-100 space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          {/* Selector de Día (Hoy / Mañana / Fecha) */}
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] font-bold text-slate-400 mr-1 flex items-center gap-1">
-              <Calendar className="w-3 h-3 text-lochmara-500" />
-              <span>Día:</span>
-            </span>
+      {/* 4. BARRA DE CONTROL DE FECHA Y HORARIO (DISTRIBUCIÓN EQUILIBRADA EN 2 COLUMNAS) */}
+      <div className="mt-3 pt-2.5 border-t dark:border-slate-800/80 border-slate-100 grid grid-cols-2 gap-2">
+        {/* Columna Izquierda: Selector de Día */}
+        <div
+          className={`p-1 rounded-xl border flex items-center justify-between transition-colors ${
+            isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+          }`}
+        >
+          <button
+            type="button"
+            onClick={() => setSelectedDate(todayStr)}
+            className={`flex-1 py-1 rounded-lg text-[10px] font-bold transition-all text-center cursor-pointer ${
+              isToday
+                ? 'bg-lochmara-600 text-white shadow-xs'
+                : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Hoy
+          </button>
 
-            {/* Chip Hoy */}
-            <button
-              type="button"
-              onClick={() => setSelectedDate(todayStr)}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer border ${
-                isToday
-                  ? 'bg-lochmara-600 border-lochmara-500 text-white shadow-2xs'
-                  : isDark
-                  ? 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
-                  : 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Hoy
-            </button>
+          <button
+            type="button"
+            onClick={() => setSelectedDate(tomorrowStr)}
+            className={`flex-1 py-1 rounded-lg text-[10px] font-bold transition-all text-center cursor-pointer ${
+              isTomorrow
+                ? 'bg-lochmara-600 text-white shadow-xs'
+                : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Mañana
+          </button>
 
-            {/* Chip Mañana */}
-            <button
-              type="button"
-              onClick={() => setSelectedDate(tomorrowStr)}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer border ${
-                isTomorrow
-                  ? 'bg-lochmara-600 border-lochmara-500 text-white shadow-2xs'
-                  : isDark
-                  ? 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
-                  : 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Mañana
-            </button>
+          <label
+            className={`relative flex-1 py-1 px-1 rounded-lg text-[10px] font-bold transition-all text-center cursor-pointer flex items-center justify-center gap-0.5 ${
+              isCustomDate
+                ? 'bg-lochmara-600 text-white shadow-xs'
+                : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Calendar className="w-2.5 h-2.5 shrink-0" />
+            <span className="truncate">{isCustomDate ? formatCustomDateLabel(selectedDate) : 'Fecha'}</span>
+            <input
+              type="date"
+              min={todayStr}
+              value={isCustomDate ? selectedDate : ''}
+              onChange={(e) => {
+                if (e.target.value) setSelectedDate(e.target.value);
+              }}
+              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+            />
+          </label>
+        </div>
 
-            {/* Chip Selector de Fecha Personalizada */}
-            <label
-              className={`relative px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer border flex items-center gap-1 ${
-                isCustomDate
-                  ? 'bg-lochmara-600 border-lochmara-500 text-white shadow-2xs'
-                  : isDark
-                  ? 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
-                  : 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <span>{isCustomDate ? formatCustomDateLabel(selectedDate) : 'Fecha'}</span>
-              <input
-                type="date"
-                min={todayStr}
-                value={isCustomDate ? selectedDate : ''}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    setSelectedDate(e.target.value);
-                  }
-                }}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              />
-            </label>
+        {/* Columna Derecha: Selector de Hora */}
+        <div
+          className={`p-1 px-2 rounded-xl border flex items-center justify-between gap-1 transition-colors ${
+            isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+          }`}
+        >
+          <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 truncate min-w-0">
+            <Clock className="w-3 h-3 text-lochmara-500 shrink-0" />
+            <span className="truncate">{timeLabel}</span>
           </div>
 
-          {/* Selector de Hora Deseada (< 1 hora) */}
-          <div className="flex items-center gap-1.5 ml-auto">
-            <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
-              <Clock className="w-3 h-3 text-lochmara-500 shrink-0" />
-              <span>{timeLabel}</span>
-            </span>
-
+          <div className="flex items-center gap-1 shrink-0">
             <input
               type="time"
               value={passengerTimeFilter || ''}
               onChange={(e) => setPassengerTimeFilter(e.target.value)}
-              className={`py-0.5 px-2 rounded-lg text-[11px] font-bold border transition-colors cursor-pointer ${
+              className={`py-0.5 px-1.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
                 isDark
-                  ? 'bg-slate-950 border-slate-700 text-white focus:border-lochmara-500'
+                  ? 'bg-slate-900 border-slate-700 text-white focus:border-lochmara-500'
                   : 'bg-white border-slate-300 text-slate-900 focus:border-lochmara-500 shadow-2xs'
               }`}
             />
@@ -417,10 +409,10 @@ export const HomeHeroRouteCard = ({
               <button
                 type="button"
                 onClick={() => setPassengerTimeFilter('')}
-                className="text-[9px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold cursor-pointer"
+                className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 text-[10px] font-bold flex items-center justify-center cursor-pointer transition-colors"
                 title="Mostrar todas las horas"
               >
-                Todas
+                <X className="w-2.5 h-2.5" />
               </button>
             )}
           </div>

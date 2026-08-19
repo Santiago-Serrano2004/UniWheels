@@ -55,11 +55,11 @@ export const DriverRoutePublishForm = ({
 
   // Formatear etiqueta de fecha personalizada
   const formatCustomDateLabel = (dateStr) => {
-    if (!dateStr) return 'Otra fecha';
+    if (!dateStr) return 'Fecha';
     try {
       const [year, month, day] = dateStr.split('-');
       const d = new Date(year, month - 1, day);
-      return d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' });
+      return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }).replace('.', '');
     } catch {
       return dateStr;
     }
@@ -244,60 +244,45 @@ export const DriverRoutePublishForm = ({
           isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
         }`}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-lochmara-500" />
-            <h3 className="text-xs font-black">Detalles del Trayecto</h3>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Clock className="w-4 h-4 text-lochmara-500 shrink-0" />
+            <h3 className="text-xs font-black truncate">Detalles del Trayecto</h3>
           </div>
 
-          {/* Selector de Día (Hoy / Mañana / Otra Fecha) */}
-          <div className="flex items-center gap-1">
+          {/* Selector de Día (Pill Segmented Control) */}
+          <div className={`p-0.5 rounded-xl border flex items-center gap-0.5 ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
             <button
               type="button"
               onClick={() => setFechaSalida(todayStr)}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer border ${
-                isToday
-                  ? 'bg-emerald-600 border-emerald-500 text-white shadow-2xs'
-                  : isDark
-                  ? 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
-                  : 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900'
+              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                isToday ? 'bg-emerald-600 text-white shadow-xs' : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               Hoy
             </button>
-
             <button
               type="button"
               onClick={() => setFechaSalida(tomorrowStr)}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer border ${
-                isTomorrow
-                  ? 'bg-emerald-600 border-emerald-500 text-white shadow-2xs'
-                  : isDark
-                  ? 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
-                  : 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900'
+              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                isTomorrow ? 'bg-emerald-600 text-white shadow-xs' : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               Mañana
             </button>
-
             <label
-              className={`relative px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer border flex items-center gap-1 ${
-                isCustomDate
-                  ? 'bg-emerald-600 border-emerald-500 text-white shadow-2xs'
-                  : isDark
-                  ? 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
-                  : 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900'
+              className={`relative px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                isCustomDate ? 'bg-emerald-600 text-white shadow-xs' : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
+              <Calendar className="w-2.5 h-2.5 shrink-0" />
               <span>{isCustomDate ? formatCustomDateLabel(fechaSalida) : 'Fecha'}</span>
               <input
                 type="date"
                 min={todayStr}
                 value={isCustomDate ? fechaSalida : ''}
                 onChange={(e) => {
-                  if (e.target.value) {
-                    setFechaSalida(e.target.value);
-                  }
+                  if (e.target.value) setFechaSalida(e.target.value);
                 }}
                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
               />
