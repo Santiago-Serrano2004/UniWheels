@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# pre-commit: formatea los archivos staged con el formateador del proyecto
+# (Pint / Prettier / ruff). Cubre commits hechos por cualquier herramienta,
+# no solo por los hooks de Claude Code.
+#
+# Activar en este repo (una vez por clon):
+#   git config core.hooksPath .githooks
+set -u
+
+repo_root="$(git rev-parse --show-toplevel)"
+changed=0
+
+find_up() {
+  local d="$1" target="$2"
+  while [ "$d" != "/" ]; do
+    [ -e "$d/$target" ] && { printf '%s' "$d/$target"; return 0; }
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+
+mapfile -t files < <(git diff --cached --name-only --diff-filter=ACM)
+mapfile -t unstaged < <(git diff --name-only)
+is_unstaged() { local f; for f in "${unstaged[@]}"; do [ "$f" = "$1" ] && return 0; done; return 1; }
+
+for f in "${files[@]}"; do
+  abs="$repo_root/$f"
+  [ -f "$abs" ] || continue
+  dir="$(dirname "$abs")"
+  before="$(sha1sum "$abs" 2>/dev/null | cut -d' ' -f1)"
+
+  case "$f" in
+    *.php)
+      p="$(find_up "$dir" vendor/bin/pint)" && "$p" "$abs" >/dev/null 2>&1 || true
+      ;;
+    *.js|*.jsx|*.ts|*.tsx|*.mjs|*.cjs|*.json|*.css|*.scss|*.less|*.html|*.vue|*.svelte|*.md|*.mdx|*.yml|*.yaml)
+      pf="$(find_up "$dir" node_modules/.bin/prettier)" && "$pf" --write "$abs" >/dev/null 2>&1 || true
+      ;;
+    *.py)
+      rf="$(find_up "$dir" .venv/bin/ruff)" && { "$rf" format "$abs" >/dev/null 2>&1; "$rf" check --fix -q "$abs" >/dev/null 2>&1; } || true
+      ;;
+  esac
+
+  after="$(sha1sum "$abs" 2>/dev/null | cut -d' ' -f1)"
+  [ "$before" = "$after" ] && continue
+  changed=1
+  if is_unstaged "$f"; then
+    echo "pre-commit: formateado (NO re-staged, tenia cambios sin stage): $f"
+  else
+    git add -- "$f"
+    echo "pre-commit: formateado y re-staged: $f"
+  fi
+done
+
+[ "$changed" -eq 1 ] && echo "pre-commit: formato aplicado."
+exit 0

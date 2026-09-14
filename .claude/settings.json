@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./uniwheels:*)",
+      "Bash(composer install:*)",
+      "Bash(composer test:*)",
+      "Bash(composer dev:*)",
+      "Bash(php artisan:*)",
+      "Bash(./vendor/bin/pint:*)",
+      "Bash(./vendor/bin/pest:*)",
+      "Bash(./vendor/bin/phpunit:*)",
+      "Bash(npm run:*)",
+      "Bash(npm test:*)",
+      "Bash(npm ci:*)",
+      "Bash(npx vite:*)",
+      "Bash(npx playwright:*)",
+      "Bash(pytest:*)",
+      "Bash(python scripts/:*)",
+      "Bash(podman compose:*)",
+      "Bash(podman:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git show:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh workflow list:*)"
+    ]
+  }
+}

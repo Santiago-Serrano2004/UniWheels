@@ -195,22 +195,36 @@ cmd_status() {
         printf "%-25s %-8s ${YELLOW}%-12s${NC} %-32s\n" "OSRM Routing Engine" "5000" "OPCIONAL" "Modo simulador / local"
     fi
 
+    if check_port 3001; then
+        printf "%-25s %-8s ${GREEN}%-12s${NC} %-32s\n" "Uptime Kuma (monitor)" "3001" "ACTIVO" "http://localhost:3001"
+    else
+        printf "%-25s %-8s ${YELLOW}%-12s${NC} %-32s\n" "Uptime Kuma (monitor)" "3001" "OPCIONAL" "podman compose up -d uptime_kuma"
+    fi
+
     # Microservicios de Aplicación
     for entry in "${SERVICES[@]}"; do
         IFS=':' read -r name port path cmd <<< "${entry}"
         local url="http://localhost:${port}"
+        local health_url=""
         if [ "${name}" = "ai-route-service" ]; then
             url="http://localhost:${port}/docs"
+            health_url="http://localhost:${port}/health"
         elif [ "${name}" = "frontend-spa" ]; then
             url="http://localhost:${port}"
+            health_url="http://localhost:${port}"
         else
             url="http://localhost:${port}/api/v1"
+            health_url="http://localhost:${port}/up"
         fi
 
-        if check_port "${port}"; then
+        if ! check_port "${port}"; then
+            printf "%-25s %-8s ${RED}%-12s${NC} %-32s\n" "${name}" "${port}" "DETENIDO" "${url}"
+        elif curl -sf -o /dev/null --max-time 3 "${health_url}"; then
             printf "%-25s %-8s ${GREEN}%-12s${NC} %-32s\n" "${name}" "${port}" "EN LÍNEA" "${url}"
         else
-            printf "%-25s %-8s ${RED}%-12s${NC} %-32s\n" "${name}" "${port}" "DETENIDO" "${url}"
+            # El puerto responde pero el health-check real falla: app arriba pero rota
+            # (migración pendiente, config mala, excepción en boot) — no es lo mismo que "abajo".
+            printf "%-25s %-8s ${YELLOW}%-12s${NC} %-32s\n" "${name}" "${port}" "DEGRADADO" "${url}"
         fi
     done
     echo "---------------------------------------------------------------------------------"
@@ -284,6 +298,112 @@ cmd_migrate() {
     echo -e "${GREEN}✓ Migraciones completadas en los 5 microservicios.${NC}"
 }
 
+# --- Respaldo y restauración de PostgreSQL (database-per-service) ---
+BACKUP_DIR="${RUNTIME_DIR}/backups"
+POSTGRES_CONTAINER="uniwheels_postgres_gis"
+POSTGRES_SUPERUSER="uniwheels_user"
+BACKUP_DATABASES=("auth_db" "vehicle_db" "route_gis_db" "trip_db" "notification_db")
+
+cmd_backup() {
+    print_banner
+    echo -e "${BLUE}▶ Respaldando las 5 bases de datos PostgreSQL...${NC}"
+
+    if ! podman exec "${POSTGRES_CONTAINER}" true >/dev/null 2>&1 && ! docker exec "${POSTGRES_CONTAINER}" true >/dev/null 2>&1; then
+        echo -e "${RED}✗ No se pudo alcanzar el contenedor ${POSTGRES_CONTAINER}. ¿Está corriendo? (podman-compose up -d)${NC}"
+        exit 1
+    fi
+    local runtime="podman"
+    podman exec "${POSTGRES_CONTAINER}" true >/dev/null 2>&1 || runtime="docker"
+
+    mkdir -p "${BACKUP_DIR}"
+    local ts
+    ts=$(date +%Y%m%d_%H%M%S)
+    local ok=0
+
+    for db in "${BACKUP_DATABASES[@]}"; do
+        local file="${BACKUP_DIR}/${db}_${ts}.sql.gz"
+        echo -e "  ${CYAN}⚡ ${db}...${NC}"
+        if ${runtime} exec "${POSTGRES_CONTAINER}" pg_dump -U "${POSTGRES_SUPERUSER}" -Fp "${db}" 2>/dev/null | gzip > "${file}"; then
+            echo -e "    ${GREEN}✓ $(basename "${file}") ($(du -h "${file}" | cut -f1))${NC}"
+            ok=$((ok + 1))
+        else
+            echo -e "    ${RED}✗ Falló el respaldo de ${db}${NC}"
+            rm -f "${file}"
+        fi
+    done
+
+    echo -e "${BLUE}▶ Aplicando política de retención (7 diarios / 4 semanales / 6 mensuales)...${NC}"
+    python3 "${ROOT_DIR}/scripts/backup_retention.py" "${BACKUP_DIR}"
+
+    echo ""
+    if [ "${ok}" -eq "${#BACKUP_DATABASES[@]}" ]; then
+        echo -e "${GREEN}✓ Respaldo completado: ${ok}/${#BACKUP_DATABASES[@]} bases de datos en ${BACKUP_DIR}${NC}"
+    else
+        echo -e "${YELLOW}⚠ Respaldo parcial: ${ok}/${#BACKUP_DATABASES[@]} bases de datos.${NC}"
+        exit 1
+    fi
+}
+
+cmd_backup_list() {
+    print_banner
+    echo -e "${BLUE}▶ Respaldos disponibles en ${BACKUP_DIR}:${NC}"
+    echo ""
+    if [ ! -d "${BACKUP_DIR}" ] || [ -z "$(ls -A "${BACKUP_DIR}" 2>/dev/null)" ]; then
+        echo -e "${YELLOW}  Ningún respaldo todavía. Ejecuta: ./uniwheels backup${NC}"
+        return
+    fi
+    ls -lh "${BACKUP_DIR}"/*.sql.gz 2>/dev/null | awk '{print "  "$9"  ("$5")"}'
+}
+
+# Restaurar UN respaldo específico en su base de datos correspondiente.
+# Uso: ./uniwheels backup:restore <archivo.sql.gz>
+cmd_backup_restore() {
+    local file=$1
+    if [ -z "${file}" ]; then
+        echo -e "${RED}✗ Debes indicar el archivo a restaurar: ./uniwheels backup:restore <archivo.sql.gz>${NC}"
+        echo -e "  Usa ./uniwheels backup:list para ver los disponibles."
+        exit 1
+    fi
+    if [[ "${file}" != /* ]]; then
+        file="${BACKUP_DIR}/${file}"
+    fi
+    if [ ! -f "${file}" ]; then
+        echo -e "${RED}✗ No existe el archivo: ${file}${NC}"
+        exit 1
+    fi
+
+    local base db
+    base=$(basename "${file}")
+    if [[ "${base}" =~ ^(.+)_([0-9]{8})_([0-9]{6})\.sql\.gz$ ]]; then
+        db="${BASH_REMATCH[1]}"
+    else
+        echo -e "${RED}✗ El nombre del archivo no tiene el formato esperado <db>_<fecha>_<hora>.sql.gz${NC}"
+        exit 1
+    fi
+
+    if [[ ! " ${BACKUP_DATABASES[*]} " =~ " ${db} " ]]; then
+        echo -e "${RED}✗ '${db}' no es una de las bases de datos conocidas del ecosistema.${NC}"
+        exit 1
+    fi
+
+    echo -e "${YELLOW}${BOLD}⚠ ADVERTENCIA: esto SOBRESCRIBE por completo la base de datos '${db}' con el contenido de:${NC}"
+    echo -e "  ${base}"
+    read -r -p "Escribe el nombre de la base de datos ('${db}') para confirmar: " confirmacion
+    if [ "${confirmacion}" != "${db}" ]; then
+        echo -e "${RED}✗ Confirmación incorrecta. Restauración cancelada.${NC}"
+        exit 1
+    fi
+
+    local runtime="podman"
+    podman exec "${POSTGRES_CONTAINER}" true >/dev/null 2>&1 || runtime="docker"
+
+    echo -e "${BLUE}▶ Restaurando ${db}...${NC}"
+    ${runtime} exec -i "${POSTGRES_CONTAINER}" psql -U "${POSTGRES_SUPERUSER}" -d "${db}" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" >/dev/null
+    gunzip -c "${file}" | ${runtime} exec -i "${POSTGRES_CONTAINER}" psql -U "${POSTGRES_SUPERUSER}" -d "${db}"
+
+    echo -e "${GREEN}✓ Base de datos '${db}' restaurada desde ${base}.${NC}"
+}
+
 # Ayuda y comandos
 cmd_help() {
     print_banner
@@ -297,6 +417,9 @@ cmd_help() {
     echo -e "  ${BLUE}logs${NC} [servicio]  Muestra los logs en tiempo real (ej: ./uniwheels logs auth)."
     echo -e "  ${CYAN}test${NC}              Ejecuta todas las pruebas unitarias y de integración."
     echo -e "  ${CYAN}migrate${NC}           Ejecuta las migraciones en las 5 bases de datos Laravel."
+    echo -e "  ${CYAN}backup${NC}            Respalda las 5 bases de datos (con retención 7d/4sem/6mes)."
+    echo -e "  ${CYAN}backup:list${NC}       Lista los respaldos disponibles."
+    echo -e "  ${CYAN}backup:restore${NC} <archivo>  Restaura un respaldo específico (pide confirmación)."
     echo -e "  ${CYAN}help${NC}              Muestra este menú de ayuda."
     echo ""
     echo -e "${BOLD}EJEMPLOS:${NC}"
@@ -304,6 +427,12 @@ cmd_help() {
     echo "  ./uniwheels status"
     echo "  ./uniwheels logs ai"
     echo "  ./uniwheels stop"
+    echo "  ./uniwheels backup"
+    echo "  ./uniwheels backup:restore trip_db_20260829_030000.sql.gz"
+    echo ""
+    echo -e "${BOLD}AUTOMATIZAR RESPALDOS NOCTURNOS (cron):${NC}"
+    echo "  crontab -e"
+    echo "  0 3 * * * ${ROOT_DIR}/uniwheels backup >> ${LOG_DIR}/backup.log 2>&1"
     echo ""
 }
 
@@ -331,6 +460,15 @@ case "$1" in
         ;;
     migrate)
         cmd_migrate
+        ;;
+    backup)
+        cmd_backup
+        ;;
+    backup:list)
+        cmd_backup_list
+        ;;
+    backup:restore)
+        cmd_backup_restore "$2"
         ;;
     help|--help|-h|"")
         cmd_help

@@ -1,0 +1,181 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+
+# Secreto JWT compartido de prueba — nunca el real de producción. Todos los
+# servicios deben usar el mismo valor porque verifican tokens emitidos por
+# otros (auth-service es el único emisor de tokens de usuario).
+env:
+  CI_JWT_SECRET: ci-test-shared-secret-not-for-production-use-only
+
+jobs:
+  # -----------------------------------------------------------------------
+  # Servicios Laravel con SQLite en memoria (auth, vehicle, trip, notification)
+  # -----------------------------------------------------------------------
+  laravel-sqlite-tests:
+    name: "Tests: ${{ matrix.service }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [auth-service, vehicle-service, trip-service, notification-service]
+    defaults:
+      run:
+        working-directory: services/${{ matrix.service }}
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, pdo_sqlite, redis, gmp, bcmath
+          coverage: none
+
+      - name: Instalar dependencias de Composer
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Preparar entorno de pruebas
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          sed -i "s/^JWT_SECRET=.*/JWT_SECRET=${CI_JWT_SECRET}/" .env
+
+      - name: Ejecutar suite de tests
+        run: php artisan test
+
+  # -----------------------------------------------------------------------
+  # route-matching-service — requiere PostgreSQL + PostGIS real (no SQLite,
+  # depende de ST_DWithin/ST_GeomFromEWKT/índices GiST que SQLite no soporta).
+  # -----------------------------------------------------------------------
+  route-matching-tests:
+    name: "Tests: route-matching-service"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/route-matching-service
+
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4-alpine
+        env:
+          POSTGRES_USER: uniwheels_user
+          POSTGRES_PASSWORD: secret_postgres_pass
+          POSTGRES_DB: route_gis_db
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, pdo_pgsql, redis, gmp, bcmath
+          coverage: none
+
+      - name: Instalar dependencias de Composer
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Habilitar extensión PostGIS
+        run: PGPASSWORD=secret_postgres_pass psql -h 127.0.0.1 -U uniwheels_user -d route_gis_db -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+
+      - name: Preparar entorno de pruebas
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          sed -i "s/^JWT_SECRET=.*/JWT_SECRET=${CI_JWT_SECRET}/" .env
+
+      - name: Ejecutar suite de tests
+        run: php artisan test
+
+  # -----------------------------------------------------------------------
+  # ai-route-service (FastAPI/Python) — pytest. Los clientes de OSRM/TomTom ya
+  # tienen fallback geométrico local si el servicio externo no responde, y el
+  # chequeo de blocklist en Redis falla en modo abierto si Redis no está
+  # disponible, así que no hace falta levantar ninguno de los dos en CI.
+  # -----------------------------------------------------------------------
+  ai-route-service-tests:
+    name: "Tests: ai-route-service"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/ai-route-service
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: services/ai-route-service/requirements.txt
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Ejecutar suite de tests
+        env:
+          JWT_SECRET: ${{ env.CI_JWT_SECRET }}
+        run: python -m pytest tests/ -q
+
+  # -----------------------------------------------------------------------
+  # Frontend (React + Vite) — lint y build de producción.
+  # -----------------------------------------------------------------------
+  frontend-build:
+    name: "Build: frontend"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests unitarios (Vitest)
+        run: npm run test
+
+      - name: Build de producción
+        run: npm run build
