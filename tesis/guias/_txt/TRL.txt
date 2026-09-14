@@ -1,0 +1,405 @@
+Notas
+Los niveles de madurez de la tecnología, más conocidos por sus siglas inglesas origina-
+rias TRLs o Technology Readiness Levels, han empezado a usarse en las convocatorias
+de ayudas del nuevo Programa Marco de Investigación (2014-2020), más conocido por
+H2020. En esta breve nota se hace un somero repaso conceptual de los TRLs y de las
+ventajas que su aplicación y conocimiento podrían aportar a las convocatorias nacio-
+nales de I+D+i.
+
+
+
+NIVELES DE MADUREZ DE LA TECNOLOGÍA
+        TECHNOLOGY READINESS LEVELS.TRLS.
+                                   UNA INTRODUCCIÓN
+
+En esta breve nota se pretende hacer una revisión de       • TRL 4: Validación de componente y/o disposición de
+los niveles de madurez de la tecnología, más conoci-       los mismos en entorno de laboratorio.
+dos por sus siglas inglesas TRLs: Technology Readiness
+Levels. Este concepto surge en la NASA pero posterior-     • TRL 5: Validación de componente y/o disposición
+mente se generaliza para aplicarse a cualquier pro-        de los mismos en un entorno relevante.
+yecto y no necesariamente a los proyectos aeronáuti-
+cos o espaciales, desde su idea original hasta su des-     • TRL 6: Modelo de sistema o subsistema o demos-
+pliegue.                                                   tración de prototipo en un entorno relevante
+
+Más en concreto un TRL es una forma aceptada de            • TRL 7: Demostración de sistema o prototipo en un
+medir el grado de madurez de una tecnología. Por           entorno real.
+lo tanto, si consideramos una tecnología concreta y
+                                                           • TRL 8: Sistema completo y certificado a través de
+tenemos información del TRL o nivel en el que se
+                                                           pruebas y demostraciones.
+encuentra podremos hacernos una idea de su nivel
+de madurez.                                                • TRL 9: Sistema probado con éxito en entorno real
+
+Evidentemente y a efectos prácticos, no se puede con-      Cuando en los (TRL 4 - TRL 5) se hace mención a «vali-
+siderar el mismo grado o nivel de innovación el que se     dación de componente y/o disposición de los mismos»
+aborda cuando se realiza un determinado proyecto si        se pretende traducir del inglés component and/or bre-
+se parte para su realización de tecnologías maduras o      adboard validation y más en concreto breadboard
+de tecnologías probadas con éxito en entornos reales       que en su traducción literal sería «tabla para cortar el
+(TRL 8 - TRL 9) y que pueden encontrarse disponibles de    pan» hace referencia en realidad a «an experimental
+forma libre o mediante licencia, que el que se aborda      arrangement of electronic circuits giving access to
+a partir de tecnologías que se encuentran en fase de
+                                                           components so that modifications can be carried out
+desarrollo y validación (TRL 4-TRL 7) o el que se aborda
+                                                           easily». En definitiva, se hace referencia a que en este
+a partir de tecnologías que se encuentran todavía en
+                                                           nivel se pueden llevar a cabo fácilmente modificacio-
+un nivel más básico, a nivel de idea o de prueba de
+                                                           nes a nivel de componente ya que posteriormente en
+concepto (TRL 1 – TRL 3).
+                                                           niveles a partir del TRL 6, nos encontraremos a nivel de
+                                                           sistema o subsistema. Por lo tanto, desde el punto de
+LOS TRLs O NIVELES DE MADUREZ DE LA TECNOLOGÍA             vista de las pruebas y la validación, la clasificación por
+                                                           niveles sería la siguiente:
+Se consideran 9 niveles que se extienden desde los
+principios básicos de la nueva tecnología hasta lle-       • TRL 1: Idea básica.
+gar a sus pruebas con éxito en un entorno real:
+                                                           • TRL 2: Concepto o tecnología formulados.
+• TRL 1: Principios básicos observados y reportados.       • TRL 3: Prueba de concepto.
+• TRL 2: Concepto y/o aplicación tecnológica for-          • TRL 4: Validación a nivel de componentes en labo-
+mulada.                                                    ratorio.
+
+• TRL 3: Función crítica analítica y experimental y/o      • TRL 5: Validación a nivel de componentes en un
+prueba de concepto característica .                        entorno relevante.
+
+
+          393 >Ei                                                                                                165
+                                                             NOTAS
+
+
+
+• TRL 6: Validación de sistema o subsistema en un en-                                          FIGURA 1
+torno relevante.
+                                                                     TRL 9
+• TRL 7: Validación de sistema en un entorno real.
+                                                                     TRL 8                                Entorno real
+• TRL 8: Validación y certificación completa en un                   TRL 7
+entorno real.
+                                                                     TRL 6
+                                                                                                     Entorno de simulación
+• TRL 9: Pruebas con éxito en entorno real.                          TRL 5
+                                                                     TRL 4
+Cuando se habla de entorno relevante se pretende
+                                                                     TRL 3
+indicar un entorno con unas condiciones que se apro-                                                 Entorno de laboratorio
+ximan o simulan suficientemente a las condiciones                    TRL 2
+existentes en un entorno real o de misión.                           TRL 1
+                                                                     FUENTE: Elaboración propia.
+En cuanto al entorno en el que se desarrolla el pro-
+yecto en los cuatro primeros niveles (TRL 1 - TRL 4) el
+entorno de validación de la tecnología es en el labo-
+ratorio, en los niveles TRL5 y TRL6 la tecnología se está
+                                                                                               FIGURA 2
+validando en un entorno con características similares
+al entorno real y los tres últimos niveles (TRL 7 - TRL 9)           TRL 9
+abordan las pruebas y validación de la tecnología
+                                                                     TRL 8                                 Innovación
+en un entorno real. Puede verse de forma gráfica en
+la figura 1.                                                         TRL 7
+                                                                     TRL 6
+Por el tipo de investigación, desarrollo tecnológico e                                                      Desarrollo
+innovación que se está abordando habría que indi-                    TRL 5
+car que los tres primeros niveles abordarían la inves-               TRL 4
+tigación tecnológica más básica hasta llegar a una                   TRL 3
+primera prueba de concepto. El desarrollo tecnoló-                                                        Investigación
+                                                                     TRL 2
+gico se llevaría a cabo desde los niveles (TRL 4 - TRL 7)
+hasta llegar a un primer prototipo o demostrador no                  TRL 1
+comercializable. Los proyectos de innovación tecno-                  FUENTE: Elaboración propia.
+lógica se encontrarían en el TRL 8, puesto que la inno-
+vación tecnológica requiere la introducción de un
+nuevo producto o servicio en el mercado y para ello
+se deben haber superado las pruebas y certificacio-                                            FIGURA 3
+nes así como todas las homologaciones pertinentes.
+Finalizada esta fase vendría el despliegue o implan-                 TRL 9                                 Despliegue
+tación a gran escala. Mostramos en la figura 2 estos                                                Producto o servicio
+conceptos en el clásico esquema «I+D+i». Y algo                                                     comercializable
+más detallado en la figura 3.                                        TRL 8
+                                                                                                    Certificaciones pruebas
+                                                                                                    específicas
+Pero más allá de estos conceptos teóricos, la idea sería
+su aplicación práctica en las convocatorias públicas                 TRL 7
+de ayudas para la realización de proyectos. Eviden-                  TRL 6                          Prototipo/Demostrador
+temente si nos queremos dirigir al ciclo de vida com-                                               Desarrollo tecnológico
+                                                                     TRL 5
+pleto de la tecnología que se pretende desarrollar
+deberíamos partir desde el TRL 1, donde a partir de una              TRL 4
+primera idea novedosa se llegaría hasta la prueba de                 TRL 3
+concepto en el TRL 3. Cuando el alcance del proyec-                                                 Prueba de concepto
+                                                                     TRL 2
+to es a nivel de prueba de concepto a la finalización                                               Investigación industrial
+del mismo se deberá tener la certeza de que el cami-                 TRL 1
+no emprendido es adecuado para llegar a disponer                     FUENTE: Elaboración propia.
+de un producto comercial, aunque todavía queda-
+rá actividades de desarrollo, pruebas e industrialización
+etc., antes de poder acceder al mercado.                             da a nivel de prueba de concepto y centrarse en los
+                                                                     niveles (TRL 4 - TRL 7), con un desarrollo tecnológico
+Posteriormente se abordaría el desarrollo tecnológi-
+co (TRL 4 – TRL 7) hasta su validación y finalmente su               más cercano a mercado según nos vamos aproxi-
+puesta en el mercado y despliegue (TRL 8 - TRL 9).                   mando al nivel TRL 8. Finalmente, los proyectos de
+                                                                     innovación que exigen la introducción del producto
+Si realmente nos quisiésemos centrar en el desarrollo                o servicio nuevo o mejorado en el mercado se abor-
+tecnológico habría que partir de tecnología valida-                  darían en los niveles (TRL 8 - TRL 9).
+
+
+166                                                                                                        393 >Ei
+                                     NIVELES DE MADUREZ DE LA TECNOLOGÍA
+
+
+
+Los TRLs han comenzado a ser una terminología            • TRL 5: Tecnología validada en entorno relevante
+habitual en el nuevo Programa Marco de                   (entorno industrial relevante si se trata de las Tec-
+Investigación (2014-2020), más conocido por              nologías facilitadoras esenciales)
+H2020. De hecho, la Comisión Europea clasifica
+los TRLs de la siguiente forma:                          • TRL 6: Tecnología demostrada en entorno relevan-
+                                                         te (entorno industrial relevante si se trata de las Tec-
+• TRL 1: Investigación básica.                           nologías facilitadoras esenciales)
+
+• TRL – TRL 4: Concepto tecnológico. Prueba de           • TRL 7: Demostración de prototipo de sistema en
+concepto. Validación en laboratorio.                     entorno operativo
+
+• TRL 5: Validación en entorno relevante.                • TRL 8: Sistema completo y certificado
+
+• TRL 6: Demostración en entorno relevante.              • TRL 9: Sistema probado en entorno operativo o
+                                                         misión real, lo que se traduce en fabricación com-
+• TRL 7: Demostración en entorno operacional             petitiva en el caso de las tecnologías facilitadoras
+(real).                                                  esenciales o probado en entorno espacial.
+
+• TRL 8: Sistema completo y certificado.                 Refiriéndonos someramente a las Key Enabling
+                                                         Technologies (KETs), un grupo de expertos creado por
+• TRL 9: Despliegue.                                     la Comisión Europea concluyó que la industria euro-
+                                                         pea perdería competitividad si no consiguiese des-
+Por lo tanto, la obtención de la certificación de        arrollar y aprovechar con éxito estas seis tecnologías:
+un determinado equipo completo (System com-
+plete and qualified) se abordaría en el TRL 8.            Micro y nanoelectrónica.
+
+De hecho, en los distintos topics o prioridades           Materiales avanzados.
+temáticas de las convocatorias H2020 se incluye
+un rango del nivel de madurez tecnológica o TRL           Biotecnología industrial.
+como indicación del tipo de proyecto que finan-
+ciará ese topic:                                          Fotónica.
+
+• TRL 1: Investigación básica.                            Nanonotecnología.
+
+• TRL 2: Formulación de la tecnología.                    Sistemas de Fabricación Avanzados.
+• TRL 3: Investigación aplicada. Prueba de con-
+                                                         En EEUU se hizo también un estudio llegándose a con-
+cepto.
+                                                         clusiones semejantes que en Europa. De hecho, el
+                                                         anterior Director del Centro de Investigación de Xerox
+• TRL 4: Desarrollo a pequeña escala (laboratorio).
+                                                         en Silicon Valley, John Seely Brown, comentaba recien-
+                                                         temente «We really have to get back to building
+• TRL 5: Desarrollo a escala real.
+                                                         things, we can’t just design things».
+• TRL 6: Sistema/prototipo validado en entorno
+simulado.                                                Ejemplos de la importancia de estas tecnologías serí-
+                                                         an los siguientes:
+• TRL 7: Sistema/prototipo validado en entorno
+real.                                                    – Un teléfono móvil incorpora chips microelectróni-
+                                                         cos para las comunicaciones, una cámara y ópticas
+• TRL 8: Primer sistema/prototipo comercial.             basadas en la fotónica, materiales avanzados para
+                                                         nuevas pantallas táctiles, etc.
+• TRL 9: Aplicación comercial.
+                                                         – Un instrumento de análisis de la gripe aviar en tiem-
+Además, la Comisión Europea hace una distin-             po real incorpora marcadores biotecnológicos, chips
+ción específica cuando se trata de las Key               microelectrónicos, detección fotónica basada en láser
+Enabling Technologies o tecnologías facilitadoras        y superficies optimizadas mediante nanotecnología
+esenciales:                                              para tratamiento de líquidos.
+
+• TRL 1: Principios básicos observados.                  En definitiva, el nuevo paradigma tecnológico:
+                                                         Nano-Bio-Info-Cogno parece confirmarse, paradig-
+• TRL 2: Concepto tecnológico formulado.                 ma que no es otro que las propias Key Enabling Tech-
+                                                         nologies.
+• TRL 3: Prueba de concepto experimental.
+                                                         Pero volviendo a los TRLs, si consideramos la escala
+• TRL 4: Tecnología validada en laboratorio.             de cada uno de los niveles de madurez tecnológica,
+
+
+       393 >Ei                                                                                               167
+                                                            NOTAS
+
+
+
+entendiendo por escala la relación entre las dimen-                                           FIGURA 4
+siones del modelo y las dimensiones del prototipo
+final, tendríamos la siguiente clasificación que se indi-           TRL 9
+ca en la figura 4.
+                                                                    TRL 8                                Escala Real =1
+
+Según el grado de disponibilidad (readiness) de la tec-             TRL 7
+nología la clasificación, sería la propia clasificación             TRL 6                         Ingeniería (Engineering Scale)
+donde TRL 1 significa mínima disponibilidad o madurez               TRL 5                             1/10 < Escala < 1
+de la tecnología y TRL 9 significa la máxima.
+                                                                    TRL 4
+• TRL 1: Idea básica. Mínima disponibilidad.                        TRL 3                             Laboratorio. Banco.
+                                                                                                   (Laboratory/Bench Scale)
+                                                                    TRL 2
+• TRL 2: Concepto o tecnología formulados.                                                              Escala < 1/10
+                                                                    TRL 1
+• TRL 3: Prueba de concepto.                                        FUENTE: Elaboración propia.
+
+• TRL 4: Componentes validados en laboratorio.
+
+• TRL 5: Componentes validados en entorno relevante.
+                                                                    Se puede utilizar para realizar decisiones de financia-
+                                                                    ción de proyectos en función de los diferentes nive-
+• TRL 6: Tecnología validada en entorno relevante.
+                                                                    les de madurez tecnológica que se pretenda consi-
+• TRL 7: Tecnología validada en entorno real                        derar.
+
+• TRL 8: Tecnología validada y certificada en entor-                La mayor ventaja de la utilización de los TRLs sería
+no real.                                                            conocer el punto de partida de un nuevo proyecto
+                                                                    a financiar y cuál sería su alcance, es decir hasta que
+• TRL 9: Tecnología disponible en entorno real. Má-                 TRL se llegaría. Esta aproximación podría ser más rea-
+xima disponibilidad.                                                lista que el denominado «efecto incentivador» del
+                                                                    Marco Comunitario de Ayudas de I+D+i que exige
+Cabría también considerar los resultados que conlle-                que la fecha de solicitud de ayuda de un proyecto
+varía cada uno de los niveles de madurez:                           sea anterior al inicio del mismo. En la práctica, las
+                                                                    empresas innovadoras realizan de una forma siste-
+• TRL 1: Artículos científicos publicados sobre los prin-           mática actividades de I+D+i pero formalizar la rea-
+cipios de la nueva tecnología.                                      lización de un nuevo proyecto requiere en realidad
+                                                                    saber cuál es su punto de partida. En cualquier caso,
+• TRL 2: Publicaciones o referencias que subrayan las               ambos enfoques pueden ser complementarios soli-
+aplicaciones de la nueva tecnología.                                citándose un nuevo proyecto antes de su inicio en
+                                                                    alguno de los diferentes niveles de madurez tecno-
+• TRL 3: Medida de parámetros en laboratorio.
+                                                                    lógica, pero el enfoque de los TRLs es más realista
+• TRL 4: Resultados de las pruebas realizadas en la-                porque permite definir un nuevo proyecto a partir de
+boratorio.                                                          un determinado nivel de madurez tecnológica.
+
+• TRL 5: Componentes validados en entorno relevante.
+                                                                    LOS TRLs EN LOS PROYECTOS DE TI
+• TRL 6: Resultados de las pruebas realizadas a nivel
+de prototipo en entorno relevante.                                  En este apartado vamos a contestar a la siguiente
+                                                                    pregunta: ¿Cómo se definen los TRLs para los proyec-
+• TRL 7: Resultado de las pruebas a nivel de prototi-               tos de software?
+po realizadas en entorno operativo.
+                                                                    • TRL 1: Nivel más bajo de la disponibilidad de la tec-
+• TRL 8: Resultados de las pruebas del sistema en su                nología software. Se está investigando un nuevo do-
+configuración final.                                                minio software por parte de la comunidad científica
+                                                                    a nivel de investigación básica. Este nivel compren-
+• TRL 9: Informes finales en condiciones de funcio-                 de el desarrollo de los usos básicos así como las pro-
+namiento o misión real.                                             piedades básicas de la arquitectura software, las for-
+                                                                    mulaciones matemáticas y los algoritmos generales.
+Algunas de las ventajas del uso de TRLs serían:
+                                                                    • TRL 2: Se comienza a investigar las aplicaciones
+ Proporcionan una comprensión común del esta-                      prácticas del nuevo software aunque las posibles
+do de madurez de una tecnología                                     aplicaciones son todavía especulativas.
+
+ La gestión del riesgo de un determinado proyecto                  • TRL 3: Se comienza una actividad intensa de I+D y
+podrá tener en cuenta el grado de madurez de la                     se comienza a demostrar la viabilidad del nuevo soft-
+tecnología                                                          ware a través de estudios analíticos y de laboratorio.
+
+
+168                                                                                                       393 >Ei
+                                             NIVELES DE MADUREZ DE LA TECNOLOGÍA
+
+
+
+• TRL 4: Se comienzan a integrar los diferentes com-              1. Por una parte y como no se trata de reinventar la
+ponentes de software básico para demostrar que                    rueda habría que tener en cuenta el grado de madu-
+pueden funcionar conjuntamente.                                   rez de las tecnologías que se utilizan o que directa-
+                                                                  mente se incorporan durante el ciclo de vida del pro-
+• TRL 5: En este nivel la nueva tecnología software               yecto.
+se encuentra preparada para integrarse en sistemas
+existentes y los algoritmos pueden ejecutarse en pro-             2. Por otra parte, es necesario tener en cuenta los
+cesadores con características similares a las de un               niveles de madurez que se abarcan durante el pro-
+entorno operativo.                                                pio desarrollo tecnológico que se aborda en el pro-
+                                                                  yecto.
+• TRL 6: En este nivel se pasaría de las implementa-
+ciones a nivel de propotipo de laboratorio a imple-
+                                                                  Evidentemente, el riesgo que se afronta y por lo tanto
+mentaciones completas en entornos reales.
+                                                                  el grado de innovación tecnológica y su valoración
+• TRL 7: En este nivel la tecnología software está pre-           no pueden ser los mismos si los desarrollos se abor-
+parada para su demostración y prueba con sistemas                 dan a partir de tecnologías maduras o disponibles
+HW/SW operativos.                                                 (mature or ready tecnologies) que si se abordan a
+                                                                  partir de tecnologías incipientes (emerging techno-
+• TRL 8: En este nivel todas las funcionalidades del              logies) o de vanguardia (breakthrough technologies)
+nuevo software se encuentran simuladas y probadas                 o si el propio proyecto consiste en el desarrollo desde
+en escenarios reales.                                             el TRL 1 de una nueva tecnología rompedora (disrup-
+                                                                  tive technology) hasta el TRL 9 Y por lo tanto hasta
+• TRL 9: En este nivel la nueva tecnología software               su despliegue en el mercado.
+se encuentra totalmente disponible y se puede utili-
+zar en cualquier entorno real.                                    Además, existe una interrelación entre las tecnologí-
+                                                                  as que se usan durante el ciclo de vida del proyec-
+                                                                  to y el propio desarrollo tecnológico que se realiza
+CONCLUSIONES                                                      durante la ejecución del mismo. En general, cuanto
+                                                                  más inmaduras sean las tecnologías que se utilizan
+La utilización de los TRLs es una ayuda importante
+                                                                  más riesgo se afrontará y más desarrollo tecnológi-
+para definir el grado de madurez tecnológica al que
+                                                                  co propio se requerirá para llegar a la consecución
+nos estamos refiriendo cuando se quiere financiar
+                                                                  de los objetivos planteados, por lo que el riesgo del
+una determinada línea temática que se quiere fo-
+                                                                  proyecto será mayor y en consecuencia también
+mentar. Apoyar un proyecto en el que se abordarían los
+                                                                  será mayor su carácter innovador.
+9 TRLs significaría fomentar el desarrollo de una nueva
+tecnología desde su idea básica hasta su desplie-
+                                                                  A efectos prácticos, en las convocatorias se podrían
+gue en el mercado. Si el foco se quiere poner en la
+                                                                  realizar dos enfoques:
+investigación básica, la convocatoria de ayudas se
+debería referir fundamentalmente a los tres primeros              • TRL’s bottom-up approach: el solicitante indica el
+niveles (TRL 1 - TRL 3), mientras que si se pretenden             TRL de partida y el TRL final al que se llegará una vez
+abordar proyectos de desarrollo tecnológico se de-                finalice el proyecto.
+berá insistir más en los cuatro siguientes (TRL 4 - TRL 7). Fi-
+nalmente, los proyectos de innovación más cercanos                • TRL’s top-down approach: la propia convocatoria
+al mercado y los proyectos de implantación y desplie-             establece, en general o para cada línea temática,
+gue se contemplarían en los dos últimos (TRL 8 – TRL 9).          los TRLs que se deberían abordar.
+
+Habría que distinguir también entre un proyecto cen-              En general en H2020 las prioridades temáticas o
+trado en el desarrollo de una tecnología genérica,                topics especifican un rango de TRLs. Se espera que
+que se puede concretar después en múltiples pro-                  la mayor parte de las actividades de cada proyec-
+yectos para el desarrollo de un producto o servicio               to se encuentren dentro del rango indicado, y que el
+nuevo o mejorado, o en el desarrollo de un produc-                TRL (objetivo) final se alcance al finalizar el proyecto.
+to o servicio nuevo o mejorado que se encuentre
+basado en una tecnología cuyo grado de madurez                    Para las prioridades temáticas en las que únicamente
+se encuentre en alguno de los 9 niveles. Este último              se indica el TRL final del proyecto, también se espera
+caso es en el que más frecuentemente nos encon-                   que las actividades del proyecto abarquen un rango
+traremos puesto que generalmente los proyectos                    de TRLs, dependiendo del estado de la técnica.
+abordan la realización de productos o servicios nue-
+vos o mejorados y se desarrollan a partir de tecnolo-             En definitiva, la idea que se pretende transmitir es que
+gías que tienen un mayor o menor grado de madu-                   sería muy conveniente distinguir entre el grado de
+rez o disponibilidad (readiness).                                 madurez de la tecnología que se incorpora o se uti-
+                                                                  liza en el marco de un proyecto y la tecnología que
+En efecto, cuando se evalúa el carácter innovador                 efectivamente se desarrolla como consecuencia del
+de un proyecto habría que distinguir bien entre estos             mismo y si el proyecto más allá del desarrollo de un
+dos conceptos:                                                    producto, servicio o proceso nuevo o mejorado apor-
+
+
+           393 >Ei                                                                                                     169
+                                                                 NOTAS
+
+
+
+ta algún valor añadido sobre el estado actual del arte                   el grado de desarrollo tecnológico y cuánto más
+en ese campo.                                                            inmaduras sean las tecnologías que se incorporan
+                                                                         mayor grado de desarrollo tecnológico propio y
+La mayoría de proyectos se centran en el desarrollo                      mayor riesgo tecnológico será necesario. Por lo tanto,
+de un nuevo producto, proceso o servicio más que                         conocer el punto de inicio y el punto de finalización
+en el desarrollo de una tecnología específica. Sin                       en términos de TRL de un determinado proyecto sig-
+embargo, conocer el grado de madurez de la tec-                          nifica mayor conocimiento del alcance del proyec-
+nología que se utiliza en el desarrollo es una métrica                   to susceptible de financiación.
+del riesgo que se afronta en el desarrollo del proyec-
+to y de la envergadura del desarrollo tecnológico
+que se acomete.
+
+En general, cuanto más maduras sean las tecnolo-
+gías que se utilizan menor será el riesgo y también menor                        Juan Miguel Ibáñez de Aldecoa Quintana
+
+
+
+BIBLIOGRAFÍA
+      HORIZON 2020 – WORK PROGRAMME 2014-2015 General Annexes
+      Development of Technology Readiness Level (TRL) Metrics and Risk Measures. U.S. Department of Energy
+      Technology Readiness Assessment Guide. U.S. Department of Energy
+      Technology Readiness Levels Handbook for Space Applications. ESA
+
+
+
+
+170                                                                                                          393 >Ei
+

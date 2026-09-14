@@ -1,0 +1,245 @@
+                                                     Marco teórico
+                                                             Por: Luis Alejandro Sandoval
+                                                         Editado por: Juliana Forigua-Sandoval
+
+
+
+
+El presente recurso tiene como objetivo definir qué es un marco
+teórico, cuál es su propósito y relevancia para la investigación
+académica, y cómo se debe construir. Esta guía tiene en cuenta los
+distintos tipos de metodologías de investigación, pues identifica sus
+principales características y ofrece un conjunto de estrategias que le
+permitirán quien investiga estructurar y desarrollar su marco teórico.
+
+
+
+
+                                                                                       ¿Qué
+                                                                                       es un
+                                                                                       marco
+                                                                                       teórico?
+Es un conjunto de conceptos, proposiciones y argumentos que están interconectados,
+y que presentan un punto de vista sistemático sobre un tema o fenómeno específico
+(Imenda, 2014). Así, el marco teórico establece una imagen clara y precisa de los
+acontecimientos que el investigador busca analizar, explicar o predecir. Del mismo
+modo, este expone los principales supuestos que fundamentan el enfoque con el que
+se aborda el problema de investigación.
+
+
+En suma, el marco teórico es un lente conceptual mediante el cual se observa e
+interpreta la realidad, sin que condicione necesariamente el planteamiento
+metodológico de la investigación. Esto quiere decir que el marco teórico es un elemento
+versátil y adaptable de acuerdo a las especificaciones metodológicas elegidas. Por
+ejemplo, el uso y exposición del marco teórico suele diferir entre metodologías de
+carácter cuantitativo y cualitativo; sin embargo, como se mostrará más adelante, ambos
+tipos de metodología requieren de dicho lente conceptual para su adecuado desarrollo
+(Creswell, 2014).
+
+
+
+¿Por qué hacer un marco teórico?
+Las principales razones por las que es necesario hacer un marco teórico son las
+siguientes:
+
+
+   ∙ Expone el enfoque conceptual que se ha utilizado para desarrollar una
+       investigación. Dicho enfoque puede ser el punto de partida de la investigación o
+       ser el resultado de esta.
+
+
+
+
+                                                                                  ∙
+      Permite tener una guía para interpretar la información recolectada y analizar los
+      fenómenos estudiados. Esto contribuye a delimitar el ejercicio investigativo y las
+      fuentes de información requeridas. En toda investigación los conceptos se
+      contrastan y se debaten con la información recolectada. Esto implica un diálogo
+      constante entre la teoría y la realidad empírica.
+
+
+   ∙ Explica por qué se dan las relaciones o los mecanismos causales observados, es
+      decir, ofrece una interpretación de los fenómenos evaluados en la investigación
+      y las relaciones que hay entre ellos.
+
+
+   ∙ Es la base sobre la cual se asume una posición clara y específica frente al
+      problema de investigación abordado. Esto quiere decir que el marco define la
+      ruta a seguir para comprender dicho problema y estudiarlo, entre muchas otras
+      posibilidades existentes.
+
+
+   ∙ Establece una justificación de carácter teórico frente al problema de investigación
+      abordado, es decir, describe la relevancia de este en el ámbito académico y
+      señala el vacío teórico que se busca llenar. Toda investigación académica debe
+      generar nueva teoría, por lo cual es necesario presentar siempre el aporte
+      teórico puntual de tal investigación.
+
+
+
+¿Cómo se construye un marco teórico?
+No todos los marcos teóricos son iguales, pues estos no siempre responden a las
+mismas necesidades. Por lo tanto, la naturaleza del problema de investigación es
+importante a la hora de estructurar y construir el marco teórico. Así, existen dos
+grandes
+corrientes en los trabajos académicos, las cuales determinan la elaboración de un
+marco teórico: la cuantitativa y cualitativa.
+✔ Marcos teóricos para trabajos cuantitativos
+En las investigaciones de carácter cuantitativo, la función del marco teórico es exponer
+los conceptos y relaciones causales que se quieren evaluar a partir del ejercicio
+metodológico propuesto, y proveer la base para derivar las hipótesis que se van a
+probar o refutar con la información recolectada. Esto se debe a que tales
+investigaciones siguen un análisis deductivo (de lo general a lo particular) y tienen
+como objetivo probar o refutar una teoría determinada a partir de datos empíricos
+(Imenda, 2014).
+Lo anterior implica que para construir un marco teórico en investigaciones de carácter
+cuantitativo se debe seguir el siguiente procedimiento:
+       1. Revisar las teorías relevantes que han abordado el problema de
+          investigación seleccionado. Esta revisión se hace a partir de una lectura de
+          las principales posiciones que han definido el objeto de estudio y las
+          relaciones causales que se buscan evaluar. Se recomienda tener siempre en
+          mente las siguientes preguntas al realizar esta lectura: ¿qué afirma esta
+          teoría? ¿para qué se ha utilizado? ¿quién la ha utilizado? ¿la teoría es
+          consistente o se contradice? ¿cómo se relaciona esta teoría con el problema
+          de investigación abordado? (Creswell, 2014). Para acompañar el ejercicio,
+          es necesario construir una sintesis de cada texto leído que responda a las
+          preguntas anteriores. Adicionalmente, se debe realizar un contraste de las
+          sintesis realizadas para establecer un esquema general que recopile los
+          postulados principales que identificó quien investiga en su revisión.
+
+
+
+
+                                                                              2. Elegir la
+                                                                              teoría1 que
+                                                                              se va a
+                                                                              probar     o
+                                                                              refutar en
+                                                                              la
+          investigación. La elección de esta teoria o teorias debe considerar al menos
+          los siguientes criterios: (i) la relevancia para el problema de investigación
+          abordado, esto significa que la teoría ha abordado el problema o hace parte
+          de un campo de estudio en el que el problema es estudiado; (ii) el alcance
+          de la teoría, lo que refiere a que la teoría tiene una capacidad explicativa
+          amplia y centrada en el contexto de la investigación; (iii) la validez lógica de
+          la teoría, es decir, que los enunciados y argumentos de la teoría sean
+          consistentes y no guarden contradicciones. Este ejercicio requiere por lo
+          general el acompañamiento de una persona que dirija o asesore dicha
+          investigación y de pares académicos.
+      3. Definir los fenómenos y relaciones causales involucradas en el problema de
+          investigación a partir de la teoría seleccionada. Esto requiere una
+          descripción puntual de cómo se entiende cada uno de los fenómenos que
+          se van a     estudiar y una exposición concreta y argumentada de las
+          relaciones que hay entre estos. Estas relaciones son las que el investigador
+          va a buscar probar o refutar a partir de la información recolectada porque
+          constituyen el aporte teórico que hace el investigador con su trabajo.
+      4. Describir cómo la teoría seleccionada ha explicado la ocurrencia de los
+          fenómenos involucrados en el problema de investigación y las relaciones
+          empíricas entre las variables que miden o caracterizan tales fenómenos. En
+          ese sentido, en el marco teórico se deben exponer las hipótesis que dicha
+          teorìa ha postulado para explicar las relaciones que se buscan evaluar.
+          Estas hipótesis son el punto de partida para la construcción de las hipótesis
+          propias del investigador. Por lo tanto, deben especificar cuáles son las
+          relaciones
+
+
+1
+ Pueden ser varias teorías a tener en cuenta. No obstante, mantendremos el singular
+por practicidad.
+
+
+
+
+                                                                              entre las
+                                                                              variables
+           dependendiente u objetivo (los fenómenos que se quieren explicar) y las
+           variables independientes (los fenómenos que permiten explicar            a las
+           variables dependientes).
+
+✔ Marcos teóricos para trabajos cualitativos
+Las investigaciones de carácter cualitativo involucran la construcción de teoría de
+manera paralela a la recopilación de información y parten de un análisis inductivo (de lo
+particular a lo general). En consecuencia, el marco teórico en este tipo de
+investigaciones no lleva necesariamente a la derivación de hipótesis (como sucede en
+el análisis cuantitativo), sino que permite construir una estructura conceptual que guía
+el proceso de recolección y análisis de la información (Strauss & Corbin, 2002). Esta
+estructura es un conjunto de construcciones teóricas que elabora el investigador o la
+investigadora a partir de conceptos previos recopilados desde una o varias teorías y la
+primera recolección de información (Creswell, 2014).
+
+
+El procedimiento para la realización de un marco teórico en investigaciones de carácter
+cualitativo es el siguiente:
+    1. Identificar las palabras clave dentro de la pregunta de investigación, las cuales
+       son las categorías que guiarán la construcción conceptual. Esta identificación es
+       necesaria para leer de manera sistemática la literatura que va a utilizar en la
+       elaboración del marco. Asimismo, esto permite establecer el andamiaje
+       conceptual que quien investigue va a proponer para el desarrollo de la
+       recolección de información. La construcción de la pregunta, y la identificación de
+       sus categorías, requiere por lo general acompañamiento de la persona que dirija
+       o asesore dicha investigación.
+   2. Revisar las teorías relevantes que han abordado el problema de investigación
+       seleccionado, lo que implica una lectura de las principales posiciones que han
+       definido las categorías establecidas y sus relaciones con otros conceptos,
+proposiciones y argumentos. Se recomienda tener siempre en mente las
+siguientes preguntas al realizar esta lectura: ¿qué afirma esta teoría? ¿para qué
+   se ha utilizado? ¿quién la ha utilizado? ¿la teoría es consistente o se
+   contradice? ¿cómo se relaciona esta teoría con el problema de investigación
+   abordado? (Creswell, 2014). Estas categorias y relaciones son las que el
+   investigador va a     evaluar a partir de la información recolectada porque
+   constituyen el aporte teórico que hace el investigador con su trabajo.
+3. Definir las categorías establecidas a partir de conceptos, proposiciones y
+   argumentos provenientes de las teorías revisadas previamente. Esta definición
+   implica no solo una descripción acerca del objeto de estudio dentro de cada
+   categoría, sino también una explicación de sus interacciones con otras
+   categorías, conceptos o teorías. Lo anterior debe reflejarse en la presentación
+   de un diálogo de las categorías con las teorías revisadas y sintetizadas. Si bien
+   se puede defender o contradecir una o más teorías, es necesario revisar más de
+   una a la hora de plantear la argumentación. Lo anterior, se debe a que en estas
+   investigaciones es necesario entablar, y mostrar en su marco, un diálogo con
+   cada una de las definiciones de las categorias abordadas y sus interacciones.
+   Es decir, que se deben exponer los puntos en que los diversos autores
+   convergen o divergen en relación con la conceptualización de las categorias
+   seleccionadas. Por lo tanto, se debe desarrollar una nueva conceptualización a
+   partir de su análisis e interpretación del contraste realizado emtre dichos puntos.
+4. Comparar y verificar la validez de los conceptos, proposiciones y argumentos
+   presentados en el paso anterior con la primera recolección de información. Este
+   contraste debe generar la derivación y descripción detallada de nuevos
+   postulados teóricos que permitan guiar el resto de la investigación. En este
+   sentido, lo presentado en el marco teórico debe ser susceptible de ser puesto a
+
+
+
+
+                                                                              prueba
+                                                                              con la
+    primera información recolectada y no postularse como la mejor o la única
+    explicación posible a los fenómenos observados.
+
+
+
+Recomendaciones generales para la
+escritura de marcos teóricos
+ ∙ Se debe tener siempre en mente que el marco teórico es un texto y, que como tal,
+    requiere una estructura clara. Debe tener una introducción (propósito y
+    estructura del texto), un desarrollo (definiciones, argumentos y/o relaciones
+    lógicas expuestas de manera coherente en párrafos) y una conclusión (síntesis
+    que recapitule los principales postulados del marco teórico).
+ ∙ Es importante que el lector comprenda por qué se eligió el marco teórico
+    expuesto para abordar el problema de investigación. Esto permite comprender
+    que el proceso investigativo no es arbitrario y que se realizó un trabajo
+    sistemático para seleccionar y elaborar el marco teórico presentado.
+ ∙ La elaboración del marco teórico requiere el planteamiento de un plan detallado.
+    No se debe redactar de manera apresurada y sin tener claro el propósito y los
+    elementos que deben estar presentes en el texto.
+Referencias
+Creswell, J. (2014). Research design: Qualitative, quantitative, and mixed methods
+approaches. Sage publications.
+Imenda, S. (2014). Is there a conceptual difference between theoretical and conceptual
+frameworks?. Journal of Social Sciences, 38(2), 185-195.
+
+
+Strauss, A., & Corbin, J. (2002). Descripción, ordenamiento conceptual y teorización.
+Bases de la investigación cualitativa. Técnicas y procedimientos para desarrollar la
+teoría fundamentada (19-20). Antioquia, Colombia: Editorial Universidad de Antioquia.
+

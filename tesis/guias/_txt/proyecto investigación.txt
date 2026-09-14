@@ -1,0 +1,1551 @@
+              Guía para proyectos de investigación
+                                       Research projects guide
+
+
+                                 Ángel Montes del Castillo1 / Alberto Montes Martínez
+                                                                                                         amontes@um.es
+
+        Resumen
+        En este artículo se presenta un modelo para la elaboración de proyectos de investigación en ciencias
+        sociales. En él se ofrece un esquema que puede ser utilizado tanto por alumnos universitarios como por
+        profesionales procedentes de diferentes ciencias sociales y se describen brevemente cada uno de los
+        apartados que lo com ponen. Es un modelo ya experimentado, con éxito, en los últimos años en la
+        Universidad de Murcia (España) por alumnos de Grado, Máster y Doctorado y por profesores e
+        investigadores profesionales.
+
+        Palabras claves
+        Proyecto, investigación, alumnos, investigadores, bibliografía, fundamentación teórica, proceso
+        metodológico.
+
+        Abstract
+        In this article we present a model for the development of research projects in the social sciences. We offer a
+        scheme that can be used by both university students and professionals from different social sciences, and
+        briefly describe each of the sections that compose. It is a model already experienced in recent years at the
+        University of Murcia for the degrees of Bachelor students, Master and Doctorate.
+
+        Keywords
+        Research project, students, researchers, bibliography, theoretical basis, methodological process
+
+
+         Forma sugerida de citar: Montes del Castillo, Á., & Montes Martínez, A. (2014). Guía para proyectos de
+                             investigación. Universitas, XII (20), enero-junio, pp. 91-126.
+
+
+
+
+         1 Docente de la Universidad de Murcia
+
+
+
+
+           ISSN impreso: 1390- 3837 / ISSN electrónico: 1390-8634, UPS-Ecuador, No. 20, enero-junio 2014, pp. 91-126.
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+
+
+
+
+Introducción
+     En este artículo vamos a describir las diferentes partes de un proyecto de
+investigación en ciencias sociales. Lo haremos detallando cada una de ellas,
+de manera que cualquier lector, y de modo especial los alumnos de Grado,
+Máster y Doctorado de titulaciones como Trabajo Social, Sociología, Antropo
+logía, Educación Social, Magisterio, Psicología, Economía, Derecho y de otras
+disciplinas tengan un instrumento para elaborar sus propios trabajos Fin Gra
+do, trabajos Fin de Máster o sus proyectos de tesis doctoral de sus respectivas
+titulaciones.
+      Somos conscientes de que los responsables académicos de cada una de las
+titulaciones indicadas pueden ofrecer a sus alumnos instrumentos parecidos,
+subrayando o destacando sus propias peculiaridades, de acuerdo con sus tra
+diciones teóricas o metodológicas. No obstante, nos atrevemos a hacer nuestra
+aportación y a presentar un instrumento ya experimentado en varias investiga
+ciones con anterioridad por su comprobada utilidad para los alumnos, de todas
+las titulaciones mencionadas, que se inician en la investigación.
+ Nosotros proponemos un modelo con el cual se pueden identificar alumnos y
+    profesores de cada una de esas titulaciones con ligeras variantes, según su
+ identidad y tradición académica. En sus proyectos de investigación los trabaja
+  dores sociales mirarán más hacia la intervención social, conectando la investi
+ gación con la acción social. Los sociólogos se preocuparán más por las teorías
+  sobre la vida social. Los antropólogos preferirán poner énfasis en la cultura y
+    en sus efectos sobre el comportamiento y sobre las instituciones sociales.
+        Maestros y educadores sociales se interesarán más por los aspectos
+       educativos, y los psi cólogos por el aprendizaje social y la estabilidad
+    emocional de los individuos. Los economistas preferirán centrarse en los
+      procesos de intercambio de bienes y servicios en la sociedad moderna,
+dominada por la internacionalización de todos los procesos y sus efectos sobre
+      las condiciones de vida, y los licenciados en derecho por los aspectos
+                   jurídicos de las complejas relaciones sociales.
+  Pero en todos los casos, en todos esos potenciales proyectos de investiga ción,
+       tendrá que haber un problema de investigación y un objeto de estudio bien
+ definido, y será necesario desarrollar una serie de estrategias que incluyen revi
+    sión de la literatura sobre la temática de que se trate, fundamentación teórica
+          de acuerdo con las bases de cada disciplina, descripción del proceso de
+                                                                         obtención
+
+
+
+                                                 92
+                Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+
+
+
+
+      y análisis de datos empíricos y presentación de conclusiones. Y nosotros aña
+        dimos, además, que debe haber una elaboración de propuestas para el cambio
+        social apoyadas en el análisis social en el contexto de la investigación- acción.
+             Al iniciar la descripción de esta guía es imprescindible recordar dos cues
+        tiones básicas. Primero, que un proyecto de investigación es una unidad, es un
+        todo constituido por diferentes partes o elementos relacionados entre sí para
+        elaborar un producto final, que es el informe de investigación sobre nuestro
+        objeto de estudio. Y segundo, que la condición básica de todo proyecto de in
+        vestigación es que debe presentar una coherencia entre todos sus elementos o
+        partes. De manera que, cada elemento tiene una entidad por sí mismo y, al
+        mismo tiempo, todos mutuamente se relacionan entre sí. Esto quiere decir, que
+        debe haber un equilibrio entre sus diferentes partes.
+             Confiamos en que este Modelo o Guía de Proyectos de Investigación que
+        presentamos sea de utilidad, no sólo para alumnos de la Universidad de Mur
+        cia, sino también para los de universidades latinoamericanas, y, especialmente,
+        ecuatorianas.
+
+
+         1. Identificación
+
+            Todo proyecto de investigación debe tener unos rasgos básicos para su
+        identificación. Y ésta, la identificación, procede, en primer lugar, del título y
+        del subtítulo y del autor.
+            La primera pregunta que se plantea es esta: ¿Cuál es el título del proyecto
+        de investigación? Esto es lo que identifica al proyecto. Es su seña de identidad.
+        El título debe reflejar con claridad y concisión el contenido del proyecto sin
+        ambigüedad. De ninguna forma el título debe proponer algo que, después, en
+        su desarrollo, no se vaya a plantear en el mismo, porque ello induce a
+        confusión. Este es uno de los errores frecuentes en los proyectos de
+        investigación que he
+        mos consultado y valorado.
+            El título se puede completar con un subtítulo del proyecto de investigación
+        que concreta, acota o especifica su contenido. La concreción del título puede
+        hacerse de muchas maneras. Una es señalando el lugar, zona o región donde
+        se va a realizar la investigación; otra indicando el período de tiempo del es
+          tudio; otra describiendo la población o muestra del mismo, es decir, el sector
+
+
+
+                                                                  93
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+
+
+
+
+de población objeto de estudio; otra puede hacer referencia al contenido o a la
+orientación teórica o al tipo de técnicas de investigación utilizadas; y, además
+de las señaladas, otras más.
+     Evidentemente, la identificación del proyecto de investigación incluye ex
+plicitar quién es el autor del mismo y la titulación de la que éste procede. Esta
+información tiene sentido ya que, en algunos casos, puede que la perspectiva
+teórica y metodológica de la disciplina de pertenencia del alumno puede condi
+cionar o impregnar el planteamiento teórico y metodológico del proyecto. Esto
+tiene, además, pleno sentido para el propio autor que, con esta declaración, se
+obliga a situar el proyecto en una perspectiva teórica y metodológica u otra.
+Pero también tiene sentido para el tribunal que lo ha de juzgar, pues le ayudará
+a situar adecuadamente el proyecto. Los mismos temas o problemas de inves
+tigación pueden ser abordados de diferente manera según la perspectiva que
+asuma el investigador o investigadores, según la disciplina desde la cual se va
+a estudiar, según la orientación teórica que se asuma o la perspectiva metodo
+lógica que se va a utilizar.
+     Esta información se completa indicando la línea de investigación en la que
+se ubica el proyecto de investigación, el nombre del profesor tutor que lo
+dirige y los descriptores que explicitan su contenido.
+   Señalar la línea de investigación a la que se vincula el proyecto de investi
+gación es una exigencia básica y todas ellas deberían aparecer en la documenta
+ción a la que tienen acceso el alumnado cuando hace su elección para iniciar el
+ proceso. Asociadas a las líneas de investigación están el profesor o profesores
+ responsables de las mismas. La línea de investigación es una de las formas de
+   acotar el proyecto de investigación. Las líneas de investigación social son
+     múltiples y cambiantes en relación a la realidad social y los problemas
+      sociales. Son dinámicas porque reflejan las preferencias y propuestas
+investigativas del profesorado responsable de ellas. La definición de una línea
+ de investigación permite concretar y asociar a ella el Proyecto de Trabajo Fin
+ de Grado o de Trabajo Fin de Máster. Al asociar un proyecto de investigación
+    a una línea de investigación concreta se está facilitando una información
+                                básica del mismo.
+       Los descriptores son las palabras clave que reflejan sintéticamente el con
+ tenido teórico o metodológico del proyecto de investigación. Se suelen utilizar
+   entre cinco y diez descriptores en cada proyecto de investigación y suelen or
+   denarse de lo más general a lo más particular. Los descriptores suele ser tan-
+
+
+
+                                                 94
+                Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+
+
+
+
+      to temáticos como metodológicos, y también localizadores de lugar y tiempo.
+        Constituyen una información más para la identificación del proyecto. Para
+        terminar, una última referencia para responder a la pregunta que fre
+        cuentemente nos plantean los alumnos sobre ¿Cómo se elige el tema del pro
+        yecto de investigación?
+            Frecuentemente, el alumnado está confuso a la hora de responder esta pre
+        gunta. Aunque más adelante se aborda esta cuestión con más detalle, se puede
+        adelantar aquí que conviene que el alumno al elegir línea y problema o tema
+        de investigación tenga en cuenta sus propios intereses académicos y sociales,
+        sus capacidades y destrezas en investigación, o la dimensión aplicada del tema
+        para la acción social. La elección debe tener, también, en cuenta la formación
+        y ex periencia investigativa del director o tutor del proyecto. Sin duda,
+        acogerse a la tutoría de un profesor que tiene un currículum directamente
+        relacionado con la temática del proyecto de investigación, que propone el
+        alumno, es una garantía de tener una buena orientación académica.
+
+
+        2. Justificación de la investigación
+
+              Pero hay una cuestión clave que es necesario responder antes de nada. Es
+        ésta: ¿Por qué esta investigación y no otra? ¿Por qué este tema, cuestión o pro
+        blema de investigación y no otro?
+              Este es uno de los apartados principales de un proyecto de investigación.
+        En él se trata de responder a la pregunta: “por qué” se propone la investigación
+        que se pretende hacer. Algunos alumnos, e incluso profesores, dan por
+        supuesto que la investigación que quieren llevar a cabo tiene sentido, por la
+        simple razón de que a ellos se les ha ocurrido y que no es necesario justificar
+        nada. Como si esto fuera razón suficiente para iniciar una investigación. En
+        realidad no es así.
+             La justificación de la investigación consiste en responder a la pregunta “por
+           qué” se propone hacer esta investigación y no otra. Qué razones la justifican.
+             Éstas, las razones, pueden ser de distinto tipo. Hay razones científicas, socia
+            les, políticas, académicas, personales o profesionales. Se trata de justificar la
+           investigación que se propone. Algunos investigadores, alumnos y profesores,
+          consideran que todo lo que se les ocurre investigar tiene sentido. Y otros más
+
+
+
+
+                                                                  95
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+
+
+
+
+osados se permiten decir que no es necesario justificar por qué se hace una in
+vestigación concreta. Pero las cosas no son así.
+     Para aquel alumno que se enfrenta por primera vez a la tarea de diseñar
+una investigación es importante que su elección se justifique por aquellos
+motivos que han sido importantes para él. Es decir, que el tema sea de interés
+personal, que haya tenido relación con el colectivo que es objeto de estudio,
+que sea, en fin, un tema motivador y que le suponga un reto personal
+abordarlo aportando algo nuevo. Hay multitud de investigaciones, de
+proyectos de investigación, in
+cluso de tesis doctorales, que repiten una y otra vez proyectos de investigación
+que han sido realizados con anterioridad y que no permiten crear ni aumentar
+el conocimiento, que es de lo que se trata. Replicar investigaciones realizadas
+con anterioridad sólo se justifica si se quiere poner a prueba, para confirmar o
+rebatir una determinada teoría.
+     Esta es la clave de todo proyecto de investigación. Responder a preguntas
+como estas: ¿La investigación que se propone permite aumentar el conocimien
+to disponible sobre el tema de estudio elegido? ¿Cuál es su interés para las
+relaciones sociales? ¿Qué incidencia política tiene el problema de
+investigación que se propone? ¿Cuáles son las aplicaciones prácticas de
+nuestro objeto de estudio? ¿Qué utilidad tiene para el ejercicio de nuestra
+profesión?
+     Esa es la cuestión principal. Algunos creen que por haber pensado en inves
+tigar una determinada temática es suficiente para seguir adelante. Otros inves
+tigadores pueden haber realizado la misma investigación con anterioridad. Por
+lo tanto, la única forma de salir de dudas es realizar una revisión exhaustiva de
+la literatura sobre la temática que nos proponemos. Sobre esto hablaremos más
+adelante.
+
+
+2.1. Delimitación del problema o tema de estudio
+
+    En consecuencia de lo que hemos mencionado anteriormente, lo primero
+de todo es delimitar el tema, objeto o problema que se pretende investigar. Es
+preciso definirlo con claridad, precisión y de la forma más concreta posible. Se
+recomienda, como es lógico, que la temática del proyecto de investigación sea
+acotable y realista, actual y con una dimensión aplicada.
+
+
+
+
+                                                 96
+                Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+             Acotable y realista quiere decir que sea posible realizar la investigación.
+        Algunos alumnos plantean, a veces, temas o problemas de investigación tan
+        difusos y amplios, que ni con un equipo de investigadores sería posible abor
+        darlos. En principio, un proyecto de investigación debería poder ser realizado
+        por el autor que lo propone. Se trata del diseño de un proyecto de investigación
+        viable, aunque no llegue a ejecutarse. Se trata, en definitiva, de elaborar un
+        “proyecto”, independientemente de que después se realice o no, que sea cohe
+        rente con la idea que venimos desarrollando.
+             El proyecto de investigación debe hacer referencia a una problemática so
+        cial actual, a cuestiones sociales que tienen que ver con la sociedad en la que
+        el investigador vive y trabaja. Tiene que estar vinculado al contexto socio-
+        políti co. Ni los trabajadores sociales ni los científicos sociales son
+        historiadores de lo social. Otros se ocupan de la historia. Los científicos
+        sociales son investiga dores de la actualidad social.
+          Pero, además, es un valor añadido que el proyecto de investigación tenga una
+               dimensión aplicada. ¿Qué implica esta dimensión aplicada? Aunque más
+             adelante volveremos sobre esto, conviene adelantar ahora que se trata de in
+           vestigar los asuntos y problemas sociales no por pura especulación, sino para
+        abordar problemas concretos de un grupo humano determinado y dar respuesta
+          a los mismos. La investigación social es para la acción social, como hemos re
+         petido en muchas ocasiones (Montes del Castillo, 2012:25). O, como prefieren
+                 decir los trabajadores sociales, “la investigación es para la intervención
+                                                                                   social”.
+
+
+         2.2. Planteamiento del problema
+
+              Por eso, en todo proyecto de investigación debe haber un apartado en el
+        que se haga un planteamiento razonado del problema de investigación. Esto es
+        básico en toda investigación. ¿Cuál es el problema de investigación que se
+        plantea en el proyecto? Es lo mismo que decir, ¿a qué problemas teóricos
+        quiere dar respuesta esta investigación? ¿Cuáles son los problemas teóricos o
+        las cues
+           tiones teóricas a las que el investigador quiere dar respuesta con su proyecto?
+         Un proyecto de investigación se diseña, en principio, para dar respuesta a una
+          serie de incertidumbres o ignorancias que se tienen sobre un asunto con creto.
+                  Esto es algo radicalmente distinto de la muestra o población objeto de
+
+
+
+                                                                   97
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+estudio. Esta es una confusión frecuente. Una cosa es el problema teórico que
+se pretende resolver y otra diferente la muestra o población objeto del estudio.
+Lo primero, el problema, hace referencia a qué problemas teóricos se quiere
+responder con la investigación. Lo segundo, la muestra, es el objeto sobre el
+que se va a investigar.
+    Por ejemplo, un problema teórico podría ser: la relación entre minorías re
+ligiosas y conflicto escolar. Es decir, cómo afecta la pertenencia a una minoría
+religiosa a la vivencia de conflictos en el ámbito escolar. ¿Cuál es el objeto de
+investigación sobre el cual se va a estudiar ese problema teórico? Con otras
+palabras, con qué grupos o con qué población se va a estudiar ese problema.
+Esta segunda cuestión permite acotar y definir la muestra o población objeto
+de estudio. Así, podríamos plantear estudiar este problema teórico con
+diversos grupos académicos como en el ámbito escolar de primaria,
+secundaria, univer sidad, centros públicos o privados, etc…
+    También podemos tener un problema teórico que consiste en identificar y
+describir la diversidad cultural en la región de Murcia, por ejemplo, para
+generar una propuesta de intervención social frente a conflictos interculturales
+existentes en la población. Lo primero, la diversidad cultural, es nuestro proble
+ma teórico. Lo segundo, la región de Murcia, es la población en la que vamos
+a investigar el problema propuesto o una parte de esa población. Se trata, por
+tanto, de identificar qué problema teórico se quiere abordar en relación al
+objeto de estudio y qué aspecto o aspectos del mismo se pretende investigar.
+Esta es una distinción básica que si el investigador no tiene clara puede ser
+motivo de errores a lo largo de todo el proceso.
+    Esta es una decisión fundamental que hay que tomar, porque el alcance o
+la capacidad de generalización de las conclusiones de la investigación,
+depende de ello, es decir, de las características de la muestra. Lo que se afirma
+en el pro yecto de investigación, las conclusiones, están en relación al objeto
+de estudio o muestra investigada.
+
+
+2.3. Preguntas sobre el problema de investigación
+
+   Hablar de preguntas supone que el investigador tiene ignorancias varias
+sobre el problema de investigación. Esto es algo que hay que aceptar como
+
+
+
+                                                 98
+                Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+
+
+
+
+      un principio básico. Sin duda, sobre la mayor parte de las cuestiones sociales
+        tenemos intuiciones, sospechas y opiniones más o menos vagas, pero no nece
+        sariamente opiniones fundamentadas. Sin embargo, para que esas ignorancias
+        puedan ser abordadas en la investigación es necesario que se formulen y se ex
+        pliciten en forma de preguntas que las definen y concretan. Con otras palabras,
+        necesitamos formular en forma de interrogantes nuestras ignorancias, tanto so
+        bre el problema de investigación como sobre el objeto de estudio, teniendo en
+        cuenta las aclaraciones ya comentadas en el punto anterior. Esta operación es
+        fundamental. Realizarla bien es la garantía de calidad de la investigación y, en
+        consecuencia, del éxito académico del proyecto. Realizar la mal es la causa de
+        fracasos académicos y editoriales.
+             Aunque formular preguntas parece un asunto muy simple, en realidad no
+        lo es. Las preguntas de una investigación son básicas, porque marcan la pauta
+        de toda la investigación y orientan la búsqueda de respuestas a lo largo de
+        todo el proceso. Las preguntas marcan la dirección y la orientación de todo el
+        proceso de la investigación. Por eso, encontramos tantas investigaciones
+        desorientadas que responden a preguntas que no se han formulado o que no
+        responden a pre
+        guntas que debían haberse formulado.
+             Siguiendo con el ejemplo sobre minorías religiosas y conflicto en el ám
+        bito escolar, algunas preguntas podrían ser estas: ¿Hay diversidad escolar en
+        los centros educativos de la región de Murcia? ¿Hay diversidad religiosa en
+        los centros educativos? ¿Hay conflictos interculturales e interreligiosos? ¿Qué
+        características tienen esos conflictos?, etc… etc.
+          A continuación, recogemos también, como ejemplo, algunas de las pregun tas
+           que formulamos en una de nuestras últimas investigaciones sobre diversidad
+           cultural y religión en la región de Murcia. Después de plantear los supuestos
+             de esta investigación formulábamos las siguientes preguntas que serían res
+            pondidas en la misma: “¿Cuáles son los grupos religiosos minoritarios en la
+             región de Murcia? ¿Cuál es su grado de implantación en la región? ¿Cómo
+          están distribuidos territorialmente? ¿Cuáles son sus prácticas sociales, educati
+          vas, culturales, económicas o religiosas? ¿De qué modo están integrados en la
+          sociedad y en la cultura murciana? ¿Cómo se relacionan con el entorno social
+        más inmediato y con el contexto social y político? ¿Cuáles son los factores que
+         activan la integración social o el conflicto? ¿Qué rasgos identifican a cada uno
+           de estos grupos? ¿A qué juego de intereses están vinculados? ¿De qué modo
+
+
+
+                                                                  99
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+
+
+
+
+es asumida la llamada Alianza de Civilizaciones en la práctica y otras políticas
+gubernamentales? ¿En qué dirección puede caminar el pluralismo religioso?
+¿Cuáles son las medidas más oportunas para facilitar la convivencia intercultu
+ral o interreligiosa? ¿La reciprocidad es el fundamento de la integración y de la
+aceptación social de la diversidad? ¿De qué manera podría activarse la recipro
+cidad a nivel local, nacional o internacional?” (Montes y Martínez, 2011A:
+39).
+     Como se puede observar, las preguntas se refieren tanto al conocimiento
+como a la acción, porque ambas cuestiones son básicas en toda investigación
+social. Queremos conocer las relaciones sociales o algún aspecto de las mis
+mas, pero queremos también impulsar la acción, el cambio social.
+    Una de las maneras más prácticas de resolver este problema es partir de lo
+más general a lo más particular. De manera que, desde una temática general
+de investigación, vayamos descendiendo a cuestiones concretas englobadas en
+aquella, en territorios concretos muy acotados, con población muy específica,
+en un espacio de tiempo acotado en meses o años, etc.
+    No hay que tener miedo en el proyecto de investigación a formular todas
+las interrogantes que se nos ocurran, al principio, sobre el objeto de estudio,
+por más peregrinas que parezcan. El desarrollo de la investigación permitirá ir
+cribando qué preguntas son pertinentes, y cuáles no son pertinentes o resultan
+redundantes. Pero, lo cierto es que, todas esas interrogantes señalan las lagunas
+que tenemos en el conocimiento del objeto de estudio al comienzo, y marcan
+el proceso mismo, o trayectoria de la investigación. En este proceso se irán res
+pondiendo aquellas preguntas que resulten pertinentes y adecuadas.
+
+
+2.4. Justificación del tema de estudio
+
+    Pero el tema de estudio o problema de investigación que se quiere abor dar
+debe ser justificado. No todo vale. Quiere esto decir que el investigador debe
+explicitar los motivos y razones que justifican la investigación del tema
+propuesto. En este punto nos encontramos con una gran variedad de razones y
+motivos, como hemos adelantado anteriormente.
+    Las razones principales, sin duda, son las científicas, es decir, aquellas que
+hacen referencia al progreso del conocimiento sobre un determinado problema
+y objeto de estudio. La razón es bastante simple. Toda investigación, por defi-
+
+
+
+                                                100
+                Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+
+
+
+
+      nición, pretende, en primer lugar, aumentar el conocimiento, en este caso,
+        sobre algún fenómeno de la realidad social. Pero las razones sociales y
+        políticas no son menos importantes, por la sencilla razón de que el
+        conocimiento es para la acción, y, por tanto, para el cambio social y, en
+        consecuencia, para resolver problemas y conflictos sociales. Los motivos
+        personales y profesionales suelen tener también mucha importancia en las
+        investigaciones. Unas veces queremos dar respuesta, con la investigación, a
+        problemas personales no resueltos que arrastramos desde años, y otras
+        estamos interesados en resolver con la investi gación interrogantes procedentes
+        de nuestra propia práctica profesional. Ambos motivos son totalmente
+        pertinentes y deben ser tenidos en cuenta en nuestras investigaciones, porque
+        suelen ser activadores de nuestra actividad profesional. Por último, también
+        conviene recordar algo bastante obvio. Y es que los co
+        nocimientos y recursos previos que tenemos sobre un fenómeno social, por la
+        razón que sea (preparación intelectual, práctica profesional, tiempo disponible
+        o recursos, etc.), pueden condicionar también su estudio y ser un motivo más,
+        además de los indicados, para iniciar su estudio.
+            Así que para comenzar una investigación, podemos tener razones cientí
+        ficas, sociales y políticas, y motivos personales y profesionales, y, a la vez,
+        disponer de recursos para iniciar una investigación social y no otra. Todos son
+        perfectamente respetables y deben explicitarse en el proyecto.
+
+
+         2.5. Relevancia científica y social de la investigación
+
+            Un factor determinante para iniciar y realizar una investigación social es
+        también su relevancia para el conocimiento del fenómeno de que se trate y
+        para la acción social. Determinar, desde el principio, la relevancia científica
+        de la investigación y la relevancia social es fundamental. Esa es la cuestión.
+        ¿Cuál es el interés de la investigación que pretendemos para el conocimiento
+        y cuál su utilidad para la acción?
+         Entendemos por relevancia científica la posibilidad de aumentar, o de apor tar
+              algo por pequeño que sea, respecto al conocimiento sobre el fenómeno es
+        tudiado en la investigación. Quiere decir que la investigación del tema u objeto
+          de estudio es relevante desde el punto de vista científico o incremento del co-
+
+
+
+
+                                                                 101
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+
+
+
+
+nocimiento. Entendemos por relevancia social la posibilidad de contribuir a la
+resolución de problemas o conflictos sociales a través de la investigación. En
+síntesis, una investigación tiene relevancia científica si aumenta el co
+nocimiento del objeto de estudio y tiene relevancia social si permite resolver
+conflictos sociales o contribuye a su resolución.
+     Son, por tanto, dos cuestiones complementarias. Muchos investigadores
+cuando abordan el estudio de un fenómeno, con frecuencia, se desentienden
+de ambas cuestiones. Ni se cuestionan la relevancia científica (su aportación al
+conocimiento), ni se preocupan de la relevancia social (su aportación a la reso
+lución de problemas sociales). Ambos olvidos convierten a muchas investiga
+ciones en ejercicios retóricos inservibles para aumentar el conocimiento, que
+es de lo que se trata en la ciencia, y en productos inútiles para resolver
+cuestiones sociales, que es el fin último del conocimiento científico. Pero, si
+la investiga ción social ni aumenta el conocimiento sobre la sociedad, ni sirve
+para resolver problemas humanos, ¿para qué la investigación? Responder a
+esta pregunta nos llevaría a los motivos bastardos y diletantes de muchas
+investigaciones. Pero no vamos a profundizar ahora en una cuestión que nos
+llevaría a otro terreno, el de la función social del conocimiento, base y
+fundamento de la ciencia y, de modo especial, de las ciencias sociales.
+
+
+2.6. Definición de vacíos en el conocimiento y aportaciones
+
+     Todo lo dicho anteriormente tiene como punto de partida los vacíos que
+tenemos en el conocimiento del objeto de estudio, y como punto de llegada las
+aportaciones que traerá la investigación sobre el mismo. Si no tenemos igno
+rancias sobre el tema, u objeto de estudio, o no sabemos identificarlas no tiene
+sentido iniciar una investigación. Por eso, es tan importante formular adecua
+damente las preguntas que van a guiar la investigación, como se ha sugerido
+anteriormente. En ellas está el origen de la investigación. De igual forma, si no
+formulamos, adecuadamente, el tipo de aportaciones de la investigación que
+nos proponemos no sabemos ni el camino que debemos seguir, desde el punto
+de vista metodológico, ni intuir el resultado final.
+     Evidentemente, la identificación de los vacíos en el conocimiento, como
+veremos a continuación, proceden de una revisión amplia de la bibliografía
+dis-
+
+
+
+                                                102
+                Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+
+
+
+
+      ponible sobre el tema de investigación. Pero no es la única fuente. Es también
+        fundamental la práctica profesional de los activistas sociales. Ésta, la actividad
+        profesional, con frecuencia, plantea preguntas a los profesionales que deben
+        ser respondidas mediante la investigación social. Así lo reconocemos en
+        nuestra investigación presentada como tesis doctoral en la Universidad
+        Complutense de Madrid (Montes del Castillo, 1989: 16), o en la investigación
+        sobre remesas, presentada como Trabajo Fin de Grado en la Universidad de
+        Murcia (Montes Martínez, 2010).
+
+
+        3. Revisión bibliográfica
+
+            Toda investigación, y de modo especial la investigación social, se apoya
+        en algún tipo de intuición explicativa sobre algún fenómeno social. El
+        investigador social vive en su sociedad y se hace permanentemente preguntas
+        sobre las cosas que pasan a su alrededor. A veces las preguntas sobre la
+        conducta humana son simples y fáciles de responder. Pero, otras veces las
+        preguntas son complejas y requieren, en consecuencia, respuestas complejas.
+        Es entonces cuando el in
+        vestigador se plantea iniciar un proceso de investigación para responder a esas
+        preguntas, no sólo para satisfacer su ansia de conocimiento sino también para
+        poder orientar su práctica social de manera certera. Ése es el origen ortodoxo
+        de la investigación social. Se investiga la conducta humana para poder dirigir
+        adecuadamente la acción social (Montes del Castilo, 2012: 25).
+            Por eso, la revisión de la literatura disponible sobre un tema concreto es
+        una de las fases más importantes de todo proceso de investigación. Los inves
+        tigadores necesitan saber lo que se ha investigado y dicho sobre el asunto que
+        pretenden conocer. Necesitan saber lo que se ha hecho con anterioridad para
+        no ser redundantes en sus investigaciones y hacer avanzar el conocimiento.
+        Esta es una afirmación sobre la que no hay dudas.
+            Es necesario conocer qué se ha investigado, cómo y con qué resultados. El
+        problema es cómo proceder en la práctica para conseguirlo. ¿Cómo conocer y
+        valorar lo que se ha investigado hasta el momento? ¿Qué estrategias son las
+        más pertinentes?
+            A veces, dependiendo del tema de investigación, la literatura disponible es
+        acotable por un solo investigador. Pero, en muchos casos, la literatura es tan
+
+
+
+                                                                 103
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+
+
+
+
+amplia y dispersa, que es necesario definir las estrategias más adecuadas de
+búsqueda y selección bibliográficas y documentales, para no perderse o dispo
+ner de varios investigadores.
+    Actualmente, estas estrategias de búsqueda se han multiplicado debido a
+las posibilidades que facilita la informática a través de las bases de datos
+documen tales, los repertorios bibliográficos o, simplemente, las bibliotecas o
+los centros de documentación especializados. La estrategia de búsqueda
+documental, para acudir a las bases de datos de revistas especializadas por
+ejemplo, podría ser de acuerdo a unos criterios que nos ayuden a reducir el
+amplio abanico de documentos con los que nos podemos encontrar. Así,
+recomendamos el uso de algunos de esos criterios, como pueden ser los
+siguientes: usar descriptores relacionados con el tema objeto de estudio,
+seleccionar la búsqueda en deter
+minados espacios temporales, o circunscribir la búsqueda al espacio
+geográfico donde ubicamos la investigación, o al grupo humano al que nos
+referimos, o a la metodología empleada, etc. etc.
+    En cada investigación es necesario describir las diferentes estrategias de
+búsqueda documental utilizadas, es decir, cuáles han sido los procedimientos
+de búsqueda. La razón es que el valor y el sentido de la revisión bibliográfica
+son diferentes en función de la estrategia utilizada. La relevancia de la revisión
+bibliográfica depende precisamente, en primer lugar, del proceso seguido para
+su búsqueda.
+    La cuestión, sin embargo, no termina ahí. Además, es necesario exponer el
+procedimiento que se ha seguido para tratar o analizar la bibliografía recupera
+da. La razón es que no se trata sólo de hacer una enumeración de referencias bi
+bliográficas, sino de mostrar sus contenidos relacionados siempre con el tema,
+problema u objeto de la propia investigación que pretendemos.
+    Por eso, proponemos a continuación una serie de pasos para abordar la re
+visión bibliográfica en una investigación social. No es el único modelo
+posible. Otros autores quizá puedan proponer otros modelos. A nosotros nos
+ha sido de gran utilidad manejar el esquema que describimos a continuación
+paso por paso y que ya hemos experimentado con anterioridad en nuestras
+investigacio nes. Quizá en algún caso no será necesario aplicar rígidamente
+todos los pasos que aquí se sugieren, pero, como modelo general, nos parece
+adecuado porque recoge todos los aspectos que consideramos imprescindible
+para abordar una revisión bibliográfica.
+
+
+
+                                                104
+                Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+
+
+
+
+          En primer lugar, es necesario efectuar una revisión de la literatura dispo
+        nible sobre el tema de la investigación. Las preguntas, para comenzar, podrían
+        éstas: ¿Qué se ha escrito sobre el tema, problema u objeto de nuestra investi
+        gación y desde qué perspectivas u orientaciones teóricas? Con otras palabras.
+        ¿Qué estudios se han realizado y desde qué disciplinas?
+            Indudablemente, por poner un solo ejemplo, el desempleo juvenil puede
+        abordarse, al menos, desde disciplinas académicas tan diferentes como la eco
+        nomía, la sociología, la psicología, la antropología o el derecho del trabajo.
+        De modo que cada disciplina ofrece una perspectiva propia. La ambición lleva
+        a los jóvenes investigadores a tratar de abordar un fenómeno desde todas las
+        perspectivas que se les ocurre, pero, con frecuencia, ésta es una tarea
+        imposible que suele desanimar bastante. Se pueden mencionar las distintas
+        perspectivas posibles, pero es imprescindible elegir la perspectiva que al
+        investigador más le interesa, o con la que más se identifica o para la que está
+        más formado.
+             Se trata, por tanto, de exponer, críticamente, el contenido de la bibliogra
+        fía seleccionada. Esto se puede hacer siguiendo diferentes criterios comple
+        mentarios: Escuelas, autores, temáticas, metodología empleada, etc. Un crite
+        rio complementario para el análisis de la bibliografía es mostrar las relaciones
+        entre los diferentes estudios que hemos manejados. Es decir, mostrar aquellas
+        coincidencias, complementariedad o divergencias de los autores o documentos
+        analizados.
+            No basta, sin embargo, con enumerar las investigaciones que se han reali
+        zado con anterioridad. Es necesario desentrañar el contenido de esas investiga
+        ciones, sus aportaciones y omisiones, sus aciertos y limitaciones y, finalmente,
+        relacionarlas con nuestra propia estrategia de investigación.
+            Esto quiere decir que la consecuencia más inmediata, de lo expuesto ante
+        riormente, es la necesidad de identificar el déficit en el conocimiento del tema.
+        Qué lagunas se observan en el conocimiento sobre el tema de estudio en la
+        bibliografía consultada y qué aspectos cree el investigador que no se han estu
+        diado correcta o suficientemente.
+            Queremos, con la investigación, aumentar el conocimiento, pero debemos
+        partir de lo que se ha hecho con anterioridad revisando la literatura disponible,
+        como acabamos de sugerir, e identificar lo que no se ha estudiado, o no se ha
+        estudiado desde la perspectiva que nos interesa.
+
+
+
+
+                                                                 105
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+
+
+
+
+    Pero, no es suficiente con hacer la revisión bibliográfica y ofrecerla si
+ guiendo alguno de los criterios indicados. Es necesario, a continuación, que el
+ investigador se posicione frente al contenido de la bibliografía revisada, seña
+ lando aciertos y errores, aportaciones y limitaciones, claro está, desde el
+ propio punto de vista del investigador. Esta no es una tarea fácil debido a la
+ variedad de la bibliografía disponible y las diferentes orientaciones existentes,
+ pero, nos parece imprescindible para marcar las diferencias y señalar
+ adecuadamente las novedades del propio enfoque. Marcar esas diferencias es
+ una manera de in dicar la novedad y las posibles aportaciones de la propia
+ orientación teórica o metodológica (Montes del Castillo, 1989 y Martínez,
+ 2000).
+      El paso siguiente es mostrar la relación de la bibliografía consultada con la
+ propia investigación y con el propio enfoque del tema. Se trata, en este momen
+ to, de contextualizar la propia investigación en el conocimiento existente sobre
+     el tema. La revisión bibliográfica no es un ejercicio arbitrario en una investi
+  gación. Por el contrario, debe estar orientada a identificar lo que se ha hecho o
+  investigado, a mostrar lo que nos parecen aciertos y errores, razonadamente, y
+  a extraer conclusiones para el propio enfoque. La pregunta clave aquí es: ¿qué
+relación tiene nuestro proyecto de investigación con la bibliografía consultada?
+      Mostrar la relación de la bibliografía consultada con la propia
+ investigación y con el propio enfoque del tema es fundamental. Es una
+ consecuencia lógica de lo expuesto anteriormente. Se trata de contextualizar
+ la propia investigación en el conocimiento existente sobre el tema. Buscamos
+ la bibliografía disponible sobre el propio tema de investigación no por una
+ rutina académica exigible, sino para situar nuestro estudio en la corriente de
+ pensamiento más adecuada, según nuestro criterio.
+     Una de las consecuencias de lo dicho es señalar las aportaciones propias
+ previsibles al conocimiento sobre el tema de estudio. ¿Cuáles serán las aporta
+ ciones de nuestra investigación al conocimiento científico del objeto de
+ estudio indicado?
+      Buscamos la bibliografía disponible no como un adorno académico, sino
+ como una manera de situarnos en una determinada corriente de pensamiento.
+ Conocemos lo que otros han hecho, señalamos sus limitaciones y marcamos
+ las novedades de nuestro estudio para hacer avanzar el conocimiento, que es
+ de lo que se trata.
+
+
+
+
+                                                 106
+                 Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+
+
+
+
+           En consecuencia, es lógico que señalemos el tipo de aportaciones propias
+        previsibles al conocimiento sobre el tema de estudio. Porque lo que pretende
+        mos, en definitiva, es hacer avanzar el conocimiento del fenómeno estudiado.
+        Es cierto que a veces se realizan investigaciones para confirmar o refutar los
+        resultados que otros han obtenido con anterioridad. Confirmar, en definitiva, o
+        refutar hipótesis de otros es perfectamente válido. Pero la tendencia
+        dominante, en ciencias sociales, es mostrar las novedades de nuestra
+        investigación más que confirmar o refutar lo que otros han hecho.
+            Aunque no todos los investigadores lo hacen, es muy conveniente mostrar,
+        por último, los límites de la propia investigación. Con otras palabras, se trata,
+        en este caso, de señalar qué se incluye y qué se excluye en la propia investiga
+        ción. Es una medida de gran utilidad para los que nos puedan leer posterior
+        mente, y para el propio investigador que puede adelantar qué va a hacer y qué
+        no va a hacer. Igualmente, deja abierta la posibilidad de futuras
+        investigaciones complementarias. Se trata, en suma, de marcar los límites de
+        la propia investi gación. Esto es bueno para el propio investigador, porque le
+        permite acotar su propia investigación y, también, de interés para los posibles
+        lectores o evalua dores de su trabajo.
+            En consecuencia, con todo lo expuesto en este punto, hacer una revisión bi
+        bliográfica consistente es una labor minuciosa y que implica mucho tiempo. Es
+        una labor fundamental para posicionar una investigación en el mundo
+        científico y para desarrollar la competencia investigadora del universitario.
+
+
+        4. Fundamentación teórica del estudio
+
+            Todo proyecto de investigación debe tener una fundamentación teórica.
+        Con otras palabras, toda investigación tiene que sustentarse en una teoría, o
+        conjunto de teorías, potencialmente explicativas del fenómeno que se pretende
+        abordar.
+          Unos autores lo denominan marco teórico de la investigación, otros, sopor te
+         teórico, otros, referente teórico. Es lo mismo. Estas y otras expresiones miran
+          siempre hacia el mismo lugar, a la necesidad ineludible de que todo proyecto
+         de investigación presente un fundamento teórico que avale nuestra propuesta
+
+
+
+
+                                                                 107
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+
+
+
+
+de investigación, que pueda explicar la temática propuesta y que justifique la
+metodología que se pretende utilizar.
+     Como la misma expresión indica, la expresión “fundamentación teórica de
+la investigación”, hace referencia a la teoría o teorías sociales en las que se apo
+ya la investigación que nos proponemos realizar. Afortunadamente, no
+estamos solos en esta atractiva tarea de desvelar el funcionamiento de la
+sociedad y de las relaciones sociales entre individuos y grupos humanos, que
+es de lo que se trata. Otros, antes que nosotros, se han hecho preguntas sobre
+la sociedad, a veces parecidas a las nuestras, y han dado respuestas, más o
+menos acertadas, para dilucidar el complejo comportamiento de individuos,
+grupos humanos e instituciones sociales.
+     Esta es una tarea ineludible que todo investigador debe realizar con mi
+nuciosidad por rigor investigativo, en primer lugar, pero también por razones
+académicas, dado que un tribunal ha de juzgar la coherencia del proyecto de
+investigación en sus diferentes fases o etapas.
+     Al plantear este tema, conviene distinguir claramente entre disciplinas y
+teorías en las que se sitúa nuestra investigación. Generalmente los alumnos,
+ya sean de Grado, Máster o Doctorado, tienden a situar su proyecto de inves
+tigación en el marco de la titulación que están cursando o de la que proceden
+académicamente. Y ésta es una buena medida que evita los riesgos de perderse
+en un laberinto ajeno al propio. Pero, no necesariamente debe ser así. Nos pare
+ce que es más adecuado, aunque puede resultar más complejo, situar la propia
+investigación en una teoría, o teorías, independientemente de que éstas hagan
+referencia a la titulación de la que el alumno procede.
+     La justificación de esta sugerencia está en el hecho de que lo importante de
+un proyecto de investigación no es la titulación académica de referencia, sino
+la teoría o teorías de referencia en las que aquel se ubica, ya sea para confirmar
+las, corregirlas o ampliarlas. Por otro lado, no es ésta una sugerencia arbitraria,
+dado que en toda titulación académica hay un núcleo duro de materias que
+justifican y dan sentido a la titulación y otro conjunto de materias que la com
+plementan y amplían desde diferentes perspectivas y disciplinas.
+       Afirmamos, por tanto, que toda investigación debe hacer referencia a una
+   orientación teórica o a un sistema teórico en el que se sitúa. Así son las cosas
+ en términos generales, salvo los casos excepcionales en que un investigador in
+             venta su propia teoría social, cosa que no suele suceder con alumnos
+                                                                        candidatos
+
+
+
+                                                108
+                Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+
+
+
+
+       a una titulación universitaria de Grado, Máster o Doctorado. Nos atrevemos a
+       decir que, incluso en casos excepcionales de propuesta de nuevas teorías socia
+        les, siempre habrá un núcleo teórico de referencia del que procede la propuesta
+        de investigación y la supera.
+             Por eso, en este proceso de presentar la orientación teórica de la propia in
+        vestigación resulta imprescindible tener en cuenta la revisión de la bibliografía
+        que sugerimos en el apartado 1.3. Es necesario hacer esa referencia, precisa
+        mente, para reafirmar el sentido de nuestra propia orientación teórica y subra
+        yar las diferencias respecto a otras investigaciones anteriores y para defender
+        la pertinencia de nuestra propia orientación teórica.
+             Pero, indicar el contexto teórico en el que se mueve nuestro proyecto de
+        investigación, no es suficiente. Es necesario, además, formular las hipótesis
+        que pretendemos demostrar. Conviene, sin embargo, aclarar el sentido que
+        damos aquí al término hipótesis. El término hipótesis procede de las ciencias
+        experi
+        mentales, obedece a una lógica teórica que se basa en la experimentación, la
+        verificación y la falsación de procesos experimentales y, con cierta frecuencia,
+        ha pasado a las ciencias sociales sin mayores precisiones. Para descargar el
+        término de sus componentes experimentalistas, frecuente en alguna de las es
+        pecializaciones de la Psicología, nosotros preferimos utilizar la expresión más
+        suave de “supuestos de la investigación”.
+             Toda investigación tiene un problema teórico y un objeto empírico. Y
+        ahora añadimos, todo proyecto de investigación debe incluir una intuición
+        explicati va previa que debe demostrarse a lo largo del proceso. De modo que,
+        tanto si se usa el término “hipótesis”, con toda su carga experimentalista,
+        como si se emplea el término menos rígido de “supuestos de la investigación”,
+        estamos ante la misma situación, la necesidad de presentar respuestas
+        anticipatorias a nuestras preguntas de investigación de un fenómeno social
+        concreto.
+               Conviene añadir, de paso, que el término experimental no implica necesa
+          riamente mayor cientificidad y mayor rigor frente a lo no experimental. Es ne
+                cesario recordar las dos concepciones de ciencia que han circulado en el
+            mundo del conocimiento y del saber. Una concepción positivista de ciencia
+          denomina da nomotética (nomos = ley) que busca el establecimiento de leyes
+                 generales sobre los fenómenos estudiados y que utiliza la metodología
+          cuantitativa. Y otra concepción humanista de ciencia denominada idiográfica
+                                                                    (idiografos = particu-
+
+
+
+
+                                                                 109
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+lar) que aspira a interpretar los fenómenos sin pretensión de generalidad y que
+utiliza la metodología cualitativa (Bisquerra, 1989).
+     Pero, además de presentar la orientación teórica de la investigación y las hi
+pótesis o supuestos, es conveniente formular, anticipatoriamente, el argumento
+central de la investigación que será contrastado con los datos empíricos. Para
+aclarar el sentido de este apartado solemos preguntar a los alumnos de doctora
+do cuando comienzan a definir su proyecto de tesis doctoral: ¿Cuál es la tesis
+de esta tesis? Suelen quedarse un poco perplejos con la pregunta, pero salen
+de dudas cuando les aclaro su sentido. Lo que les quiero preguntar con esta
+expresión es cuál es la tesis o argumento, el razonamiento o la intuición teórica
+que guía la investigación. Dicho de forma más clara. Todo proyecto de inves
+tigación (sea Proyecto Fin de Grado, Proyecto Fin de Máster o Tesis Doctoral)
+tiene que tener una tesis.
+     Una consecuencia de lo anterior es hacer, en este apartado, una descripción
+de algunos conceptos básicos que se van a utilizar en la investigación y que
+proceden de la orientación teórica indicada. Cada investigación utiliza o, más
+exactamente, selecciona sus propios conceptos a partir de la revisión bibliográ
+fica con el objeto de presentar, antes de nada, las reglas del juego o las armas
+con las que se va a conducir la investigación. En esto los escolásticos lo tenían
+claro y eran sumamente rigurosos. Antes de iniciar la exposición de una tesis
+filosófica o teológica, siempre dedicaban un tiempo a la exposición de lo que
+ellos denominaban notiones, que no era otra cosa sino describir los conceptos
+que se iban a utilizar en la presentación de una tesis o problema concreto.
+     Es evidente que aquí no podemos dar una orientación general sobre cuáles
+han de ser los conceptos que se van a utilizar en el proyecto de investigación,
+porque cada investigación tendrá los suyos. Los conceptos serán diferentes se
+gún la temática de la investigación y según el soporte bibliográfico. Pero, sí es
+necesario subrayar que en todo proyecto de investigación deben describirse los
+conceptos básicos que se van a utilizar, en razón de la teoría o teorías en que
+se sustenta.
+     Para terminar este apartado sobre la fundamentación teórica de la investiga
+ción, es necesario hacer referencia a sus objetivos y finalidades. Toda investi
+gación y, por tanto, todo proyecto de investigación debe explicitar los
+objetivos y finalidades de la misma.
+
+
+
+
+                                                110
+                Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+
+
+
+
+          Esta es una cuestión que suele aparecer en la mayoría de los proyectos de
+        investigación en los que se incluye un apartado sobre los fines que se propone
+        la misma. Conviene recordar, de paso, que éste es uno de los puntos de con
+        fusión que hemos encontrado, frecuentemente, en los proyectos de nuestros
+        alumnos. Esta confusión consiste en mezclar objetivos y acciones, fines con
+        medios para conseguirlos. Esta realidad académica refleja que no se tiene claro
+        el concepto de objetivo, u objetivos, de la investigación, y se muestran, como
+        objetivos, las tareas o actividades que van a realizar en la misma.
+              Esta distinción entre objetivos y tareas es fundamental en toda investiga
+        ción para no confundir los fines, que pretende la misma, con las actividades
+        que se van a realizar en ella para conseguir dichos fines. Las preguntas que
+        planteamos para dilucidar esta posible confusión son éstas: ¿Qué quiero con
+        seguir o para qué hago esta investigación? ¿Para qué voy a realizar tal acción o
+        actividad? (Objetivos) ¿Con qué medios, actividades, acciones voy a conseguir
+        determinados fines? (Tareas).
+              Por ejemplo, “realizar una campaña de alfabetización” es una acción com
+        pleja para conseguir un fin, que podríamos definir como: “Mejorar la compe
+        tencia lecto-escritora de la población adulta”. Este sería el objetivo.
+              Nosotros distinguimos dos tipos de objetivos: objetivos científicos o de co
+        nocimiento y objetivos sociales o políticos. Los primeros, los objetivos cientí
+        ficos o de conocimiento, se refieren a las aportaciones que vamos a ofrecer
+        para la resolución del problema o problemas de la investigación. ¿Cuál puede
+        ser nuestra respuesta a las preguntas que nos hemos formulado en la
+        investigación? ¿Qué es lo que aporto con mi investigación al conocimiento
+        del problema que me he planteado?
+              Los segundos, los objetivos sociales o políticos, se refieren a la dimensión
+        aplicada de nuestra investigación. Expresado en forma de pregunta podríamos
+        decir: ¿Para qué se van a utilizar los resultados de este estudio? ¿Cuál va a ser
+        el uso o la aplicación práctica del conocimiento adquirido en la investigación?
+               En resumen, explicitar cuáles son los objetivos de conocimiento y los obje
+          tivos de acción no es excluyente, sino que son dos preguntas complementarias
+        y perfectamente pertinentes. Proceden de la Metodología Investigación Acción
+         (Montes del Castillo, 2012) que practicamos desde hace muchos años y hemos
+             plasmado en varias investigaciones (Montes del Castillo, 1989; Montes Mar
+          tínez, 2010; Montes y Martínez, 2011A), y, según la cual, el conocimiento, la
+
+
+
+                                                                 111
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+
+
+
+
+ciencia, el saber, no es autónomo e independiente sino que mira hacia la
+acción, hacia la práctica social, hacia el cambio social. Como ya hemos
+indicado, en otro lugar (Montes del Castillo, 2012) ambos elementos, ciencia
+y acción, tie nen distintas características y diferente alcance, pero siempre
+deben estar pre
+sentes en toda investigación social. El conocimiento es para la acción. Muchos
+investigadores excluyen la discusión política latente, que hay en este
+planteamiento, formulando exclusivamente los objetivos de conocimiento que
+hay en sus investigaciones. La consecuencia de ello es que se elimina el
+posible uso del conocimiento en la vida social. Al menos no se explicita. Noso
+tros consideramos, por el contrario, que todo conocimiento, se explicite o no,
+es un conocimiento para la acción, para el cambio social, para la intervención
+y, por tanto, con consecuencias para la relaciones sociales y políticas en una
+determinada sociedad. El conocimiento, en resumen, debería tener siempre una
+dimensión aplicada a la mejora de la sociedad.
+
+
+5. Proceso metodológico
+
+    Lo específico del conocimiento científico, frente a otros tipos de conoci
+miento, es el uso de un proceso metodológico sistemático para acceder al mis
+mo. Hay, sin duda, otros modos de acceso al conocimiento y al saber, de los
+que no vamos a tratar aquí, no por ello de menor interés. Nos referimos a los
+saberes generados por las diferentes religiones y las distintas escuelas
+filosóficas, basa das, en el primer caso, en intuiciones morales y en la tradición
+y, en el segundo caso, en la especulación y el razonamiento discursivo.
+    Preferimos aplicar a este apartado el título de “proceso metodológico” más
+que el que se ha utilizado habitualmente de “metodología” o de “metodología
+de la investigación”. Con ello queremos subrayar varias cosas. La primera es
+que toda investigación social es “un proceso”. Es decir, no es una acción aisla
+da sino un conjunto de acciones. Éste, el proceso, será más complejo o menos
+de acuerdo a las características mismas de la investigación, pero siempre será
+un proceso dinámico y cambiante. Utilizamos el término “metodológico” en
+el sentido clásico de los términos método o metodología, cuyo significado no
+es otro que el de mostrar el camino que vamos a seguir para acceder al cono-
+
+
+
+
+                                                 112
+                Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+
+
+
+
+      cimiento. Tenemos así los dos elementos básicos de la investigación. Camino
+      para el conocimiento y camino dinámico y activo para acceder al
+        conocimiento. Pero sigamos adelante. ¿Cuál es la primera cuestión en este
+        proceso meto dológico de nuestra investigación? La primero de todo es
+        explicitar el problema y objeto de nuestra investigación.
+             Como se ha indicado anteriormente, es preciso distinguir claramente entre
+        dos cuestiones: por un lado, los problemas teóricos a los que la investigación
+        quiere dar respuesta, y, por otro lado, el objeto de la investigación, que se refie
+        re a la muestra o población objeto de estudio.
+             Dicho de otra manera. Una cosa es el problema teórico que se pretende
+        resolver, y otra diferente la muestra o población, objeto del estudio, sobre la
+        que se va a concentrar la investigación. Lo primero es plantear a qué
+        problemas teóricos se quiere responder con la investigación. Lo segundo, la
+        muestra, es el objeto que va a ser investigado para responder a aquellos
+        problemas. Formular adecuadamente cada una de estas dos cuestiones es
+        fundamental en toda in
+        vestigación. Confundir ambos planos es a su vez origen de errores en muchas
+        investigaciones.
+             En forma de preguntas, podríamos formularlo así: ¿A qué problema quiere
+        dar respuesta esta investigación? ¿A través del estudio de qué muestra o pobla
+        ción se va a hacer?
+             A veces los estudiantes dicen: “yo quiero investigar sobre inmigración”. Y
+        la primera pregunta que les hacemos siempre es ésta: “Y qué quiere usted
+        investigar sobre inmigración”, dado que la inmigración es un fenómeno social
+        sumamente complejo con infinidad de ramificaciones y cuestiones que pue
+        den abordarse. Y, a continuación, les lanzamos una cadena de preguntas que
+        les obliga a concretar su proyecto. Los interrogantes que tienen en torno a la
+        inmigración son el problema de la investigación. Los inmigrantes de éste o
+        aquel país, de éste o aquel género, de ésta o aquella edad, etc… son el objeto
+        de estudio.
+         Es evidente que el problema de investigación debe explicitarse en el pro yecto
+          de investigación desde el comienzo. De lo contrario, el riesgo de perderse en
+              la vorágine de los datos es muy frecuente. Una vez elegido el problema de
+           investigación, y acotado debidamente, es conveniente formular las preguntas
+             que sobre él queremos responder, delimitándolo bien de otros similares. Al
+                  mis mo tiempo, es necesario justificar por qué elegimos un problema o
+                                                                              conjunto de
+
+
+
+                                                                 113
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+
+
+
+
+problemas de investigación y no otros. Es evidente que esto tiene que ver con
+los objetivos y fines de la investigación.
+    La siguiente pregunta sería esta: ¿con qué población voy a realizar mi in
+vestigación? Ésta es otra cuestión decisiva del proceso metodológico de la in
+vestigación, definir el universo y describir las características de la muestra so
+bre la que se va realizar el estudio. Conviene recordar, al hilo de lo que vamos
+diciendo, que estamos hablando de investigación empírica, no de elucubracio
+nes teóricas ni de análisis conjeturales. La variedad de muestras es muy am
+plia, pero ya sea que hablemos de colectivos (campesinos, pescadores,
+mineros, minorías étnicas, profesores, adictos, amas de casa, etc.), de
+comunidades, en el sentido antropológico del término, o de instituciones
+(educativas, sanitarias, carcelarias, religiosas, etc.), siempre estamos frente a
+conjuntos de personas agrupadas por distintas variables (edad, sexo, clase,
+parentesco, profesión, et
+nia, residencia, etc.) sobre las que se va a realizar el estudio. Los ámbitos
+preferenciales, en el caso de la Antropología Social por poner un caso
+concreto, han girado en torno a las siguientes cuestiones.
+      Del estudio privilegiado de los pueblos primitivos, se pasó al estudio de las
+      sociedades tradicionales agrícolas y ganaderas y después al de grupos sociales
+      marginales de las sociedades urbanas o complejas como minorías étnicas, gru
+      pos socialmente desfavorecidos, drogadictos, etc. Sólo en los últimos años, ha
+      habido un interés de los antropólogos por las sociedades industriales, especial
+      mente por los entornos institucionales y, en concreto, por las instituciones edu
+      cativas, penitenciarias y sanitarias, y por procesos sociales como las relaciones
+      interculturales o multiculturales” (Montes y Martínez, 2012: 43).
+
+ ¿Cuál es el siguiente paso? El paso siguiente es definir y presentar el tipo de
+  datos empíricos que se van a conseguir y cómo se van a construir para poder
+ ser analizados. Se trata ahora de construir los datos para analizarlos posterior
+           mente. Sí, hemos dicho bien, construir. Los datos para el análisis se
+                                                                    construyen.
+Porque lo que observamos en la vida social, básicamente, son conductas, sean
+  conductas corporales (la gente actúa) o conductas verbales (la gente ha bla).
+Comportamientos corporales y comportamientos verbales. Pero, para pro ceder
+   a su análisis, necesitamos un cierto grado de abstracción para convertir las
+  conductas observables en datos para el análisis. Este salto, de las conductas
+
+
+
+
+                                                114
+                Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+        a los datos, es lo que permite analizarlos a través del uso de los diferentes pro
+        cedimientos propios de las ciencias sociales.
+             Por todo ello, en el proyecto de investigación hay que nombrar las técnicas
+        que se van a utilizar en el proceso de la investigación, tanto para el proceso de
+        recogida de datos como para el análisis de los mismos. Por eso, se distingue
+        entre técnicas de recogida de datos y técnicas de análisis de datos. Pero
+        también tendremos que describir sus características o contenido, y, sobre todo,
+        indicar el uso que de ellas se va a hacer. Utilizamos técnicas diferentes porque
+        cada una de ellas tiene un uso distinto en el contexto de cada investigación.
+             En ciencias sociales, lo más frecuente es utilizar: técnicas de observación
+        en sus diferentes modalidades, técnicas de encuesta en forma de entrevistas y
+        cuestionarios más o menos estructurados, técnicas biográficas, grupos de dis
+        cusión, técnicas de análisis de datos, tanto cuantitativas (estadística descriptiva
+        y estadística inferencial) como técnicas cualitativas (análisis de contenido y
+        análisis del discurso). Cada uno de estos instrumentos tiene su propia estructu
+        ra y sus propias características, ofrece un tipo de datos distintos y éstos están
+        sujetos a tratamiento diferente, bien sea con procedimientos cualitativos o bien
+        con procedimientos cuantitativos de análisis.
+             Con otras palabras. La pregunta que hay que responder es: ¿cómo y con
+        qué técnicas construiré los datos de la investigación? ¿Cómo se va a proceder
+        al análisis de los datos obtenidos? En el proyecto de investigación se debe
+        indicar el tipo de técnicas de recogida de datos que se van a utilizar,
+        desarrollar su con
+        tenido y señalar la función que cada una de ellas cumple en la investigación, y
+        al mismo tiempo detallar el proceso del análisis de los datos obtenidos. Por
+        tanto, otro de los elementos básicos del proceso metodológico es des cribir los
+        pasos del desarrollo de recogida de datos. Ese es el objetivo del traba jo de
+        campo, obtener datos para proceder a su análisis, sea cualitativo o cuan
+        titativo. No se trata de explicar las características genéricas de las técnicas que
+        vamos a utilizar en el trabajo de campo. Para eso están los múltiples manuales
+        de metodología de la investigación que existen en el mercado (Bisquerra,
+        1989; García Ferrando, Ibáñez y Alvira, 1990; Hernández Sampieri,
+        Fernández Co llado y Baptista Lucio, 2006; Taylor y Bogdan, 1992). Lo que sí
+        debemos hacer es indicar qué técnica, o técnicas, vamos a utilizar en la
+        recogida de datos. De bemos precisar por qué utilizamos unas técnicas y no
+        otras, y para qué se van a
+
+
+
+
+                                                                 115
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+utilizar cada una de ellas en el contexto de la investigación. También tenemos
+que explicitar qué uso se les va a dar en la investigación.
+     Con todo ello, se trata de responder a estas preguntas: ¿Cómo se van a
+recoger los datos? ¿Qué técnicas se van a utilizar? ¿Qué tipo de datos se van a
+obtener y con qué instrumentos? ¿Qué características tienen esos
+instrumentos? Y, en consecuencia, ¿cómo se va a responder al problema e
+interrogantes de la investigación y a los objetivos de la misma? En resumen,
+se trata de exponer las técnicas que se van a emplear en la recogida de datos y
+por qué y para qué se va a utilizar cada una de ellas. Qué uso se les va a dar en
+la investigación.
+
+
+6. Análisis de los datos
+
+     Ya hemos indicado anteriormente que en un proyecto de investigación hay
+que distinguir claramente tres elementos y tres procesos. Los elementos son:
+i) Los fenómenos sociales que se pretenden describir o explicar. ii) Los datos
+construidos para el análisis. iii) El proceso de análisis de los datos.
+     Consecuentemente, los tres procesos son: i) La identificación y descripción
+de los fenómenos sociales que se van a explicar. ii) La conversión de los he
+chos sociales en datos para el análisis. iii) El proceso de análisis de los datos
+obtenidos.
+      En todo proyecto de investigación, además de mostrar el fenómeno que se
+   quiere estudiar y de indicar la transformación de los hechos sociales en datos
+   para el análisis, es necesario especificar el proceso de análisis de los datos ob
+  tenidos, ¿qué voy a hacer con los datos y cómo lo haré? Se trata de mostrar el
+    procedimiento que se va a seguir en el análisis de los datos. Qué técnicas se
+  van a emplear para el análisis, cómo se van a utilizar cada una de ellas y para
+                                                                               qué.
+     Cada uno de los tres procesos es fundamental. Queremos describir o ex
+plicar algún fenómeno social, y lo que observamos en la realidad social son
+conductas, corporales y verbales, de individuos o de grupos humanos. Pero las
+conductas no hablan por sí mismas. Es necesario convertir o transformar las
+conductas en datos para el análisis. Es decir, en datos que puedan ser analiza
+dos. Este es el segundo paso. Una vez realizada esta segunda operación
+estamos en disposición de pasar al análisis de los datos, con los distintos
+procedimientos o técnicas, sean cualitativas o cuantitativas.
+
+
+
+                                                116
+                Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+             Una vez que hemos identificado y acotado el fenómeno social que quere
+        mos analizar y que hemos convertido los hechos sociales en datos preparados
+        para el análisis, lo que procede es pasar al análisis de los datos. Por eso, lo pri
+        mero de todo en esta fase es describir el proceso de análisis de los datos. ¿Qué
+        procedimiento se va a seguir en el análisis de los datos? ¿Qué técnicas se van a
+        emplear en el proceso? ¿Cómo se van a utilizar y para qué?
+             Se trata de establecer las conexiones entre la realidad social, objeto de es
+        tudio, los datos obtenidos y construidos, y su análisis para, después, proceder a
+        presentar las conclusiones de nuestra investigación. Cada decisión que se toma
+        debe ser explicada y justificada.
+             Este tercer paso es decisivo y el más importante de la investigación. Es el
+        momento de ordenar todo lo anterior en la dirección de presentar resultados y
+        conclusiones sobre nuestro problema y objeto de investigación. Este proceso,
+        presentación los análisis, resultados y conclusiones, variará según el objeto de
+        la investigación, el proceso metodológico y las técnicas de recogida de datos
+        empleadas.
+             El último paso es lo que denominamos “Redacción del Informe de Inves
+        tigación”. La cuestión ahora es responder a las siguientes preguntas: ¿Cómo
+        responde la investigación a las hipótesis o supuestos que guían el estudio y a
+        las interrogantes del mismo? ¿Cuáles son las conclusiones de la investigación?
+        ¿Qué propuestas se deducen para la intervención social?
+             Se trata, en definitiva, de mostrar dos elementos básicos sobre lo que es en
+        realidad la investigación social. Toda investigación social es un discurso sobre
+        el fenómeno estudiado (Objetivos científicos) y, al mismo tiempo, es una pro
+        puesta de acción (Objetivos políticos o sociales).
+             No entramos ahora en la descripción de los diferentes métodos de inves
+        tigación, ni en la presentación de las distintas técnicas de recogidas de datos y
+        de análisis de datos. Pueden consultarse en cualquiera de los manuales citados
+        anteriormente. Pero sí queremos insistir en la distinción entre mé todos y
+        técnicas cualitativas y cuantitativas. El uso de unas u otras en cada
+        investigación debe justificarse y, al mismo tiempo, explicitar la finalidad de
+        unas u otras.
+
+
+
+
+                                                                 117
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+
+
+
+
+7. Bibliografía básica
+     Todo proyecto de investigación debe incluir una bibliografía básica. Esa bi
+bliografía es el soporte documental fundamental de la investigación. Después,
+a lo largo del desarrollo de la investigación, se irá incrementando la
+bibliografía con todos aquellos documentos que se vayan utilizando a lo largo
+del proce so. Pero, siempre, un proyecto de investigación debe partir de una
+bibliografía básica.
+     En este apartado del proyecto de investigación, por tanto, se presentará un
+avance de lo que será la bibliografía que se va a utilizar. No tiene por qué ser
+exhaustiva al momento de presentar el proyecto. Esta es una bibliografía provi
+sional que se irá ampliando y modificando a medida que se desarrolla el proce
+so de la investigación. Pero debe ofrecerse una bibliografía básica que permita
+identificar el tema y la orientación general de nuestra investigación.
+     Hemos comprobado que algunos investigadores confunden la revisión bi
+bliográfica con la bibliografía de la investigación. Es una confusión bastante
+frecuente. En principio, son dos cosas distintas, aunque es necesario reconocer
+que muchos registros bibliográficos pueden aparecer en ambas. Por decirlo de
+manera más clara. En la bibliografía general de un informe de investigación
+debe aparecer toda la bibliografía utilizada en la investigación (libros, artículos
+de revistas, ponencias de congresos, páginas web, etc.). Pero, en la revisión
+bibliográfica deben aparecer sólo aquellos documentos que se han discutido o
+evaluado en la misma.
+     Como su mismo nombre indica, la revisión bibliográfica de la investiga
+ción hace referencia al conjunto de libros, artículos, ponencias a congresos o
+documentos, en general, que el investigador considera necesario evaluar por su
+relación directa o indirecta con el propio tema de investigación. Mientras que,
+la bibliografía general de la investigación es el conjunto de toda la bibliografía
+utilizada en las diferentes fases o etapas utilizadas en la misma, tanto si es cita
+da expresamente en el texto como si no.
+     La revisión bibliográfica se hace con varias finalidades. Una es conocer lo
+que se ha hecho hasta el momento sobre nuestro mismo, o similar, tema de
+investigación. Otra es valorar lo que se ha investigado y escrito sobre el
+mismo. Otra es ver qué, de lo hecho hasta el momento, puede sernos de
+utilidad para nuestra propia investigación. Con otras palabras, la revisión
+bibliográfica no
+
+
+
+                                                118
+                Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+
+
+
+
+      es un ejercicio de erudición del investigador para mostrar lo mucho que sabe y
+      lo mucho que controla desde el punto de vista bibliográfico. Por el contrario,
+        la revisión bibliográfica debe estar directa o indirectamente relacionada con la
+        investigación que nos proponemos y ser de utilidad a la misma.
+         La bibliografía de la investigación es más amplia. Es la armadura docu mental
+                  de nuestro proyecto de investigación. En ella podrán aparecer registros
+           procedentes de la revisión bibliográfica, pero también otros muchos registros
+               que son el soporte teórico y metodológico de nuestra investigación. Tiene
+                pleno sentido recoger y discutir lo que otros dicen sobre nuestro tema de
+               investiga ción, pero no la bibliografía metodológica que se empleará en la
+                                                                             investigación.
+          Por último, una recomendación básica para la presentación de la bibliogra fía.
+                  Todo investigador debe conocer alguno de los diferentes sistemas docu
+          mentales que existen y explicitar en el proyecto de investigación cuál de ellos
+                        se va a utilizar. Lo que no tiene sentido, en un mismo proyecto de
+         investigación y menos aún en la redacción final del informe de investigación,
+              es mezclar di versos sistemas de citación. Esto, que a veces hacen algunos
+            investigadores, no está aceptado en la academia y es considerado como una
+            falta de conocimiento sobre lo que se debe hacer, y valorado negativamente
+             en los tribunales que evalúan los trabajos Fin de Grado, los trabajos Fin de
+           Máster o las tesis docto rales. Por ello, sugerimos utilizar las pautas vigentes
+                    en ciencias sociales para la presentación de la bibliografía. Nosotros
+           recomendamos usar uno de estos dos sistemas más utilizados en las ciencias
+                                                       sociales: el APA o el Harvard Style.
+
+
+          8. Temporalización
+
+            Una de las cosas más importantes, y más prácticas a la vez, en todo proyec
+        to de investigación, sea trabajos Fin de Grado, trabajos Fin de Máster o tesis
+        doctorales, es prever y concretar el tiempo total que exigirá la investigación
+        que se propone y cada una de sus partes o elementos.
+             Esto es muy importante porque, según en qué casos, algunas veces el inves
+         tigador dispone de un tiempo límite para la realización de la investigación y la
+           entrega de las conclusiones y el informe final. Así sucede en los trabajos Fin
+               de Grado y en los trabajos Fin de Máster, que tienen unas convocatorias
+        definidas cronológicamente para su defensa en un curso académico, y también
+                                                                                   en los
+
+
+
+                                                                 119
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+proyectos que se presentan a instituciones financiadoras de investigación, que
+suelen marcar unos plazos fijos, entre otras cosas para transferir los fondos al
+proyecto de investigación de acuerdo a los Informes que se van exigiendo.
+     En el caso de los trabajos Fin de Grado y en los trabajos Fin de Máster hay
+coincidencia en que en ambos casos se indican fechas de las convocatorias
+para la defensa ante el tribunal correspondiente. Y éstas son muy estrictas en
+cuanto a los períodos de defensa. En el caso de los proyectos de investigación
+presen
+tados a instituciones, igualmente, las convocatorias suelen marcar las fechas
+exactas para la entrega de los Informes de investigación.
+     Pero la exigencia de temporalización del proyecto de investigación se refie
+re también al tiempo que el investigador se propone dedicar a cada una de las
+fases de la investigación. Por eso, la pregunta que debe hacerse el investigador
+antes de comenzar es: ¿qué tiempo me va a exigir cada una de las fases o
+etapas del proyecto de investigación? Esto es decisivo.
+     Por la simple temporalización de un proyecto de investigación podemos
+saber, incluso antes de leerlo en su totalidad, si está bien planteado y está equi
+librado adecuadamente entre las diferentes partes del mismo. Por ejemplo y
+por decirlo de manera gruesa. No se puede proponer un tiempo amplio o
+ilimitado a la revisión bibliográfica y un tiempo muy reducido al trabajo de
+campo. O no podemos proponer un tiempo muy amplio a la interpretación de
+los datos y un tiempo muy reducido al trabajo de campo. Este tipo de
+desequilibrios son muy elocuentes e indicadores de las distorsiones del
+proyecto de investigación. En el primer caso se trata de una distorsión que
+privilegia la revisión bibliográfica sobre el trabajo de campo, que es de donde
+van a salir las conclusiones de la investigación. En el segundo caso, se
+privilegia la interpretación de los datos sobre el trabajo de campo.
+Indudablemente, de la interpretación de los datos es de donde proceden las
+conclusiones de la investigación y eso es fundamental. Pero, si el trabajo de
+campo ha sido muy elemental y con muy poca dedicación, los datos ofrecidos
+para la interpretación serán muy pobres.
+     Conscientemente, no señalamos períodos de tiempo fijos para cada una de
+las fases de los Proyectos de Investigación, porque cada proyecto tiene carac
+terísticas diferentes que exigen tiempos diferentes. Pero sí señalamos que debe
+haber un cierto equilibrio entre las diferentes fases en cuanto a la dedicación
+que requieren los proyectos de investigación.
+
+
+
+
+                                                120
+                Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+            Sea que se utilice éste, u otro modelo, como Guía para el Proyecto de
+        Inves tigación es recomendable definir y describir bien las distintas fases o
+        etapas del proyecto. Es necesario, en suma, elaborar un cronograma con una
+        estimación del tiempo de la duración de cada fase.
+            Pero, además, es necesario señalar, en cada fase, las tareas que se van a
+        realizar, detallando qué actividades se van a realizar en cada una de ellas,
+        quién las va a realizar en el caso de que participen varios investigadores y con
+        qué dedicación temporal, dónde se van a ejecutar cada una de ellas, con qué
+        instru
+        mentos o guías en el caso del trabajo de campo, con qué estrategia de
+        búsqueda documental en el caso de la revisión bibliográfica, etc.
+            Somos conscientes de que en determinados centros o universidades les
+        parece algo ajeno e innecesario elaborar un cronograma para la planificación
+        de la investigación. Sin embargo, nosotros somos absolutamente favorables a
+        este ejercicio dentro del proyecto de investigación, porque lo que estamos pre
+        tendiendo es desarrollar la competencia que permite al estudiante diseñar un
+        proyecto de investigación y no sería completa esta formación si éste no puede
+        planificar adecuadamente su ejecución.
+
+
+        9. Recursos y presupuesto
+
+             Pero, si es importante todo lo mencionado hasta aquí, no lo es menos defi
+        nir con claridad los recursos que van a ser necesarios para culminar con éxito
+        la investigación y el presupuesto necesario para ello. Esto, recursos y presu
+        puesto, es un olvido muy frecuente en los proyectos de los alumnos que rea
+        lizan trabajos Fin de Grado, trabajos Fin de Máster y tesis doctorales. Todas
+        sus preocupaciones las centran en la investigación misma, es decir, en el tema
+        de investigación, la revisión bibliográfica, el análisis o las conclusiones. Pero,
+        suelen olvidar algo tan fundamental como disponer de medios para hacer la
+        investigación que proponen. Ingenuamente piensan que un proyecto de investi
+        gación es una actividad académica y altruista. Y olvidan que una investigación
+        es, efectivamente, una tarea académica, pero que requiere tiempo, recursos y
+        presupuesto para su ejecución.
+             Por eso, es necesario que los alumnos que preparan sus trabajos Fin de
+        Grado, sus trabajos Fin de Máster y sus tesis doctorales conozcan desde los úl-
+
+
+
+                                                                 121
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+timos cursos de Universidad las instituciones públicas y privadas que financian
+proyectos de investigación.
+     Todo proyecto de investigación requiere, en primer lugar, tiempo y dedi
+cación. Será imprescindible acotar el tiempo que se va a dedicar a la investi
+gación que se pretende, sean semanas, meses o años. Evidentemente el cálculo
+del tiempo para la investigación que se pretende será diferente en los casos del
+trabajo Fin de Grado y del trabajo Fin de Máster y de las tesis doctorales. Es
+el tiempo estimado para realizar la investigación en sus distintas etapas. En los
+primeros el tiempo puede ser más corto, de varios meses según la carga
+docente asignada, y lógicamente, en el caso de las tesis doctorales, el tiempo
+estimado será más extenso, de varios años.
+     No hay un tiempo ideal o estándar, ni para el primer caso (Trabajos Fin de
+Grado y trabajos Fin de Máster) ni para el segundo (Tesis Doctoral). El tiem
+po necesario para realizar una investigación depende de muchos factores. Al
+menos señalamos algunos que resultan determinantes: el conocimiento previo
+del investigador sobre el tema de investigación; la amplitud de la bibliografía
+que se pretende revisar y las dificultades para acceder a ella; la mayor o menor
+dedicación del trabajo de campo necesario; la mayor o menor complejidad del
+tratamiento de los datos obtenidos para el análisis, y otros.
+     Todo proyecto de investigación debe indicar con claridad, además, cuáles
+son los recursos personales necesarios que se requieren para culminar con
+éxito el proceso. Y esto es aplicable, tanto para proyectos de investigación
+colectivos, que incluyen un equipo de investigación de investigadores con
+tareas diferen
+ciadas y tiempo de dedicación diferente, como a los Proyectos de
+Investigación individuales, como son los trabajos Fin de Grado y los trabajos
+Fin de Máster y las tesis doctorales, realizados en solitario o con
+colaboradores ocasionales.
+     En los proyectos de investigación colectivos, formados por equipos de in
+vestigadores, se suelen marcar tareas diferenciadas y tiempo u horas de dedi
+cación al mismo, en el que se incluye desde dedicación a tiempo completo,
+que sería el máximo, hasta dedicaciones ocasionales, que sería el mínimo. En
+la práctica, las cantidades de dinero destinadas a los diferentes investigadores
+o colaboradores en los proyectos colectivos son muy variables, y dependen no
+sólo de las tareas a realizar por cada uno de ellos, sino de las ayudas o subven
+ciones recibidas para la realización de la investigación.
+
+
+
+
+                                                122
+                Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+            Podría dar la impresión que el asunto de la dedicación es totalmente dife
+        rente en los casos de los proyectos de investigación individuales en relación
+        con los proyectos de investigación colectivos. Y así es. Pero los gastos de una
+        investigación no son sólo los que hacen referencia a la dedicación personal del
+        que hace la investigación o de los que participan en un proyecto colectivo.
+        Además de los gastos personales están los gastos materiales, un capítulo que
+        incluye cámara de fotografías, grabadoras, ordenadores, impresora, scanner,
+        fotocopias, etc. Y por último, los gastos ocasionados por viajes, estancias, ali
+        mentación, pagos a informantes y, por supuesto, bibliografía.
+
+
+         10. Anexos al proyecto de investigación
+
+             Todo proyecto de investigación debe incluir, por último, un apartado de
+        nominado Anexos en el que se incluirán algunos de los instrumentos que el
+        investigador va a emplear en el trabajo de campo, en el proceso de análisis de
+        los datos o en la presentación de los resultados.
+          Entre ellos cabe mencionar algunos básicos, como son: guías de observa ción,
+         guías de entrevista, guías para grupos de discusión, cuestionarios y los mapas,
+              gráficos y tablas que ayuden a completar la información sobre el mismo.
+             No todos los instrumentos deben anticiparse necesariamente en el proyec
+        to, puesto que algunos de ellos se elaborarán en los primeros momentos de la
+        investigación, pero si deben aparecer algunos aunque puedan ser remodelados
+        por el investigador en el transcurso del proyecto.
+
+
+         11. Algunos consejos prácticos
+
+           Para terminar, presentamos a continuación algunos consejos prácticos para
+        culminar con éxito este complejo proceso académico.
+           Hemos afirmado que un proyecto de investigación debe responder a estas
+        cuestiones: Qué se quiere conocer, por qué o cómo se justifica la investigación
+        que se pretende, cómo se va a realizar el estudio, tanto en cuanto a la recogida
+        de datos como al análisis, y para qué o con qué fines. Ahora, añadimos que
+        debe
+
+
+
+
+                                                                 123
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+haber una coherencia entre las distintas partes del proyecto de investigación y
+una trabazón entre todas ellas.
+     Todo proyecto de investigación tiene unas características propias y una fle
+xibilidad grande entre todas sus partes o elementos. Pero conviene justificar
+cada decisión que se toma en el proceso de la investigación (Objeto, técnicas
+de recogida de datos y de análisis, objetivos, etc.). Las cosas pueden ser
+diferentes en cada investigación, pero es necesario justificar todas las
+decisiones que se toman.
+     Otro asunto importante es la necesidad de privilegiar en la investigación
+social los datos empíricos sobre cualquier forma de especulación. Es impres
+cindible privilegiar la investigación empírica, o de campo, frente a la de tipo
+teórico en la que la tarea y aportación intelectual es básicamente “hablar de lo
+que hablan otros”. Hay que distinguir claramente que una cosa es investigar
+recopilando datos empíricos de la realidad social y analizarlos para llegar a
+unas conclusiones. Y otra muy diferente es teorizar sobre fenómenos sociales
+sin base empírica.
+     Una decisión básica en la investigación social es privilegiar las investiga
+ciones micro frente a los estudios macro. Por ejemplo, conviene privilegiar los
+estudios de comunidad o sectoriales frente a los análisis regionales o naciona
+les, dada la utilidad de aquéllos para impulsar la intervención social. La razón
+es que éstos permiten planificar e impulsar acciones sociales realistas.
+     En la realización de investigaciones sociales, es necesario utilizar, siste
+máticamente, el diario de campo, ordenando tanto las observaciones como las
+reflexiones teóricas mediante un sistema de categorías elaborado ad hoc. Esta
+decisión permitirá utilizar las anotaciones ventajosamente a lo largo de
+proceso de la investigación.
+     Y por último, sugerimos que, todo proyecto de investigación, en ciencias
+sociales, esté orientado hacia la acción. Con otras palabras. Todo proyecto de
+investigación debe mirar hacia la intervención social con el objeto de cumplir
+dos tareas fundamentales: Investigar o aumentar el conocimiento sobre la rea
+lidad social y, al mismo tiempo, mejorar la vida de los grupos humanos. Para
+ello, como se ha sugerido anteriormente, es necesario asumir en el proyecto de
+investigación la metodología de la Investigación Acción (Montes del Castillo,
+2012).
+
+
+
+
+                                               124
+               Ángel Montes del Castillo / Alberto Montes Martínez. Guía para proyectos de investigación
+
+
+
+
+      Bibliografía
+      Bisquerra, R.
+         1989 Métodos de investigación educativa. Guía práctica. Barcelona: Ediciones
+                  CEAC.S.A.
+      García Fernando, M; Ibáñez, J. y Alvira, F.
+         1990 El análisis de la realidad social. Métodos y técnicas de investigación. Ma
+                  drid: Alianza Editorial. S.A.
+      Hernández Sampieri, R.; Fernández Collado, C. y Baptista Lucio,
+      P. 2006 Metodología de la investigación. México: McGraw-Hill.
+      Martínez Martínez, Mª J.
+        2000 El discurso social sobre drogas en la prensa de Murcia. Murcia: Servicio de
+                  Publicaciones de la Universidad de Murcia.
+      Montes del Castillo, A.
+         1989 Simbolismo y poder. Un estudio sobre compadrazgo y priostazgo en una
+                  comunidad andina. Barcelona: Ed. Anthropos.
+      Montes del Castillo, A.
+        2012 “Antropología, Investigación-Acción y Trabajo Social”. En Antropología
+                 Aplicada. Lecturas de Antropología y Trabajo Social. Murcia: Diego Marín
+                 Editor.
+      Montes del Castillo, A. y Martínez Martínez, Mª J.
+          2011a Diversidad cultural y religión. Minorías religiosas en la región de Murcia.
+                   Madrid-Barcelona: Icaria-Fundación Pluralismo y Convivencia.
+      Montes del Castillo, A. y Martínez Martínez, Mª J.
+        2011b Cultura y religión. Debates sobre minorías religiosas. Murcia: Diego Marín
+                  Editor.
+      Montes del Castillo, A. y Martínez Martínez, Mª J.
+        2012 Antropología Aplicada. Lecturas de Antropología y Trabajo Social. Murcia:
+                  Diego Marín Editor.
+      Montes Martínez, A.
+        2010 “Uso y destino de las remesas de los migrantes en el cantón Paute (Ecua dor)”.
+                  Trabajo Fin de Grado. Facultad de Trabajo Social. Universidad de Murcia.
+     Montes Martínez, A.; Montes del Castillo, A. y Martínez Martínez, MªJ. 2012 “Para qué
+      se utilizan las remesas de los migrantes. Destino de las remesas de los migrantes en el
+      Cantón Paute. (Azuay. Ecuador)”. En Antropología
+
+
+
+
+                                                                 125
+Universitas, Revista de Ciencias Sociales y Humanas de la Universidad Politécnica Salesiana del Ecuador, Año XII, No. 20, 2014
+
+
+
+
+          Aplicada. Lecturas de Antropología y Trabajo Social. Murcia: Diego Marín
+          Editor.
+Piñuel Raigada, J.L. y Gaitán Moya, J.A.
+  1995 Metodología General. Conocimiento científico e investigación en comuni
+           cación social. Madrid: Editorial Síntesis, S.A.
+Taylor, S.J. y Bogdan, R.
+  1992 Introducción a los métodos cualitativos de investigación. Barcelona: Edito
+           rial Paidós.
+
+
+         Fecha de recepción: marzo 26/2014; fecha de aceptación: junio 24/2014
+
+
+
+
+                                        126
+

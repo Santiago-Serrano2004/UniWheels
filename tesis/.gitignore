@@ -1,0 +1,14 @@
+# Credenciales y config local del snapshot — NUNCA commitear
+scripts/sa-key.json
+scripts/config.json
+scripts/.venv/
+__pycache__/
+
+# Originales binarios de las guias (se re-descargan con sync_guias.py).
+# Se versiona rubrica.md y guias/_txt/ (texto, diffable).
+guias/*.pdf
+guias/*.docx
+guias/*.html
+
+# PDFs de snapshot: Drive ya versiona el PDF; en git basta el .md (diffable)
+export/*.pdf

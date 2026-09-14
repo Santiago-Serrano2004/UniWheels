@@ -1,0 +1,159 @@
+ELEMENTOS SOBRE LA FORMULACION DE OBJETIVOS: Barrera y Felder
+
+LA FORMULACION DE OBJETIVOS EN LA INVESTIGACION
+Marcos Fidel Barrera Morales.
+
+De la correcta formulación de objetivos depende el éxito de todo proyecto que se precie de ser elaborado
+con las técnicas y exigencias actuales. Sin embargo, son muchas las personas que confrontan dificultades
+al momento de formular objetivos.
+La "gerencia por objetivos", el "liderazgo por objetivos", o cualquier plan o proyecto o programa o
+actividad que exija formulación de objetivos, requiere de las personas que participan en su ejecución,
+conocimientos formales que propicien una mejor comprensión del trabajo en todas sus dimensiones.
+
+Cuando de formular objetivos se trata, es importante observar lo siguiente:
+1. Para definir el "para que", esto es, los objetivos, es imprescindible tener claridad previa en cuanto al
+"que". Esto se refiere a tener conocimiento en cuanto a la actividad que se cumple o se va a cumplir Es
+necesario además resolver el "acerca de": el asunto o tema sobre lo cual va a versar la actividad o
+investigación. También es conveniente resolver lo relativo al "por que", o sea, la justificación, las razones,
+motivos, inquietudes que justifican tal o cual propósito.
+2. Teniendo claros el "que", el "acerca de" y el "por que", se puede precisar con más facilidad el "para
+que": los objetivos. Estos deben formularse con suficiente claridad, de modo que sean entendidos por
+quienes participan en el proceso.
+3. Es necesario advertir, además, que la formulación de los objetivos debe obedecer a cuestiones
+realizables, que se puedan cumplir. Plantear objetivos que estén lejos de las posibilidades reales, en el
+contexto de la actividad a la cual se refieren, es un error ya que la actividad podría considerarse un
+"fracaso" a la hora de considerar el cumplimiento de los objetivos.
+4. Esto conduce a entender que los objetivos son evaluables: deben ser expuesto de una manera tal que
+permita la confrontación posterior, por parte de los involucrados en la actividad.
+5. Su formulación debe ser hecha comenzando por un verbo en infinitivo.
+6. Deben redactarse en tercera persona.
+7. En su enunciado, los objetivos presentan una acción, y una finalidad o logro. El simple enunciado de la
+actividad como objetivo no basta. La actividad por la actividad, es insuficiente. Es diferente decir,
+"efectuar una revisión", como formulación de objetivo, a plantear, "efectuar una revisión con el propósito
+de...". Para que un objetivo este completamente formulado, debe presentar la actividad y su finalidad.
+8. En su extensión, los objetivos pueden ser, general y específicos. El objetivo general considera la
+finalidad del trabajo o proyecto en sus expectativas y propósitos más amplios, dentro de consideraciones
+de factibilidad. Los objetivos específicos exponen propósitos según la naturaleza del proyecto, teniendo
+como guía el objetivo general.
+9. Hay que tener en cuenta que los objetivos presentan diversos niveles, según su profundidad y
+complejidad. En investigación, al primer nivel, perceptual, corresponden los verbos explorar y describir.
+El segundo nivel, aprehensivo, se enuncia con verbos como comparar y analizar. Los objetivos del tercer
+nivel, comprensivo, se formulan con verbos como explicar, predecir y proponer. En el cuarto nivel,
+integrativo, se emplean verbos como modificar, confirmar y evaluar.
+10. Es preciso recordar que según el nivel de formulación, corresponden metas, líneas de acción, técnicas,
+tácticas y estrategias.
+
+La correcta formulación de los objetivos en todo plan, proyecto, programa, actividad, investigación, etc.,
+es garantía de éxito previo, como también indicio del conocimiento que tienen los planificadores,
+programadores o especialistas, en cualquier disciplina, sobre lo que hacen.
+LA VISION DE RICHARD FELDER (apartes de uno de sus trabajos sobre pedagogía).
+FORMULATE AND PUBLISH CLEAR INSTRUCTIONAL OBJECTIVES
+Instructional objectives are statements of what students should be able to do to demonstrate
+their mastery of course material and desired skills. They contain a stem specifying the point at
+which the mastery should occur, followed by one or more phrases describing the expected
+behavior, with each phrase beginning with an action verb. For example, When this chapter has
+been completed , the student should be able to define the variables in the ideal gas equation of
+state in terms a high school senior could understand,
+calculate the value of any one of the variables from given values of the other three, estimate the
+error in the calculated value, and outline the derivation of the ideal gas equation from the kinetic
+theory of gases.
+The common stem of the four objectives in this paragraph is “When this chapter has been
+completed.”
+An alternative stem might be “In order to do well on the next test.” The phrases that define the
+objectives begin with the verbs define, calculate, estimate, and outline. Other acceptable verbs
+include list, identify, explain (without using jargon), predict, model, derive, compare and contrast,
+design, create, select, optimize, and many others.
+The behavior specified in an instructional objective must be directly observable by the instructor
+and should be as specific and unambiguous as possible. For this reason, verbs like know, learn,
+understand, and appreciate are unacceptable. These are critically important goals, but they are
+not directly observable. For example, if an instructor states that his goal is for his students to
+understand the first law of thermodynamics, he might be asked how he will know whether or not
+they do. He would then list the things he would ask them to do to demonstrate their
+understanding. The items on the list would constitute the instructional objectives associated with
+the specified goal. If there could be any possible doubt about whether or not an objective has
+been met, measurement criteria should be included in the defining statement. Instructional
+objectives may involve skills that cover a broad spectrum of complexity and difficulty. The
+Taxonomy of Educational Objectives (Cognitive Domain) developed by Bloom and colleagues
+defines a hierarchy of six levels:
+
+1. Knowledge—repeating memorized information
+2. Comprehension—paraphrasing text, explaining concepts in jargon-free terms
+3. Application—applying course material to solve straightforward problems
+4. Analysis—solving complex problems, developing process models and simulations,
+troubleshooting equipment and system problems
+5. Synthesis—designing experiments, devices, processes, and products
+6. Evaluation—choosing from among alternatives and justifying the choice, optimizing
+processes, making judgments about the environmental impact of engineering decisions,
+resolving ethical dilemmas
+
+Levels 1–3 are commonly known as lower-level skills and Levels 4–6 are higher-level skills.
+Most undergraduate engineering courses focus on Level 3 skills: an analysis of one four-year
+engineering program showed that 2345 out of 2952 problems assigned (79%) were Level 3 or
+lower. On the other hand, probable demands on engineering graduates in the coming decades
+and many of the new ABET accreditation criteria (Engineering Criteria 2000) involve skills at
+Levels 4–6.
+
+
+            LISTA DE VERBOS QUE PUEDEN SERVIR PARA REDACTAR LOS OBJETIVOS
+ l.    CONOCIMIENTOS (Información)
+Reproducir Relatar               Citar                    Identificar          Reconocer
+Copiar     Resumir               Duplicar                 Narrar               Nombrar
+Dibujar    Traducir              Describir                Recitar              Localizar
+Imitar     Parafrasear           Enlistar                 Reconstruir          Contar
+Repetir    Esbozar               Enumerar                 Bosquejar            Rotular
+Memorizar Anotar                 Graficar                 Definir              Seleccionar
+Comentar   Registrar             Recordar                 Subrayar
+
+  2. INTERPRETACION (Compresión)
+Relacionar Determinar         Transformar                 Ordenar             Agrupar
+Comparar    Explicar          Convertir                   Parear              Categorizar
+Concluir    Demostrar         Definir                     Interpretar         Contrastar
+Ilustrar    Inferir           Identificar                 Asociar             Discriminar
+Representar Seleccionar       Prolongar                   Clasificar          Diferenciar
+Cambiar     Traducir          Ejemplificar                Generalizar         Distinguir
+Restablecer Expresar          Predecir                    Deducir             Igualar
+Reordenar   Reafirmar         Resumir                     Describir           Ubicar
+Reconocer Informar            Revisar
+
+ 3     APLICACION
+Realizar      Extender            Organizar                 Componer            Desarrollar
+Adaptar       Generalizar         Formular                  Dramatizar          Leer
+Transformar Conversar             Reparar                 Rechazar            Explicar
+Cambiar     Emplear               Demostrar               Secuenciar          Descubrir
+Chequear Ensayar                  Clasificar              Operar              Modificar
+Imitar     Colorear               Identificar             Separar             Utilizar
+Reorganizar llenar                Localizar               Traducir            Interpretar
+Calcular    Predecir              Medir                   Elegir              Planear
+Aplicar     Sistematizar          Resolver                Usar                Preparar
+Dibujar     Practicar             Ilustrar                Programar           Relacionar
+
+ 4     ANÁLISIS
+
+Esbozar     Ver las partes        Contrastar              Identificar         Inferir
+Clasificar Descifrar              Descubrir               Discriminar         Relacionar
+Jerarquizar Descomponer           Diferenciar             Analizar            Reconocer
+Separar     Desglozar             Destacar                Catalogar           Detectar
+Diagramar Cateqorizar             Describir               Subrayar            Determinar
+Ilustrar    Ordenar               Distinguir              Subdividir          Comprar
+Descubrir Calcular                Experimentar            Probar              Comparar
+Criticar    Discutir              Inspeccionar            Debatir             Examinar
+
+ 5. SINTESIS
+Adaptar    Diseñar              Redactar                 Categorizar          Elaborar
+Bosquejar Modificar             Dibujar                  Organizar            Integrar
+Crear      Desarrollar          Planear                  Compilar             Fabricar
+Confeccionar Producir           Codificar                Formular             Inventar
+Transmitir Extender             Especificar              Ordenar              Idear
+Deducir    Reconstruir          Clasificar               Componer             Planificar(Planear)
+Escribir   Construir            Concebir                 Solucionar           Proponer un plan
+Narrar     Interpretar          Reunir                   Combinar             Dirigir
+Preparar                        Establecer
+
+6. EVALUACION
+Juzgar     Opinar            Criticar           Apoyar             Concluir
+Medir          Auscultar        Evaluar     Interpretar     Aceptar
+Chequear       Especificar      Verificar   Examinar         Rechazar
+Sustentar      Clasificar     Argumentar    Seleccionar     Estimar   Confirmar
+Decidir         Comparar     Calificar       Diagnosticar
+Valorar     Escoger
+

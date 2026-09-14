@@ -1,0 +1,1822 @@
+Gestores bibliográficos:
+recomendaciones para su
+aprovechamiento en la academia
+Carlos Manuel Varón Castañeda
+Varón Castañeda, Carlos Manuel
+  Gestores bibliográficos [recurso electrónico] : recomendaciones para su aprovechamiento
+  en la academia / Carlos Manuel Varón Castañeda. – Medellín : Journals & Authors, 2017.
+  1 recurso electrónico (38 p.)
+
+   ISBN 978-958-56233-0-9
+
+   Citas bibliográficas – Programas para computador. 2. Cita de recursos de información electróni-
+   cos - Programas para computador. I. Tít. II. Arévalo, Julio Alonso, pról.
+
+025.30285 cd 23 ed.
+V323
+  Universidad Eafit- Centro Cultural Biblioteca Luis Echavarría Villegas
+
+
+Obra derivada de investigación
+ISBN digital: 978-958-56233-0-9
+DOI: 10.25012/isbn.9789585623309
+Primera edición, enero de 2017
+
+Concepción y contenidos
+Carlos Manuel Varón Castañeda
+Lingüista, Universidad Nacional de Colombia
+Especialista en edición de publicaciones, Universidad de Antioquia
+Correo electrónico: cmvaronc@gmail.com
+
+Asesoría
+Carlos Sánchez Lozano
+
+Concepción gráfica y diagramación
+Katya Alexandra Villota González
+Correo electrónico: katyavillota08@gmail.com
+
+Edición
+Journals & Authors
+
+
+
+
+Carrera 70 n.° 24 – 210, int. 313
+Medellín, Colombia
+http://www.jasolutions.com.co/
+Correo electrónico: info@jasolutions.com.co
+
+
+
+
+Esta obra está bajo una Licencia Creative Commons atribución –
+no comercial – sin derivar 4.0 internacional.
+Prólogo
+                                                                         Contenido
+Introducción
+
+ 1. Gestores bibliográficos: caracterización,
+    historia y funciones
+    1.1. Presentación
+    1.2. ¿Qué es un gestor bibliográfico?
+    1.3. Orígenes, surgimiento y consolidación de los gestores
+    1.4. Tres gestores representativos
+    1.5. Beneficios del uso de gestores
+    1.6. ¿Quiénes son usuarios de los gestores?
+    1.7. ¿Cómo le pueden servir a usted los gestores?
+
+
+ 2. Problemas actuales en la búsqueda y gestión
+    de fuentes documentales
+    2.1. Presentación
+    2.2. Acceso a las fuentes de consulta especializadas
+    2.3. Problemas en el desarrollo de la búsqueda
+    2.4. Falencias en citación y referenciación
+
+
+ 3. Gestores en comunidades de investigación
+    3.1. Presentación
+    3.2. Visibilidad e impacto
+    3.3. Trabajo colaborativo y sus desafíos en la academia
+    3.4. Trabajar en comunidades de investigación con gestores
+    3.5. Beneficios de adoptar una estrategia grupal de gestión de
+         fuentes basada en gestores
+    3.6. Redes sociales científicas de libre acceso que pueden com-
+          plementar el uso colaborativo de los gestores bibliográficos
+    Contenido    Prólogo Introducción   Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+
+                                                           Prólogo
+                                                        Por Julio Alonso Arévalo1
+
+    Hace casi 20 años empecé a trabajar con gestores de referencias bibliográficas. En 2001, después de algunos años de ex-
+    periencia con el uso de gestores tanto para el trabajo de investigación como profesional, publiqué una guía sobre ProCite, la
+    primera en español sobre este programa que era, de alguna manera, icónico, ya que entonces era casi el único software de
+    gestión de referencias disponible en el mercado, y no disponía ni de traducción en español, ni de ninguna guía en este idio-
+    ma. Posteriormente, Thomson Reuters sacó una versión extendida de ProCite que denominó Reference Manager, un buen
+    software que permitía poner nuestra base de datos personal en línea, o incluso compartirla con otros investigadores para
+    trabajar cooperativamente. Pero, finalmente, el programa de la empresa que alcanzó el éxito es EndNote, una versión media
+    entre ProCite y EndNote. Posteriormente, aparecieron otros desarrollos como RefWorks, Mendeley, CiteUlike y Zotero.
+
+    Cualquiera puede pensar que un gestor de referencias bibliográficas tiene un valor meramente instrumental, es decir, hacer
+    fácil la generación de referencias en los trabajos de investigación. Pero la importancia de una herramienta va más allá de la
+    pura funcionalidad de la cita. Los gestores de referencias están presentes en todo el proceso de investigación, más aún des-
+    de que los propios investigadores han trasladado sus actividades a la web. Al respecto, una investigación de Van Noorden2
+    nos dice que más del 75% de los investigadores inician su proceso de investigación desde la web, y concretamente desde
+    Google o Google Académico.
+
+    Los gestores de referencias en este sentido están fortaleciendo la capacidad de documentarse, un hecho inicial y al que la
+    mayor parte de los investigadores dedican más inversión de tiempo. A través de los gestores de referencias disponibles en
+    la web los investigadores disponen de un botón que se añade al propio navegador, de manera que con solo un clic pueden
+    compilar todos los metadatos o los datos asociados a un objeto digital de manera automática; y esta información les será
+    de una utilidad sin precedentes cuando pretendan diseñar su tema de investigación, a la hora de encuadrar el tema, concre-
+    tar sus límites y desarrollar el estado de la cuestión. Digo esto por experiencia propia: ahora mismo tengo publicados una
+    docena de libros y más de 80 artículos de revista, y en todo este maremágnum los gestores de referencias han sido funda-
+    mentales en documentar, perfilar y desarrollar sobre qué iba a escribir, qué aspectos iba a tratar, qué documentos iba a leer
+    y, sobre todo, para plantear el estado de la cuestión sobre el tema a desarrollar en la investigación.
+
+    El aspecto metodológico es vital en cualquier trabajo de investigación: una buena metodología infiere una buena calidad
+    final. Los gestores de referencias bibliográficas contribuyen a ello, y también a que el propio investigador dedique sus es-
+    fuerzos más a la tarea investigadora y menos a la tarea metodológica, con un resultado final óptimo. En este sentido, los
+    gestores de referencias, cada vez más fáciles de usar e intuitivos, facilitan la citación normalizada y uniforme sin la necesidad
+    de esforzarse en pensar cómo se debe citar cada tipología documental en formato APA, ISO, Vancouver, etc. Por lo general,
+    los gestores utilizan la misma fuente de estilos para interpretar las citas: se trata de CitationStyles.org, un sistema de estilos
+
+
+
+    1 Licenciado en Geografía e Historia y diplomado en Biblioteconomía y Documentación, Universidad de Salamanca. Jefe de la
+      Biblioteca de la Facultad de Traducción y Documentación de la misma institución.
+    2 Van Noorden, R. (2014). Online collaboration: Scientists and the social network. Nature, 512, 126-129.
+
+
+4     Gestores bibliográficos: recomendaciones para su aprovechamiento en la academia
+                                                           Contenido     Prólogo Introducción   Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+de citas de código abierto que emplean Mendeley, Zotero y          Durante todos estos años me he sentido muy orgulloso de
+Papers; se trata de un repositorio crowdsourced (microcola-        haber sido pionero en mi país, así como en otros de Euro-
+boración abierta distribuida) que ofrece más de 7.500 esti-        pa y de América Latina, de haber enseñado a bibliotecarios,
+los de citas CSL libres, y es utilizado tanto por los productos    profesionales y a investigadores a trabajar con gestores de
+comerciales de gestión de referencias bibliográficas como          referencias. No sé el número exacto de cursos que he impar-
+por aquellos de código abierto.                                    tido; quizás pasen de la centena o más. También he escrito
+                                                                   artículos y algún libro en torno a este tema (Alonso-Arévalo,
+Quizás menos conocido, pero fundamental para muchos de             Julio. Zotero: software libre para la gestión y mantenimiento
+nosotros, es el uso de los gestores de referencias en el tra-      de las referencias bibliográficas en trabajos de investigación.
+bajo profesional de las bibliotecas. Como dije anteriormen-        Amazon, 2015) 3. Por ello no puedo por menos que celebrar
+te, llevo más de 20 años trabajando con estas herramien-           y prologar la aparición de este nuevo libro de Carlos Manuel
+tas y las utilizo como estrategia nuclear en los servicios de      Varón Castañeda, que desde mi humilde opinión toca algu-
+información que realizamos en la Biblioteca de Traducción          nas de las cuestiones relevantes en torno a la gestión de re-
+y Documentación de la Universidad de Salamanca, que de             ferencias bibliográficas, sobre todo por su carácter didáctico
+alguna manera nos han prestigiado en el contexto profesio-         y de guía aclaratoria; y porque relaciona las herramientas de
+nal. En la biblioteca utilizamos los gestores de referencias       gestión con otros de los aspectos que conlleva el proceso
+para compilar información de manera automática y siste-            investigativo, esto es, la búsqueda y compilación de la infor-
+mática: cada semana recogemos información de bases de              mación, y sobre todo, el trabajo colaborativo y la visibilidad
+datos en línea, tanto por suscripción como abiertas, a partir      de la investigación científica. En la actualidad, los gestores
+de la cual elaboramos productos propios como boletines de          de referencias integran también redes sociales de investiga-
+alerta semanales de artículos de revistas, monográficos de-        dores, en las que tan importante como el software es la co-
+dicados a un tema determinado o boletines de libros gratui-        munidad académica que lo utiliza. En términos prácticos, lo
+tos y legales, amén de utilizar estas herramientas como par-       que esto significa es que el trabajo de encontrar y organizar
+te del servicio de información bibliográfica presencial y en       una colección de artículos sobre un tema específico puede
+línea. Compilar información sistemáticamente nos permite           ser compartido por un grupo de personas —a través de los
+atender adecuadamente las necesidades de información de            grupos y las redes sociales que llevan asociadas la mayoría
+nuestros usuarios cuando nos demandan información para             de estas herramientas—, ya que aprovechan los recursos de
+sus trabajos de clase, afrontar un tema, desarrollar un pro-       “la multitud” para potenciar los intereses del investigador
+                                                                   individual. Pero los beneficios van más allá de los grupos
+ducto o preparar una oposición para conseguir un empleo.
+                                                                   de descubrimiento de la literatura: el investigador también
+                                                                   puede anotar y comentar sus documentos para compartir-
+Por ello digo que los gestores de referencias son herramientas
+                                                                   los con sus colegas, haciendo de la ciencia un proceso cada
+polivalentes que podemos utilizar profesionalmente, no solo
+                                                                   vez más colaborativo, transparente y abierto.
+en los servicios de información sino también en las tareas de
+asesoramiento de alumnos, docentes e investigadores. Ya
+                                                                                    Salamanca (España), 5 de diciembre de 2016
+casi todas las universidades están desarrollando servicios de
+alfabetización informacional, y una de las herramientas que
+casi todas ellas emplean consiste en enseñar cómo funcionan
+los gestores de referencias bibliográficas; que más allá de la
+herramienta concreta, lo que se está enseñando es una for-
+ma de adquirir la información, de gestionarla y, sobre todo, de
+utilizarla éticamente. En realidad, cuando enseñamos cómo
+trabajar con un gestor de referencias estamos enseñando a          3
+                                                                        Alonso-Arévalo, J. (2015). [e-Book] Zotero: Los Gestores
+nuestros alumnos que cuando escriben un trabajo para clase             de referencias: software para la gestión y mantenimiento de
+                                                                       las referencias bibliográficas en trabajos de investigación.
+y consultan una fuente de información deben darle el mere-
+                                                                       Texto completo: http://www.amazon.es/Zotero-referen-
+cido reconocimiento, es decir, citar esa idea que tomaron de           cias-mantenimiento-bibliogr%C3%A1ficas-investigaci%-
+otro autor; así se construye la ciencia, con la frase “a hombros       C3%B3n-ebook/dp/B00TNSY3ZS/ref=sr_1_1?ie=UTF8&-
+de gigantes” que se atribuyó a Isaac Newton.                           qid=1424075299&sr=8-1&keywords=zotero
+
+                                            Gestores bibliográficos: recomendaciones para su aprovechamiento en la academia           5
+                                                                                                 Sobre el autor
+
+
+
+
+                                                                                                Fotografía: Edgar Arturo Varón Cañón.
+
+                                                                                         Carlos Manuel Varón Castañeda es lingüista de la
+                                                                                         Universidad Nacional de Colombia y especialista en
+                                                                                         edición de publicaciones de la Universidad de Antio-
+                                                            h_
+                                                               W
+                                                                ilki
+                                                                    ns
+                                                                       _B
+                                                                                         quia (el presente trabajo es producto del desarrollo
+                                                                         oo
+                                                                            k_
+                                                                              Ar
+                                                                                ch
+                                                                                         de este programa académico). Sus áreas de interés
+                                                                                  .jp
+                                                                                     g
+                                                                                         son la comprensión y producción de artículos cien-
+ Sarah
+       Wilkin                                                                            tíficos; la edición universitaria; la traducción de las
+http:        s, Bo
+     //ww          ok A
+          w.sar
+                       rch                                                               lenguas inglesa y francesa a español; las ciencias de
+               ahwi
+                    lkins                                                                la información; y la alfabetización informacional. En
+                          .net/
+                               wp-                                                       la actualidad, se desempeña como editor en la Fun-
+                                   con
+                                      ten
+                                         t/u                                             dación Universitaria Católica del Norte (Medellín, Co-
+                                             plo
+                                                ads                                      lombia), a la vez que presta servicios de traducción y
+                                                   /20
+                                                      16/                                corrección de estilo a otras instituciones académicas.
+                                                         03
+                                                            /S
+                                                              ara                        De forma paralela a su labor profesional, se ha inte-
+                                                                                         resado por la práctica competitiva del Scrabble® en
+                                                                                         español, a tal punto que ha representado a Colombia
+                                                                                         en los campeonatos mundiales de este juego de la
+                                                                                         mente en 2013 (Buenos Aires, Argentina) y 2014 (La
+                                                                                         Habana, Cuba), y compite en torneos locales y regio-
+                                                                                         nales de esa disciplina con regularidad.
+
+                                                                                         Perfil en Academia.edu: https://independent.aca-
+                                                                                         demia.edu/CarlosVarónCastañeda
+
+                                                                                         Perfil en Mendeley: https://www.mendeley.com/
+                                                                                         profiles/carlos-varn/
+                                                          Contenido   Prólogo Introducción    Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+
+                                                                                              Introducción
+La escritura de textos destinados a la academia, si bien importante y necesaria, requiere satisfacer criterios de pertinencia y
+rigurosidad para tener impacto. Ello exige, a su turno, respetar tanto cuestiones de orden conceptual como reglas formales.
+
+Entre estas últimas suele causar especial inquietud la organización de las fuentes documentales, en tanto aun las iniciativas
+de menor envergadura exigen rigurosidad para gestionarlas. Los gestores de referencias bibliográficas, o gestores biblio-
+gráficos, surgen como alternativa para subsanar esta dificultad y permitir que los autores dediquen la mayor parte de sus
+esfuerzos a la investigación y la producción textual, lo cual podría redundar en publicaciones científicas de mejor calidad.
+
+Pese a lo anterior, la adopción de estas herramientas por parte de quienes pudieran ser sus usuarios es incipiente en Colom-
+bia, aun cuando las instituciones educativas invierten recursos en ello. Lo anterior permite sustentar la necesidad de producir
+un material de naturaleza pedagógica como el que se presenta aquí, el cual se divide en tres capítulos: en el primero se pre-
+senta una conceptualización general sobre los gestores, su historia y su funcionamiento; el segundo versa sobre dificultades
+comunes en la búsqueda y gestión de fuentes documentales; y el tercero comprende una reflexión respecto del papel que
+podrían tener los gestores como herramientas para el trabajo colaborativo. En atención a la naturaleza pedagógica de este
+material, cada capítulo está complementado por actividades de exploración, repaso y afianzamiento de los saberes vistos,
+así como por glosarios, imágenes y apuntes prácticos.
+
+Además, es importante destacar que, a manera de ayuda para la lectura en pantalla (de equipos de cómputo de escritorio o
+bien de dispositivos móviles), la cartilla ha sido dotada de cierto grado de interactividad: mediante los vínculos ubicados en la
+esquina superior derecha de las páginas, así como en las tablas de contenido general y por capítulo, el lector podrá acceder
+de forma inmediata a la sección o apartado de su interés.
+
+Con el ánimo de contribuir a la adopción de estas herramientas en el ámbito académico colombiano surgió la idea de ela-
+borar la presente cartilla, enmarcada en el desarrollo de la Especialización en Edición de Publicaciones de la Universidad
+de Antioquia, y de modo más específico, en las líneas de trabajo de edición de publicaciones pedagógicas y alfabetización
+informacional. Se trata de un material didáctico mediante el cual investigadores, profesores universitarios, estudiantes de
+pregrado y posgrado, y auxiliares de investigación podrán conocer (o ampliar sus conocimientos) sobre estas herramientas,
+de tal forma que puedan sentirse motivados a servirse de sus beneficios como herramientas de investigación. No se trata,
+por lo tanto, de un manual de instrucciones en tanto no pretende brindar instrucciones respecto del funcionamiento de
+ningún gestor en particular; en lugar de ello, presenta generalidades a la espera de motivar a sus lectores a tomar decisiones
+propias con base en sus necesidades particulares.
+
+
+
+
+                                           Gestores bibliográficos: recomendaciones para su aprovechamiento en la academia          7
+                                                                 Contenido
+
+
+
+
+01.
+                                                                 1.1. Presentación
+                                                                 1.2. ¿Qué es un gestor bibliográfico?
+                                                                 1.3. Orígenes, surgimiento y
+                                                                      consolidación de los gestores
+                                                                 1.4. Tres gestores representativos
+
+
+   Capítulo 01.
+                                                                 1.5. Beneficios del uso de gestores
+                                                                 1.6. ¿Quiénes son usuarios de los
+                                                                      gestores?
+                                                                 1.7. ¿Cómo le pueden servir a usted los
+
+                  Gestores bibliográficos:                            gestores?
+
+
+
+
+                  caracterización, historia
+                  y funciones
+
+
+
+ En este capítulo se presenta un panorama general sobre los
+ gestores bibliográficos: primero una presentación de la te-
+ mática, acompañada de una reseña histórica; segundo, una
+ descripción de las funciones básicas de los gestores, ejem-
+ plificadas por una breve descripción comparativa de tres de
+ ellos; y tercero, anotaciones respecto de las ventajas, posi-
+ bles usuarios y beneficios que puede traer la utilización de
+ estas aplicaciones en la práctica.
+                                                                Contenido    Prólogo Introducción      Capítulo 1    Capítulo 2 Capítulo 3
+
+
+
+
+                                                                                              1.1. Presentación
+Los gestores electrónicos de referencias, esto es, programas informáticos que permiten guardar bases de datos de fuentes
+bibliográficas, hemerográficas o audiovisuales, surgieron en la década de 1980 y desde entonces han ganado terreno como
+herramientas para la investigación. Quizá la ventaja más destacable que reviste usarlas radica en que simplifican la labor de
+citación en los documentos creados con procesadores de textos (p. ej. Microsoft Word), que habitualmente se realizan de
+forma manual. Por esta razón, han sido difundidas en el ámbito académico.
+
+No obstante, durante mucho tiempo no fue posible disponer de una aplicación que permitiera buscar, organizar y exportar
+las referencias bibliográficas, razón por la que se pensaba en estas tareas como elementos separados entre sí. Cohen (2008,
+p. 8) lo explicó así:
+
+          Dos décadas en las que Microsoft Word ha sido la aplicación estándar para la academia han sesgado nuestra percepción
+          respecto de lo que debería ser un programa de esta naturaleza. (...) Lo anterior ha resultado en una división del entorno de in-
+          vestigación en muchas ventanas separadas e inconexas: un gestor de referencias como EndNote, un procesador de textos, un
+          navegador y notas escritas en medios físicos o virtuales (...). Incluso las aplicaciones que se instalan en un servidor, a las cuales
+          se accede mediante el navegador, han tendido a estar aisladas (traducción y adaptación propias). (p. 8).
+
+
+Hoy, los gestores bibliográficos brindan una solución a este problema, en tanto sus funcionalidades los constituyen como
+herramientas de investigación integrales con beneficios y potencialidades diversos, al igual que la forma en la que estos se
+aprovechan. El propósito de este capítulo, por lo tanto, es presentar un panorama general para quienes deseen emplear
+estas aplicaciones en sus quehaceres académicos.
+
+
+
+
+                                         Conceptos clave
+
+                                         Base de datos: conjunto de informaciones agrupados bajo la misma temática que se
+                                         almacenan de forma sistemática.
+
+                                         Metadatos: datos cuya función es describir el contenido informativo de otro elemento.
+                                         Tal es el caso de las palabras clave de los artículos científicos, por ejemplo.
+
+                                         Web 2.0: es un término acuñado por la editorial norteamericana O’Reilly en 2004,
+                                         que hace referencia a la aparición de aplicaciones en internet que permiten al usuario
+                                         interactuar con otras personas a través de la red. Se cuentan como aplicaciones Web
+                                         2.0 las herramientas de publicación de documentos como los blogs, las redes sociales
+                                         y los sitios que permiten difundir materiales audiovisuales (e. g. YouTube), entre otras
+                                         (O’ Reilly, 2005).
+
+
+
+
+                                                                        Gestores bibliográficos: caracterización, historia y funciones            9
+                     1.2. ¿Qué es un gestor bibliográfico?
+                     En pocas palabras, un gestor de referencias bibliográficas es una aplicación
+                     informática de base de datos que permite buscar y organizar de forma orde-
+                     nada las fuentes de información en cualquier área (esto es, materiales escri-
+                     tos impresos o digitales, o registros audiovisuales) (Muldrow & Yoder, 2009,
+                     p. 168), y exportarlas a manera de listas de referencias y citaciones.
+
+
+                          1.2.1. Funciones
+                     Si bien cada gestor tiene interfaces y características particulares y, según la
+                     necesidad, podamos encontrar virtudes o deficiencias en su funcionamiento,
+                     todos están diseñados para desarrollar tres funciones básicas: entrada, orga-
+                     nización y salida de datos.
+
+
+                                1.2.1.1. Entrada de datos
+                     La información bibliográfica de las fuentes (i.e. datos como autor, año y lugar
+                     de edición) puede incorporarse en los gestores de tres maneras: automática,
+                     directa o indirecta.
+
+                         • Automática. el gestor recupera los datos bibliográficos de la fuen-
+                           te consultada con mínima intervención del usuario; basta con hacer
+                           clic en el botón que el gestor destine para ello en el navegador web.
+                           Desde luego, la primera es la más valorada y utilizada actualmente,
+                           aunque en ocasiones sea necesario recurrir a las demás (e. g. un do-
+                           cumento impreso que no se encuentra en ninguna base de datos o
+                           buscador en línea).
+
+
+
+                                          https://www.worldcat.org
+
+                           Aplicaciones       Capture Reference              Otros marcadores
+
+
+
+                                             EndNote Basic            Zotero        Mendeley
+
+                     Figura 1. Botones para entrada automática de referencias de los gestores Zote-
+                     ro, Mendeley y Endnote Basic en el navegador Google Chrome
+
+
+                         • Directa. En los casos en los que no es posible recuperar la informa-
+                           ción automáticamente, existe la posibilidad de incorporar la informa-
+                           ción de cada fuente mediante un formulario cuyos campos deben ser
+                           completados por el usuario.
+                         • Indirecta. Algunas bases de datos y buscadores permiten exportar re-
+                           ferencias o listas de ellas en archivos de texto cuyo formato puede ser
+                           “leído” por los gestores (llamados archivos RIS, por Research Informa-
+
+
+Selected by freepi
+                           tion Systems, compañía que los inventó).
+                                                        Contenido   Prólogo Introducción    Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+
+          1.2.1.2. Organización de datos
+Las interfaces de todos los gestores, aun de los más antiguos, permiten revisar de forma ordenada toda la información
+recopilada mediante los mismos, de tal forma que sea posible realizar acciones como verificar que la información de todos
+los registros esté completa; eliminar referencias duplicadas (si las hubiere); añadir datos adicionales o registros nuevos; u
+organizar conjuntos de referencias en carpetas, entre otras.
+
+
+          1.2.1.3. Salida de datos
+Los gestores pueden integrarse en los programas de procesamiento de texto (e. g. Microsoft Word) para insertar citas y re-
+ferencias a partir de la información que se ha recopilado con los mismos. Esta función se conoce como write & cite (Cordón
+García, Alonso Arévalo, Gómez Díaz, & López Lucas, 2010, p. 315). Dichas citaciones podrán adoptar el estilo que se desee,
+según las necesidades (Chicago, APA, MLA, etc.).
+
+
+
+     1.2.2. ¿Qué caracteriza a un buen gestor?
+Dada la gran cantidad de gestores —pagos
+y gratuitos— existentes en la actualidad,
+puede resultar difícil elegir el que mejor se
+ajuste a nuestras necesidades. Al respecto,
+Cordón García et al. (2010) proponen una
+serie de criterios a tener en cuenta para
+escoger un gestor, que nos permitimos
+reproducir aquí:
+
+    • Compatibilidad con las bases de da-
+      tos comerciales más importantes.
+    • Capacidad para organizar y procesar las
+      referencias bibliográficas obtenidas.
+    • Capacidad para gestionar referencias en
+      los formatos más utilizados (e. g. APA,
+
+
+
+
+                                                                                                                                 http://raquelsofiamusic.tumblr.com/post/64918998858/mi-primer-viaje-fue-un-libro
+      Vancouver)
+    • Posibilidad de integración con los pro-
+      cesadores de texto más conocidos.
+    • Versatilidad
+    • Capacidad de integrar documentos a
+      texto completo y recursos compartidos.
+      (p. 325).
+
+
+
+
+ Figura 2. Barra de herramientas del gestor bibliográfico
+ Zotero en Microsoft Word
+
+
+
+
+                                                                Gestores bibliográficos: caracterización, historia y funciones                                                                                      11
+      Contenido Prólogo Introducción          Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+     1.3. Orígenes, surgimiento y consolidación de los gestores
+     Los primeros gestores bibliográficos, creados como apli-
+     caciones aisladas que se instalaban en los computado-
+     res de los usuarios, surgieron a principios de la década de
+
+
+
+
+                                                                                   Cronología
+     1980 para atender la necesidad de los investigadores de
+     contar con una base de datos personal de colecciones
+     de documentos impresos. ProCite y Reference Manager,
+     lanzados en 1983 y 1984, fueron los primeros gestores de
+     venta comercial. El segundo, por su parte, nació como una
+     aplicación con un fuerte énfasis en el trabajo en red (i. e.
+     una base de datos alimentada por múltiples usuarios).
+     En la década de 1990, el hecho de que se extendiera el
+     acceso a bases de datos bibliográficas desde internet hizo                           1983: aparición de ProCite.
+     que los objetivos y necesidades a satisfacer fuesen distin-
+     tos: “¿para qué crear una colección de referencias perso-                            1984: aparición de Reference
+     nal, si Pubmed está disponible para ser consultada desde                                   Manager.
+     el navegador?” (Norman, 2008; traducción y adaptación
+     propias). Este hecho, sumado a la comercialización masi-
+                                                                                          1988: aparición de EndNote.
+     va de procesadores de texto como Microsoft Word, causó
+     modificaciones en el funcionamiento de los gestores; se
+     les incorporó la capacidad de integrarse con dichos pro-                             1991: surgimiento de la web.
+     gramas para agilizar las labores de citación. Reference
+     Manager y EndNote, gestores desarrollados por la misma                               2001: aparición de Refworks.
+     compañía (Thomson Reuters), adquirieron popularidad
+     gracias a este hecho.                                                                2005: primera mención del
+     Entrada la década del 2000, la masificación de internet y                                  término ‘Web 2.0’.
+     el advenimiento de la Web 2.0 propiciaron la aparición de
+     nuevos gestores, tanto comerciales como gratuitos, que
+                                                                                          2006: aparición de Zotero.
+     aprovechan estas tecnologías para nuevos gestores —va-
+     rios de ellos gratuitos— que aprovecharon las ventajas de
+     la red para ofrecer servicios nuevos, tal es como compartir                          2008: aparición de Mendeley.
+     las bases de datos con otros usuarios, capturar fuentes di-
+     rectamente desde las ventanas de navegadores e insertar
+     metadatos en las referencias (Muldrow & Yoder, 2009, p.
+     168). Numerosas aplicaciones como Zotero y Mendeley,
+     sustentadas en sus funcionalidades sociales, ganaron un
+     espacio que se hizo cada vez mayor. Los gestores más an-
+     tiguos, por su parte, debieron adaptarse a estos cambios;
+     mientras que algunos desaparecieron de forma paulati-
+     na (como Reference Manager, que salió del mercado en
+     2015), otros optaron por integrarse a la web mediante
+     funcionalidades o aplicaciones nuevas —tal es el caso de
+     Endnote Web (hoy llamado Endnote Basic) y Refworks—,
+     situación que continúa hasta hoy.
+
+
+12     Gestores bibliográficos: recomendaciones para su aprovechamiento en la academia
+                                                          Contenido     Prólogo Introducción   Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+ 1.4. Tres gestores representativos
+El número de gestores bibliográficos disponibles actualmente es considerable; en algunos casos, inclusive, las instituciones
+educativas compran licencias de aplicaciones pagas que ponen a disposición de sus comunidades académicas. Para efectos
+ilustrativos, hemos optado por presentar aquí una descripción de tres gestores de uso gratuito que por sus funcionalidades
+y versatilidad gozan de gran aceptación en la actualidad; estos son Zotero, Endnote Basic y Mendeley.
+
+
+                                              ENDNOTE basic
+                                                                         TM
+
+
+
+
+Zotero es un gestor creado por iniciativa   Este gestor, versión gratuita de la aplica-    Mendeley nació por iniciativa de dos es-
+del Center for History and New Media de     ción paga Endnote, es desarrollado por         tudiantes de doctorado en 2008 como
+la George Mason University. Es posible      la empresa Thompson Reuters. A dife-           una aplicación de acceso abierto. Poste-
+utilizarlo de dos formas: como una “ex-     rencia de Zotero y Mendeley, Endnote           riormente, en 2013, fue adquirido por el
+tensión” del navegador Mozilla Firefox, o   Basic solo funciona en línea, por lo cual      grupo editorial Elsevier, aunque su uso
+bien como una aplicación independiente      es necesario disponer de una conexión          aún es gratuito. Se caracteriza por cuan-
+en caso de usar otro navegador. Se ca-      permanente a internet para utilizarlo. No      to, más que solo un gestor de referen-
+racteriza por su amplia compatibilidad      obstante, comparte con sus congéneres          cias, es una plataforma que lleva su ca-
+con fuentes que van más allá de los         la posibilidad de importar referencias         rácter Web 2.0 aún más allá: los usuarios
+buscadores y las bases de datos: esto es,   mediante un botón que se instala en el         pueden compartir trabajos propios y re-
+permite importar de forma automática        navegador y exportarlas a procesadores         visar productos de sus colegas, así como
+información de sitios comerciales como      de texto, así como compartir referencias       valorar el impacto de dichas publicacio-
+Amazon, blogs y sitios de contenido au-     con otros usuarios.                            nes en términos estadísticos, rasgo que
+diovisual como Youtube (Cordón García                                                      la convierte en una red social académica.
+et al., 2010, p. 322). Asimismo, dispone                                                   Al igual que sus competidores, cuenta
+de una característica ingeniosa: el botón                                                  con interfaces para importar referencias
+para entrada automática de referencias                                                     desde buscadores y bases de datos, así
+cambia según la naturaleza de la fuen-                                                     como para exportar citas y referencias a
+te (i. e. de un libro a una página web).                                                   documentos.
+En tanto herramienta Web 2.0, permite
+almacenar copias de las referencias en
+la web, así como compartirlas con otros
+usuarios de la aplicación.
+
+
+
+
+                                                                                           Para aprender…
+A continuación presentamos enlaces a recursos escritos y audiovisuales sobre la instalación y uso básico de los
+tres gestores que describimos aquí. Le invitamos a consultarlos y luego hacer el proceso de instalación de alguno
+de ellos en su equipo de cómputo, para tener un primer contacto con su interfaz.
+
+
+      Videos (preparados por la Universidad de la Sabana)
+Zotero:                                         Endnote Basic:                             Mendeley:
+http://bit.ly/2b9s4zp.                          http://bit.ly/2bvzKMT.                     http://bit.ly/2bazD4u.
+
+      Guías y manuales
+Documentación oficial de Zotero:                Guía de uso de Endnote Basic (Universi-    Manual de Mendeley (Universidad de León).
+http://bit.ly/1W3CiCb.                          dad de León): http://bit.ly/2baABgY.       http://bit.ly/2b8rUcO.
+
+
+
+
+                                                                   Gestores bibliográficos: caracterización, historia y funciones 13
+     Contenido   Prólogo Introducción    Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+
+                                                                 Aunque cumplen funciones similares, las interfaces de los tres
+                                                                 gestores descritos tienen rasgos propios: Zotero y Mendeley, en
+                                                                 tanto aplicaciones que pueden funcionar de forma autónoma, di-
+                                                                 viden el espacio en tres partes, destinadas principalmente a las
+                                                                 colecciones del usuario (conjuntos de referencias agrupados en
+                                                                 carpetas), al listado de referencias y a la información detallada de
+                                                                 cada una de ellas. Endnote Basic, por su parte, dispone sus ele-
+                                                                 mentos mediante pestañas.
+
+
+
+
+                                Colecciones                                                                Información de la
+                                                                                                           referencia selecionada
+
+
+
+
+                                                               Listado de referencias
+
+
+
+                                Filtro de etiquetas
+
+
+
+
+                                                       Figura 3. Interfaz de Zotero
+
+
+
+
+14    Gestores bibliográficos: recomendaciones para su aprovechamiento en la academia
+                          Contenido   Prólogo Introducción   Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+
+ENDNOTE basic
+         TM
+
+
+
+
+                                            Pestañas para ver la lista de referencias
+                                            (“Mis referencias”), recopilar fuentes de
+                                            algunas bases de datos, crear colecciones
+                                            nuevas (“Organizar”), exportar las referen-
+                                            cias (“Aplicar formato”) y acceder a opcio-
+                                            nes de configuración adicionales
+
+
+
+
+                          Colecciones
+
+
+
+
+              Figura 4. Interfaz de Endnote Basic
+
+
+
+
+                                 Gestores bibliográficos: caracterización, historia y funciones   15
+     Contenido   Prólogo Introducción     Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+
+                         Colecciones
+
+
+
+
+                                                        Listado de referencias
+                                                                                        Información de la
+                                                                                        referencia selecionada
+
+                        Filtros para mostrar las
+                        referencias (por autor, año)
+
+
+
+
+                                                  Figura 5. Interfaz de Mendeley
+
+
+
+
+16    Gestores bibliográficos: recomendaciones para su aprovechamiento en la academia
+                                                       Contenido   Prólogo Introducción    Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+
+1.5. Beneficios del uso de gestores
+En concordancia sus funciones básicas, los gestores modernos pueden reportar beneficios en tres frentes de trabajo: la
+búsqueda de información; la gestión de las fuentes; y la visibilidad del conocimiento producido.
+
+
+
+
+  Búsqueda de información                 Gestión de fuentes                         Visibilidad del conocimiento
+
+  • Hacen posible acopiar información     •   Al encontrarse en una colección        •    Liberan tiempo de las labores
+    referida exclusivamente a necesi-         personal, es posible modificar              de citación y referenciación que
+    dades o intereses del usuario, con        los metadatos de las referencias            puede asignarse en tareas rela-
+    lo cual se reducen los tiempos de         para que reflejen necesidades               cionadas con la escritura, mucho
+    búsqueda y se obtienen resultados         particulares; por ejemplo, añadir           más importantes para la calidad
+    más precisos y relevantes.                palabras clave específicas y ha-            global de los escritos.
+  • Algunos gestores, además de               cer anotaciones. Además de op-         •    Ayudan a evitar situaciones
+    recopilar la referencia, guardan          timizar la colección, esto puede            de plagio, en tanto se asegura
+    copias de los documentos con-             permitir que otras personas in-             que las fuentes (cuando menos
+    sultados en su base de datos (alo-        teresadas en la misma temática              aquellas que se han recopilado
+    jada en el equipo de cómputo del          accedan con más facilidad a los             con el gestor) serán citadas de
+    usuario); esto permite acceder a          contenidos.                                 forma adecuada.
+    ellos de forma eficiente, sin preo-   •   Permiten que grupos de perso-          •    Además de hacer posible que
+    cuparse por recordar el lugar en el       nas trabajen sobre colecciones              el usuario comparta sus propios
+    que se almacenarán.                       comunes desde lugares distan-               escritos, algunos gestores per-
+  • Abren la posibilidad de integrar          tes, lo cual puede ser beneficioso          miten extraer estadísticas bási-
+     fuentes que antaño no habrían            para el desarrollo de proyectos             cas sobre los mismos: con qué
+     tenido la misma relevancia que           de investigación colectivos.                frecuencia se leen y se descar-
+     los artículos científicos, tales                                                     gan los textos, por ejemplo.
+     como repositorios de contenidos
+     y blogs.
+
+
+
+
+                                                Para recordar…
+                                                       Es probable que, en el ejercicio de su vida como estudiante,
+                                                       profesional o investigador, usted se haya visto en situacio-
+                                                       nes en las que le hubiera sido provechoso emplear un gestor
+                                                       bibliográfico. ¿Puede recordar alguna? ¿Por qué cree que ha-
+                                                       bría sido útil recurrir a estas herramientas en ese momento?
+
+
+
+
+                                                               Gestores bibliográficos: caracterización, historia y funciones 17
+      Contenido Prólogo Introducción         Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+
+     1.6. ¿Quiénes son usuarios de los gestores?
+     El uso de gestores bibliográficos puede beneficiar a personas con perfiles y necesidades diversos, más allá de solo aquellas
+     que emprenden proyectos de investigación. He aquí una descripción esquemática de sus perfiles y las labores que pueden
+
+
+
+
+                            Investigadores o                                           Estudiantes universitarios
+                            auxiliares de investigación
+
+             Pueden…                                                        Pueden…
+             • Gestionar las fuentes que utilizarán                         • Crear colecciones de referencias con
+               como soporte para el desarrollo de sus                         base en sus intereses académicos.
+               proyectos individuales o colectivos.                         • Citar de forma adecuada las fuentes
+             • Componer las citaciones y las listas de                        que utilicen en sus trabajos escritos.
+               referencias de sus escritos de forma
+               ágil y eficiente.
+             • Cumplir con facilidad los requisitos de
+               publicación de las revistas en lo que
+
+
+
+
+                                                                                                                        Icons made by www.freepik.com Freepik from www.flaticon.com is licensed by CC 3.0 BY
+               respecta a estilos de citación.
+
+
+
+
+                            Profesores universitarios                                  Bibliotecas
+
+             Pueden…                                                        Pueden…
+             • Organizar la bibliografía que emplea-                        • Establecer servicios de información
+               rán en sus cursos.                                             respecto de la disponibilidad de re-
+             • Crear listas de referencias que pue-                           cursos bibliográficos específicos (me-
+               dan nutrirse con los aportes de sus                            diante la creación de colecciones pro-
+               estudiantes.                                                   pias en los gestores).
+                                                                            • Educar a sus usuarios respecto de la
+                                                                              citación y referenciación de fuentes
+                                                                              en trabajos escritos.
+
+
+
+
+18     Gestores bibliográficos: recomendaciones para su aprovechamiento en la academia
+      Contenido    Prólogo Introducción      Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+
+desempeñar con estas herramientas.
+1.7. ¿Cómo le pueden servir a usted los gestores?
+Como lo hemos visto, los gestores pueden tener aplicaciones
+prácticas diversas, relacionadas de forma directa con el perfil de
+sus usuarios: pueden ser desde una simple ayuda para agilizar la
+incorporación de referencias en un trabajo escrito, hasta una he-
+rramienta de investigación mediante la cual es posible facilitar la-
+bores de investigación individuales o grupales.
+Llegado el momento de que usted decida qué gestor puede servir
+más para satisfacer sus intereses e iniciativas, sugerimos plantear-
+se los siguientes cuestionamientos para facilitar esa decisión:
+
+    • ¿Voy a componer mi colección de referencias a partir de
+      documentos extraídos de bases de datos, o recurriré tam-
+      bién a espacios como blogs y repositorios de contenidos?
+    • ¿Necesito acceder a mis colecciones de referencias aun sin
+      estar conectado a internet?
+    • ¿Tengo la intención de compartir mis listas de referencias
+      con otras personas?
+    • ¿Mi institución tiene preferencia por algún gestor específico?
+      ¿Si es así, puedo utilizarlo libremente?
+    • ¿Tengo una colección de fuentes muy grande, quizás dema-
+      siado para el espacio virtual que ofrecen algunos gestores?
+
+En último término, y a manera de ayuda adicional, presentamos
+aquí una valoración breve sobre las funcionalidades de los 3 ges-
+tores descritos en este capítulo, de tal forma que le sea posible
+identificar las posibles virtudes o deficiencias que tendrían para
+sus labores particulares si decidiera emplear alguno.
+
+
+
+
+                                                                                  Created by Teksomolika - Freepik.com
+
+
+
+
+              Gestores bibliográficos: caracterización, historia y funciones 19
+      Contenido Prólogo Introducción   Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+     Tabla 1. Comparación de funcionalidades de Zotero, Endnote Basic y Mendeley
+
+
+
+
+                                                                                                                                  0
+                           Puntos en contra                                  Puntos a favor
+
+                           • No tiene un buscador propio de referencias      • Funciona sobre el navegador (Firefox) o de
+                             en bases de datos, por lo que siempre es          forma independiente.
+                             necesario acceder a ellas directamente.         • Puede importar información bibliográfica tan-
+                           • No dispone de una versión para disposi-           to de bases de datos y buscadores académi-
+                             tivos móviles (i. e. teléfonos inteligentes o     cos como de blogs y sitios comerciales (e. g.
+           Zotero            tabletas electrónicas).                           Amazon, YouTube).
+                                                                             • La documentación sobre su uso es abundante
+                                                                               y su interfaz es fácil de explorar para usuarios
+                                                                               nuevos.
+                                                                             • Permite importar información bibliográfica de
+                                                                               documentos en formato PDF.
+
+                           • Solo funciona en la web, por lo que el ac-      • Es compatible con una amplia gama de equi-
+                             ceso depende de contar con una conexión           pos de cómputo y dispositivos móviles por
+       Endnote Basic         permanente a internet.                            cuanto funciona como una página web.
+                           • Compatibilidad más limitada con sitios co-      • Permite hacer búsquedas en algunas bases de
+                             merciales y blogs.                                datos sin acceder directamente a ellas.
+
+                           • Compatibilidad limitada con sitios comer-       • Sus funcionalidades como red social académi-
+                             ciales y blogs.                                   ca son más completas: además de compartir
+                           • El hecho de que la plataforma haya sido ad-       colecciones de referencias, es posible hacer
+                             quirida por un grupo editorial ha suscitado       públicos documentos propios (o producto de
+                             controversia por la integridad de los datos       un trabajo colectivo) para ser leídos por otras
+          Mendeley
+                             que se alojan en ella.                            personas en la web.
+                                                                             • Dispone de una versión para dispositivos mó-
+                                                                               viles.
+                                                                             • Permite importar información bibliográfica de
+                                                                               documentos en formato PDF.
+
+     Fuente: elaboración propia con base en Cordón García et al. (2009).
+
+
+
+
+                                                                                              Para practicar…
+           Le proponemos hacer el intento de decidir sobre qué gestor podría ajustarse mejor a sus necesidades
+           actuales, de acuerdo con lo visto en el capítulo. ¿Alguno de los gestores descritos aquí llamó su aten-
+           ción? ¿Conoce otro que podría satisfacer de mejor manera sus requerimientos?
+           Ahora, inicie el gestor que haya seleccionado y comience a explorar más a fondo sus funcionalidades.
+           Intente, por ejemplo, acceder a una base de datos y recuperar algunas referencias a modo de prueba, y
+           luego insértelas en un documento de texto.
+
+
+
+20     Gestores bibliográficos: recomendaciones para su aprovechamiento en la academia
+                                                              Contenido
+
+
+
+
+02.
+                                                              2.1. Presentación
+                                                              2.2. Acceso a las fuentes de consulta
+                                                                   especializadas
+                                                              2.3. Problemas en el desarrollo de la
+
+
+   Capítulo 02.
+                                                                   búsqueda
+                                                              2.4. Falencias en citación y referenciación
+
+
+
+
+                  Problemas actuales en
+                  la búsqueda y gestión de
+                  fuentes documentales
+
+
+
+ En este capítulo se discuten ciertas situaciones que gene-
+ ran reveses al embarcarse en la labor de recopilar, alma-
+ cenar y emplear fuentes documentales en el desarrollo
+ de trabajos de investigación que tienen como resultado la
+ elaboración de documentos escritos, cualquiera sea su en-
+ vergadura o alcance.
+      Contenido Prólogo Introducción     Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+
+     2.1. Presentación
+     La escritura de textos en el ámbito académico es un ejercicio en cuyo desarrollo se generan diálogos entre posiciones de
+     orígenes diversos, en procura de emplearlas como sustento para encontrar una voz propia. En este sentido, la calidad de un
+     escrito de tal naturaleza deviene, en buena parte, del rigor con el que se aborde la tarea de gestionar las fuentes que com-
+     pondrán dichos intercambios.
+     Ahora bien, aunque se tome la decisión de emplear un gestor para agilizar los procesos de recuperación, almacenamiento y
+     exportación de colecciones de referencias, es claro que la aplicación por sí sola no garantiza que la búsqueda y sus resultados
+     tengan un efecto positivo en el desarrollo de un trabajo de investigación que derivará en un documento escrito. Sumado a
+     esto, la llegada de nuevos recursos de información que trascienden las nociones de libros o artículos de revistas obligan a
+     adquirir conocimientos para valorar su calidad y pertinencia . García (2007) agrupa esto último bajo el concepto competencia
+     para manejar información: esto es, un conjunto de saberes, actitudes y habilidades que permiten recabar información de
+     manera eficiente, en procura de “convertirla en conocimiento útil aplicable en contextos variados y reales”.
+     Así entonces, el embarcarse en un proceso de escritura que exija contar con fuentes documentales requiere, en palabras
+     de Bundy (2000), de la “capacidad de reconocer la existencia de una necesidad de información, identificar cuál es nece-
+     saria, acceder a ella, valorarla y emplearla cuando se requiera” (p. 1, traducción propia).
+     Con lo anterior, en este capítulo se pretende caracterizar algunas situaciones que suelen enfrentarse al emprender una re-
+     visión documental —soportada o no en gestores bibliográficos—, las cuales pueden tener efectos negativos en la gestión de
+     las fuentes si no se sabe cómo enfrentarlas.
+
+
+
+
+        Conceptos clave
+        Base de datos especializada: es aquella en la que se almacenan documentos
+        (escritos o audiovisuales) para satisfacer necesidades de información en áreas
+        diversas del conocimiento.
+
+        Buscador (o motor de búsqueda): sistema que sirve para recuperar archivos
+        que están alojados en servidores en internet.
+
+        Estilo de citación: reglas que establecen los datos que es necesario recabar
+        para citar y referenciar una fuente, así como el orden en que deben disponerse.
+
+
+
+
+22     Gestores bibliográficos: recomendaciones para su aprovechamiento en la academia
+2.2. Acceso a las fuentes de consulta especializadas
+El número de espacios de internet en los cuales es posible consultar infor-
+mación de índole académica son innumerables y de muy diverso orden.
+No obstante, su utilidad como fuentes de información puede verse dis-
+minuida por asuntos relacionados con el acceso —justamente uno de los
+criterios expuestos—; ciertos contenidos pueden estar disponibles solo de
+forma parcial, o bien requerir de suscripciones pagas para ser consultados.
+Es conveniente, por lo tanto, dar un repaso a una tipología general sobre            Consejos prácticos
+dichos servicios, con miras a generar competencias que permitan orientar
+mejor el proceso de búsqueda de información relevante.
+                                                                                           Si se decide utilizar un gestor para
+     2.2.1. Definición de alcance de la búsqueda                                     conducir la búsqueda de referencias, es
+Una de las razones que motivan la ineficacia de las búsquedas en internet            importante tener en cuenta que algunos
+corresponde a la falta de criterio para establecer las metas y límites de las        ofrecen mejor compatibilidad con cier-
+mismas. Esto es, definir lo siguiente (Cordón García et al., 2010, p. 44)            tos sitios o bases de datos que otros. Por
+                                                                                     ejemplo, respecto de los tres gestores
+       •    Tipo de labor para la que se adelantará la búsqueda                      mencionados en el capítulo 1, Zotero per-
+       •    Tipo de materiales que serán tenidos en cuenta al desarrollarla          mite obtener resultados mejores en la
+       •    Idiomas de consulta                                                      recuperación de metadatos de publica-
+                                                                                     ciones en redes sociales y blogs, mientras
+     2.2.2. ¿En dónde buscar?                                                        que EndNote Basic y Mendeley son más
+La pregunta da lugar a múltiples respuestas, relacionadas de forma directa           eficientes para recuperar información de
+con lo expresado en 2.2.1.: el alcance de la búsqueda dará la pauta para             bases de datos académicas. Estas fortale-
+establecer los lugares de donde se partirá para recabar información.                 zas —o limitaciones, según el caso— debe-
+A continuación mostraremos algunos aspectos relevantes de los más                    rán tenerse en cuenta al definir el alcance
+utilizados: los buscadores y las bases de datos.                                     de la búsqueda y, con ello, el gestor más
+                                                                                     adecuado para llevarla a cabo.
+           2.2.2.1. Bases de datos
+De más está reiterar que, especialmente en el desarrollo de trabajos de
+                                                                                         Las técnicas de búsqueda de infor-
+investigación que devendrán en artículos científicos, las bases de datos es-
+                                                                                     mación en bases de datos y buscado-
+pecializadas constituirán una valiosa fuente de consulta, en tanto contie-
+                                                                                     res ameritan una revisión más exten-
+nen información cuya calidad ha sido evaluada por los equipos editoriales
+                                                                                     sa, que escapa a los alcances de esta
+de las revistas en las que se ha publicado. No obstante, es justamente la
+                                                                                     cartilla. En vista de ello, sugerimos ac-
+enorme cantidad de información alojada en ellas lo que hace que las bús-
+                                                                                     ceder a una guía básica sobre el tema,
+quedas se tornen complejas. A este respecto, es conveniente conocer el
+                                                                                     dispuesta por la Universidad Nacional
+funcionamiento y uso de los operadores booleanos (“and”, “or” y “not”), así
+                                                                                     Autónoma de México, en el siguiente
+como el uso de truncamiento de términos (p. ej. auto* recuperaría auto-
+                                                                                     enlace: http://bit.ly/2d5txoQ.
+móvil, autobús, etc.)
+
+
+           2.2.2.2. Buscadores
+Los buscadores permiten acceder a recursos de innumerables variedades
+y orígenes. No obstante, hay algunos especializados en recuperar infor-
+mación de documentos científicos, de los cuales se destaca Google Aca-
+démico (http://scholar.google.com). Este motor de búsqueda, surgido en
+2004, sirve para tres propósitos:
+         buscar el texto completo de un trabajo; buscar la producción biblio-
+         gráfica de un autor; de una revista o sobre un tema; [y] buscar las
+         citas que recibe un trabajo (libro, artículo de revista, tesis, informe…)
+         (Torres-Salinas, Ruiz-Pérez, & Delgado-López-Cózar, 2009, p. 502).
+      Contenido Prólogo Introducción          Capítulo 1   Capítulo 2 Capítulo 3
+
+     No obstante, tal como sucede con la versión
+     "generalista" de Google, las búsquedas suelen
+                                                                                                       Para aprender…
+     verse afectadas negativamente por la manera
+     como se escriben las frases de búsqueda. Re-                   Es muy probable que, en algún ejercicio de investiga-
+     comendamos, por lo tanto, utilizar la función                  ción, haya recurrido a Google para rastrear información.
+     de búsqueda avanzada, cualquiera sea la ver-                   Pero ¿ha utilizado las funciones de búsqueda avanzada?
+     sión del buscador que se utilice; con esta es                  Defina un tema de investigación (e. g. “alfabetización
+     posible depurar los resultados de la búsqueda                  informacional en Latinoamérica”); luego, ingrese a
+     mediante acciones como recabar información                     Google o a Google Académico, escriba la frase que haya
+     de fechas específicas, definir el idioma de los                elegido como tema y revise los resultados; ¿correspon-
+     resultados y buscar archivos de tipologías par-
+                                                                    den de forma exacta a lo que buscaba? Luego, intente
+     ticulares (e. g. solo archivos PDF), entre otras.
+                                                                    realizar la misma pesquisa con la búsqueda avanzada;
+     Problemas en el desarrollo de la búsqueda.
+                                                                    ¿obtiene los mismos resultados?
+ 2.3. Problemas en el desarrollo de la búsqueda
+
+         2.3.1. Criterios de selección de fuentes
+ En el ejercicio de cualquier proceso que radique en componer una lista de fuentes es importante disponer de criterios mí-
+ nimos de selección, de tal forma que la información recabada resulte verdaderamente útil para el trabajo. Ahora bien, la
+ proliferación de nuevas fuentes de información alojadas en páginas web como blogs y repositorios de contenidos, aunque
+ positiva en tanto sustento teórico adicional, puede traer dificultades si no se tiene criterio alguno para valorar la idoneidad
+ de la información, en especial aquella que proviene de documentos electrónicos por cuanto puede obedecer a “propósitos
+ personales, comerciales y no académicos” (Martínez, 2013, p. 45).
+
+ Con lo anterior, al embarcarse en la tarea de recabar fuentes es importante realizar dos tareas básicas: primero, establecer
+ el alcance y el objeto de la búsqueda (Córdón-García et al., 2010, p. 42); y segundo, plantearse ciertos cuestionamientos
+ respecto de la fiabilidad de dichas fuentes, de modo tal que las listas de referencias acopiadas manualmente o a través de
+ un gestor sean verdaderamente útiles para el trabajo a realizar, o bien para iniciativas futuras. En este sentido, la tabla 2 pre-
+ senta algunas consideraciones básicas que sugerimos tener en cuenta al evaluar dos tipos de materiales: artículos (impresos
+ o digitales) y recursos web (entradas de blogs, páginas personales, portales).
+
+
+
+
+                                                                                                            Consejos prácticos
+        Sobre el formato y los elementos que puede llevar una ficha de lectura sugerimos consultar dos materiales: el primero, ¿Cómo
+        elaborar una ficha de lectura? de Blanca González (2005), es un libro que aporta numerosos elementos sobre la construcción
+        y uso de estas herramientas como ayudas para la composición de escritos académicos; y el segundo es la guía publicada por la
+        Universidad Nacional de Colombia (2013), disponible en http://bit.ly/2cniWmJ: aun cuando sus alcances son más modestos,
+        la resaltamos aquí en tanto resulta un trabajo conciso que puede ser de utilidad en caso de no poder acceder a la primera obra.
+
+         El gestor Endnote Basic, también presentado en el primer capítulo, no dispone de opción alguna para escribir notas en las refe-
+        rencias; no obstante, sí permite adjuntar archivos de texto escritos con procesadores como Microsoft Word. En consecuencia,
+        es posible escribir las fichas de lectura con una aplicación de este tipo y adjuntarlas luego a las referencias correspondientes.
+
+        A manera de puesta en práctica de los criterios dispuestos en la tabla 2, proponemos que revise los sitios de la revista científica
+        El profesional de la información (http://bit.ly/2efzGTa) y el blog Universo Abierto (https://universoabierto.com/); si bien ambos
+        publican textos relacionados con la misma área (ciencias de la información) y gozan de un alto grado de reconocimiento en en
+        mundo académico, examinarlos permite identificar que sus contenidos se presentan de formas radicalmente distintas.
+
+
+24     Gestores bibliográficos: recomendaciones para su aprovechamiento en la academia
+                                                                Contenido   Prólogo Introducción   Capítulo 1   Capítulo 2 Capítulo 3
+
+
+                          Tabla 2. Criterios para evaluar la idoneidad de artículos y recursos en la web
+
+
+                                                           Tipo de material
+
+                                     Artículo                                         Recurso web
+
+                   • ¿Quién es el autor? ¿Es un experto en             • ¿La dirección de la página corresponde
+                     la materia?                                         a un dominio institucional (e. g. http://
+                   • ¿El artículo está publicado o se alo-               www.unal.edu.co) o personal?; en el últi-
+                     ja en un espacio personal? ¿Tiene el                mo caso, ¿es una página confiable?
+                     aval de una institución académica o               • ¿Los datos del autor(es) del recurso se
+                     de una organización?                                explicitan?
+                   • ¿Cómo se accede al artículo?                      • ¿Los contenidos son originales?
+                   • ¿Los contenidos están sustentados                 • ¿La información presentada es objetiva?
+                     con citas y referencias?                          • ¿El acceso al recurso es gratuito o pago?
+                   • ¿Se trata de un documento publicado               • ¿Cuál es la naturaleza de los contenidos
+                     en una revista, o bien de una ponencia              del recurso (de opinión, académica, de
+                     o conferencia?                                      divulgación, etc.)?
+                   • ¿El artículo ha sido citado por otras
+                     fuentes?
+
+
+                                     Fuente: elaboración propia con base en Martínez (2013).
+
+
+     2.3.2. Fragmentación de los resultados de las búsquedas
+En ocasiones —y en el caso que nos ocupa, cuando se decide
+confiar en un gestor para recopilar fuentes documentales—, bien
+sea por la cantidad de referencias, o porque estas no serán utili-
+
+
+
+
+                                                                                                                                        Readings and readers in the library / Lecturas y lectores en la biblioteca (ilustración de Edward McGowan)
+zadas en un tiempo prudencial, pueden pasarse por alto detalles
+importantes respecto de las mismas que, dado el caso, podrían
+servir como insumo de consulta en ejercicios de investigación o
+escritura posteriores.
+Ante esto, diversos materiales educativos recomiendan adquirir el
+hábito de elaborar fichas de lectura; esto es, documentos cuyo ob-
+jeto es acopiar la información más relevante sobre el material que
+se ha leído (Universidad Nacional de Colombia, 2013, p. 1), de tal
+forma que pueda ser ubicada y consultada posteriormente.
+Ahora bien, ¿cómo hacer compatible la elaboración de guías de
+lectura con el uso de gestores bibliográficos? Zotero y Mendeley,
+
+
+
+
+                                                                                                                                        http://bibliolectors.tumblr.com/post/86116655896/readings-and-readers-in-the-library-lecturas-y
+dos de los gestores presentados en el capítulo anterior, disponen
+de funcionalidades que podrían funcionar a este respecto: radican
+en la posibilidad de agregar notas a las referencias consultadas. El
+punto fuerte de esta alternativa radica en que se tiene la posibilidad
+de utilizar texto enriquecido (es decir, cambiar el tipo de letra, inser-
+tar cuadros, usar colores, subrayar y usar cursivas, entre otras accio-
+nes). Veamos ahora un ejemplo de ficha de lectura (construida bajo
+los parámetros establecidos en Universidad Nacional de Colombia,
+2013) que se inserta en un gestor bibliográfico a modo de nota.
+      Figura 6. Ficha de lectura insertada como nota en Zotero
+
+
+                                                               Problemas actuales en la búsqueda y gestión de fuentes documentales 25
+      Contenido   Introducción
+                  Prólogo        Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+
+                                                              Contenido de la ficha
+
+
+
+
+                                                             Referencias relacionadas
+
+
+                                               Palabras clave de la referencia
+
+
+
+                                        Figura 6. Ficha de lectura insertada como nota en Zotero
+
+
+
+
+     Para recordar…
+     ¿En alguna oportunidad ha realizado fichas de lectura para
+     analizar la bibliografía sobre un tema específico? De ser
+     así, ¿de qué manera las organizó?
+     Ahora, ingrese al gestor de su preferencia —si ha elegido
+     alguno— e intente componer la ficha de alguna referencia
+     (puede usar para ello la estructura de la mencionada guía
+     de la Universidad Nacional [2013]). ¿Considera que esta
+     estrategia podría serle de utilidad?
+
+
+
+
+26     Gestores bibliográficos: recomendaciones para su aprovechamiento en la academia
+                                                               Contenido     Prólogo Introducción   Capítulo 1   Capítulo 2 Capítulo 3
+
+
+2.4. Falencias en citación y referenciación
+Aun cuando el uso de gestores automatiza el proceso de exportación de citas a procesadores de texto, es importante tener
+presentes dos cuestiones: primera, aun con la automatización mencionada, el usuario es responsable absoluto de disponer
+de forma adecuada las citas y referencias en su escrito; y segunda, aun los gestores modernos distan de arrojar resultados
+perfectos en lo que respecta a la exportación, en particular con citas provenientes de recursos disponibles en la web, como
+entradas en blogs y archivos audiovisuales.
+
+
+     2.4.1. Citas textuales inadecuadas que pueden devenir en situaciones de plagio involuntario
+No aludiremos aquí a los casos en los que de manera intencional se copia el trabajo de otros sin darles crédito. En lugar de
+ello, nos referiremos a aquellas situaciones en las que, por descuido o desconocimiento de las nociones básicas de citación,
+se incurre de forma involuntaria en situaciones que podrían ser consideradas como casos de plagio.
+Tómese una comparación entre un texto original (izquierda) y una cita inapropiada del mismo (derecha):
+
+
+             Además, fue autodidacta y el primer gran nove-              Nieto fue autodidacta y el primer gran novelista
+             lista que tuvo Colombia: en 1839 publicó la Geo-            que tuvo Colombia: en 1839 publicó la Geografía
+             grafía de la provincia de Cartagena, y las novelas          de la provincia de Cartagena, y las novelas Rosi-
+             Rosina, Ingermina o la hija de Calamar (1844) y             na, Ingermina o la hija de Calamar (1844) y Los
+             Los moriscos (1845). Y para honrar a su raza ne-            moriscos (1845). Y para honrar a su raza negra, él
+             gra, Nieto fue el gran gestor de la abolición de            fue el gran gestor de la abolición de la esclavitud
+             la esclavitud en Colombia recién fundada la Re-             en Colombia recién fundada la República.
+             pública.
+
+                                                        Fuente: Montaño (2016).
+
+Si no conociésemos el original, tenderíamos a pensar que el fragmento de la derecha corresponde a una elaboración pro-
+pia respecto del texto citado; por el contrario, se trata de una cita textual, apenas con unas pocas alteraciones (adición del
+apellido “Nieto” y cambio del mismo por el pronombre personal “él”), la cual no se introduce de forma adecuada en el texto,
+hecho que deriva en la confusión mencionada.
+Lo anterior deviene de la carencia de una distinción clara entre las nociones de paráfrasis y cita textual, dos acciones que
+corresponden al mismo campo, pero cuyas formas y objetivos no son siempre los mismos. Mientras que la primera es una
+estrategia por medio de la cual se expresa lo dicho en el texto original en palabras distintas —cita indirecta—, la segunda es
+una transcripción literal del escrito de otro autor (aun cuando se omitan o añadan pequeñas aclaraciones o comentarios),
+esto es, una cita directa, y debe identificarse como tal.
+Dado que provienen de la interpretación personal del autor sobre los trabajos que cita en su escrito, las formas que pueden
+adquirir las paráfrasis son múltiples y numerosas. A manera de ejemplo, mostramos aquí lo que podría ser una de varias
+paráfrasis del texto. Nótese que la oración se introduce con una alusión directa al autor del escrito original, a la vez que se
+emplean términos distintos para expresar la misma idea.
+
+
+             Montaño (2016) describe a Nieto como un destacado exponente de las letras colombianas en el siglo xix,
+             así como promotor fundamental de la abolición de la esclavitud en el país.
+
+Las diversas formas de alusión directa o indirecta a las voces de otros, llamadas en su conjunto discurso referido, son tema
+de numerosos trabajos; destacamos aquí algunos que podrían consultarse en caso de que se quiera profundizar en esta te-
+mática. De un lado, si se desea consultar una descripción lingüística de este tipo de discursos se encuentra lo contemplado
+al respecto en la Nueva gramática de la lengua española (Real Academia Española, 2009), así como un artículo de Maldo-
+nado dedicado al tema en la Gramática descriptiva de la Lengua Española (1999). De otro lado, para una explicación más
+sucinta y esquemática respecto de las formas adecuadas de citación, es posible remitirse al texto “Citas y tipos de citas” de
+Planas, Aragón y Aportela (2013, pp. 98-100) ; adicionalmente, si no es posible tener acceso al material anterior, Sabaj y
+Páez (2011) presentan un ejercicio de investigación relacionado con este tema, disponible en http://bit.ly/2dTkyJo.
+
+
+                                                             Problemas actuales en la búsqueda y gestión de fuentes documentales 27
+      Contenido Prólogo Introducción       Capítulo 1   Capítulo 2 Capítulo 3
+
+         2.4.2 Referencias con datos incompletos
+     Este inconveniente, común y muy recurrente, carece de una solución automática e inmediata; corresponde al investigador
+     verificar que las referencias contengan todos los datos requeridos. A este respecto, la búsqueda de artículos o recursos espe-
+     cíficos en buscadores y bases de datos puede ayudar a recuperar la información faltante. En el caso de los libros, sugerimos
+     acudir al catálogo en línea Worldcat (http://www.worldcat.org): a la vez que constituye una valiosa fuente de consulta refe-
+     rencial (i. e. enlista los materiales, pero no permite consultarlos), es compatible con la función de captura de varios gestores
+     bibliográficos. De igual manera, en ocasiones resulta de utilidad dirigirse a sitios comerciales como Amazon por cuanto sus
+     catálogos disponen de datos bibliográficos completos sobre los libros que comercializan.
+
+
+         2.4.3. Uso de normativas de citación mal adaptadas a lenguas distintas del español
+     Es común encontrar casos como el siguiente en listas de referencias elaboradas o bien manualmente, o bien con la asisten-
+     cia de gestores bibliográficos:
+
+
+                      Pizarro, R. (2009). Las TICs en la enseñanza de las Matemáticas. Aplicación al caso
+                      de Métodos Numéricos (tesis de maestría). Buenos Aires: Universidad Nacional de
+                      La Plata. Retrieved from http://postgrado.info.unlp.edu.ar/Carreras/Magisters/
+                      Tecnologia_Informatica_Aplicada_en_Educacion/Tesis/Pizarro.pdf
+
+
+     La frase señalada (retrieved from, “recuperado de”) es solo uno de numerosos ejemplos que involucran la presencia de ele-
+     mentos propios de la normativa de citación escritos en lenguas distintas del español. Lo mismo ocurre con nombres de
+     ciudades (lugar de edición, en el caso de las publicaciones), por citar otro ejemplo.
+     Este tipo de dificultades tiene dos causas: o bien los metadatos de la referencia recabados por el gestor —en caso de haberlo
+     utilizado— están escritos en otra lengua, o bien la configuración de idioma en las opciones de exportación del gestor utilizado
+     es incorrecta. Mientras que el primer caso exige revisar manualmente las referencias para verificar la información, el segundo
+     puede solucionarse cambiando los parámetros de exportación de las referencias en la configuración de uno de los gestores
+     presentados en el capítulo anterior, como se muestra en la figura 7.
+     Ahora bien, no todos los gestores permiten hacer esto; corresponderá entonces al usuario hacer manualmente los ajustes a
+     los que haya lugar en caso de ser necesario, reemplazando los términos y frases extranjeros por sus equivalentes en español.
+
+
+
+
+                                                                          Idioma en el que se exportarán las referencias
+
+
+
+
+                                         Figura 7. Ventana de “ajustes del documento” en Zotero
+
+
+28     Gestores bibliográficos: recomendaciones para su aprovechamiento en la academia
+Para practicar…
+La siguiente es una lista de cinco referencias dis-
+puestas bajo las normas APA que obedecen a una
+temática específica: novelas y relatos para niños y
+jóvenes que aluden al conflicto armado colombia-
+no. No obstante, presenta varias dificultades rela-
+cionadas con las temáticas que hemos visto hasta el
+momento (algunos datos están incompletos, otros
+son erróneos y no todas las referencias obedecen al
+mismo estilo de citación). Luego de analizarla, ¿de
+qué forma las solucionaría? ¿Recurriría a un gestor
+bibliográfico para organizarlas, o las recompondría
+manualmente? ¿Cómo verificaría que los datos de
+las referencias son verídicos? ¿Si quisiera encontrar
+referencias adicionales sobre el mismo tema, a dón-
+de se dirigiría?
+
+Reyes, Y. (2008). Los agujeros negros. Medellín,
+Alfaguara.
+Montaña, F. (2013). El gato y la madeja perdida.
+Bogotá.
+Irene Vasco, 1995. Paso a paso. Bogotá:
+Lozano, Pilar (2010) Era como mi sombra.
+Meneses, G. La luna en los almendros. Bogotá:
+
+
+
+
+                                                        Thumbprint Pattern, Cheryl sorg studio
+Ediciones SM, 2011.
+
+
+
+
+                                                        http://www.libropatas.com/libros-literatura/10-poster-literarios-para-amantes-de-los-libros/
+                                                                   Contenido
+
+
+
+
+03.
+                                                                   3.1. Presentación
+                                                                   3.2. Visibilidad e impacto
+                                                                   3.3. Trabajo colaborativo y sus desafíos en la
+
+
+                     Capítulo 03.
+                                                                        academia
+                                                                   3.4. Trabajar en comunidades de investigación
+                                                                        con gestores
+                                                                   3.5. Beneficios de adoptar una estrategia
+                                                                        grupal de gestión de fuentes basada en
+
+
+  Gestores en comunidades
+                                                                        gestores
+                                                                   3.6. Redes sociales científicas de libre acceso
+                                                                         que pueden complementar el uso cola-
+
+
+  de investigación
+                                                                         borativo de los gestores bibliográficos
+
+
+
+
+ En este capítulo se brindan algunos apuntes generales sobre
+ los conceptos de visibilidad, impacto y trabajo colaborativo,
+ a partir de los cuales se propone una estrategia para la imple-
+ mentación de gestores bibliográficos en el quehacer de los
+ grupos de investigación.
+                                                        Contenido   Prólogo Introducción   Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+
+                                                                                            3.1. Presentación
+La producción científica que está representada en publicaciones como ponencias, artículos y libros deviene, en gran medida,
+del trabajo de los grupos de investigación. La generación de estos materiales está mediada por procesos de revisión y ges-
+tión de fuentes documentales, encargados tanto a los investigadores como a los asistentes de investigación.
+No obstante, solo con la aparición de los gestores de referencias que también son redes sociales, como Mendeley, ha sido
+posible pensar en que este proceso no sea desarrollado por sus actores de forma aislada sino integrada, mediante la crea-
+ción de colecciones de referencias compartidas que permitan disponer de las fuentes de forma organizada y unificada, para
+facilitar la construcción de las publicaciones mencionadas. Aún más, los componentes sociales abren las posibilidades de
+compartir estos productos en espacios que franquean los límites de los medios tradicionales, lo cual trae beneficios para
+tanto para los grupos que los producen como para la comunidad científica en que se inscriben.
+Así entonces, en este capítulo se abordarán algunas cuestiones relacionadas con la importancia del trabajo colaborativo
+para la producción científica, a partir de los conceptos de visibilidad e impacto —estrechamente relacionados con la gestión
+de fuentes—; y en este sentido se brindarán algunas estrategias tendientes a facilitar la implementación de gestores biblio-
+gráficos en las comunidades de investigación, con miras a agilizar los procesos de gestión de fuentes documentales en la
+creación de documentos derivados de dichas investigaciones a partir del trabajo colaborativo.
+
+
+
+
+                                Conceptos clave
+
+                                Grupo de investigación: “conjunto de personas que interactúan para investigar y generar
+                                productos de conocimiento en uno o varios temas, de acuerdo con un plan de trabajo (…)
+                                (tendiente a la solución de un problema)” (Colciencias, 2015).
+
+                                Impacto: efecto de la producción científica en los ámbitos académico y social (Ramírez
+                                Martínez et al., 2012, p. 34).
+
+                                Trabajo colaborativo: forma de cooperación por medio de la cual grupos de personas traba-
+                                jan en conjunto para generar productos culturales, información o conocimientos nuevos
+                                sin preocuparse por jerarquías ni beneficios económicos (Benkler & Nissenbaum, 2006).
+
+                                Visibilidad: reconocimiento que se da a los investigadores en virtud de las citaciones de sus
+                                obras en otros documentos (Cordón García et al., 2010).
+
+
+
+
+                                                                                 Gestores en comunidades de investigación 31
+     Contenido Prólogo Introducción   Capítulo 1   Capítulo 2 Capítulo 3
+
+  3.2. Visibilidad e impacto                                                     buscando financiación y apoyo, y desarro-
+  En tanto es mayormente pública, la ciencia tiene por objeto difun-             llando proyectos interdisciplinarios. Así, la
+  dirse; esto es, los proyectos de investigación suelen validarse cuan-          comunicación de conocimientos permite,
+  do sus resultados son comunicados a la comunidad científica. Así               por ejemplo, que un investigador común,
+  entonces, “existe una simbiosis (…) entre investigación científica y           el docente universitario, vaya más allá del
+  publicación-comunicación de la misma, de tal manera que la lite-               ámbito de experticia de su asignatura y de
+  ratura de una materia es tan fundamental como la propia labor de               su unidad académica y traspase las fron-
+  investigación que contiene” (Cordón-García et al., 2010, p. 30). Así           teras de su institución. (Ramírez Martínez
+  entonces, el resultado de la difusión en el ámbito científico se ve            et al., 2012, p. 36)
+  reflejado en dos factores que se describirán a continuación: la visi-
+  bilidad y el impacto.
+  ¿Qué significa “ser visible” en el contexto académico? En palabras
+  simples, la visibilidad científica se traduce en el reconocimiento
+  que se da a los investigadores en virtud de las menciones que sus
+                                                                               Para aprender…
+                                        pares hacen de sus proyectos           Reflexione sobre la elección que realizó
+                                        en otros trabajos (Cordón Gar-         en la actividad “Para practicar” del capítulo
+       "...el resultado de                                                     1. ¿Al confrontar esa selección con los cri-
+                                        cía et al., 2010). Dicho recono-
+       la difusión en el                cimiento es beneficioso tanto          terios mostrados en la sección 3.4.2, ese
+                                        para los grupos que desarrollan        gestor puede servirle para llevar a cabo un
+       ámbito científico se                                                    trabajo académico de forma colaborativa?
+                                        estas iniciativas como para las
+       ve reflejado en dos              instituciones que suelen apo-
+       factores: la visibilidad yarlas, toda vez que representa
+                                        un indicador de calidad.           El impacto social, a su turno, corresponde a los
+       y el impacto..."                 Con lo anterior, se tiene que      efectos que pueden tener las investigaciones en
+                                        las iniciativas o proyectos de     ámbitos que traspasan las fronteras de la acade-
+  investigación emprendidos por un grupo puede dar lugar a varios          mia y, en consecuencia, generan beneficios en la
+  materiales comunicativos cuyo objeto radica en dar a conocer los         sociedad:
+  pormenores de su desarrollo: entre otros, se encuentran aquí las
+  ponencias; los informes; las tesis; las monografías; y los artículos            El grado de efectividad, articulación y es-
+  publicados en revistas científicas, que proporcionan más visibilidad            fuerzo conjunto con el que se promueve la
+  en tanto han pasado por un proceso editorial que incluye una fase               investigación como estrategia para gene-
+  de evaluación, lo cual les confiere un nivel superior a los demás ti-           rar impactos sociales desde la academia,
+  pos de documentos.                                                              favorece el progreso de cada disciplina,
+  La noción de impacto, por su parte, cobija el efecto que tiene la               motivado en gran medida por las innova-
+  comunicación científica en los ámbitos académico y social, como lo              ciones que surjan desde sus investigacio-
+  explican Ramírez Martínez et al. (2012, p. 34). Así entonces, para los          nes, progreso que además también debe
+  autores citados el impacto académico (tradicionalmente valorado                 ser sustentado con el apoyo y desarrollo
+  en función del número de citas que de otros trabajos se realizan                desde otros ámbitos no académicos. (Ra-
+  en los artículos científicos) corresponde a la manera en que los in-            mírez Martínez et al., 2012, pp. 37–38).
+  vestigadores se apropian de los conocimientos generados por sus
+  pares y los utilizan como fuente para iniciativas o proyectos nuevos,    Con lo dicho, y en relación directa con el tema
+  hecho que trae beneficios notables:                                      central de esta cartilla, asegurar que la difusión
+                                                                           científica sea efectiva implica para los grupos
+          [el impacto académico] reflejaría idealmente la formación        adquirir competencias en materia de gestión
+          de investigadores que ofrezcan sintonía y empatía con la         de la información documental que fundamen-
+          sociedad, y tengan la posibilidad de generar nuevas opor-        tará sus trabajos, de tal forma que sean capa-
+          tunidades basadas en lo que sucede a su alrededor, en for-       ces de tomar decisiones que redunden en más
+          ma creativa, estableciendo equipos de trabajo con colegas        proyección y reconocimiento para los mismos
+                                                                           (Cordón García et al., 2010).
+          y expertos pares de otras instituciones o universidades,
+
+
+32   Gestores bibliográficos: recomendaciones para su aprovechamiento en la academia
+                                                             Contenido   Prólogo Introducción   Capítulo 1   Capítulo 2 Capítulo 3
+
+3.3. Trabajo colaborativo y sus desafíos en la academia
+La estrategia de implementación de gestores en comunidades de investigación que se propone en este capítulo tiene
+sustento en el concepto de trabajo colaborativo; esto es, una forma de cooperación facilitada por la masificación de in-
+ternet, por medio de la cual se logra que grupos de personas trabajen de forma mancomunada a fin de generar produc-
+tos culturales, información o conocimientos nuevos sin preocuparse por jerarquías ni beneficios económicos (Benkler &
+Nissenbaum, 2006).
+Resulta entonces natural que se piense en esta forma de trabajo como deseable para los grupos de investigación —y den-
+tro de estos, para labores como la gestión de las fuentes documentales—aunque su adopción no está exenta de retos, de
+los cuales se destacan los tres siguientes:
+
+
+    • Apatía ante los cambios: está dada tanto por el hecho de adoptar una nueva forma de trabajo como por el descono-
+       cimiento de las herramientas y aplicaciones digitales a las que se recurre en su implementación.
+    • Cambio de visión respecto de las jerarquías: como se estableció, y dado que todos los miembros del grupo pueden
+       contribuir a la consolidación de una base de datos compartida de fuentes documentales, las jerarquías se hacen poco
+       útiles; no así las responsabilidades, que se describirán más adelante.
+    • Descentralización del trabajo: dado que todos los miembros del grupo pueden hacer aportes al desarrollo de la labor
+       desde cualquier lugar, los espacios y soportes físicos se hacen poco necesarios, hecho que podría ser traumático para
+       personas no acostumbradas a ello.
+
+
+3.4. Trabajar en comunidades de investigación con gestores
+A continuación, presentamos un modelo de aquello que podría constituir una estrategia para la implementación de un
+gestor bibliográfico en grupos de investigación, con miras a motivarla. Hemos optado por dividirla en tres fases: primero, la
+definición de los roles y las responsabilidades que tendrán los integrantes del grupo en dicha implementación; segundo, la
+elección del gestor a utilizar; y tercero, el desarrollo del trabajo propiamente dicho.
+
+
+     3.4.1. Definición de roles y responsabilidades
+Como se expresó anteriormente, resulta innecesario detenerse en discutir asuntos relacionados con las jerarquías para los
+efectos de una estrategia como la que presentamos; sin embargo, ello no quiere decir que no existan responsabilidades
+puntuales que deban asignarse a roles específicos. En concreto, existen dos roles principales, investigador y auxiliar de in-
+vestigación, cuyas funciones se describen en el siguiente esquema.
+
+
+
+
+                           Investigador                                               Auxiliar de investigación
+
+           En tanto responsable del adecuado desa-                       En el ámbito institucional, se trata del es-
+           rrollo del proyecto, ejecuta labores ten-                     tudiante que colabora en tareas operativas
+           dientes a llevar los proyectos de inves-                      del proyecto, entre las cuales se encuentra
+           tigación a buen término. Para el caso de                      la recuperación y gestión de fuentes prima-
+           la gestión de fuentes, además de aportar                      rias y secundarias. Para el caso que nos ocu-
+           referencias, verifica que el trabajo de los                   pa, puede encargarse de administrar el gru-
+           auxiliares de investigación en este sentido                   po a partir del cual se construirá la base de
+           se ejecute de forma adecuada.                                 datos compartida en el gestor bibliográfico.
+
+
+
+
+                                                                                      Gestores en comunidades de investigación 33
+      Contenido Prólogo Introducción        Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+
+         3.4.2 Elección de una plataforma
+     Además de las preguntas establecidas en la sección 1.7, referidas a las consideraciones iniciales para elegir un gestor sobre
+     otros, el uso compartido de estas herramientas requiere que en el grupo se formulen preguntas adicionales relacionadas con
+     cuatro factores principales, las cuales se disponen en la tabla 3.
+
+                    Tabla 3. Criterios de selección para el uso de gestores bibliográficos en grupos de investigación
+
+
+                         Factor de selección                                     Cuestionamientos
+
+                                                         • ¿El gestor a elegir es compatible con los sistemas operati-
+                                                           vos utilizados por todos los integrantes del grupo?
+                                                         • ¿Es necesario para el grupo que las referencias compar-
+                                                           tidas puedan consultarse tanto en equipos de escritorio
+                                                           como en dispositivos móviles?
+                           Compatibilidad
+                                                         • En caso de que algunos miembros del grupo dispongan de
+                                                           bases de datos de referencias construidas con otros ges-
+                                                           tores, ¿es posible importarlas a la plataforma elegida?
+                                                         • ¿El gestor dispone de los estilos de citación que serán
+                                                           empleados por el grupo?
+
+                                                         • ¿La institución a la cual está afiliado el grupo dispone de
+                                                           una suscripción a un gestor pago?
+                                Costos                   • ¿De cuánto espacio de almacenamiento se dispone para
+                                                           la base de datos compartida? ¿Es posible adquirir más en
+                                                           caso de ser necesario?
+
+                                                         • ¿Los integrantes del grupo están familiarizados con el ges-
+                                                           tor? ¿De no ser así, existe la posibilidad de capacitarlos?
+                             Versatilidad
+                                                         • ¿El grupo está interesado en publicar sus productos en re-
+                                                           des sociales académicas, además de compartir referencias?
+
+
+
+
+         3.4.3. Desarrollo del trabajo
+     El diagrama de flujo que presentamos a continuación constituye una estrategia de implementación de un gestor de referen-
+     cias en las labores de un grupo de investigación, cualquiera sea su área de conocimiento, con miras a agilizar la producción
+     de los materiales comunicativos que le brindan visibilidad (e. g. artículos, ponencias, libros, etc.).
+
+
+
+
+34     Gestores bibliográficos: recomendaciones para su aprovechamiento en la academia
+                                                                                   Contenido        Prólogo Introducción            Capítulo 1      Capítulo 2 Capítulo 3
+
+
+
+                                                                                Diagrama de flujo
+
+                                                 El grupo determina la
+                                                   mejor manera de                                                     Cada miembro crea una
+                                                 capacitar a todos sus                                                 cuenta en el servicio en
+                                                miembros respecto del                                                     línea del gestor.
+                                                     uso del gestor.
+                                                                      .
+
+                                                                                                                                 No
+                                                          No                         Se elige a un miembro
+                                                                                     del grupo para asumir
+                                                                                                                                                          El administrador crea
+                                                                                        las funciones de
+                                                                                                                             ¿Todos los                      un “grupo” en la
+                                                      ¿Todos los                      administrador; este
+                       Los miembros                                                                                     miembros disponen                plataforma en línea del
+                                                   miembros saben                  creará y será responsable
+    Inicio                del grupo         .                              Sí                  ,
+                                                                                     principal de la base de
+                                                                                                            :           de una cuenta en el         Sí “ gestor (base de datos
+                                                   utilizar el gestor                                                   servicio en línea del            compartida) y agrega a
+                      eligen un gestor.                 elegido?                    datos compartida en el
+                                                                                                                               gestor?                   todos los miembros al
+                                                                                    gestor elegido, así como
+                                                                                                                                                                 mismo.
+                                                                                    de verificar la integridad
+                                                                                                                                                                              .
+                                                                                       de la información.
+                                                                                                       .
+
+
+
+
+                                    Los investigadores ingresan la
+                                    información manualmente o
+                                    bien solicitan a un auxiliar de
+                                      investigación que lo haga.                                                                      A
+
+                                                 No
+                                                                                                                                      No
+                                              ¿Los datos
+ Los investigadores y                                                             Las referencias son añadidas al
+                                         bibliográficos de las
+auxiliares alimentan la                                                           gestor mediante la función de
+                                     fuentes pueden recuperarse                                                             ¿El grupo empleará
+  librería compartida
+                                        de forma automática
+                                                                          Sí        recuperación automática a                                             Sí         B
+                                                                                                                             fichas de lectura?
+ con los datos de las
+                    .                                                                 partir de bases de datos
+                                             mediante el
+         fuentes.                                                                    (catálogos y buscadores).
+                                                gestor?
+
+
+
+
+                                       Mediante la integración con los procesado-                                                               Convenciones
+                                          res de texto (e.g. Microsoft Word), las
+         A                             referencias se exportan a los productos que                               Fin
+                                           visibilizarán el trabajo del grupo (e.g.
+                                            conferencias, artículos, libros etc.).                                                                Actividad
+
+
+
+
+                                                                                                                                                   Conector
+
+
+
+
+                                                 Los miembros del grupo añaden las
+      El grupo elige un formato                  fichas de lectura a los registros en la                                                          Decisión
+      para elaborar las fichas de                     base de datos compartida
+               lectura.                            empleando el formato acordado.
+
+
+                                                                                                                                                Actividad que
+                                                                                                                                                  involucra
+                                                                                                                                                 documento
+         B
+
+
+
+                                                                                                                                                  Inicio/fin
+
+
+
+
+                                                                                                                       Gestores en comunidades de investigación                    35
+                                                                                3.5. Beneficios de adoptar una estrategia grupal de gestión de fuentes ba-
+                                                                                sada en gestores
+
+                                                                                Un plan de acción como el presentado puede tener efectos posi-
+                                                                                tivos en la labor de superar los desafíos planteados anteriormente.
+                                                                                De modo específico, presentamos aquí cuatro hechos que repre-
+                                                                                sentan beneficios del desarrollo de la estrategia:
+
+                                                                                     •   Unificación de criterios y mejora en el desarrollo de la
+                                                                                         investigación: el hecho de que todos los miembros del
+                                                                                         grupo compartan una colección de fuentes debidamente
+                                                                                         sistematizada —e incluso complementada por herramien-
+                                                                                         tas como las fichas de lectura— facilita la revisión de las
+                                                                                         fuentes, hecho que redunda en un desarrollo más fluido
+                                                                                         y riguroso de esta fase de los procesos de investigación.
+
+                                                                                     •   Facilidad de comunicación: unidos a recursos como el
+                                                                                         correo electrónico, las redes sociales y los sistemas de
+                                                                                         mensajería, las colecciones de referencias compartidas
+                                                                                         permiten que los miembros de los grupos de investiga-
+                                                                                         ción entren en contacto de manera más eficiente y rápida,
+                                                                                         motivados por un interés común.
+
+                                                                                     •   Aumento de la visibilidad: la exportación adecuada de las
+                                                                                         referencias permite que tanto los productos generados
+                                                                                         desde el grupo como los documentos citados en los mis-
+                                                                                         mos sean más fácilmente ubicables en el universo de la
+                                                                                         comunicación científica.
+
+                                                                                     •   Optimización de los procesos de creación de materiales
+
+
+
+
+Ilustración de Anuska Allepuz
+                                                                                         de comunicación científica: disponer en todo momento
+                                                                                         de una base de datos completa y normalizada permite
+                                                                                         que la labor de citación y referenciación pase de ser una
+                                                                                         tarea dispendiosa y extenuante a convertirse en una pro-
+                                                                                         cedimiento sencillo y rápido.
+
+
+
+
+http://lalitoutsimplement.com/wp-content/uploads/2014/04/ALLEPUZ-Anuska-1.jpg
+                                                               Contenido     Prólogo Introducción     Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+
+3.6. Redes sociales científicas de libre acceso que pueden complementar el uso colaborativo de los gestores bibliográficos
+
+Para aquellas personas o grupos de investigación interesados en potenciar la visibilidad de sus publicaciones en medios
+diseñados especialmente para tal fin, existen existen redes sociales específicas que permiten encontrar a personas que
+compartan intereses académicos, disponer los trabajos propios y buscar posibilidades de colaboración. Describimos a con-
+tinuación tres de las más destacadas:
+
+     •    Academia.edu: lanzada al público en 2008, esta red social científica cuenta actualmente con más de 42 millones
+          de investigadores abonados y cerca de 830.000 visitas mensuales. Permite establecer vínculos entre colegas, a la
+          vez que dispone de una enorme colección de artículos, ponencias y demás productos de investigaciones, y permite
+          revisar datos relacionados con la visibilidad y el impacto de los documentos publicados por el usuario (e. g. número
+          y frecuencia de visitas).
+
+     •    ResearchGate: fue lanzada en 2008. Tal como sus congéneres, permite al usuario disponer de un perfil por medio
+          del cual puede hacer públicos sus trabajos, así como buscar a otros académicos con intereses similares. Igualmente,
+          permite observar datos en relación con la visibilidad y el impacto de los mismos (Thelwall & Kousha, 2016).
+
+     •    Mendeley: como se dijo anteriormente, quizá el hecho que distingue a Mendeley de las otras plataformas nombra-
+          das aquí es su doble función de gestor bibliográfico y red social, hecho que le confiere una gran versatilidad. Cuenta
+          con más de 2,5 millones de usuarios y un elevado número de documentos y referencias, y dispone de las mismas
+          funciones de sus competidores: disponer de un perfil, ubicar a contactos, publicar documentos y crear grupos con
+          base en intereses académicos.
+
+
+
+
+                                                Para practicar…
+                                                Como experiencia previa a la implementación de un gestor en
+                                                su comunidad de investigación, intente crear una colección de
+                                                referencias compartida en el gestor de su preferencia y, de ser
+                                                posible, invite a otros a participar en la construcción de la misma.
+                                                ¿Qué dificultades encuentra? ¿Considera sencillas las labores de
+                                                administración de la base de datos?
+
+
+
+
+                                                                                           Gestores en comunidades de investigación 37
+     Contenido   Prólogo Introducción   Capítulo 1   Capítulo 2 Capítulo 3
+
+
+
+
+         Referencias
+                  Benkler, Y., & Nissenbaum, H. (2006). Commons-based Peer Production and Virtue. Journal of Political
+                                Philosophy, 14(4), 394–419. https://doi.org/10.1111/j.1467-9760.2006.00235.x
+                  Bundy, A. (2000). Information Literacy: the Foundation of Lifelong Learning. Presentado en Lifelong
+                                Learning Conference of The South Australian Association of School Parents Clubs. Recu-
+                                perado a partir de http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.125.7441&re-
+                                p=rep1&type=pdf
+                  Colciencias (2015). Modelo de medición de grupos de investigación, tecnológica y/o de innovación. Bo-
+                                gotá: Colciencias. Recuperado 2 de septiembre de 2016, a partir de http://www.colciencias.
+                                gov.co/sites/default/files/upload/noticias/mediciondegrupos-actene2015.pdf
+                  Cordón García, J. A., Alonso Arévalo, J., Gómez Díaz, R., & López Lucas, J. (2010). Las nuevas fuentes de in-
+                                formación: información y búsqueda documental en el contexto de la web 2.0. Madrid: Pirámide.
+                  Cordón-García, J., Martín Rodero, H., & Alonso-Arévalo, J. (2009). Gestores de referencias de última
+                                generación: análisis comparativo de RefWorks, EndNote Web y Zotero. El profesional de la
+                                información, 18(4), 445–454. http://doi.org/10.3145/epi.2009.jul.14
+                  González, B. (2005). ¿Cómo elaborar una ficha de lectura? Bogotá: Universidad Sergio Arboleda.
+                  López, J. C. (s. f.). Eduteka - Competencia para Manejar Información (CMI) > CMI > Introducción. Recupe-
+                                rado 17 de octubre de 2016, a partir de http://eduteka.icesi.edu.co/modulos/1/148/486/1
+                  Martínez, M. (2013). Evaluación de los recursos informativos. En A. Pacios (Ed.), Técnicas de búsqueda y
+                                uso de la información (pp. 44–52). Madrid: Editorial Universitaria Ramón Areces.
+                  Montaño, J. (2016). La historia del único presidente negro que ha tenido Colombia - Otras ciudades. El
+                                Tiempo. Recuperado a partir de http://www.eltiempo.com/colombia/otras-ciudades/his-
+                                toria-del-unico-presidente-negro-que-ha-tenido-colombia/16706291
+                  Muldrow, J., & Yoder, S. (2009). Out of Cite! How Reference Managers Are Taking Research to the Next
+                                Level. PS: Political Science and Politics, 42(1), 167–172.
+                  Planas, M., Aragón, I., & Aportela, I. (2013). Citas y tipos de citas. En Técnicas de búsqueda y uso de la
+                                información (pp. 98–100). Madrid: Editorial Universitaria Ramón Areces.
+                  Ramírez, D. C., Martínez Ruiz, L. C., Castellanos Domínguez, Ó. F., Ramírez Martínez, D. C., Martínez Ruiz,
+                                L. C., & Castellanos Domínguez, Ó. F. (2012). Divulgación y difusión del conocimiento: las re-
+                                vistas científicas. Bogotá: Universidad Nacional de Colombia. Recuperado a partir de http://
+                                www.biogestion.unal.edu.co/
+                  Sabaj, O., & Páez, D. (2010). Tipos y funciones de las citas en artículos de investigación de tres
+                                disciplinas. Literatura y lingüística, (22), 117–134. https://doi.org/10.4067/S0716-
+                                58112010000200009
+                  Thelwall, M., & Kousha, K. (2016). ResearchGate articles: Age, discipline, audience size, and impact.
+                                Journal of the Association for Information Science and Technology, n/a-n/a. https://doi.
+                                org/10.1002/asi.23675
+                  Torres-Salinas, D., Ruiz-Pérez, R., & Delgado-López-Cózar, E. (2009). Google Scholar como herramien-
+                                ta para la evaluación científica. El Profesional de la Información, 18(5), 501–510.
+                  Universidad Nacional de Colombia. (2013). Recomendaciones para elaborar una ficha de lectura. Re-
+                                cuperado a partir de http://expresatebien.unal.edu.co/uploads/media/EBCM_ADC_T2__
+                                S19_Fichadelectura.pdf
+
+
+
+
+38    Gestores bibliográficos: recomendaciones para su aprovechamiento en la academia
+
