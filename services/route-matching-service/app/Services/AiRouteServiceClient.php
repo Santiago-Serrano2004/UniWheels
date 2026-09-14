@@ -44,7 +44,7 @@ class AiRouteServiceClient
                     'origin' => ['lat' => $puntos['origin'][0], 'lng' => $puntos['origin'][1]],
                     'destination' => ['lat' => $puntos['destination'][0], 'lng' => $puntos['destination'][1]],
                     'vehicle_capacity' => max(1, (int) $route->available_seats),
-                    'departure_time' => optional($route->scheduled_departure_time)->format('h:i A') ?? '06:45 AM',
+                    'departure_time' => $route->scheduled_departure_time?->clone()->setTimezone('America/Bogota')->format('h:i A') ?? '06:45 AM',
                     'max_allowed_detour_minutes' => (float) ($route->max_detour_minutes ?: 15),
                 ],
                 'passenger_request' => [
@@ -90,7 +90,7 @@ class AiRouteServiceClient
                     'origin' => ['lat' => $puntos['origin'][0], 'lng' => $puntos['origin'][1]],
                     'destination' => ['lat' => $puntos['destination'][0], 'lng' => $puntos['destination'][1]],
                     'vehicle_capacity' => max(1, (int) $route->available_seats),
-                    'departure_time' => optional($route->scheduled_departure_time)->format('h:i A') ?? '06:45 AM',
+                    'departure_time' => $route->scheduled_departure_time?->clone()->setTimezone('America/Bogota')->format('h:i A') ?? '06:45 AM',
                     'max_allowed_detour_minutes' => (float) ($route->max_detour_minutes ?: 15),
                 ],
                 'candidate_passengers' => $candidatePassengers,

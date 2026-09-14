@@ -449,8 +449,8 @@ class TripLifecycleController extends Controller
                     'is_pin_verified' => (bool) $trip->is_pin_verified,
                     'status' => $trip->status,
                     'scheduled_pickup_time' => $trip->scheduled_pickup_time?->toISOString(),
-                    'date' => $trip->created_at?->format('d/m/Y') ?? 'Hoy',
-                    'time' => $trip->created_at?->format('h:i A') ?? '07:00 AM',
+                    'date' => $trip->created_at?->clone()->setTimezone('America/Bogota')->format('d/m/Y') ?? 'Hoy',
+                    'time' => $trip->created_at?->clone()->setTimezone('America/Bogota')->format('h:i A') ?? '07:00 AM',
                 ];
             });
 
@@ -492,8 +492,8 @@ class TripLifecycleController extends Controller
                     'payment_method' => $trip->payment_method,
                     'payment_confirmed_at' => $trip->payment_confirmed_at?->toISOString(),
                     'scheduled_pickup_time' => $trip->scheduled_pickup_time?->toISOString(),
-                    'date' => $trip->created_at?->format('d/m/Y') ?? 'Hoy',
-                    'time' => $trip->created_at?->format('h:i A') ?? '07:00 AM',
+                    'date' => $trip->created_at?->clone()->setTimezone('America/Bogota')->format('d/m/Y') ?? 'Hoy',
+                    'time' => $trip->created_at?->clone()->setTimezone('America/Bogota')->format('h:i A') ?? '07:00 AM',
                 ];
             });
 
