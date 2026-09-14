@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Repositorio de Consultas Espaciales Nativas PostGIS 3.4
- * 
+ *
  * Gestiona indexación GiST, operaciones de proximidad (ST_DWithin),
  * cálculo de distancias esféricas (ST_DistanceSphere) y proyecciones
  * escalares sobre trayectorias geométricas (ST_LineLocatePoint).
@@ -19,11 +19,10 @@ class PostGisSpatialRepository
      * Buscar rutas activas cuya trayectoria pase a menos de un radio de tolerancia en metros.
      * Utiliza el índice espacial GiST para poda de candidatos en O(log N).
      *
-     * @param float $pickupLat Latitud del punto de recogida del pasajero
-     * @param float $pickupLng Longitud del punto de recogida del pasajero
-     * @param float $radiusMeters Radio de tolerancia (default: 800m)
-     * @param int|null $destinationCampusId ID opcional de la sede universitaria
-     * @return Collection
+     * @param  float  $pickupLat  Latitud del punto de recogida del pasajero
+     * @param  float  $pickupLng  Longitud del punto de recogida del pasajero
+     * @param  float  $radiusMeters  Radio de tolerancia (default: 800m)
+     * @param  int|null  $destinationCampusId  ID opcional de la sede universitaria
      */
     public function findCandidateRoutes(
         float $pickupLat,
@@ -71,9 +70,9 @@ class PostGisSpatialRepository
      * Validar que el punto de recogida esté ubicado ANTES del destino a lo largo de la trayectoria.
      * Evita que se sugieran viajes a un pasajero en sentido contrario al recorrido del conductor.
      *
-     * @param string $routeId UUID de la ruta
-     * @param float $pickupLat Latitud de recogida
-     * @param float $pickupLng Longitud de recogida
+     * @param  string  $routeId  UUID de la ruta
+     * @param  float  $pickupLat  Latitud de recogida
+     * @param  float  $pickupLng  Longitud de recogida
      * @return bool True si el punto está en el sentido correcto del viaje
      */
     public function isPointInForwardDirection(string $routeId, float $pickupLat, float $pickupLng): bool
@@ -86,7 +85,7 @@ class PostGisSpatialRepository
             [$pickupLng, $pickupLat, $routeId]
         );
 
-        if (!$resultado || $resultado->pickup_fraction === null) {
+        if (! $resultado || $resultado->pickup_fraction === null) {
             return false;
         }
 
@@ -97,11 +96,10 @@ class PostGisSpatialRepository
     /**
      * Guardar o actualizar la geometría PostGIS (LineString y Points) para una ruta dada.
      *
-     * @param string $routeId UUID de la ruta
-     * @param array $coordinates Array de pares de coordenadas [[lat, lng], [lat, lng], ...]
-     * @param array $originCoords [lat, lng]
-     * @param array $destinationCoords [lat, lng]
-     * @return bool
+     * @param  string  $routeId  UUID de la ruta
+     * @param  array  $coordinates  Array de pares de coordenadas [[lat, lng], [lat, lng], ...]
+     * @param  array  $originCoords  [lat, lng]
+     * @param  array  $destinationCoords  [lat, lng]
      */
     public function saveRouteGeometry(
         string $routeId,
@@ -120,7 +118,7 @@ class PostGisSpatialRepository
             $lng = (float) $coord[1];
             $puntosWkt[] = "{$lng} {$lat}";
         }
-        $lineStringWkt = 'SRID=4326;LINESTRING(' . implode(', ', $puntosWkt) . ')';
+        $lineStringWkt = 'SRID=4326;LINESTRING('.implode(', ', $puntosWkt).')';
 
         $originPointWkt = "SRID=4326;POINT({$originCoords[1]} {$originCoords[0]})";
         $destinationPointWkt = "SRID=4326;POINT({$destinationCoords[1]} {$destinationCoords[0]})";
@@ -139,7 +137,7 @@ class PostGisSpatialRepository
     /**
      * Obtener la polilínea de la ruta serializada en formato GeoJSON.
      *
-     * @param string $routeId UUID de la ruta
+     * @param  string  $routeId  UUID de la ruta
      * @return array|null Array de coordenadas [[lat, lng], ...]
      */
     public function getRouteCoordinates(string $routeId): ?array
@@ -149,12 +147,12 @@ class PostGisSpatialRepository
             [$routeId]
         );
 
-        if (!$resultado || !$resultado->geojson) {
+        if (! $resultado || ! $resultado->geojson) {
             return null;
         }
 
         $geoJson = json_decode($resultado->geojson, true);
-        if (!isset($geoJson['coordinates']) || !is_array($geoJson['coordinates'])) {
+        if (! isset($geoJson['coordinates']) || ! is_array($geoJson['coordinates'])) {
             return null;
         }
 
@@ -162,5 +160,28 @@ class PostGisSpatialRepository
         return array_map(function ($punto) {
             return [(float) $punto[1], (float) $punto[0]];
         }, $geoJson['coordinates']);
+    }
+
+    /**
+     * Obtener las coordenadas planas [lat, lng] de origen y destino de una ruta
+     * (usado para construir el request hacia ai-route-service).
+     */
+    public function getOriginDestinationPoints(string $routeId): ?array
+    {
+        $resultado = DB::selectOne(
+            'SELECT ST_Y(origin_geom) AS origin_lat, ST_X(origin_geom) AS origin_lng,
+                    ST_Y(destination_geom) AS destination_lat, ST_X(destination_geom) AS destination_lng
+             FROM routes WHERE id = ?',
+            [$routeId]
+        );
+
+        if (! $resultado || $resultado->origin_lat === null) {
+            return null;
+        }
+
+        return [
+            'origin' => [(float) $resultado->origin_lat, (float) $resultado->origin_lng],
+            'destination' => [(float) $resultado->destination_lat, (float) $resultado->destination_lng],
+        ];
     }
 }

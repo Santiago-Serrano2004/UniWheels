@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Servicio de Ruteo Topológico OSRM (Open Source Routing Machine)
- * 
+ *
  * Consulta distancias y duraciones reales sobre la malla vial de OpenStreetMap.
  * Incluye mecanismo de respaldo geodésico automático con factor de sinuosidad
  * vial para el Área Metropolitana de Bucaramanga.
@@ -15,20 +15,22 @@ use Illuminate\Support\Facades\Log;
 class OsrmRoutingService
 {
     protected string $osrmBaseUrl;
+
     const URBAN_SPEED_KMH = 28.0; // Velocidad promedio urbana en Bucaramanga
+
     const ROAD_TORTUOSITY_FACTOR = 1.35; // Factor de curvatura vial en Santander
 
     public function __construct()
     {
-        $this->osrmBaseUrl = env('OSRM_API_URL', 'https://router.project-osrm.org/route/v1/driving');
+        $this->osrmBaseUrl = config('services.osrm.url');
     }
 
     /**
      * Calcular la ruta y tiempos entre un origen, un destino y paradas intermedias opcionales.
      *
-     * @param array $origin [lat, lng]
-     * @param array $destination [lat, lng]
-     * @param array $waypoints Array de paradas intermedias [[lat, lng], ...]
+     * @param  array  $origin  [lat, lng]
+     * @param  array  $destination  [lat, lng]
+     * @param  array  $waypoints  Array de paradas intermedias [[lat, lng], ...]
      * @return array { distance_meters, duration_minutes, coordinates, is_fallback }
      */
     public function calculateRoute(array $origin, array $destination, array $waypoints = []): array
@@ -64,7 +66,7 @@ class OsrmRoutingService
                 ];
             }
         } catch (\Throwable $e) {
-            Log::warning('Fallo en conexión con OSRM, activando respaldo geodésico: ' . $e->getMessage());
+            Log::warning('Fallo en conexión con OSRM, activando respaldo geodésico: '.$e->getMessage());
         }
 
         // Respaldo Inteligente Geodésico
@@ -74,8 +76,7 @@ class OsrmRoutingService
     /**
      * Respaldo Geodésico Haversine con corrección por curvatura vial y velocidad urbana.
      *
-     * @param array $puntos Array de coordenadas [[lat, lng], ...]
-     * @return array
+     * @param  array  $puntos  Array de coordenadas [[lat, lng], ...]
      */
     public function calculateGeodesicFallback(array $puntos): array
     {

@@ -14,7 +14,7 @@ class PublishRouteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'driver_id' => ['required', 'uuid'],
+            // driver_id ya no se acepta del cliente: se toma del JWT verificado (ver RouteController::store).
             'vehicle_id' => ['required', 'uuid'],
             'origin_name' => ['required', 'string', 'max:150'],
             'origin_lat' => ['required', 'numeric', 'between:6.80,7.35'],

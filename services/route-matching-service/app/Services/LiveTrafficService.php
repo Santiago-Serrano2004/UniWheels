@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Servicio de Telemetría e Ingesta de Tráfico en Tiempo Real y Vías Cerradas
- * 
+ *
  * Integra TomTom Traffic Flow Segment API con Protección Anti-Sobrecosto (Circuit Breaker):
  * - Cuota máxima diaria: 2.000 llamadas (dentro del límite gratuito de 2.500/día).
  * - Caché espacial cuantizada por cuadrícula de ~110m (3 decimales) con TTL de 10 minutos.
@@ -19,10 +19,13 @@ use Illuminate\Support\Facades\Log;
 class LiveTrafficService
 {
     const MAX_DAILY_REQUESTS = 2400; // Límite de seguridad diario para 75.000 consultas mensuales
+
     const CACHE_TTL_MINUTES = 5; // Refresco cada 5 min para máxima fidelidad vial
 
     protected ?string $apiKey = null;
+
     protected string $flowApiUrl;
+
     protected string $incidentApiUrl;
 
     public function __construct()
@@ -34,30 +37,31 @@ class LiveTrafficService
     public function setApiKey(string $key): self
     {
         $this->apiKey = $key;
+
         return $this;
     }
 
     public function getApiKey(): string
     {
-        return $this->apiKey ?? config('services.tomtom.key', env('TOMTOM_API_KEY', 'test_tomtom_key'));
+        return $this->apiKey ?? config('services.tomtom.key');
     }
 
     /**
      * Consultar el estado del tráfico y posibles vías cerradas en un punto o tramo de desvío.
      *
-     * @param float $lat Latitud del punto de desvío
-     * @param float $lng Longitud del punto de desvío
-     * @param Carbon|null $departureTime Hora estimada del viaje
+     * @param  float  $lat  Latitud del punto de desvío
+     * @param  float  $lng  Longitud del punto de desvío
+     * @param  Carbon|null  $departureTime  Hora estimada del viaje
      * @return array { congestion_factor, current_speed_kmh, free_flow_speed_kmh, has_road_closure, source, description, remaining_daily_quota }
      */
     public function getTrafficConditions(float $lat, float $lng, ?Carbon $departureTime = null): array
     {
         $fechaHora = $departureTime ?: now();
-        
+
         // Cuantización espacial (~110m) y ranura horaria de 15 min
         $cacheLat = round($lat, 3);
         $cacheLng = round($lng, 3);
-        $horaSlot = $fechaHora->format('H') . '_' . (int) ($fechaHora->format('i') / 15);
+        $horaSlot = $fechaHora->format('H').'_'.(int) ($fechaHora->format('i') / 15);
         $cacheKey = "tomtom_traffic_flow_{$cacheLat}_{$cacheLng}_{$horaSlot}";
 
         return Cache::remember($cacheKey, now()->addMinutes(self::CACHE_TTL_MINUTES), function () use ($lat, $lng, $fechaHora) {
@@ -66,7 +70,7 @@ class LiveTrafficService
             $keyContador = "tomtom_daily_requests_{$hoy}";
             $consumoHoy = (int) Cache::get($keyContador, 0);
 
-            $esClaveValida = $apiKey && !in_array($apiKey, ['test_tomtom_key', 'fake_live_key']);
+            $esClaveValida = $apiKey && ! in_array($apiKey, ['test_tomtom_key', 'fake_live_key']);
             $esTestFake = ($apiKey === 'fake_live_key');
 
             // Diferenciación: Viajes inmediatos (<= 60 min) usan telemetría en vivo de TomTom
@@ -109,13 +113,18 @@ class LiveTrafficService
                         }
                     }
                 } catch (\Throwable $e) {
-                    Log::warning('Fallo en TomTom Traffic API, activando modelo horario: ' . $e->getMessage());
+                    // No se registra $e->getMessage() completo: las excepciones HTTP suelen
+                    // incluir la URL completa de la petición, que contiene la API key en query string.
+                    Log::warning('Fallo en TomTom Traffic API, activando modelo horario.', [
+                        'exception_class' => get_class($e),
+                    ]);
                 }
             }
 
             // Para viajes futuros o cuando la API no aplique: Modelo estadístico horario de Bucaramanga
             $resHorario = $this->getStatisticalHourlyTraffic($fechaHora);
             $resHorario['daily_requests_used'] = $consumoHoy;
+
             return $resHorario;
         });
     }

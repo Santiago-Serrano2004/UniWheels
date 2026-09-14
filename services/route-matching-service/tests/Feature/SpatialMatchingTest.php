@@ -3,17 +3,22 @@
 namespace Tests\Feature;
 
 use App\Models\Route;
+use App\Services\AiRouteServiceClient;
+use App\Services\DriverProfileClient;
+use App\Services\LiveTrafficService;
 use App\Services\OsrmRoutingService;
 use App\Services\PostGisSpatialRepository;
 use App\Services\SpatialMatchingService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
  * Suite de Pruebas Exhaustivas para el Motor de IA y Optimización Geoespacial
- * 
+ *
  * Evalúa operaciones espaciales PostGIS, podas GiST, ruteo topológico OSRM,
  * algoritmos de desvío de Modalidad 1 y 2, factores de tráfico en horas pico,
  * restricciones duras de puntualidad universitaria y desglose de tarifas.
@@ -23,6 +28,7 @@ class SpatialMatchingTest extends TestCase
     use RefreshDatabase;
 
     protected PostGisSpatialRepository $spatialRepo;
+
     protected SpatialMatchingService $matchingService;
 
     protected function setUp(): void
@@ -64,7 +70,7 @@ class SpatialMatchingTest extends TestCase
             ],
         ];
 
-        $response = $this->postJson('/api/v1/routes', $payload);
+        $response = $this->withToken($this->jwtDePrueba($driverId))->postJson('/api/v1/routes', $payload);
 
         $response->assertStatus(201)
             ->assertJson([
@@ -94,7 +100,7 @@ class SpatialMatchingTest extends TestCase
             'destination_campus_id' => 1,
         ];
 
-        $response = $this->postJson('/api/v1/routes/search-match', $payloadBusqueda);
+        $response = $this->withToken($this->jwtDePrueba((string) Str::uuid()))->postJson('/api/v1/routes/search-match', $payloadBusqueda);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -111,14 +117,14 @@ class SpatialMatchingTest extends TestCase
     {
         $ruta = $this->crearRutaBase('Cañaveral', 6, 45, 7, 30, 20.0, 4500);
 
-        // Pasajero en Parque San Pío (desviado ~450 metros de Carrera 33)
+        // Pasajero desviado ~700 metros de Carrera 33 (fuera del radio de match directo de 500m)
         $payloadBusqueda = [
-            'pickup_lat' => 7.1186,
-            'pickup_lng' => -73.1102,
+            'pickup_lat' => 7.1208,
+            'pickup_lng' => -73.1100,
             'destination_campus_id' => 1,
         ];
 
-        $response = $this->postJson('/api/v1/routes/search-match', $payloadBusqueda);
+        $response = $this->withToken($this->jwtDePrueba((string) Str::uuid()))->postJson('/api/v1/routes/search-match', $payloadBusqueda);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -170,7 +176,7 @@ class SpatialMatchingTest extends TestCase
             'destination_campus_id' => 1,
         ];
 
-        $response = $this->postJson('/api/v1/routes/search-match', $payloadBusqueda);
+        $response = $this->withToken($this->jwtDePrueba((string) Str::uuid()))->postJson('/api/v1/routes/search-match', $payloadBusqueda);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -255,6 +261,15 @@ class SpatialMatchingTest extends TestCase
      */
     public function test_aplica_multiplicador_de_trafico_en_horas_pico_manana_y_tarde(): void
     {
+        // Este test verifica que un factor de congestión mayor produzca un desvío
+        // mayor — se fija (fake) la respuesta de ai-route-service para las dos
+        // evaluaciones, ya que ahora es el motor de tráfico/desvío principal.
+        Http::fake([
+            '*/api/v1/optimize/match' => Http::sequence()
+                ->push(['detour_minutes' => 9.9, 'traffic_status' => 'Hora pico', 'traffic_multiplier_kappa' => 1.25], 200)
+                ->push(['detour_minutes' => 6.5, 'traffic_status' => 'Fluido', 'traffic_multiplier_kappa' => 1.05], 200),
+        ]);
+
         // Ruta en hora pico mañana (07:15 AM -> multiplicador 1.25)
         $rutaManana = $this->crearRutaBase('Cañaveral', 7, 15, 8, 15, 20.0, 4500);
         $evalManana = $this->matchingService->evaluateRouteDetourForPassenger($rutaManana, 7.1186, -73.1102);
@@ -285,7 +300,7 @@ class SpatialMatchingTest extends TestCase
             'destination_campus_id' => 1,
         ];
 
-        $response = $this->postJson('/api/v1/routes/search-match', $payloadBusqueda);
+        $response = $this->withToken($this->jwtDePrueba((string) Str::uuid()))->postJson('/api/v1/routes/search-match', $payloadBusqueda);
 
         $response->assertStatus(200)
             ->assertJsonPath('total_matches', 0)
@@ -307,7 +322,7 @@ class SpatialMatchingTest extends TestCase
             'destination_campus_id' => 1,
         ];
 
-        $response = $this->postJson('/api/v1/routes/search-match', $payloadBusqueda);
+        $response = $this->withToken($this->jwtDePrueba((string) Str::uuid()))->postJson('/api/v1/routes/search-match', $payloadBusqueda);
 
         $response->assertStatus(200)
             ->assertJsonPath('total_matches', 0);
@@ -338,7 +353,7 @@ class SpatialMatchingTest extends TestCase
     {
         $ruta = $this->crearRutaBase('Cañaveral', 6, 45, 7, 30, 25.0, 4500);
 
-        $response = $this->postJson("/api/v1/routes/{$ruta->id}/evaluate-detour", [
+        $response = $this->withToken($this->jwtDePrueba((string) Str::uuid()))->postJson("/api/v1/routes/{$ruta->id}/evaluate-detour", [
             'pickup_lat' => 7.1186,
             'pickup_lng' => -73.1102,
         ]);
@@ -363,8 +378,8 @@ class SpatialMatchingTest extends TestCase
      */
     public function test_detecta_via_cerrada_en_tiempo_real_y_rechaza_el_desvio(): void
     {
-        \Illuminate\Support\Facades\Http::fake([
-            'https://api.tomtom.com/*' => \Illuminate\Support\Facades\Http::response([
+        Http::fake([
+            'https://api.tomtom.com/*' => Http::response([
                 'flowSegmentData' => [
                     'currentSpeed' => 0.0,
                     'freeFlowSpeed' => 45.0,
@@ -375,9 +390,15 @@ class SpatialMatchingTest extends TestCase
             ], 200),
         ]);
 
-        \Illuminate\Support\Facades\Cache::flush();
-        $trafficService = (new \App\Services\LiveTrafficService())->setApiKey('fake_live_key');
-        $matching = new \App\Services\SpatialMatchingService($this->spatialRepo, app(\App\Services\OsrmRoutingService::class), $trafficService);
+        Cache::flush();
+        $trafficService = (new LiveTrafficService)->setApiKey('fake_live_key');
+        $matching = new SpatialMatchingService(
+            $this->spatialRepo,
+            app(OsrmRoutingService::class),
+            $trafficService,
+            app(AiRouteServiceClient::class),
+            app(DriverProfileClient::class)
+        );
 
         $ruta = $this->crearRutaBase('Cañaveral', 6, 45, 7, 30, 20.0, 4500);
 
@@ -393,8 +414,8 @@ class SpatialMatchingTest extends TestCase
      */
     public function test_ingesta_factor_de_congestion_severa_en_vivo(): void
     {
-        \Illuminate\Support\Facades\Http::fake([
-            'https://api.tomtom.com/*' => \Illuminate\Support\Facades\Http::response([
+        Http::fake([
+            'https://api.tomtom.com/*' => Http::response([
                 'flowSegmentData' => [
                     'currentSpeed' => 15.0,
                     'freeFlowSpeed' => 45.0,
@@ -403,11 +424,20 @@ class SpatialMatchingTest extends TestCase
                     'freeFlowTravelTime' => 100.0, // Factor de congestión = 2.0x
                 ],
             ], 200),
+            // Este test verifica específicamente el cálculo PHP/TomTom local — se
+            // fuerza a que ai-route-service falle para ejercitar ese fallback.
+            '*/api/v1/optimize/match' => Http::response([], 500),
         ]);
 
-        \Illuminate\Support\Facades\Cache::flush();
-        $trafficService = (new \App\Services\LiveTrafficService())->setApiKey('fake_live_key');
-        $matching = new \App\Services\SpatialMatchingService($this->spatialRepo, app(\App\Services\OsrmRoutingService::class), $trafficService);
+        Cache::flush();
+        $trafficService = (new LiveTrafficService)->setApiKey('fake_live_key');
+        $matching = new SpatialMatchingService(
+            $this->spatialRepo,
+            app(OsrmRoutingService::class),
+            $trafficService,
+            app(AiRouteServiceClient::class),
+            app(DriverProfileClient::class)
+        );
 
         $ruta = $this->crearRutaBase('Cañaveral', 10, 0, 11, 0, 20.0, 4500); // 10:00 AM hora valle normalmente 1.05x
 
