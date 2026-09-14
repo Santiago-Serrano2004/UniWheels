@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Trip;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -12,12 +13,32 @@ class TripLifecycleTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function fakeRouteMatching(string $driverId, float $baseFareCop = 4500.0, ?string $routeId = null): string
+    {
+        $routeId = $routeId ?? (string) Str::uuid();
+
+        Http::fake([
+            '*/api/v1/routes/*' => Http::response([
+                'success' => true,
+                'data' => [
+                    'id' => $routeId,
+                    'driver_id' => $driverId,
+                    'base_contribution_cop' => $baseFareCop,
+                ],
+            ], 200),
+        ]);
+
+        return $routeId;
+    }
+
     public function test_un_pasajero_puede_reservar_un_viaje_y_obtener_pin_de_4_digitos(): void
     {
+        $passengerId = (string) Str::uuid();
+        $driverId = (string) Str::uuid();
+        $routeId = $this->fakeRouteMatching($driverId, 4500.0);
+
         $payload = [
-            'route_id' => (string) Str::uuid(),
-            'driver_id' => (string) Str::uuid(),
-            'passenger_id' => (string) Str::uuid(),
+            'route_id' => $routeId,
             'driver_name' => 'Carlos Mendoza',
             'passenger_name' => 'Santiago Garcia',
             'vehicle_plate' => 'KLU-492',
@@ -26,39 +47,59 @@ class TripLifecycleTest extends TestCase
             'dropoff_address' => 'Campus El Jardín',
             'total_fare_cop' => 5800,
             'scheduled_pickup_time' => Carbon::tomorrow()->setHour(7)->setMinute(5)->toISOString(),
-            'boarding_pin' => '4829',
+            'payment_method' => 'efectivo',
         ];
 
-        $response = $this->postJson('/api/v1/trips', $payload);
+        $response = $this->withToken($this->jwtDePrueba($passengerId))->postJson('/api/v1/trips', $payload);
 
         $response->assertStatus(201)
             ->assertJson([
                 'success' => true,
                 'message' => 'Viaje reservado exitosamente. Se ha generado tu PIN de abordaje seguro.',
             ])
-            ->assertJsonPath('data.boarding_pin', '4829')
             ->assertJsonPath('data.status', 'confirmado')
             ->assertJsonPath('data.total_fare_cop', 5800);
 
         $this->assertDatabaseHas('trips', [
-            'boarding_pin' => '4829',
             'pickup_address' => 'Parque San Pío',
             'total_fare_cop' => 5800.00,
             'status' => 'confirmado',
+            'passenger_id' => $passengerId,
+            'driver_id' => $driverId,
         ]);
+    }
+
+    public function test_rechaza_una_tarifa_fuera_del_rango_valido_de_la_ruta(): void
+    {
+        $passengerId = (string) Str::uuid();
+        $driverId = (string) Str::uuid();
+        $routeId = $this->fakeRouteMatching($driverId, 4500.0);
+
+        $payload = [
+            'route_id' => $routeId,
+            'pickup_address' => 'Parque San Pío',
+            'dropoff_address' => 'Campus El Jardín',
+            'total_fare_cop' => 50000, // muy por encima del máximo tolerable (base + 4500)
+            'scheduled_pickup_time' => Carbon::tomorrow()->setHour(7)->setMinute(5)->toISOString(),
+            'payment_method' => 'efectivo',
+        ];
+
+        $this->withToken($this->jwtDePrueba($passengerId))
+            ->postJson('/api/v1/trips', $payload)
+            ->assertStatus(422);
     }
 
     public function test_el_conductor_puede_iniciar_el_recorrido_y_llegar_al_punto_de_encuentro(): void
     {
         $trip = $this->crearViajeBase();
 
-        // 1. Iniciar conducción
-        $respStart = $this->postJson("/api/v1/trips/{$trip->id}/start");
+        $respStart = $this->withToken($this->jwtDePrueba($trip->driver_id))
+            ->postJson("/api/v1/trips/{$trip->id}/start");
         $respStart->assertStatus(200)
             ->assertJsonPath('data.status', 'en_camino');
 
-        // 2. Llegar al punto
-        $respArrive = $this->postJson("/api/v1/trips/{$trip->id}/arrive");
+        $respArrive = $this->withToken($this->jwtDePrueba($trip->driver_id))
+            ->postJson("/api/v1/trips/{$trip->id}/arrive");
         $respArrive->assertStatus(200)
             ->assertJsonPath('data.status', 'en_punto_encuentro');
     }
@@ -67,9 +108,8 @@ class TripLifecycleTest extends TestCase
     {
         $trip = $this->crearViajeBase('4829');
 
-        $response = $this->postJson("/api/v1/trips/{$trip->id}/verify-pin", [
-            'pin' => '4829',
-        ]);
+        $response = $this->withToken($this->jwtDePrueba($trip->driver_id))
+            ->postJson("/api/v1/trips/{$trip->id}/verify-pin", ['pin' => '4829']);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -90,14 +130,11 @@ class TripLifecycleTest extends TestCase
     {
         $trip = $this->crearViajeBase('4829');
 
-        $response = $this->postJson("/api/v1/trips/{$trip->id}/verify-pin", [
-            'pin' => '9999', // PIN incorrecto
-        ]);
+        $response = $this->withToken($this->jwtDePrueba($trip->driver_id))
+            ->postJson("/api/v1/trips/{$trip->id}/verify-pin", ['pin' => '9999']);
 
         $response->assertStatus(422)
-            ->assertJson([
-                'success' => false,
-            ]);
+            ->assertJson(['success' => false]);
 
         $this->assertDatabaseHas('trips', [
             'id' => $trip->id,
@@ -106,11 +143,27 @@ class TripLifecycleTest extends TestCase
         ]);
     }
 
+    public function test_no_se_puede_verificar_el_pin_de_un_viaje_ya_cancelado(): void
+    {
+        $trip = $this->crearViajeBase('4829');
+        $trip->update(['status' => Trip::STATUS_CANCELADO_PASAJERO]);
+
+        $response = $this->withToken($this->jwtDePrueba($trip->driver_id))
+            ->postJson("/api/v1/trips/{$trip->id}/verify-pin", ['pin' => '4829']);
+
+        $response->assertStatus(422);
+        $this->assertDatabaseHas('trips', [
+            'id' => $trip->id,
+            'status' => 'cancelado_por_pasajero',
+        ]);
+    }
+
     public function test_no_permite_completar_el_viaje_si_no_ha_validado_el_pin(): void
     {
-        $trip = $this->crearViajeBase('4829'); // Estado 'confirmado', sin validar PIN
+        $trip = $this->crearViajeBase('4829');
 
-        $response = $this->postJson("/api/v1/trips/{$trip->id}/complete");
+        $response = $this->withToken($this->jwtDePrueba($trip->driver_id))
+            ->postJson("/api/v1/trips/{$trip->id}/complete");
 
         $response->assertStatus(422)
             ->assertJson([
@@ -119,22 +172,25 @@ class TripLifecycleTest extends TestCase
             ]);
     }
 
-    public function test_completa_el_viaje_y_liquida_la_comision_del_12_por_ciento(): void
+    public function test_completa_un_viaje_pagado_p2p_y_debita_la_comision_de_la_billetera_del_conductor(): void
     {
+        Http::fake([
+            '*/api/v1/wallet/debit-commission' => Http::response(['success' => true], 200),
+        ]);
+
         $trip = $this->crearViajeBase('4829', 5000.0);
-        $trip->verifyBoardingPin('4829'); // Transicionar a recogido
+        $trip->verifyBoardingPin('4829');
 
-        $response = $this->postJson("/api/v1/trips/{$trip->id}/complete");
+        $response = $this->withToken($this->jwtDePrueba($trip->driver_id))
+            ->postJson("/api/v1/trips/{$trip->id}/complete");
 
-        // 12% de 5000 = 600 COP de comisión, ganancia conductor = 4400 COP
         $response->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-            ])
+            ->assertJson(['success' => true])
             ->assertJsonPath('data.status', 'completado')
             ->assertJsonPath('data.total_fare_cop', 5000)
             ->assertJsonPath('data.platform_commission_cop', 600)
-            ->assertJsonPath('data.driver_net_earnings_cop', 4400);
+            ->assertJsonPath('data.driver_net_earnings_cop', 4400)
+            ->assertJsonPath('data.commission_status', 'debitada_exitosamente');
 
         $this->assertDatabaseHas('trips', [
             'id' => $trip->id,
@@ -143,40 +199,132 @@ class TripLifecycleTest extends TestCase
             'driver_amount_cop' => 4400.00,
             'commission_status' => 'debitada_exitosamente',
         ]);
+
+        Http::assertSent(function ($request) use ($trip) {
+            return str_contains($request->url(), 'wallet/debit-commission')
+                && $request['user_id'] === $trip->driver_id
+                && $request['amount_cop'] === 600.0;
+        });
     }
 
-    public function test_cancelacion_por_conductor_aplica_penalizacion_de_3000_cop(): void
+    public function test_si_auth_service_no_responde_el_viaje_igual_se_completa_pero_la_comision_queda_pendiente(): void
     {
-        $trip = $this->crearViajeBase();
-
-        $response = $this->postJson("/api/v1/trips/{$trip->id}/cancel", [
-            'cancelled_by' => 'conductor',
-            'reason' => 'Se pinchó una llanta en la autopista.',
+        Http::fake([
+            '*/api/v1/wallet/debit-commission' => Http::response([], 500),
         ]);
 
+        $trip = $this->crearViajeBase('4829', 5000.0);
+        $trip->verifyBoardingPin('4829');
+
+        $response = $this->withToken($this->jwtDePrueba($trip->driver_id))
+            ->postJson("/api/v1/trips/{$trip->id}/complete");
+
         $response->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-            ])
+            ->assertJsonPath('data.status', 'completado')
+            ->assertJsonPath('data.commission_status', 'pendiente_debito');
+    }
+
+    public function test_un_viaje_con_tarjeta_no_se_puede_completar_sin_pago_confirmado(): void
+    {
+        $trip = $this->crearViajeBase('4829', 5000.0);
+        $trip->update(['payment_method' => Trip::PAYMENT_METHOD_TARJETA]);
+        $trip->verifyBoardingPin('4829');
+
+        $response = $this->withToken($this->jwtDePrueba($trip->driver_id))
+            ->postJson("/api/v1/trips/{$trip->id}/complete");
+
+        $response->assertStatus(422);
+        $this->assertDatabaseHas('trips', ['id' => $trip->id, 'status' => 'recogido']);
+    }
+
+    public function test_un_viaje_con_tarjeta_confirmado_acredita_la_ganancia_al_conductor(): void
+    {
+        Http::fake([
+            '*/api/v1/wallet/credit' => Http::response(['success' => true], 200),
+        ]);
+
+        $trip = $this->crearViajeBase('4829', 5000.0);
+        $trip->update(['payment_method' => Trip::PAYMENT_METHOD_TARJETA, 'payment_confirmed_at' => now()]);
+        $trip->verifyBoardingPin('4829');
+
+        $response = $this->withToken($this->jwtDePrueba($trip->driver_id))
+            ->postJson("/api/v1/trips/{$trip->id}/complete");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.commission_status', 'debitada_exitosamente');
+
+        Http::assertSent(function ($request) use ($trip) {
+            return str_contains($request->url(), 'wallet/credit')
+                && $request['user_id'] === $trip->driver_id
+                && $request['amount_cop'] === 4400.0;
+        });
+    }
+
+    public function test_cancelacion_por_conductor_con_menos_de_15_min_aplica_penalizacion(): void
+    {
+        $trip = $this->crearViajeBase('4829', 4500.0, null, null, Carbon::now()->addMinutes(5));
+
+        $response = $this->withToken($this->jwtDePrueba($trip->driver_id))
+            ->postJson("/api/v1/trips/{$trip->id}/cancel", [
+                'cancelled_by' => 'conductor',
+                'reason' => 'Se pinchó una llanta en la autopista.',
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJson(['success' => true])
             ->assertJsonPath('data.status', 'cancelado_por_conductor')
             ->assertJsonPath('data.penalized', true)
             ->assertJsonPath('data.penalty_fee_cop', 3000);
+
+        $this->assertDatabaseHas('trip_cancellations', [
+            'trip_id' => $trip->id,
+            'canceller_role' => 'conductor',
+            'had_penalty' => true,
+        ]);
     }
 
-    public function test_cancelacion_por_pasajero_no_aplica_penalizacion(): void
+    public function test_cancelacion_por_conductor_con_mas_de_15_min_no_aplica_penalizacion(): void
     {
-        $trip = $this->crearViajeBase();
+        $trip = $this->crearViajeBase('4829', 4500.0, null, null, Carbon::now()->addMinutes(45));
 
-        $response = $this->postJson("/api/v1/trips/{$trip->id}/cancel", [
-            'cancelled_by' => 'pasajero',
-            'reason' => 'Se canceló mi clase de 7am.',
-        ]);
+        $response = $this->withToken($this->jwtDePrueba($trip->driver_id))
+            ->postJson("/api/v1/trips/{$trip->id}/cancel", [
+                'cancelled_by' => 'conductor',
+                'reason' => 'Cambio de planes con antelación.',
+            ]);
 
         $response->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-            ])
-            ->assertJsonPath('data.status', 'cancelado_por_pasajero');
+            ->assertJsonPath('data.penalized', false);
+    }
+
+    public function test_cancelacion_por_pasajero_con_mas_de_2_min_no_aplica_penalizacion(): void
+    {
+        $trip = $this->crearViajeBase('4829', 4500.0, null, null, Carbon::now()->addMinutes(10));
+
+        $response = $this->withToken($this->jwtDePrueba($trip->passenger_id))
+            ->postJson("/api/v1/trips/{$trip->id}/cancel", [
+                'cancelled_by' => 'pasajero',
+                'reason' => 'Se canceló mi clase de 7am.',
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJson(['success' => true])
+            ->assertJsonPath('data.status', 'cancelado_por_pasajero')
+            ->assertJsonPath('data.penalized', false);
+    }
+
+    public function test_cancelacion_por_pasajero_con_menos_de_2_min_aplica_penalizacion(): void
+    {
+        $trip = $this->crearViajeBase('4829', 4500.0, null, null, Carbon::now()->addMinute());
+
+        $response = $this->withToken($this->jwtDePrueba($trip->passenger_id))
+            ->postJson("/api/v1/trips/{$trip->id}/cancel", [
+                'cancelled_by' => 'pasajero',
+                'reason' => 'Ya no puedo esperar.',
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.penalized', true);
     }
 
     public function test_consulta_el_viaje_activo_del_pasajero(): void
@@ -184,7 +332,8 @@ class TripLifecycleTest extends TestCase
         $passengerId = (string) Str::uuid();
         $trip = $this->crearViajeBase('4829', 4500.0, $passengerId);
 
-        $response = $this->getJson("/api/v1/passenger/{$passengerId}/active-trip");
+        $response = $this->withToken($this->jwtDePrueba($passengerId))
+            ->getJson('/api/v1/passenger/active-trip');
 
         $response->assertStatus(200)
             ->assertJson([
@@ -195,11 +344,36 @@ class TripLifecycleTest extends TestCase
             ->assertJsonPath('data.pickup_address', 'Parque San Pío');
     }
 
-    protected function crearViajeBase(string $pin = '4829', float $fare = 4500.0, ?string $passengerId = null): Trip
+    public function test_rutas_de_viajes_rechazan_peticiones_sin_token(): void
     {
+        $this->postJson('/api/v1/trips', [])->assertStatus(401);
+        $this->getJson('/api/v1/passenger/active-trip')->assertStatus(401);
+    }
+
+    public function test_un_pasajero_no_puede_consultar_el_historial_de_otro_pasajero_por_query_param(): void
+    {
+        $passengerReal = (string) Str::uuid();
+        $otroPassenger = (string) Str::uuid();
+        $this->crearViajeBase('4829', 4500.0, $otroPassenger);
+
+        // Intenta forzar el passenger_id de otro usuario vía query string — debe ser ignorado.
+        $response = $this->withToken($this->jwtDePrueba($passengerReal))
+            ->getJson('/api/v1/passenger/history?passenger_id='.$otroPassenger);
+
+        $response->assertStatus(200)
+            ->assertJsonCount(0, 'data');
+    }
+
+    protected function crearViajeBase(
+        string $pin = '4829',
+        float $fare = 4500.0,
+        ?string $passengerId = null,
+        ?string $driverId = null,
+        ?Carbon $scheduledPickupTime = null
+    ): Trip {
         return Trip::create([
             'route_id' => (string) Str::uuid(),
-            'driver_id' => (string) Str::uuid(),
+            'driver_id' => $driverId ?? (string) Str::uuid(),
             'passenger_id' => $passengerId ?? (string) Str::uuid(),
             'driver_name' => 'Carlos Mendoza',
             'passenger_name' => 'Santiago Garcia',
@@ -214,7 +388,7 @@ class TripLifecycleTest extends TestCase
             'platform_commission_cop' => round($fare * 0.12, 2),
             'commission_status' => 'pendiente_debito',
             'status' => Trip::STATUS_CONFIRMADO,
-            'scheduled_pickup_time' => Carbon::tomorrow()->setHour(7)->setMinute(0),
+            'scheduled_pickup_time' => $scheduledPickupTime ?? Carbon::tomorrow()->setHour(7)->setMinute(0),
         ]);
     }
 }

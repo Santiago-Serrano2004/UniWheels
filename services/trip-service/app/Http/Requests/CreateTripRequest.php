@@ -2,21 +2,25 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Trip;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CreateTripRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        // Solo el propio pasajero autenticado puede reservar un viaje a su nombre.
+        return (string) $this->attributes->get('user_id') !== '';
     }
 
     public function rules(): array
     {
         return [
             'route_id' => ['required', 'string'],
-            'driver_id' => ['required', 'string'],
-            'passenger_id' => ['required', 'string'],
+            // driver_id ya no se acepta del cliente: se resuelve consultando route-matching-service.
+            // passenger_id ya no se acepta del cliente: siempre es el usuario autenticado (JWT).
+            // boarding_pin ya no se acepta del cliente: siempre se genera server-side.
             'vehicle_id' => ['nullable', 'string'],
             'driver_name' => ['nullable', 'string', 'max:120'],
             'passenger_name' => ['nullable', 'string', 'max:120'],
@@ -24,9 +28,9 @@ class CreateTripRequest extends FormRequest
             'vehicle_model' => ['nullable', 'string', 'max:80'],
             'pickup_address' => ['required', 'string', 'max:150'],
             'dropoff_address' => ['required', 'string', 'max:150'],
-            'total_fare_cop' => ['required', 'numeric', 'min:2000'],
+            'total_fare_cop' => ['required', 'numeric', 'min:2000', 'max:100000'],
             'scheduled_pickup_time' => ['required', 'date'],
-            'boarding_pin' => ['nullable', 'string', 'regex:/^[0-9]{4}$/'],
+            'payment_method' => ['required', 'string', Rule::in(Trip::PAYMENT_METHODS)],
         ];
     }
 }

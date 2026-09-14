@@ -37,7 +37,8 @@ class PaymentSettlementTest extends TestCase
             'is_pin_verified' => true,
         ]);
 
-        $response = $this->postJson("/api/v1/trips/{$trip->id}/complete");
+        $response = $this->withToken($this->jwtDePrueba($driverId))
+            ->postJson("/api/v1/trips/{$trip->id}/complete");
 
         $response->assertStatus(200)
             ->assertJson([
@@ -81,7 +82,8 @@ class PaymentSettlementTest extends TestCase
             'is_pin_verified' => true,
         ]);
 
-        $response = $this->postJson("/api/v1/trips/{$trip->id}/complete");
+        $response = $this->withToken($this->jwtDePrueba($driverId))
+            ->postJson("/api/v1/trips/{$trip->id}/complete");
 
         $response->assertStatus(200)
             ->assertJsonPath('data.status', 'completado');
@@ -118,10 +120,11 @@ class PaymentSettlementTest extends TestCase
             'is_pin_verified' => false,
         ]);
 
-        $response = $this->postJson("/api/v1/trips/{$trip->id}/cancel", [
-            'cancelled_by' => 'pasajero',
-            'reason' => 'Cambio de horario de clase en la UNAB.',
-        ]);
+        $response = $this->withToken($this->jwtDePrueba($passengerId))
+            ->postJson("/api/v1/trips/{$trip->id}/cancel", [
+                'cancelled_by' => 'pasajero',
+                'reason' => 'Cambio de horario de clase en la UNAB.',
+            ]);
 
         $response->assertStatus(200)
             ->assertJson([
