@@ -14,30 +14,15 @@ export const HomeView = () => {
     setSelectedSearchRoute,
     activePassengerBooking,
     cancelPassengerBooking,
-    smartMatchAlerts,
-    recurringPassengerAlerts,
-    acceptSmartMatchAlert,
-    dismissSmartMatchAlert,
     setActiveTab,
     theme,
   } = useAppStore();
 
   const isDark = theme === 'dark';
 
-  // Días que coinciden entre la ruta del conductor y las rutinas del pasajero
-  const passengerDaysSet = useMemo(() => {
-    const set = new Set();
-    (recurringPassengerAlerts || [])
-      .filter((a) => a.isActive)
-      .forEach((a) => (a.days || []).forEach((d) => set.add(d)));
-    return set;
-  }, [recurringPassengerAlerts]);
-
-  const getMatchingDays = (driverDays) => {
-    if (!driverDays || !Array.isArray(driverDays)) return [];
-    if (passengerDaysSet.size === 0) return driverDays;
-    return driverDays.filter((d) => passengerDaysSet.has(d));
-  };
+  // Si el pasajero descarta la tarjeta destacada, se respeta durante esta sesión
+  // de la pantalla (vuelve a aparecer si cambia la búsqueda o se recarga).
+  const [featuredDismissed, setFeaturedDismissed] = useState(false);
 
   // Fechas de referencia dinámica (Hoy y Mañana)
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
@@ -51,7 +36,6 @@ export const HomeView = () => {
   const [directionFilter, setDirectionFilter] = useState('towards');
 
   // Modalidad seleccionada en Smart Match ('meeting_point' | 'door_pickup')
-  const [smartMatchModality, setSmartMatchModality] = useState('meeting_point');
 
   // 2. Programación de Fecha: 'todayStr', 'tomorrowStr', o 'YYYY-MM-DD'
   const [selectedDate, setSelectedDate] = useState(todayStr);
@@ -334,22 +318,20 @@ export const HomeView = () => {
     return true;
   });
 
+  // El mejor resultado se destaca arriba (ver "COINCIDENCIA DESTACADA"); la
+  // grilla de abajo muestra el resto para no repetir la misma tarjeta dos veces.
+  const isFeaturedShown = !activePassengerBooking && !featuredDismissed && directionFilter === 'towards' && filteredRides.length > 0;
+  const gridRides = isFeaturedShown ? filteredRides.slice(1) : filteredRides;
+
   return (
     <div className="h-full flex flex-col min-h-0 overflow-hidden select-none">
       {/* SECCIÓN SUPERIOR ESTÁTICA / FIJA */}
       <div className="shrink-0 space-y-2 pb-1">
-        {/* 1. BANNER PROACTIVO DE COINCIDENCIA EN RUTA */}
-        {!activePassengerBooking && smartMatchAlerts && smartMatchAlerts.length > 0 && (() => {
-          const activeMatch = smartMatchAlerts[0];
-          const isDoorEligible = Boolean(activeMatch.is_door_pickup_eligible);
-          const meetingPointName = activeMatch.meeting_point_name || activeMatch.pickup_point || activeMatch.pickup || activeMatch.origin || 'Punto de Encuentro Cercano';
-          const meetingPointFare = activeMatch.meeting_point_fare || activeMatch.fare || '$ 4.000';
-          const doorPickupFare = activeMatch.door_pickup_fare || '$ 4.500';
-          const walkingMeters = activeMatch.walking_distance_meters || 80;
-          const walkingMins = activeMatch.walking_time_minutes || 1;
-          const detourMins = activeMatch.additional_detour_minutes || 2;
-          const effectiveModality = isDoorEligible ? smartMatchModality : 'meeting_point';
-          const effectiveFare = effectiveModality === 'meeting_point' ? meetingPointFare : doorPickupFare;
+        {/* 1. COINCIDENCIA DESTACADA — el mejor resultado REAL de searchResults (PostGIS +
+               ai-route-service), no una alerta simulada. "Ver Detalles y Reservar" lleva al
+               mismo flujo de confirmación real que cualquier tarjeta de la grilla de abajo. */}
+        {isFeaturedShown && (() => {
+          const topMatch = filteredRides[0];
 
           return (
             <div
@@ -359,36 +341,21 @@ export const HomeView = () => {
                   : 'bg-white border-slate-200 text-slate-900 shadow-md'
               }`}
             >
-              {/* Cabecera: Insignia Coincidencia + Días de Coincidencia de Rutina + Descarte */}
+              {/* Cabecera: Insignia Coincidencia + Descarte */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold flex items-center gap-1.5 border border-emerald-500/30">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span>Coincidencia en ruta</span>
                   </span>
-
-                  {activeMatch.is_recurring ? (
-                    <div className="flex items-center gap-1.5 bg-lochmara-500/10 border border-lochmara-500/20 px-2 py-0.5 rounded-full">
-                      <span className="text-[10px] font-bold text-lochmara-600 dark:text-lochmara-400">Coincide:</span>
-                      <div className="flex items-center gap-0.5">
-                        {getMatchingDays(activeMatch.driver_days).map((dia) => (
-                          <span
-                            key={dia}
-                            className="px-1.5 py-0.2 rounded-md bg-lochmara-600 text-white text-[9px] font-black"
-                          >
-                            {dia}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="text-[10px] text-slate-400 font-bold">Viaje único hoy</span>
-                  )}
+                  <span className="text-[10px] text-slate-400 font-bold">
+                    {topMatch.is_direct ? 'En ruta, sin desvío' : `Con desvío optimizado (${topMatch.detour_minutes})`}
+                  </span>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => dismissSmartMatchAlert(activeMatch.id)}
+                  onClick={() => setFeaturedDismissed(true)}
                   className="w-5 h-5 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
                   title="Descartar sugerencia"
                 >
@@ -400,155 +367,61 @@ export const HomeView = () => {
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-10 h-10 rounded-2xl bg-lochmara-500/10 border border-lochmara-500/20 flex items-center justify-center text-lochmara-500 font-black text-xs shrink-0 overflow-hidden">
-                    {activeMatch.driver_avatar ? (
-                      <img src={activeMatch.driver_avatar} alt={activeMatch.driver_name} className="w-full h-full object-cover" />
-                    ) : (
-                      activeMatch.driver_avatar_initials || 'CD'
-                    )}
+                    {topMatch.driver_avatar_initials || 'CD'}
                   </div>
 
                   <div className="min-w-0">
                     <div className="flex items-center gap-1">
-                      <p className="font-black truncate text-xs">{activeMatch.driver_name}</p>
+                      <p className="font-black truncate text-xs">{topMatch.driver_name}</p>
                       <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.2 rounded-md">
-                        {activeMatch.rating} ★
+                        {topMatch.rating ? `${topMatch.rating} ★` : 'Sin calificación'}
                       </span>
                     </div>
                     <p className="text-[10px] text-slate-400 truncate">
-                      {activeMatch.vehicle} • <strong className="font-mono text-slate-300">{activeMatch.plate}</strong>
+                      {topMatch.vehicle} • <strong className="font-mono text-slate-300">{topMatch.plate}</strong>
                     </p>
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
                   <p className="text-[10px] text-slate-400">Llegada estimada:</p>
-                  <span className="text-xs font-black text-lochmara-600 dark:text-lochmara-400">{activeMatch.arrival_time}</span>
-                  <p className="text-[9px] text-slate-400 font-bold">{activeMatch.available_seats} cupos libres</p>
+                  <span className="text-xs font-black text-lochmara-600 dark:text-lochmara-400">{topMatch.arrival_time || '—'}</span>
+                  <p className="text-[9px] text-slate-400 font-bold">{topMatch.available_seats} cupos libres</p>
                 </div>
               </div>
 
-              {/* SI ES ELEGIBLE PARA PUERTA A PUERTA: MOSTRAR RECOMENDACIÓN DE RUTA + SELECTOR DE 2 OPCIONES */}
-              {isDoorEligible ? (
-                <>
-                  {/* RECOMENDACIÓN DE RUTA (COMERCIAL) */}
-                  <div className={`p-2.5 rounded-2xl border text-xs flex items-start gap-2 ${
-                    isDark ? 'bg-slate-950 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
-                  }`}>
-                    <Sparkles className="w-4 h-4 text-lochmara-500 shrink-0 mt-0.5" />
-                    <div className="min-w-0 space-y-0.5">
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-lochmara-600 dark:text-lochmara-400">
-                        Recomendación de Ruta
-                      </p>
-                      <p className="text-[11px] font-medium leading-snug">
-                        {activeMatch.ai_advisory || 'Caminar al punto de encuentro ahorra dinero y reduce tiempo en tráfico.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* SELECTOR DE MODALIDAD: PUNTO DE ENCUENTRO VS PUERTA A PUERTA */}
-                  <div className="space-y-1.5">
-                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                      Modalidad de Abordaje:
-                    </p>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      {/* Opción 1: Encuentro */}
-                      <button
-                        type="button"
-                        onClick={() => setSmartMatchModality('meeting_point')}
-                        className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer space-y-1 ${
-                          smartMatchModality === 'meeting_point'
-                            ? 'bg-lochmara-500/10 border-lochmara-500 shadow-2xs'
-                            : isDark ? 'bg-slate-950 border-slate-800 hover:border-slate-700' : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="text-[10px] font-black uppercase tracking-wider truncate text-lochmara-600 dark:text-lochmara-400">
-                            Encuentro
-                          </span>
-                          <span className="text-xs font-black shrink-0 whitespace-nowrap text-emerald-500">
-                            {meetingPointFare}
-                          </span>
-                        </div>
-                        <p className="text-[10px] font-black truncate text-slate-950 dark:text-white">
-                          {meetingPointName}
-                        </p>
-                        <p className="text-[9px] text-slate-400 font-medium">
-                          A {walkingMeters}m • {walkingMins} min a pie
-                        </p>
-                      </button>
-
-                      {/* Opción 2: Recogida */}
-                      <button
-                        type="button"
-                        onClick={() => setSmartMatchModality('door_pickup')}
-                        className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer space-y-1 ${
-                          smartMatchModality === 'door_pickup'
-                            ? 'bg-lochmara-500/10 border-lochmara-500 shadow-2xs'
-                            : isDark ? 'bg-slate-950 border-slate-800 hover:border-slate-700' : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="text-[10px] font-black uppercase tracking-wider truncate text-lochmara-600 dark:text-lochmara-400">
-                            Recogida
-                          </span>
-                          <span className="text-xs font-black shrink-0 whitespace-nowrap text-emerald-500">
-                            {doorPickupFare}
-                          </span>
-                        </div>
-                        <p className="text-[10px] font-black truncate text-slate-950 dark:text-white">
-                          En tu dirección
-                        </p>
-                        <p className="text-[9px] text-slate-400 font-medium">
-                          +{detourMins} min tiempo adicional
-                        </p>
-                      </button>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                /* SI NO ES ELEGIBLE PARA PUERTA A PUERTA: SOLO TARJETA LIMPIA DE ENCUENTRO */
-                <div className={`p-3 rounded-2xl border text-left space-y-1 ${
-                  isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
-                }`}>
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-lochmara-600 dark:text-lochmara-400">
-                      Encuentro
-                    </span>
-                    <span className="text-xs font-black text-emerald-500 shrink-0 whitespace-nowrap">
-                      {meetingPointFare}
-                    </span>
-                  </div>
-                  <p className="text-[10px] font-black truncate text-slate-950 dark:text-white">
-                    {meetingPointName}
-                  </p>
-                  <p className="text-[9px] text-slate-400 font-medium">
-                    A {walkingMeters}m de tu ubicación • {walkingMins} min a pie
-                  </p>
-                </div>
-              )}
-
-              {/* Botones de Acción */}
-              <div className="flex items-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => acceptSmartMatchAlert(activeMatch.id, effectiveModality)}
-                  className="flex-1 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/30"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>
-                    Aceptar Cupo ({effectiveFare})
+              {/* Origen → Destino y tarifa real (una sola modalidad: la que ya decidió
+                  route-matching-service según distancia real al punto de recogida) */}
+              <div className={`p-3 rounded-2xl border text-left space-y-1 ${
+                isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-lochmara-600 dark:text-lochmara-400">
+                    {topMatch.origin}
                   </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('history')}
-                  className="px-3 py-2.5 rounded-2xl bg-lochmara-500/10 hover:bg-lochmara-500/20 text-lochmara-600 dark:text-lochmara-400 text-xs font-black transition-all cursor-pointer shrink-0"
-                >
-                  Ver Todas ({smartMatchAlerts.length})
-                </button>
+                  <span className="text-xs font-black text-emerald-500 shrink-0 whitespace-nowrap">
+                    {topMatch.fare}
+                  </span>
+                </div>
+                <p className="text-[10px] font-black truncate text-slate-950 dark:text-white">
+                  → {topMatch.destination}
+                </p>
+                {topMatch.walking_distance_meters > 0 && (
+                  <p className="text-[9px] text-slate-400 font-medium">
+                    A {Math.round(topMatch.walking_distance_meters)}m del punto de encuentro • {Math.round(topMatch.walking_time_minutes)} min a pie
+                  </p>
+                )}
               </div>
+
+              {/* Botón de Acción: lleva al mismo mapa/confirmación real que la grilla */}
+              <button
+                type="button"
+                onClick={() => handleSelectRide(topMatch)}
+                className="w-full py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/30"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Ver Detalles y Reservar ({topMatch.fare})</span>
+              </button>
             </div>
           );
         })()}
@@ -584,7 +457,7 @@ export const HomeView = () => {
         <div className="shrink-0 flex items-center justify-between px-1">
           <h3 className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             <Navigation className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Viajes Disponibles ({filteredRides.length})</span>
+            <span>Viajes Disponibles ({gridRides.length})</span>
           </h3>
           <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
             {selectedDate === tomorrowStr ? 'Programados para Mañana' : passengerTimeFilter ? 'Ventana < 1h activa' : 'Rutas Verificadas'}
@@ -616,9 +489,9 @@ export const HomeView = () => {
             <div className="rounded-2xl p-4 border border-rose-300 bg-rose-50 dark:bg-rose-950/30 dark:border-rose-900/50 text-center">
               <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">{searchErrorMsg}</p>
             </div>
-          ) : filteredRides.length > 0 ? (
+          ) : gridRides.length > 0 ? (
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              {filteredRides.map((ride) => (
+              {gridRides.map((ride) => (
                 <AvailableRideCard
                   key={ride.id}
                   ride={ride}
@@ -631,6 +504,10 @@ export const HomeView = () => {
                 />
               ))}
             </div>
+          ) : isFeaturedShown ? (
+            <p className="text-[11px] text-slate-400 text-center py-6">
+              Ya viste el único viaje disponible arriba.
+            </p>
           ) : (
             <div className={`p-6 rounded-3xl border text-center space-y-2 transition-colors ${
               isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-xs'
