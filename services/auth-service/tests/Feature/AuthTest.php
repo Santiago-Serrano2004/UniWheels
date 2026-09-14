@@ -3,9 +3,11 @@
 use App\Models\Institution;
 use App\Models\InstitutionCampus;
 use App\Models\User;
+use App\Services\JwtService;
 use Database\Seeders\InstitutionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
@@ -35,15 +37,17 @@ test('puede listar las instituciones activas con sus sedes oficiales', function 
 test('un estudiante puede registrarse exitosamente con prefijo y codigo estudiantil UXXXXXXXX', function () {
     $institution = Institution::where('code', 'UNAB')->first();
     $campus = InstitutionCampus::where('code', 'JARDIN')->first();
-    $claveDinamica = 'Clave' . Str::random(10) . '1!';
+    $claveDinamica = 'Clave'.Str::random(10).'1!';
 
     // Mock OTP verification code in cache
-    \Illuminate\Support\Facades\Cache::put('email_verification_crodriguez@unab.edu.co', '123456', 300);
+    Cache::put('email_verification_crodriguez@unab.edu.co', '123456', 300);
+    Cache::put('sms_verification_3159876543', '654321', 300);
 
     $payload = [
         'name' => 'Carlos Rodriguez',
         'email_prefix' => 'crodriguez',
         'verification_code' => '123456',
+        'phone_verification_code' => '654321',
         'institution_id' => $institution->id,
         'campus_id' => $campus->id,
         'id_document_number' => '1098998877',
@@ -87,7 +91,7 @@ test('un estudiante puede registrarse exitosamente con prefijo y codigo estudian
 
 test('rechaza registro si el codigo estudiantil no cumple el formato UXXXXXXXX', function () {
     $institution = Institution::where('code', 'UNAB')->first();
-    $claveDinamica = 'Clave' . Str::random(10) . '1!';
+    $claveDinamica = 'Clave'.Str::random(10).'1!';
 
     $payload = [
         'name' => 'Usuario Formato Invalido',
@@ -111,7 +115,7 @@ test('rechaza registro si el codigo estudiantil no cumple el formato UXXXXXXXX',
 
 test('rechaza registro con dominio de correo no perteneciente a la universidad', function () {
     $institution = Institution::where('code', 'UNAB')->first();
-    $claveDinamica = 'Clave' . Str::random(10) . '1!';
+    $claveDinamica = 'Clave'.Str::random(10).'1!';
 
     $payload = [
         'name' => 'Usuario Invalido',
@@ -135,7 +139,7 @@ test('rechaza registro con dominio de correo no perteneciente a la universidad',
 
 test('un usuario registrado puede iniciar sesion y obtener Bearer Token', function () {
     $institution = Institution::where('code', 'UNAB')->first();
-    $claveDinamica = 'Clave' . Str::random(10) . '1!';
+    $claveDinamica = 'Clave'.Str::random(10).'1!';
 
     $user = User::create([
         'name' => 'Ana Gomez',
@@ -177,7 +181,7 @@ test('un usuario registrado puede iniciar sesion y obtener Bearer Token', functi
 
 test('un usuario autenticado puede consultar su perfil con /api/v1/auth/me', function () {
     $institution = Institution::where('code', 'UNAB')->first();
-    $claveDinamica = 'Clave' . Str::random(10) . '1!';
+    $claveDinamica = 'Clave'.Str::random(10).'1!';
 
     $user = User::create([
         'name' => 'Usuario Perfil Test',
@@ -197,7 +201,7 @@ test('un usuario autenticado puede consultar su perfil con /api/v1/auth/me', fun
     ]);
     $user->assignRole('estudiante');
 
-    $token = $user->createToken('test_token')->plainTextToken;
+    $token = app(JwtService::class)->issue($user);
 
     $response = $this->withToken($token)->getJson('/api/v1/auth/me');
 
@@ -211,7 +215,7 @@ test('un usuario autenticado puede consultar su perfil con /api/v1/auth/me', fun
 
 test('un usuario puede cerrar sesion y revocar su token', function () {
     $institution = Institution::where('code', 'UNAB')->first();
-    $claveDinamica = 'Clave' . Str::random(10) . '1!';
+    $claveDinamica = 'Clave'.Str::random(10).'1!';
 
     $user = User::create([
         'name' => 'Usuario Logout Test',
@@ -229,7 +233,7 @@ test('un usuario puede cerrar sesion y revocar su token', function () {
         'email_verified_at' => now(),
         'verification_expires_at' => now()->addMonths(6),
     ]);
-    $token = $user->createToken('logout_token')->plainTextToken;
+    $token = app(JwtService::class)->issue($user);
 
     $response = $this->withToken($token)->postJson('/api/v1/auth/logout');
 

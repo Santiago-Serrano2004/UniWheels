@@ -14,6 +14,8 @@ use App\Mail\VerificacionCorreoMail;
 use App\Models\User;
 use App\Models\UserReputationStats;
 use App\Models\UserWallet;
+use App\Services\JwtService;
+use App\Services\SmsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -25,6 +27,8 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct(private JwtService $jwtService, private SmsService $smsService) {}
+
     /**
      * Registrar un nuevo estudiante, docente o colaborador en la comunidad universitaria.
      */
@@ -33,14 +37,27 @@ class AuthController extends Controller
         $datosValidados = $request->validated();
         $correo = $request->input('email');
         $codigoIngresado = $datosValidados['verification_code'] ?? null;
+        $telefono = $datosValidados['phone_number'];
+        $codigoSmsIngresado = $datosValidados['phone_verification_code'];
 
         // Validar que el código PIN coincida con el almacenado en Cache
-        $codigoAlmacenado = Cache::get('email_verification_' . $correo);
+        $codigoAlmacenado = Cache::get('email_verification_'.$correo);
 
-        if (!$codigoAlmacenado || $codigoAlmacenado !== $codigoIngresado) {
+        if (! $codigoAlmacenado || $codigoAlmacenado !== $codigoIngresado) {
             return response()->json([
                 'success' => false,
                 'message' => 'El código de verificación PIN es inválido o ha expirado. Por favor solicita uno nuevo.',
+            ], 422);
+        }
+
+        // Validar el código SMS de forma independiente al de correo — ambos canales
+        // deben confirmarse antes de crear la cuenta.
+        $codigoSmsAlmacenado = Cache::get('sms_verification_'.$telefono);
+
+        if (! $codigoSmsAlmacenado || $codigoSmsAlmacenado !== $codigoSmsIngresado) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El código de verificación SMS es inválido o ha expirado. Por favor solicita uno nuevo.',
             ], 422);
         }
 
@@ -59,17 +76,16 @@ class AuthController extends Controller
                 'academic_program_or_department' => $datosValidados['academic_program_or_department'] ?? 'Comunidad Universitaria',
                 'semester' => $datosValidados['semester'] ?? null,
                 'password' => Hash::make($datosValidados['password']),
-                'is_driver' => $datosValidados['is_driver'] ?? false,
+                'is_driver' => false,
                 'is_active' => true,
                 'email_verified_at' => now(),
+                'phone_verified_at' => now(),
                 'verification_expires_at' => now()->addMonths(6), // Ciclo semestral de re-verificacion
             ]);
 
-            // Asignacion de roles
+            // Asignacion de roles. El rol "conductor" solo se otorga vía /driver/register
+            // (registerDriver), tras validar vehículo/documentos — nunca autodeclarado aquí.
             $nuevoUsuario->assignRole('estudiante');
-            if (!empty($datosValidados['is_driver'])) {
-                $nuevoUsuario->assignRole('conductor');
-            }
 
             // Inicializacion de estadisticas de reputacion y billetera virtual
             UserReputationStats::create(['user_id' => $nuevoUsuario->id]);
@@ -78,19 +94,20 @@ class AuthController extends Controller
             return $nuevoUsuario;
         });
 
-        // Limpiar código de verificación usado de la caché
-        Cache::forget('email_verification_' . $correo);
+        // Limpiar códigos de verificación usados de la caché
+        Cache::forget('email_verification_'.$correo);
+        Cache::forget('sms_verification_'.$telefono);
 
         // Enviar correo de bienvenida
         try {
             $codigoActivacion = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
             Mail::to($usuario->email)->send(new BienvenidaUsuarioMail($usuario, $codigoActivacion));
         } catch (\Throwable $e) {
-            Log::error('Error al enviar correo de bienvenida: ' . $e->getMessage());
+            Log::error('Error al enviar correo de bienvenida: '.$e->getMessage());
         }
 
         $usuario->load(['institution', 'campus', 'reputationStats', 'wallet', 'roles']);
-        $tokenAcceso = $usuario->createToken('auth_token')->plainTextToken;
+        $tokenAcceso = $this->jwtService->issue($usuario);
 
         return response()->json([
             'success' => true,
@@ -113,13 +130,13 @@ class AuthController extends Controller
 
         $usuario = User::where('email', $correo)->first();
 
-        if (!$usuario || !Hash::check($contrasena, $usuario->password)) {
+        if (! $usuario || ! Hash::check($contrasena, $usuario->password)) {
             throw ValidationException::withMessages([
                 'email' => ['Las credenciales ingresadas son incorrectas o no corresponden a un usuario activo.'],
             ]);
         }
 
-        if (!$usuario->is_active) {
+        if (! $usuario->is_active) {
             return response()->json([
                 'success' => false,
                 'message' => 'Tu cuenta ha sido suspendida o esta inactiva. Contacta a Bienestar Universitario.',
@@ -127,7 +144,7 @@ class AuthController extends Controller
         }
 
         $usuario->load(['institution', 'campus', 'reputationStats', 'wallet', 'roles']);
-        $tokenAcceso = $usuario->createToken('auth_token')->plainTextToken;
+        $tokenAcceso = $this->jwtService->issue($usuario);
 
         return response()->json([
             'success' => true,
@@ -152,7 +169,7 @@ class AuthController extends Controller
         $correo = $request->input('email');
         $usuario = User::where('email', $correo)->first();
 
-        if (!$usuario) {
+        if (! $usuario) {
             return response()->json([
                 'success' => false,
                 'message' => 'No encontramos una cuenta registrada con este correo institucional.',
@@ -161,13 +178,13 @@ class AuthController extends Controller
 
         // Generar codigo de 6 digitos y almacenar por 15 minutos en cache
         $codigoVerificacion = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
-        Cache::put('password_reset_' . $correo, $codigoVerificacion, now()->addMinutes(15));
+        Cache::put('password_reset_'.$correo, $codigoVerificacion, now()->addMinutes(15));
 
         // Enviar correo electrónico con la plantilla oficial
         try {
             Mail::to($usuario->email)->send(new RecuperacionClaveMail($usuario, $codigoVerificacion));
         } catch (\Throwable $e) {
-            Log::error('Error al enviar correo de recuperación: ' . $e->getMessage());
+            Log::error('Error al enviar correo de recuperación: '.$e->getMessage());
         }
 
         return response()->json([
@@ -175,7 +192,7 @@ class AuthController extends Controller
             'message' => 'Hemos enviado un código de verificación de 6 dígitos a tu correo institucional.',
             'data' => [
                 'email' => $correo,
-                'debug_code' => config('app.debug') ? $codigoVerificacion : null,
+                'debug_code' => (app()->environment('local') && config('app.debug')) ? $codigoVerificacion : null,
             ],
         ]);
     }
@@ -195,9 +212,9 @@ class AuthController extends Controller
         $codigoIngresado = $request->input('code');
         $nuevaContrasena = $request->input('password');
 
-        $codigoAlmacenado = Cache::get('password_reset_' . $correo);
+        $codigoAlmacenado = Cache::get('password_reset_'.$correo);
 
-        if (!$codigoAlmacenado || $codigoAlmacenado !== $codigoIngresado) {
+        if (! $codigoAlmacenado || $codigoAlmacenado !== $codigoIngresado) {
             return response()->json([
                 'success' => false,
                 'message' => 'El código de verificación es inválido o ha expirado.',
@@ -205,7 +222,7 @@ class AuthController extends Controller
         }
 
         $usuario = User::where('email', $correo)->first();
-        if (!$usuario) {
+        if (! $usuario) {
             return response()->json([
                 'success' => false,
                 'message' => 'Usuario no encontrado.',
@@ -216,7 +233,7 @@ class AuthController extends Controller
             'password' => Hash::make($nuevaContrasena),
         ]);
 
-        Cache::forget('password_reset_' . $correo);
+        Cache::forget('password_reset_'.$correo);
 
         return response()->json([
             'success' => true,
@@ -243,13 +260,13 @@ class AuthController extends Controller
         }
 
         $codigoVerificacion = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
-        Cache::put('email_verification_' . $correo, $codigoVerificacion, now()->addMinutes(15));
+        Cache::put('email_verification_'.$correo, $codigoVerificacion, now()->addMinutes(15));
 
         // Enviar correo electrónico con el código PIN de verificación
         try {
             Mail::to($correo)->send(new VerificacionCorreoMail($correo, $codigoVerificacion));
         } catch (\Throwable $e) {
-            Log::error('Error al enviar correo de verificación institucional: ' . $e->getMessage());
+            Log::error('Error al enviar correo de verificación institucional: '.$e->getMessage());
         }
 
         return response()->json([
@@ -257,7 +274,39 @@ class AuthController extends Controller
             'message' => 'Código de verificación institucional enviado exitosamente a tu correo.',
             'data' => [
                 'email' => $correo,
-                'debug_code' => config('app.debug') ? $codigoVerificacion : null,
+                'debug_code' => (app()->environment('local') && config('app.debug')) ? $codigoVerificacion : null,
+            ],
+        ]);
+    }
+
+    /**
+     * Enviar código de verificación SMS previo al registro — canal independiente
+     * del código de correo, ambos se validan por separado en /auth/register.
+     */
+    public function sendSmsCode(Request $request): JsonResponse
+    {
+        $request->validate([
+            'phone_number' => ['required', 'string', 'regex:/^3[0-9]{9}$/'],
+        ], [
+            'phone_number.regex' => 'Ingresa un celular colombiano válido de 10 dígitos (ej: 3151234567).',
+        ]);
+
+        $telefono = $request->input('phone_number');
+
+        $codigoVerificacion = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+        Cache::put('sms_verification_'.$telefono, $codigoVerificacion, now()->addMinutes(15));
+
+        $this->smsService->send(
+            $telefono,
+            "UniWheels: tu código de verificación es {$codigoVerificacion}. Vence en 15 minutos."
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Código de verificación enviado exitosamente por SMS.',
+            'data' => [
+                'phone_number' => $telefono,
+                'debug_code' => (app()->environment('local') && config('app.debug')) ? $codigoVerificacion : null,
             ],
         ]);
     }
@@ -282,34 +331,26 @@ class AuthController extends Controller
     public function registerDriver(RegisterDriverRequest $request): JsonResponse
     {
         $datosValidados = $request->validated();
+
+        // El middleware jwt.auth garantiza que $request->user() es un usuario real
+        // y autenticado del token — no existe (ni debe existir) ningún fallback aquí.
         $usuario = $request->user();
 
-        // Si la petición viene sin token Sanctum pero con email de prueba
-        if (!$usuario && $request->has('email')) {
-            $usuario = User::where('email', $request->input('email'))->first();
+        $usuario->update([
+            'is_driver' => true,
+        ]);
+
+        if (! $usuario->hasRole('conductor')) {
+            $usuario->assignRole('conductor');
         }
 
-        if (!$usuario) {
-            $usuario = User::first();
-        }
-
-        if ($usuario) {
-            $usuario->update([
-                'is_driver' => true,
-            ]);
-
-            if (!$usuario->hasRole('conductor')) {
-                $usuario->assignRole('conductor');
-            }
-
-            $usuario->load(['institution', 'campus', 'reputationStats', 'wallet', 'roles']);
-        }
+        $usuario->load(['institution', 'campus', 'reputationStats', 'wallet', 'roles']);
 
         return response()->json([
             'success' => true,
             'message' => 'Solicitud de conductor registrada y verificada exitosamente bajo la Ley 1581.',
             'data' => [
-                'user' => $usuario ? new UserResource($usuario) : null,
+                'user' => new UserResource($usuario),
                 'vehicle' => [
                     'vehicle_type' => $datosValidados['vehicle_type'],
                     'plate_number' => $datosValidados['plate_number'],
@@ -327,10 +368,37 @@ class AuthController extends Controller
     /**
      * Revocar el token de acceso actual (cerrar sesión).
      */
+    /**
+     * Renovar el token del usuario autenticado antes de que expire (sesión deslizante).
+     * Rota el token: emite uno nuevo con TTL completo y revoca el anterior de inmediato,
+     * reutilizando la misma blocklist de Redis que ya usa logout/deleteAccount.
+     */
+    public function refresh(Request $request): JsonResponse
+    {
+        $usuario = $request->user();
+        $claimsAnteriores = $request->attributes->get('jwt_claims');
+
+        $nuevoToken = $this->jwtService->issue($usuario);
+
+        if ($claimsAnteriores) {
+            $this->jwtService->revoke($claimsAnteriores);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'access_token' => $nuevoToken,
+                'token_type' => 'Bearer',
+            ],
+        ]);
+    }
+
     public function logout(Request $request): JsonResponse
     {
-        if ($request->user() && $request->user()->currentAccessToken()) {
-            $request->user()->currentAccessToken()->delete();
+        $claims = $request->attributes->get('jwt_claims');
+
+        if ($claims) {
+            $this->jwtService->revoke($claims);
         }
 
         return response()->json([
@@ -346,7 +414,7 @@ class AuthController extends Controller
     {
         $usuario = $request->user();
 
-        if (!$usuario) {
+        if (! $usuario) {
             return response()->json([
                 'success' => false,
                 'message' => 'No autorizado. Debes iniciar sesión para eliminar tu cuenta.',
@@ -354,7 +422,7 @@ class AuthController extends Controller
         }
 
         // Si se provee contraseña para confirmación, verificarla
-        if ($request->filled('password') && !Hash::check($request->input('password'), $usuario->password)) {
+        if ($request->filled('password') && ! Hash::check($request->input('password'), $usuario->password)) {
             return response()->json([
                 'success' => false,
                 'message' => 'La contraseña ingresada es incorrecta.',
@@ -365,11 +433,14 @@ class AuthController extends Controller
         try {
             Mail::to($usuario->email)->send(new CuentaEliminadaMail($usuario));
         } catch (\Throwable $e) {
-            Log::error('Error al enviar correo de cuenta eliminada: ' . $e->getMessage());
+            Log::error('Error al enviar correo de cuenta eliminada: '.$e->getMessage());
         }
 
-        // Revocar todos los tokens de acceso activos
-        $usuario->tokens()->delete();
+        // Revocar el token de acceso actual
+        $claims = $request->attributes->get('jwt_claims');
+        if ($claims) {
+            $this->jwtService->revoke($claims);
+        }
 
         // Desactivar y soft-delete de la cuenta
         $usuario->update(['is_active' => false]);
@@ -386,45 +457,53 @@ class AuthController extends Controller
      */
     public function reputationStats(Request $request): JsonResponse
     {
+        $stats = $request->user()->reputationStats;
+
+        if (! $stats) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'rating_average_driver' => null,
+                    'rating_average_passenger' => null,
+                    'total_trips_as_driver' => 0,
+                    'total_trips_as_passenger' => 0,
+                    'reviews_count' => 0,
+                ],
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
-                'rating_average' => 4.9,
-                'total_trips' => 18,
-                'puntualidad' => 4.9,
-                'amabilidad' => 5.0,
-                'conduccion_segura' => 4.8,
-                'vehiculo_limpio' => 4.9,
-                'comunicacion' => 5.0,
-                'reviews_count' => 14,
+                'rating_average_driver' => $stats->average_rating_as_driver,
+                'rating_average_passenger' => $stats->average_rating_as_passenger,
+                'total_trips_as_driver' => $stats->total_trips_as_driver,
+                'total_trips_as_passenger' => $stats->total_trips_as_passenger,
+                'reviews_count' => $stats->rating_count_as_driver + $stats->rating_count_as_passenger,
             ],
         ]);
     }
 
     /**
-     * Obtener historial de transacciones de la billetera.
+     * Obtener historial de transacciones de la billetera del usuario autenticado.
      */
     public function walletTransactions(Request $request): JsonResponse
     {
+        $wallet = $request->user()->wallet;
+
+        if (! $wallet) {
+            return response()->json(['success' => true, 'data' => []]);
+        }
+
+        $transacciones = $wallet->transactions()->paginate(20);
+
         return response()->json([
             'success' => true,
-            'data' => [
-                [
-                    'id' => 'TX-001',
-                    'type' => 'recarga_nequi',
-                    'title' => 'Recarga Nequi',
-                    'amount' => 20000,
-                    'date' => 'Hoy, 06:30 AM',
-                    'status' => 'completada',
-                ],
-                [
-                    'id' => 'TX-002',
-                    'type' => 'debito_comision',
-                    'title' => 'Comisión Viaje Campus El Jardín',
-                    'amount' => -1080,
-                    'date' => 'Ayer, 06:15 PM',
-                    'status' => 'completada',
-                ],
+            'data' => $transacciones->items(),
+            'meta' => [
+                'current_page' => $transacciones->currentPage(),
+                'last_page' => $transacciones->lastPage(),
+                'total' => $transacciones->total(),
             ],
         ]);
     }

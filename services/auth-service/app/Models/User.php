@@ -14,7 +14,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles, HasUuids, SoftDeletes;
+    use HasApiTokens, HasFactory, HasRoles, HasUuids, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -33,6 +33,7 @@ class User extends Authenticatable
         'is_driver',
         'is_active',
         'email_verified_at',
+        'phone_verified_at',
         'verification_expires_at',
     ];
 
@@ -48,6 +49,7 @@ class User extends Authenticatable
             'is_driver' => 'boolean',
             'is_active' => 'boolean',
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
             'verification_expires_at' => 'datetime',
             'password' => 'hashed',
         ];
@@ -78,7 +80,7 @@ class User extends Authenticatable
      */
     public function hasValidInstitutionalVerification(): bool
     {
-        if (!$this->verification_expires_at) {
+        if (! $this->verification_expires_at) {
             return false;
         }
 

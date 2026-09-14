@@ -28,7 +28,7 @@ class RegisterRequest extends FormRequest
             if ($institucion) {
                 $prefijoLimpio = explode('@', $prefijoCorreo)[0];
                 $this->merge([
-                    'email' => strtolower($prefijoLimpio . '@' . $institucion->domain),
+                    'email' => strtolower($prefijoLimpio.'@'.$institucion->domain),
                 ]);
             }
         } elseif ($this->has('email')) {
@@ -38,7 +38,7 @@ class RegisterRequest extends FormRequest
         }
 
         // Si no viene id_document_number pero viene student_code, usarlo como identificador
-        if (!$this->has('id_document_number') && $this->has('student_code')) {
+        if (! $this->has('id_document_number') && $this->has('student_code')) {
             $this->merge([
                 'id_document_number' => $this->input('student_code'),
             ]);
@@ -60,15 +60,15 @@ class RegisterRequest extends FormRequest
             ],
             'id_document_number' => ['nullable', 'string', 'max:30'],
             'id_document_type' => ['nullable', 'string', 'in:CC,CE,TI,PASAPORTE'],
-            'phone_number' => ['nullable', 'string', 'max:20'],
+            'phone_number' => ['required', 'string', 'regex:/^3[0-9]{9}$/'],
             'student_code' => ['nullable', 'string', 'max:30', 'regex:/^U[0-9]{8}$/i'],
             'academic_program_or_department' => ['nullable', 'string', 'max:150'],
             'semester' => ['nullable', 'integer', 'min:1', 'max:12'],
-            'password' => ['required', 'string', Password::min(8)->letters()->numbers()],
+            'password' => ['required', 'string', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
             'profile_photo' => ['nullable'],
             'profile_photo_path' => ['nullable', 'string'],
-            'is_driver' => ['boolean'],
             'verification_code' => ['required', 'string', 'size:6'],
+            'phone_verification_code' => ['required', 'string', 'size:6'],
         ];
     }
 
@@ -84,6 +84,10 @@ class RegisterRequest extends FormRequest
             'password.required' => 'La contraseña es obligatoria.',
             'verification_code.required' => 'El código de verificación PIN es obligatorio.',
             'verification_code.size' => 'El código de verificación debe tener exactamente 6 dígitos.',
+            'phone_number.required' => 'Tu número de celular es obligatorio para verificación por SMS.',
+            'phone_number.regex' => 'Ingresa un celular colombiano válido de 10 dígitos (ej: 3151234567).',
+            'phone_verification_code.required' => 'El código de verificación SMS es obligatorio.',
+            'phone_verification_code.size' => 'El código de verificación SMS debe tener exactamente 6 dígitos.',
         ];
     }
 }

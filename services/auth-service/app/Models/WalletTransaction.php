@@ -25,9 +25,9 @@ class WalletTransaction extends Model
     protected function casts(): array
     {
         return [
-            'amount_cop' => 'float',
-            'balance_before_cop' => 'float',
-            'balance_after_cop' => 'float',
+            'amount_cop' => 'decimal:2',
+            'balance_before_cop' => 'decimal:2',
+            'balance_after_cop' => 'decimal:2',
         ];
     }
 

@@ -21,7 +21,7 @@ class UserWallet extends Model
     protected function casts(): array
     {
         return [
-            'balance_cop' => 'float',
+            'balance_cop' => 'decimal:2',
             'is_locked' => 'boolean',
         ];
     }
