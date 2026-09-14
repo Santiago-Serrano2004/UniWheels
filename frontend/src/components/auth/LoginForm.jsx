@@ -63,12 +63,17 @@ export const LoginForm = ({ onBack }) => {
           studentCode: u.academic_profile?.student_code || u.student_code || 'U000000',
           profilePhoto: u.profile_photo_url,
           role: u.roles?.includes('conductor') ? 'driver' : 'passenger',
+          isDriver: u.roles?.includes('conductor') || false,
           isAdmin: u.roles?.includes('administrador') || false,
           institution: u.institution?.name || 'Universidad Autónoma de Bucaramanga',
           campus: u.campus?.name || 'Campus El Jardín',
           institutionWelcomeImage: u.institution?.welcome_image_url || '/assets/institutions/unab-mascot.png',
-          rating: u.reputation?.average_rating_as_passenger || 5.0,
-          tripsCount: u.reputation?.total_trips_as_passenger || 0,
+          rating: u.roles?.includes('conductor')
+            ? u.reputation?.average_rating_as_driver || 5.0
+            : u.reputation?.average_rating_as_passenger || 5.0,
+          tripsCount: u.roles?.includes('conductor')
+            ? u.reputation?.total_trips_as_driver || 0
+            : u.reputation?.total_trips_as_passenger || 0,
           walletBalance: u.wallet?.balance_cop || 0,
           token: respuesta.data.access_token,
         });
