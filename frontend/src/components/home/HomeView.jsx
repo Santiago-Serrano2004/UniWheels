@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { authService } from '../../services/api';
+import { authService, routesService } from '../../services/api';
 import { placesApiService } from '../../services/placesApiService';
 import { LocationPickerModal } from '../map/LocationPickerModal';
 import { CampusSelectorModal } from './CampusSelectorModal';
 import { HomeHeroRouteCard } from './HomeHeroRouteCard';
 import { AvailableRideCard } from './AvailableRideCard';
-import { Navigation, Car, Sparkles, CheckCircle2, X, Calendar } from 'lucide-react';
+import { Navigation, Car, Sparkles, CheckCircle2, X, Calendar, Loader2 } from 'lucide-react';
 
 export const HomeView = () => {
   const {
@@ -118,207 +118,11 @@ export const HomeView = () => {
   // 6. Filtro de Horario del Pasajero (Ventana < 1 hora)
   const [passengerTimeFilter, setPassengerTimeFilter] = useState('');
 
-  // 7. Catálogo Dinámico de Viajes (Con soporte multi-día y recurrencia)
-  const [allAvailableRides] = useState([
-    {
-      id: 'ride_101',
-      driver_name: 'Carlos Mendoza',
-      vehicle: 'Mazda 3 (Rojo)',
-      plate: 'KLU-492',
-      rating: 4.95,
-      direction: 'towards',
-      origin: 'Cañaveral - C.C. Cañaveral',
-      destination: 'Campus El Jardín',
-      meeting_point: null,
-      scheduled_date: todayStr,
-      is_recurring_daily: true,
-      departure_time: '06:30 AM',
-      arrival_time: '06:55 AM',
-      available_seats: 3,
-      fare: '$ 4.500',
-      fare_cop: 4500,
-      detour_minutes: '+3 min',
-      is_detour_feasible: true,
-      is_direct: false,
-      driver_avatar_initials: 'CM',
-    },
-    {
-      id: 'ride_102',
-      driver_name: 'Valentina Ríos',
-      vehicle: 'Chevrolet Onix (Gris)',
-      plate: 'WYX-810',
-      rating: 4.88,
-      direction: 'towards',
-      origin: 'Cabecera - Parque San Pío',
-      destination: 'CSU — Centro de Servicios Universitarios',
-      meeting_point: null,
-      scheduled_date: todayStr,
-      is_recurring_daily: true,
-      departure_time: '07:05 AM',
-      arrival_time: '07:20 AM',
-      available_seats: 2,
-      fare: '$ 4.000',
-      fare_cop: 4000,
-      detour_minutes: '+0 min',
-      is_detour_feasible: true,
-      is_direct: true,
-      driver_avatar_initials: 'VR',
-    },
-    {
-      id: 'ride_103',
-      driver_name: 'Juan Pablo Duarte',
-      vehicle: 'Renault Duster (Blanco)',
-      plate: 'LMN-304',
-      rating: 4.92,
-      direction: 'from',
-      origin: 'Campus El Jardín',
-      destination: 'Provenza - Estación Metrolínea',
-      meeting_point: 'Portería Principal Calle 48',
-      scheduled_date: todayStr,
-      is_recurring_daily: true,
-      departure_time: '05:15 PM',
-      arrival_time: '05:40 PM',
-      available_seats: 4,
-      fare: '$ 4.500',
-      fare_cop: 4500,
-      detour_minutes: '+4 min',
-      is_detour_feasible: true,
-      is_direct: false,
-      driver_avatar_initials: 'JD',
-    },
-    {
-      id: 'ride_104',
-      driver_name: 'Mateo Silva',
-      vehicle: 'Yamaha MT-03 (Negro)',
-      plate: 'WTR-82F',
-      rating: 4.97,
-      direction: 'towards',
-      origin: 'Piedecuesta - Centro',
-      destination: 'Campus El Jardín',
-      meeting_point: null,
-      scheduled_date: todayStr,
-      is_recurring_daily: true,
-      departure_time: '06:10 AM',
-      arrival_time: '06:45 AM',
-      available_seats: 1,
-      fare: '$ 3.500',
-      fare_cop: 3500,
-      detour_minutes: '+1 min',
-      is_detour_feasible: true,
-      is_direct: false,
-      driver_avatar_initials: 'MS',
-    },
-    {
-      id: 'ride_105',
-      driver_name: 'Laura Gómez',
-      vehicle: 'Kia Picanto (Plateado)',
-      plate: 'HWP-931',
-      rating: 4.96,
-      direction: 'inter_campus',
-      origin: 'Campus El Jardín',
-      destination: 'Campus El Bosque',
-      meeting_point: 'Bahía de Parqueadero Edificio Central',
-      scheduled_date: todayStr,
-      is_recurring_daily: true,
-      departure_time: '11:30 AM',
-      arrival_time: '11:55 AM',
-      available_seats: 3,
-      fare: '$ 3.500',
-      fare_cop: 3500,
-      detour_minutes: '+0 min',
-      is_detour_feasible: true,
-      is_direct: true,
-      driver_avatar_initials: 'LG',
-    },
-    {
-      id: 'ride_106',
-      driver_name: 'Andrés Felipe Correa',
-      vehicle: 'Chevrolet Spark GT (Azul)',
-      plate: 'USK-412',
-      rating: 4.89,
-      direction: 'inter_campus',
-      origin: 'Campus El Bosque',
-      destination: 'Campus El Jardín',
-      meeting_point: 'Portería Principal Cañaveral',
-      scheduled_date: todayStr,
-      is_recurring_daily: true,
-      departure_time: '01:45 PM',
-      arrival_time: '02:10 PM',
-      available_seats: 2,
-      fare: '$ 3.500',
-      fare_cop: 3500,
-      detour_minutes: '+0 min',
-      is_detour_feasible: true,
-      is_direct: true,
-      driver_avatar_initials: 'AC',
-    },
-    {
-      id: 'ride_107',
-      driver_name: 'Diana Marcela Torres',
-      vehicle: 'Suzuki Swift (Blanco)',
-      plate: 'RZT-155',
-      rating: 4.93,
-      direction: 'from',
-      origin: 'Campus El Bosque',
-      destination: 'Cabecera del Llano',
-      meeting_point: 'Kiosco Cafetería Central',
-      scheduled_date: todayStr,
-      is_recurring_daily: true,
-      departure_time: '06:00 PM',
-      arrival_time: '06:30 PM',
-      available_seats: 3,
-      fare: '$ 4.500',
-      fare_cop: 4500,
-      detour_minutes: '+2 min',
-      is_detour_feasible: true,
-      is_direct: false,
-      driver_avatar_initials: 'DT',
-    },
-    {
-      id: 'ride_108',
-      driver_name: 'Santiago Serrano',
-      vehicle: 'Mazda CX-30 (Gris)',
-      plate: 'GHT-921',
-      rating: 5.0,
-      direction: 'towards',
-      origin: 'Girón - Casco Antiguo',
-      destination: 'Campus El Jardín',
-      meeting_point: null,
-      scheduled_date: tomorrowStr,
-      is_recurring_daily: true,
-      departure_time: '06:15 AM',
-      arrival_time: '06:50 AM',
-      available_seats: 3,
-      fare: '$ 4.500',
-      fare_cop: 4500,
-      detour_minutes: '+2 min',
-      is_detour_feasible: true,
-      is_direct: false,
-      driver_avatar_initials: 'SS',
-    },
-    {
-      id: 'ride_109',
-      driver_name: 'Natalia Castro',
-      vehicle: 'Renault Kwid (Naranja)',
-      plate: 'KPB-714',
-      rating: 4.94,
-      direction: 'from',
-      origin: 'Campus El Jardín',
-      destination: 'Floridablanca - Cañaveral',
-      meeting_point: 'Portería Principal Calle 48',
-      scheduled_date: tomorrowStr,
-      is_recurring_daily: true,
-      departure_time: '06:15 PM',
-      arrival_time: '06:45 PM',
-      available_seats: 2,
-      fare: '$ 4.000',
-      fare_cop: 4000,
-      detour_minutes: '+0 min',
-      is_detour_feasible: true,
-      is_direct: true,
-      driver_avatar_initials: 'NC',
-    },
-  ]);
+  // 7. Resultados reales de búsqueda (route-matching-service, PostGIS + IA + TomTom)
+  const [rawMatches, setRawMatches] = useState([]);
+  const [isLoadingMatches, setIsLoadingMatches] = useState(false);
+  const [searchErrorMsg, setSearchErrorMsg] = useState('');
+
 
   // Cargar sedes dinámicas
   useEffect(() => {
@@ -329,6 +133,92 @@ export const HomeView = () => {
       }
     }).catch(() => {});
   }, []);
+
+  // Id numérico real del campus (route-matching-service filtra por destination_campus_id,
+  // no por nombre) — se resuelve contra el catálogo dinámico cargado arriba.
+  const campusIdByName = useMemo(() => {
+    const map = {};
+    sedesDisponibles.forEach((sede) => {
+      map[sede.name] = sede.id;
+    });
+    return map;
+  }, [sedesDisponibles]);
+
+  // Búsqueda real contra route-matching-service (PostGIS + IA + TomTom). Solo el
+  // sentido "hacia campus" tiene soporte geoespacial completo hoy — el motor de
+  // matching decide Modalidad 1/2 en función del punto de recogida y el campus de
+  // destino; no existe todavía el query inverso para "desde campus"/"entre sedes".
+  useEffect(() => {
+    if (directionFilter !== 'towards') {
+      setRawMatches([]);
+      setSearchErrorMsg('');
+      return;
+    }
+
+    const destinationCampusId = campusIdByName[selectedCampus];
+    if (!destinationCampusId) return;
+
+    const pickup = editableCoords || [7.0678, -73.1066]; // Cañaveral (AMB) por defecto
+
+    const timer = setTimeout(async () => {
+      setIsLoadingMatches(true);
+      setSearchErrorMsg('');
+      try {
+        const results = await routesService.searchMatches(
+          pickup[0],
+          pickup[1],
+          destinationCampusId,
+          passengerTimeFilter || null
+        );
+        setRawMatches(results);
+      } catch {
+        setSearchErrorMsg('No se pudo conectar con el buscador de rutas. Intenta nuevamente.');
+      } finally {
+        setIsLoadingMatches(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [directionFilter, selectedCampus, editableCoords, passengerTimeFilter, campusIdByName]);
+
+  // Adaptar el contrato de route-matching-service al shape que ya consume AvailableRideCard.
+  const searchResults = useMemo(() => {
+    return rawMatches.map((match) => {
+      const vehicleDesc = [match.vehicle_description, match.vehicle_color ? `(${match.vehicle_color})` : null]
+        .filter(Boolean)
+        .join(' ');
+      const departureDate = match.departure_timestamp ? match.departure_timestamp.split('T')[0] : todayStr;
+      const arrivalTime = match.estimated_arrival_time
+        ? new Date(match.estimated_arrival_time).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })
+        : null;
+
+      return {
+        id: match.route_id,
+        driver_id: match.driver_id,
+        vehicle_id: match.vehicle_id,
+        driver_name: match.driver_name,
+        driver_avatar_initials: match.driver_avatar_initials,
+        rating: match.driver_rating,
+        vehicle: vehicleDesc || null,
+        plate: match.vehicle_plate,
+        direction: 'towards',
+        origin: match.origin_name,
+        destination: match.destination_campus_name,
+        meeting_point: null,
+        scheduled_date: departureDate,
+        departure_time: match.scheduled_departure_time,
+        arrival_time: arrivalTime,
+        available_seats: match.available_seats,
+        fare: `$ ${Number(match.suggested_fare_cop || 0).toLocaleString('es-CO')}`,
+        fare_cop: match.suggested_fare_cop,
+        detour_minutes: match.detour_label,
+        is_detour_feasible: match.is_viable !== false,
+        is_direct: match.modality === 'modalidad_1_directa',
+        walking_distance_meters: match.walking_distance_meters,
+        walking_time_minutes: match.walking_time_minutes,
+      };
+    });
+  }, [rawMatches, todayStr]);
 
   // Búsqueda reactiva con debounce de 300ms
   useEffect(() => {
@@ -425,36 +315,15 @@ export const HomeView = () => {
     return diff <= 60;
   };
 
-  // Filtrar viajes disponibles según Fecha Programada, Modalidad, Sedes y Ventana de Tiempo (< 1 hr)
-  const filteredRides = allAvailableRides.filter((ride) => {
-    // 1. Filtro por Fecha (Coincidencia de fecha específica o rutas rutinarias recurrentes)
-    if (selectedDate) {
-      const matchExactDate = ride.scheduled_date === selectedDate;
-      const isRecurring = Boolean(ride.is_recurring_daily);
-      if (!matchExactDate && !isRecurring) {
-        return false;
-      }
+  // Filtrar resultados reales según Fecha Programada (route-matching-service no filtra
+  // por fecha — devuelve toda ruta publicada vigente dentro del radio geoespacial).
+  const filteredRides = searchResults.filter((ride) => {
+    if (selectedDate && ride.scheduled_date && ride.scheduled_date !== selectedDate) {
+      return false;
     }
 
-    // 2. Filtro por sentido
-    if (directionFilter === 'towards') {
-      if (ride.direction !== 'towards') return false;
-      const campusKey = selectedCampus.toLowerCase().replace('campus ', '');
-      if (!ride.destination.toLowerCase().includes(campusKey)) return false;
-    } else if (directionFilter === 'from') {
-      if (ride.direction !== 'from') return false;
-      const campusKey = selectedCampus.toLowerCase().replace('campus ', '');
-      if (!ride.origin.toLowerCase().includes(campusKey)) return false;
-    } else if (directionFilter === 'inter_campus') {
-      if (ride.direction !== 'inter_campus') return false;
-      const originKey = selectedCampus.toLowerCase().replace('campus ', '');
-      const destKey = selectedDestinationCampus.toLowerCase().replace('campus ', '');
-      if (!ride.origin.toLowerCase().includes(originKey) || !ride.destination.toLowerCase().includes(destKey)) {
-        return false;
-      }
-    }
-
-    // 3. Filtro de rango de tiempo (< 1 hora)
+    // Ventana de tiempo (< 1 hora) — el backend ya recibe preferred_time, pero hoy
+    // no lo usa para filtrar server-side, así que se aplica también en cliente.
     if (passengerTimeFilter) {
       const timeToCheck = directionFilter === 'towards' ? ride.arrival_time : ride.departure_time;
       if (!isWithinOneHour(timeToCheck, passengerTimeFilter)) {
@@ -724,7 +593,30 @@ export const HomeView = () => {
 
         {/* Contenedor escroleable */}
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pr-1 space-y-2.5 pb-6">
-          {filteredRides.length > 0 ? (
+          {directionFilter !== 'towards' ? (
+            <div className={`p-6 rounded-3xl border text-center space-y-2 transition-colors ${
+              isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-xs'
+            }`}>
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <p className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                Esta modalidad de búsqueda estará disponible próximamente
+              </p>
+              <p className="text-[11px] text-slate-400 max-w-xs mx-auto leading-relaxed">
+                Por ahora la búsqueda en tiempo real solo cubre trayectos <strong>hacia</strong> un campus. Vuelve a intentarlo en esa pestaña.
+              </p>
+            </div>
+          ) : isLoadingMatches ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-2">
+              <Loader2 className="w-6 h-6 text-lochmara-500 animate-spin" />
+              <p className="text-[11px] text-slate-400 font-semibold">Buscando rutas cercanas con PostGIS...</p>
+            </div>
+          ) : searchErrorMsg ? (
+            <div className="rounded-2xl p-4 border border-rose-300 bg-rose-50 dark:bg-rose-950/30 dark:border-rose-900/50 text-center">
+              <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">{searchErrorMsg}</p>
+            </div>
+          ) : filteredRides.length > 0 ? (
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {filteredRides.map((ride) => (
                 <AvailableRideCard

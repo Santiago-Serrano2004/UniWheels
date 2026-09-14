@@ -63,7 +63,7 @@ export const NotificationCenterModal = ({ isOpen, onClose }) => {
   // Cargar notificaciones desde el backend (puerto 8005)
   useEffect(() => {
     if (isOpen) {
-      notificationsService.getUserNotifications(userId).then((res) => {
+      notificationsService.getUserNotifications().then((res) => {
         if (res?.data && res.data.length > 0) {
           setNotifications(res.data);
           setUnreadCount(res.unread_count || 0);
@@ -83,7 +83,7 @@ export const NotificationCenterModal = ({ isOpen, onClose }) => {
   const marcarTodasLeidas = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     setUnreadCount(0);
-    await notificationsService.markAllAsRead(userId);
+    await notificationsService.markAllAsRead();
   };
 
   const simularNotificacionEnVivo = async () => {
@@ -96,15 +96,11 @@ export const NotificationCenterModal = ({ isOpen, onClose }) => {
       created_at: new Date().toISOString(),
     };
 
+    // Solo actualización visual local: el despacho real de notificaciones
+    // (/notifications/send) es un endpoint servicio-a-servicio, no invocable
+    // desde la app cliente.
     setNotifications((prev) => [nueva, ...prev]);
     setUnreadCount((prev) => prev + 1);
-
-    await notificationsService.broadcastPushNotification({
-      user_id: userId,
-      title: nueva.title,
-      body: nueva.body,
-      type: nueva.type,
-    });
   };
 
   if (!isOpen) return null;

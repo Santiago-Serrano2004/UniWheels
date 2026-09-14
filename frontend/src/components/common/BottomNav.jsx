@@ -1,16 +1,21 @@
 import React from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { Home, Map, Wallet, User, PlusCircle, Route } from 'lucide-react';
+import { Home, Map, Wallet, User, PlusCircle, Route, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const BottomNav = () => {
-  const { activeTab, setActiveTab, activeRole, activeDriverTrip, theme } = useAppStore();
+  const { activeTab, setActiveTab, activeRole, activeDriverTrip, theme, user } = useAppStore();
 
   // Configuración estricta de pestañas según el ROL ACTIVO:
+  // 0. ADMINISTRADOR (Bienestar Universitario): solo Verificación y Perfil
   // 1. CONDUCTOR: Inicio (Panel), Publicar, Viajes de Conducción, Billetera, Perfil
   // 2. PASAJERO: Inicio, Buscar Ruta, Viajes / Reservas, Perfil
-  const navItems =
-    activeRole === 'driver'
+  const navItems = user?.isAdmin
+    ? [
+        { id: 'admin', label: 'Verificación', icon: ShieldCheck },
+        { id: 'profile', label: 'Perfil', icon: User },
+      ]
+    : activeRole === 'driver'
       ? [
           { id: 'home', label: 'Mi Panel', icon: Home, badge: activeDriverTrip ? 'En curso' : null },
           { id: 'driver', label: 'Publicar', icon: PlusCircle },

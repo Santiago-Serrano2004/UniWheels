@@ -10,6 +10,7 @@ import {
   School,
   MapPin,
   Mail,
+  Phone,
   CreditCard,
   Lock,
   Eye,
@@ -21,6 +22,7 @@ import {
   Camera,
   Trash2,
   KeyRound,
+  MessageSquare,
   RotateCw,
   Sparkles,
 } from 'lucide-react';
@@ -46,15 +48,18 @@ export const RegisterForm = ({ onBack }) => {
   // Campos del Paso 2
   const [usuarioCorreo, setUsuarioCorreo] = useState('');
   const [documentoId, setDocumentoId] = useState('');
+  const [telefono, setTelefono] = useState('');
   const [clave, setClave] = useState('');
   const [mostrarClave, setMostrarClave] = useState(false);
   const [confirmarClave, setConfirmarClave] = useState('');
   const [mostrarConfirmarClave, setMostrarConfirmarClave] = useState(false);
   const [aceptaHabeasData, setAceptaHabeasData] = useState(false);
 
-  // Campos del Paso 3 (Verificación PIN)
+  // Campos del Paso 3 (Verificación PIN de correo + código SMS, canales independientes)
   const [codigoPin, setCodigoPin] = useState('');
+  const [codigoSms, setCodigoSms] = useState('');
   const [reenviandoCodigo, setReenviandoCodigo] = useState(false);
+  const [reenviandoSms, setReenviandoSms] = useState(false);
   const [mensajeReenvio, setMensajeReenvio] = useState('');
 
   // Estados de control UX
@@ -149,6 +154,12 @@ export const RegisterForm = ({ onBack }) => {
       return;
     }
 
+    const telefonoLimpio = telefono.trim().replace(/\D/g, '');
+    if (!/^3[0-9]{9}$/.test(telefonoLimpio)) {
+      setMensajeError('Ingresa un número de celular colombiano válido de 10 dígitos (ej: 3151234567).');
+      return;
+    }
+
     if (!requisitosCompletos) {
       const faltantes = [];
       if (!reqMin8) faltantes.push('mínimo 8 caracteres');
@@ -180,7 +191,10 @@ export const RegisterForm = ({ onBack }) => {
     const correoCompleto = `${usuarioLimpio}@${institucionSeleccionada.domain}`;
 
     try {
-      await authService.sendVerificationCode(correoCompleto);
+      await Promise.all([
+        authService.sendVerificationCode(correoCompleto),
+        authService.sendSmsCode(telefonoLimpio),
+      ]);
       setEstaProcesando(false);
       setPasoActual(3);
     } catch (err) {
@@ -189,7 +203,7 @@ export const RegisterForm = ({ onBack }) => {
     }
   };
 
-  // Reenviar código PIN
+  // Reenviar código PIN de correo
   const reenviarPin = async () => {
     const usuarioLimpio = usuarioCorreo.trim().toLowerCase().replace(/@.*$/, '');
     const correoCompleto = `${usuarioLimpio}@${institucionSeleccionada.domain}`;
@@ -208,6 +222,24 @@ export const RegisterForm = ({ onBack }) => {
     }
   };
 
+  // Reenviar código SMS
+  const reenviarSms = async () => {
+    const telefonoLimpio = telefono.trim().replace(/\D/g, '');
+    setReenviandoSms(true);
+    setMensajeError('');
+    setMensajeReenvio('');
+
+    try {
+      await authService.sendSmsCode(telefonoLimpio);
+      setReenviandoSms(false);
+      setMensajeReenvio('¡Nuevo código enviado por SMS!');
+      setTimeout(() => setMensajeReenvio(''), 4000);
+    } catch (err) {
+      setReenviandoSms(false);
+      setMensajeError(parseBackendError(err));
+    }
+  };
+
   // Validar PIN y Crear la Cuenta definitivamente
   const procesarRegistroFinal = async (e) => {
     e.preventDefault();
@@ -215,13 +247,20 @@ export const RegisterForm = ({ onBack }) => {
 
     const pinLimpio = codigoPin.trim();
     if (pinLimpio.length !== 6) {
-      setMensajeError('El código de verificación PIN debe tener exactamente 6 dígitos.');
+      setMensajeError('El código de verificación PIN de correo debe tener exactamente 6 dígitos.');
+      return;
+    }
+
+    const smsLimpio = codigoSms.trim();
+    if (smsLimpio.length !== 6) {
+      setMensajeError('El código de verificación SMS debe tener exactamente 6 dígitos.');
       return;
     }
 
     setEstaProcesando(true);
     const usuarioLimpio = usuarioCorreo.trim().toLowerCase().replace(/@.*$/, '');
     const docLimpio = documentoId.trim().toUpperCase();
+    const telefonoLimpio = telefono.trim().replace(/\D/g, '');
     const correoCompleto = `${usuarioLimpio}@${institucionSeleccionada.domain}`;
 
     try {
@@ -235,12 +274,13 @@ export const RegisterForm = ({ onBack }) => {
         student_code: docLimpio,
         id_document_number: docLimpio.replace(/^U/i, ''),
         id_document_type: 'CC',
-        phone_number: '3150000000',
+        phone_number: telefonoLimpio,
         member_type: 'estudiante',
         academic_program_or_department: 'Comunidad Universitaria',
         profile_photo_path: fotoPerfilPreview || null,
         is_driver: false,
         verification_code: pinLimpio,
+        phone_verification_code: smsLimpio,
       });
 
       setEstaProcesando(false);
@@ -334,14 +374,14 @@ export const RegisterForm = ({ onBack }) => {
                 ? 'Únete a UniWheels'
                 : pasoActual === 2
                 ? 'Seguridad y Acceso'
-                : 'Verifica tu Correo'}
+                : 'Verifica tu Cuenta'}
             </h2>
             <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               {pasoActual === 1
                 ? 'Completa tu información institucional básica'
                 : pasoActual === 2
                 ? 'Configura tu acceso institucional seguro'
-                : `Ingresa el código PIN de 6 dígitos enviado a ${correoVisual}`}
+                : 'Ingresa los dos códigos de 6 dígitos que te enviamos por correo y por SMS'}
             </p>
           </div>
 
@@ -525,6 +565,29 @@ export const RegisterForm = ({ onBack }) => {
                   />
                 </div>
 
+                {/* Número de Celular (para verificación SMS, independiente del correo) */}
+                <div className="space-y-1">
+                  <label className={`text-xs font-bold flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <Phone className="w-3.5 h-3.5 text-lochmara-500" />
+                    <span>Número de Celular</span>
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={telefono}
+                    onChange={(e) => setTelefono(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
+                    placeholder="3151234567"
+                    className={`w-full text-xs rounded-2xl px-4 py-2.5 border transition-all shadow-2xs focus:outline-none focus:ring-2 focus:ring-lochmara-500 ${
+                      isDark
+                        ? 'bg-slate-900 border-slate-800 text-white placeholder-slate-500'
+                        : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+                    }`}
+                  />
+                  <p className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                    Te enviaremos un código de verificación por SMS, aparte del de tu correo.
+                  </p>
+                </div>
+
                 {/* Contraseña */}
                 <div className="space-y-1">
                   <label className={`text-xs font-bold flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
@@ -661,10 +724,10 @@ export const RegisterForm = ({ onBack }) => {
                   className="w-full py-3 mt-1 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-lochmara-600/25 disabled:opacity-50"
                 >
                   {estaProcesando ? (
-                    <span>Enviando código PIN a tu correo...</span>
+                    <span>Enviando códigos a tu correo y celular...</span>
                   ) : (
                     <>
-                      <span>Verificar Correo Institucional</span>
+                      <span>Enviar Códigos de Verificación</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}
@@ -672,7 +735,7 @@ export const RegisterForm = ({ onBack }) => {
               </motion.form>
             )}
 
-            {/* PASO 3: VERIFICACIÓN PIN DE CORREO INSTITUCIONAL */}
+            {/* PASO 3: VERIFICACIÓN PIN DE CORREO INSTITUCIONAL + CÓDIGO SMS (canales independientes) */}
             {pasoActual === 3 && (
               <motion.form
                 key="paso-3"
@@ -693,7 +756,7 @@ export const RegisterForm = ({ onBack }) => {
                   </div>
                   <div>
                     <p className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      Código de 6 dígitos enviado
+                      Código de correo enviado
                     </p>
                     <p className={`text-[11px] font-mono text-lochmara-600 dark:text-lochmara-400`}>
                       {correoVisual}
@@ -701,10 +764,10 @@ export const RegisterForm = ({ onBack }) => {
                   </div>
                 </div>
 
-                {/* Input de PIN */}
+                {/* Input de PIN de correo */}
                 <div className="space-y-1.5">
                   <label className={`text-xs font-bold text-center block ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                    Ingresa tu PIN de Activación
+                    Código de Correo
                   </label>
                   <input
                     type="text"
@@ -720,28 +783,61 @@ export const RegisterForm = ({ onBack }) => {
                         : 'bg-white border-slate-200 text-slate-900 placeholder-slate-300'
                     }`}
                   />
-                  <p className={`text-[10px] text-center ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    Revisa tu bandeja de entrada o carpeta de spam institucional
-                  </p>
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      disabled={reenviandoCodigo}
+                      onClick={reenviarPin}
+                      className="inline-flex items-center gap-1.5 text-[11px] font-bold text-lochmara-600 dark:text-lochmara-400 hover:underline cursor-pointer disabled:opacity-50"
+                    >
+                      <RotateCw className={`w-3 h-3 ${reenviandoCodigo ? 'animate-spin' : ''}`} />
+                      <span>{reenviandoCodigo ? 'Reenviando...' : 'Reenviar código de correo'}</span>
+                    </button>
+                  </div>
                 </div>
 
-                {/* Reenviar código */}
-                <div className="text-center pt-1">
-                  <button
-                    type="button"
-                    disabled={reenviandoCodigo}
-                    onClick={reenviarPin}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-lochmara-600 dark:text-lochmara-400 hover:underline cursor-pointer disabled:opacity-50"
-                  >
-                    <RotateCw className={`w-3 h-3 ${reenviandoCodigo ? 'animate-spin' : ''}`} />
-                    <span>{reenviandoCodigo ? 'Reenviando...' : 'Reenviar código PIN'}</span>
-                  </button>
+                {/* Input de código SMS (canal independiente) */}
+                <div
+                  className={`p-3 rounded-2xl border space-y-2 ${
+                    isDark ? 'bg-slate-900 border-slate-800' : 'bg-emerald-50/70 border-emerald-200/80'
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
+                    <p className={`text-[11px] font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      Código SMS enviado a {telefono || 'tu celular'}
+                    </p>
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={codigoSms}
+                    onChange={(e) => setCodigoSms(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                    placeholder="• • • • • •"
+                    className={`w-full text-center text-2xl font-mono font-extrabold tracking-widest rounded-2xl py-3 border transition-all shadow-2xs focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                      isDark
+                        ? 'bg-slate-950 border-slate-800 text-white placeholder-slate-600'
+                        : 'bg-white border-slate-200 text-slate-900 placeholder-slate-300'
+                    }`}
+                  />
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      disabled={reenviandoSms}
+                      onClick={reenviarSms}
+                      className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer disabled:opacity-50"
+                    >
+                      <RotateCw className={`w-3 h-3 ${reenviandoSms ? 'animate-spin' : ''}`} />
+                      <span>{reenviandoSms ? 'Reenviando...' : 'Reenviar código SMS'}</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Botón Finalizar Registro */}
                 <button
                   type="submit"
-                  disabled={estaProcesando || codigoPin.length !== 6 || registroExitoso}
+                  disabled={estaProcesando || codigoPin.length !== 6 || codigoSms.length !== 6 || registroExitoso}
                   className="w-full py-3.5 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-lochmara-600/25 disabled:opacity-50"
                 >
                   {estaProcesando ? (

@@ -10,12 +10,21 @@ import {
   Navigation,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { openExternalNavigation } from '../../utils/mapNavigation';
 
 export const PassengerActiveTripCard = () => {
   const { activePassengerBooking, cancelPassengerBooking, theme } = useAppStore();
 
   if (!activePassengerBooking) return null;
   const isDark = theme === 'dark';
+
+  const tieneCoordenadas = activePassengerBooking.pickup_lat != null && activePassengerBooking.pickup_lng != null;
+  const irAlPuntoDeEncuentro = () => {
+    openExternalNavigation('google_maps', {
+      destLat: activePassengerBooking.pickup_lat,
+      destLng: activePassengerBooking.pickup_lng,
+    });
+  };
 
   return (
     <div className="space-y-3 pb-6 select-none">
@@ -140,15 +149,27 @@ export const PassengerActiveTripCard = () => {
           </div>
         </div>
 
-        {/* Botón de Cancelar Reserva */}
-        <button
-          type="button"
-          onClick={() => cancelPassengerBooking()}
-          className="w-full py-2.5 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
-        >
-          <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
-          <span>Cancelar Mi Reserva de Cupo</span>
-        </button>
+        {/* Botones de Acción */}
+        <div className="flex gap-2">
+          {tieneCoordenadas && (
+            <button
+              type="button"
+              onClick={irAlPuntoDeEncuentro}
+              className="flex-1 py-2.5 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 text-white text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-lochmara-600/20"
+            >
+              <Navigation className="w-3.5 h-3.5" />
+              <span>Cómo Llegar</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => cancelPassengerBooking()}
+            className="flex-1 py-2.5 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+          >
+            <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+            <span>Cancelar Reserva</span>
+          </button>
+        </div>
       </motion.section>
     </div>
   );

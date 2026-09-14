@@ -12,6 +12,17 @@ dist
 dist-ssr
 *.local
 
+# Token de subida de source maps a Sentry — secreto real, nunca al bundle público
+# (a diferencia del DSN en .env, que sí es público por diseño). Convención propia
+# de @sentry/vite-plugin: la carga automáticamente si existe este archivo.
+.env.sentry-build-plugin
+
+# Playwright E2E
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

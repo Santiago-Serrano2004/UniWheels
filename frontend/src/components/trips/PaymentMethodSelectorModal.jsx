@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '../../store/useAppStore';
-import { AddCardModal } from '../wallet/AddCardModal';
 import {
   CreditCard,
   Wallet,
@@ -30,12 +29,11 @@ export const PaymentMethodSelectorModal = ({
   const [tarjetaSeleccionadaId, setTarjetaSeleccionadaId] = useState(
     savedCards?.find((c) => c.isDefault)?.id || savedCards?.[0]?.id || null
   );
-  const [modalAddCardOpen, setModalAddCardOpen] = useState(false);
 
   if (!isOpen) return null;
 
   const hasCards = Array.isArray(savedCards) && savedCards.length > 0;
-  const hasNoCardsWhenCardSelected = metodo === 'card_instant' && !hasCards;
+  const hasNoCardsWhenCardSelected = false;
 
   const METODOS = [
     {
@@ -50,11 +48,11 @@ export const PaymentMethodSelectorModal = ({
     {
       id: 'card_instant',
       title: 'Tarjeta Débito / Crédito',
-      subtitle: 'Cobro automático in-app inmediato',
+      subtitle: 'Pago seguro al confirmar la reserva',
       icon: <CreditCard className="w-5 h-5 text-lochmara-500" />,
       tag: 'Cobro Inmediato',
       tagColor: isDark ? 'bg-lochmara-500/10 text-lochmara-400 border-lochmara-500/30' : 'bg-lochmara-50 text-lochmara-700 border-lochmara-200',
-      description: 'Se debita automáticamente de tu tarjeta tokenizada.',
+      description: 'Se abre una ventana segura de pago (Wompi) al confirmar tu reserva.',
     },
     {
       id: 'cash_direct',
@@ -272,12 +270,6 @@ export const PaymentMethodSelectorModal = ({
         </AnimatePresence>,
         document.body
       )}
-
-      {/* MODAL PARA AGREGAR NUEVA TARJETA */}
-      <AddCardModal
-        isOpen={modalAddCardOpen}
-        onClose={() => setModalAddCardOpen(false)}
-      />
     </>
   );
 };

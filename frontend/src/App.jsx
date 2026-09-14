@@ -9,6 +9,7 @@ import { BottomNav } from './components/common/BottomNav';
 import { HomeView } from './components/home/HomeView';
 import { TripMapView } from './components/map/TripMapView';
 import { DriverView } from './components/driver/DriverView';
+import { DriverCockpitCard } from './components/driver/DriverCockpitCard';
 import { DriverOnboardingView } from './components/driver/DriverOnboardingView';
 import { WalletView } from './components/wallet/WalletView';
 import { ProfileView } from './components/profile/ProfileView';
@@ -17,9 +18,11 @@ import { DriverHistoryView } from './components/driver/DriverHistoryView';
 import { ActiveRoleConflictBlocker } from './components/common/ActiveRoleConflictBlocker';
 import { LiveTripIslandWidget } from './components/common/LiveTripIslandWidget';
 import { DriverApprovedCelebrationModal } from './components/common/DriverApprovedCelebrationModal';
+import { AdminVehicleReviewView } from './components/admin/AdminVehicleReviewView';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import { vehicleService } from './services/api';
+import { vehicleService, authService } from './services/api';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -69,6 +72,17 @@ export default function App() {
     }
   }, [user?.id, user?.isDriver, user?.driverStatus, user?.driverApplication]);
 
+  // Sesión deslizante: renueva el JWT cada 20 min mientras la app está abierta y
+  // autenticada, para que el token (TTL de 4h) nunca expire en medio de un viaje
+  // activo. Si esto falla, el interceptor 401 de api.js reintenta reactivamente.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const interval = setInterval(() => {
+      authService.refreshToken();
+    }, 20 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -83,6 +97,12 @@ export default function App() {
     // 1. La pestaña de Perfil SIEMPRE es accesible independientemente del rol o estado
     if (activeTab === 'profile') {
       return <ProfileView />;
+    }
+
+    // 1.b Bienestar Universitario (administrador): panel de verificación de
+    // conductores, sin los flujos de pasajero/conductor que no le aplican.
+    if (user?.isAdmin) {
+      return <AdminVehicleReviewView />;
     }
 
     // 2. Validación de conflicto: Si tiene viaje activo como conductor e intenta interactuar como pasajero
@@ -116,7 +136,7 @@ export default function App() {
     // 4. Vistas estándar según activeTab
     switch (activeTab) {
       case 'home':
-        return <HomeView />;
+        return activeRole === 'driver' ? <DriverCockpitCard /> : <HomeView />;
       case 'map':
         return <TripMapView />;
       case 'history':
@@ -191,11 +211,15 @@ export default function App() {
           >
             {/* TopBar / Encabezado Móvil (FIJO Y SIEMPRE VISIBLE) */}
             <div className="shrink-0 z-30 w-full">
-              <Header />
+              <ErrorBoundary variant="silent" label="header">
+                <Header />
+              </ErrorBoundary>
             </div>
 
             {/* Isla Dinámica / Live Activity de Viaje Activo */}
-            <LiveTripIslandWidget />
+            <ErrorBoundary variant="silent" label="live-trip-island">
+              <LiveTripIslandWidget />
+            </ErrorBoundary>
 
             {/* Contenido Principal con Scroll Independiente */}
             <main
@@ -220,7 +244,9 @@ export default function App() {
                       : 'min-h-full pb-2'
                   }
                 >
-                  {renderActiveView()}
+                  <ErrorBoundary key={activeTab} variant="contained" label={`view:${activeTab}`} onReset={() => setActiveTab('home')}>
+                    {renderActiveView()}
+                  </ErrorBoundary>
                 </motion.div>
               </AnimatePresence>
             </main>

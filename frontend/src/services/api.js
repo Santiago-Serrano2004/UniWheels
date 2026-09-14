@@ -1,30 +1,113 @@
 import axios from 'axios';
+import { useAppStore } from '../store/useAppStore';
 
 // URL base del API Gateway o Microservicio Auth
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1';
 
-export const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  },
-  timeout: 8000,
-});
-
-// Interceptor para inyectar el Bearer Token en cada solicitud
-apiClient.interceptors.request.use((config) => {
+const readStoredSession = () => {
   try {
     const sessionData = localStorage.getItem('uniwheels_session');
-    if (sessionData) {
-      const parsed = JSON.parse(sessionData);
-      if (parsed.token) {
+    return sessionData ? JSON.parse(sessionData) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeStoredSessionToken = (nuevoToken) => {
+  const sesion = readStoredSession();
+  if (!sesion) return;
+  const actualizada = { ...sesion, token: nuevoToken };
+  try {
+    localStorage.setItem('uniwheels_session', JSON.stringify(actualizada));
+  } catch {}
+  useAppStore.setState({ user: actualizada });
+};
+
+// Cliente crudo (sin interceptores) exclusivo para la llamada de refresh — evita
+// que su propio 401 dispare de nuevo el interceptor de refresh (recursión).
+const rawRefreshClient = axios.create({ baseURL: API_BASE_URL, timeout: 8000 });
+
+// Deduplica refrescos concurrentes: si varias peticiones reciben 401 al mismo
+// tiempo (ej. la app recién reabierta con el token vencido), todas comparten
+// la misma promesa en vez de pedir 3-4 tokens nuevos en paralelo.
+let refreshInFlight = null;
+
+const solicitarNuevoToken = () => {
+  if (!refreshInFlight) {
+    const tokenActual = readStoredSession()?.token;
+    refreshInFlight = rawRefreshClient
+      .post('/auth/refresh', {}, { headers: tokenActual ? { Authorization: `Bearer ${tokenActual}` } : {} })
+      .then((res) => {
+        const nuevoToken = res.data?.data?.access_token;
+        if (!nuevoToken) throw new Error('Respuesta de refresh sin token.');
+        writeStoredSessionToken(nuevoToken);
+        return nuevoToken;
+      })
+      .finally(() => {
+        refreshInFlight = null;
+      });
+  }
+  return refreshInFlight;
+};
+
+/**
+ * Inyecta el Bearer Token (JWT emitido por auth-service) en cada solicitud de
+ * un cliente axios. Se aplica a TODOS los clientes de microservicios — antes
+ * solo lo tenía apiClient, dejando el resto de llamadas sin autenticar.
+ *
+ * También intenta renovar la sesión una vez si el backend responde 401 (token
+ * vencido a mitad de un viaje, por ejemplo) y reintenta la petición original;
+ * si la renovación también falla, cierra la sesión para que el usuario vea el
+ * gateway de login en vez de errores silenciosos indefinidamente.
+ */
+const attachAuthInterceptor = (client) => {
+  client.interceptors.request.use((config) => {
+    try {
+      const parsed = readStoredSession();
+      if (parsed?.token) {
         config.headers.Authorization = `Bearer ${parsed.token}`;
       }
+    } catch {}
+    return config;
+  });
+
+  client.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const config = error.config;
+      const esNoAutenticado = error.response?.status === 401;
+      const yaReintentado = config?._reintentadoTrasRefresh;
+
+      if (!esNoAutenticado || !config || yaReintentado || !readStoredSession()?.token) {
+        return Promise.reject(error);
+      }
+
+      config._reintentadoTrasRefresh = true;
+
+      try {
+        const nuevoToken = await solicitarNuevoToken();
+        config.headers.Authorization = `Bearer ${nuevoToken}`;
+        return client(config);
+      } catch {
+        useAppStore.getState().logout();
+        return Promise.reject(error);
+      }
     }
-  } catch {}
-  return config;
-});
+  );
+
+  return client;
+};
+
+export const apiClient = attachAuthInterceptor(
+  axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    timeout: 8000,
+  })
+);
 
 /**
  * Normalizador avanzado de errores del backend a lenguaje natural en español
@@ -162,6 +245,40 @@ export const INSTITUCIONES_PREDETERMINADAS = [
 
 // Servicios de Autenticación
 export const authService = {
+  // Perfil completo del usuario autenticado (incluye wallet.balance_cop real).
+  async me() {
+    try {
+      const response = await apiClient.get('/auth/me');
+      return response.data?.data || null;
+    } catch {
+      return null;
+    }
+  },
+
+  // Enviar código de verificación SMS (canal independiente del de correo)
+  async sendSmsCode(phoneNumber) {
+    try {
+      const response = await apiClient.post('/auth/send-sms-code', { phone_number: phoneNumber });
+      return response.data;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'Error al enviar el código de verificación por SMS.' };
+    }
+  },
+
+  // Renovación proactiva de sesión (sesión deslizante) — se llama periódicamente
+  // mientras la app está abierta para que el token nunca llegue a vencer en medio
+  // de un viaje activo. Silenciosa: si falla, el interceptor 401 la reintentará
+  // reactivamente en la siguiente petición real.
+  async refreshToken() {
+    try {
+      await solicitarNuevoToken();
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
   // Obtener lista de instituciones y sedes
   async getInstitutions() {
     try {
@@ -281,14 +398,16 @@ export const authService = {
 // URL base del Microservicio de Vehículos y Validación de Documentos
 const VEHICLE_API_BASE_URL = import.meta.env.VITE_VEHICLE_API_URL || 'http://localhost:8002/api/v1';
 
-export const vehicleApiClient = axios.create({
-  baseURL: VEHICLE_API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  },
-  timeout: 8000,
-});
+export const vehicleApiClient = attachAuthInterceptor(
+  axios.create({
+    baseURL: VEHICLE_API_BASE_URL,
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    timeout: 8000,
+  })
+);
 
 // Servicios de Vehículos (vehicle-service)
 export const vehicleService = {
@@ -352,6 +471,42 @@ export const vehicleService = {
     } catch {
       return [];
     }
+  },
+
+  // --- PANEL DE ADMINISTRACIÓN (Bienestar Universitario) ---
+
+  // Listar todos los vehículos registrados (solo administradores; sin user_id el
+  // backend devuelve el listado completo cuando el rol del JWT es 'administrador').
+  async getAllVehiclesForAdmin() {
+    try {
+      const response = await vehicleApiClient.get('/vehicles');
+      return response.data?.data || [];
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'Error al cargar los vehículos pendientes de revisión.' };
+    }
+  },
+
+  // Aprobar o rechazar un documento específico (dispara auto-aprobación del
+  // vehículo en el backend si con este documento queda 100% en regla).
+  async verifyDocument(vehicleId, documentId, isVerified, rejectionNotes = null) {
+    try {
+      const response = await vehicleApiClient.patch(
+        `/vehicles/${vehicleId}/documents/${documentId}/verify`,
+        { is_verified: isVerified, rejection_notes: rejectionNotes || undefined }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'Error al actualizar el estado del documento.' };
+    }
+  },
+
+  // Descargar el archivo de un documento como blob autenticado (la URL firmada
+  // sigue exigiendo el Bearer JWT, por lo que no sirve como <img src> directo).
+  async fetchDocumentBlob(secureDownloadUrl) {
+    const response = await vehicleApiClient.get(secureDownloadUrl, { responseType: 'blob' });
+    return URL.createObjectURL(response.data);
   },
 };
 
@@ -417,7 +572,8 @@ export const tripsService = {
 
   async getDriverHistory() {
     try {
-      const response = await apiClient.get('/driver/history');
+      // trip-service (:8004), no auth-service — bug corregido: apuntaba al cliente equivocado.
+      const response = await tripLifecycleClient.get('/driver/history');
       return response.data?.data || [];
     } catch {
       return [];
@@ -426,25 +582,37 @@ export const tripsService = {
 
   async getPassengerHistory() {
     try {
-      const response = await apiClient.get('/passenger/history');
+      const response = await tripLifecycleClient.get('/passenger/history');
       return response.data?.data || [];
     } catch {
       return [];
     }
   },
 
+  /**
+   * Trips reales (trip-service) de pasajeros activos asociados a una ruta del
+   * conductor — usado por el dashboard real del conductor (Mi Panel / cabina).
+   */
+  async getActiveTripsForRoute(routeId) {
+    if (!routeId) return [];
+    const historial = await this.getDriverHistory();
+    const estadosActivos = ['confirmado', 'en_camino', 'en_punto_encuentro', 'recogido'];
+    return historial.filter((t) => t.route_id === routeId && estadosActivos.includes(t.status));
+  },
+
   async getWalletTransactions() {
     try {
       const response = await apiClient.get('/wallet/transactions');
-      return response.data?.data || { balance_cop: 25000, transactions: [] };
+      return response.data?.data || [];
     } catch {
-      return { balance_cop: 25000, transactions: [] };
+      return [];
     }
   },
 
   async submitRating(ratingPayload) {
     try {
-      const response = await apiClient.post('/ratings', ratingPayload);
+      // notification-service (:8005), no auth-service — bug corregido.
+      const response = await notificationApiClient.post('/ratings', ratingPayload);
       return response.data;
     } catch (error) {
       if (error.response?.data) throw error.response.data;
@@ -475,14 +643,16 @@ export const tripsService = {
 // URL base del Microservicio de Emparejamiento Geoespacial e IA
 const ROUTE_API_BASE_URL = import.meta.env.VITE_ROUTE_API_URL || 'http://localhost:8003/api/v1';
 
-export const routeApiClient = axios.create({
-  baseURL: ROUTE_API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  },
-  timeout: 6000,
-});
+export const routeApiClient = attachAuthInterceptor(
+  axios.create({
+    baseURL: ROUTE_API_BASE_URL,
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    timeout: 6000,
+  })
+);
 
 // Servicios de IA y Ruteo Geoespacial (PostGIS + OSRM)
 export const routesService = {
@@ -496,12 +666,34 @@ export const routesService = {
     }
   },
 
-  async searchMatches(pickupLat, pickupLng, destinationCampusId = 1) {
+  // Orden óptimo de paradas (ALNS vía ai-route-service) para los pasajeros
+  // actualmente confirmados en una ruta activa.
+  async optimizePassengers(routeId, passengers) {
+    try {
+      const response = await routeApiClient.post(`/routes/${routeId}/optimize-passengers`, { passengers });
+      return response.data;
+    } catch {
+      return null;
+    }
+  },
+
+  // Rutas propias del conductor autenticado (todas, sin importar estado/cupos).
+  async getMyRoutes() {
+    try {
+      const response = await routeApiClient.get('/routes', { params: { mine: true } });
+      return response.data?.data || [];
+    } catch {
+      return [];
+    }
+  },
+
+  async searchMatches(pickupLat, pickupLng, destinationCampusId = 1, preferredTime = null) {
     try {
       const response = await routeApiClient.post('/routes/search-match', {
         pickup_lat: pickupLat,
         pickup_lng: pickupLng,
         destination_campus_id: destinationCampusId,
+        preferred_time: preferredTime || undefined,
       });
       return response.data?.data || [];
     } catch {
@@ -521,32 +713,14 @@ export const routesService = {
     }
   },
 
-  async evaluateDetourWithAI({ driver_origin, campus_destination, passenger_pickup, vehicle_type = 'car' }) {
-    try {
-      const aiResponse = await axios.post(
-        'http://localhost:8006/api/v1/optimize/match',
-        {
-          driver_route: {
-            origin: { lat: driver_origin[0], lng: driver_origin[1] },
-            destination: { lat: campus_destination[0], lng: campus_destination[1] },
-            vehicle_type: vehicle_type === 'motorcycle' ? 'motorcycle' : 'car',
-          },
-          passenger_request: {
-            pickup_location: { lat: passenger_pickup[0], lng: passenger_pickup[1] },
-            destination_campus: { lat: campus_destination[0], lng: campus_destination[1] },
-            max_walking_distance_meters: 500,
-          },
-        },
-        { timeout: 2500 }
-      );
-
-      if (aiResponse.data) {
-        return { success: true, data: aiResponse.data };
-      }
-    } catch {
-      // Fallback local instantáneo sin error de consola
-    }
-
+  /**
+   * Estimación LOCAL (heurística geodésica, sin llamada de red) del desvío para
+   * la vista previa del mapa. ai-route-service ya no es alcanzable directamente
+   * desde el navegador (Fase 6: solo acepta llamadas servicio-a-servicio); la
+   * evaluación real y autorizada del desvío se hace vía
+   * `routesService.evaluateDetour(routeId, ...)` contra route-matching-service.
+   */
+  estimateDetourLocally({ driver_origin, campus_destination, passenger_pickup }) {
     const latDiff = Math.abs(driver_origin[0] - passenger_pickup[0]) + Math.abs(campus_destination[0] - passenger_pickup[0]);
     const lngDiff = Math.abs(driver_origin[1] - passenger_pickup[1]) + Math.abs(campus_destination[1] - passenger_pickup[1]);
     const distEstKm = Math.round((latDiff + lngDiff) * 111 * 10) / 10;
@@ -554,16 +728,16 @@ export const routesService = {
 
     return {
       success: true,
+      isLocalEstimate: true,
       data: {
         is_viable: detourMin <= 15,
         detour_time_minutes: detourMin,
         detour_distance_km: distEstKm,
         original_duration_minutes: 22,
         new_total_duration_minutes: 22 + detourMin,
-        ai_confidence_score: 0.94,
         traffic_congestion_level: 'fluido',
         carbon_saved_grams: Math.round(distEstKm * 120),
-        reason: detourMin <= 15 ? 'Desvío viable optimizado por IA' : 'Excede límite de tiempo de desvío',
+        reason: detourMin <= 15 ? 'Desvío estimado dentro del rango viable' : 'Excede el límite estimado de desvío',
       },
     };
   },
@@ -572,16 +746,31 @@ export const routesService = {
 // URL base del Microservicio de Gestión del Ciclo de Vida de Viajes
 const TRIP_API_BASE_URL = import.meta.env.VITE_TRIP_API_URL || 'http://localhost:8004/api/v1';
 
-export const tripLifecycleClient = axios.create({
-  baseURL: TRIP_API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  },
-  timeout: 6000,
-});
+export const tripLifecycleClient = attachAuthInterceptor(
+  axios.create({
+    baseURL: TRIP_API_BASE_URL,
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    timeout: 6000,
+  })
+);
 
 // Servicios del Ciclo de Vida del Viaje (Fase 05 - trip-service)
+// Billetera del usuario (auth-service) — recarga real vía Wompi.
+export const walletService = {
+  async initRecharge(amountCop) {
+    try {
+      const response = await apiClient.post('/wallet/recharge/init', { amount_cop: amountCop });
+      return response.data?.data || null;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'No se pudo iniciar la recarga de billetera.' };
+    }
+  },
+};
+
 export const tripLifecycleService = {
   async bookTrip(tripPayload) {
     try {
@@ -614,8 +803,13 @@ export const tripLifecycleService = {
   },
 
   async completeTrip(tripId) {
-    const response = await tripLifecycleClient.post(`/trips/${tripId}/complete`);
-    return response.data;
+    try {
+      const response = await tripLifecycleClient.post(`/trips/${tripId}/complete`);
+      return response.data;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'No se pudo completar el viaje.' };
+    }
   },
 
   async cancelTrip(tripId, cancelledBy, reason) {
@@ -626,12 +820,24 @@ export const tripLifecycleService = {
     return response.data;
   },
 
-  async getActivePassengerTrip(passengerId) {
+  async getActivePassengerTrip() {
     try {
-      const response = await tripLifecycleClient.get(`/passenger/${passengerId}/active-trip`);
+      const response = await tripLifecycleClient.get('/passenger/active-trip');
       return response.data?.data || null;
     } catch {
       return null;
+    }
+  },
+
+  // Iniciar el cobro con tarjeta de un viaje (payment_method='tarjeta') — el
+  // backend devuelve los parámetros firmados para abrir el widget de Wompi.
+  async initCardPayment(tripId) {
+    try {
+      const response = await tripLifecycleClient.post(`/trips/${tripId}/payment/card/init`);
+      return response.data?.data || null;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'No se pudo iniciar el pago con tarjeta.' };
     }
   },
 };
@@ -639,30 +845,24 @@ export const tripLifecycleService = {
 // URL base del Microservicio de Notificaciones Push y Alertas
 const NOTIFICATION_API_BASE_URL = import.meta.env.VITE_NOTIFICATION_API_URL || 'http://localhost:8005/api/v1';
 
-export const notificationApiClient = axios.create({
-  baseURL: NOTIFICATION_API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  },
-  timeout: 6000,
-});
+export const notificationApiClient = attachAuthInterceptor(
+  axios.create({
+    baseURL: NOTIFICATION_API_BASE_URL,
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    timeout: 6000,
+  })
+);
 
 // Servicios de Notificaciones (Fase 06 - notification-service)
+// NOTA: /notifications/send solo puede ser invocado por servicios internos del
+// backend (requiere un token de servicio) — nunca desde la app cliente.
 export const notificationsService = {
-  async sendNotification(notificationPayload) {
+  async getUserNotifications() {
     try {
-      const response = await notificationApiClient.post('/notifications/send', notificationPayload);
-      return response.data;
-    } catch (error) {
-      if (error.response?.data) throw error.response.data;
-      return { success: true };
-    }
-  },
-
-  async getUserNotifications(userId) {
-    try {
-      const response = await notificationApiClient.get(`/users/${userId}/notifications`);
+      const response = await notificationApiClient.get('/notifications');
       return response.data || { success: true, unread_count: 0, data: [] };
     } catch {
       return { success: true, unread_count: 0, data: [] };
@@ -678,9 +878,39 @@ export const notificationsService = {
     }
   },
 
-  async markAllAsRead(userId) {
+  async markAllAsRead() {
     try {
-      const response = await notificationApiClient.post(`/users/${userId}/notifications/mark-all-read`);
+      const response = await notificationApiClient.post('/notifications/mark-all-read');
+      return response.data;
+    } catch {
+      return { success: true };
+    }
+  },
+
+  // --- NOTIFICACIONES PUSH DEL NAVEGADOR (Web Push) ---
+
+  async getVapidPublicKey() {
+    try {
+      const response = await notificationApiClient.get('/push/vapid-public-key');
+      return response.data?.data?.public_key || null;
+    } catch {
+      return null;
+    }
+  },
+
+  async savePushSubscription(pushSubscription) {
+    try {
+      const response = await notificationApiClient.post('/push/subscribe', pushSubscription.toJSON());
+      return response.data;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'Error al registrar la suscripción push.' };
+    }
+  },
+
+  async removePushSubscription(endpoint) {
+    try {
+      const response = await notificationApiClient.delete('/push/unsubscribe', { data: { endpoint } });
       return response.data;
     } catch {
       return { success: true };
@@ -688,50 +918,9 @@ export const notificationsService = {
   },
 };
 
-// URL base del Microservicio de Inteligencia Artificial (FastAPI + OSRM + XGBoost + ALNS)
-const AI_ROUTE_API_BASE_URL = import.meta.env.VITE_AI_ROUTE_API_URL || 'http://localhost:8006/api/v1';
-
-export const aiRouteApiClient = axios.create({
-  baseURL: AI_ROUTE_API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  },
-  timeout: 8000,
-});
-
-export const aiRouteOptimizationService = {
-  async evaluateMatch(payload) {
-    try {
-      const response = await aiRouteApiClient.post('/optimize/match', payload);
-      return response.data;
-    } catch (error) {
-      if (error.response?.data) return error.response.data;
-      return null;
-    }
-  },
-
-  async optimizeMultiPassengerALNS(payload) {
-    try {
-      const response = await aiRouteApiClient.post('/optimize/multi-passenger-alns', payload);
-      return response.data;
-    } catch (error) {
-      if (error.response?.data) return error.response.data;
-      return null;
-    }
-  },
-
-  async getCorridorTraffic(lat = 7.0856, lng = -73.1142) {
-    try {
-      const response = await aiRouteApiClient.get('/optimize/traffic-corridor', {
-        params: { lat, lng },
-      });
-      return response.data;
-    } catch {
-      return { traffic_factor_kappa: 1.0, status_description: 'Fluido' };
-    }
-  },
-};
-
+// NOTA: ai-route-service (FastAPI, :8006) ya no se expone a la app cliente — desde
+// la Fase 6 de la auditoría solo acepta llamadas servicio-a-servicio autenticadas
+// (route-matching-service, trip-service). El frontend nunca debe llamarlo directo;
+// usa `routesService.searchMatches`/`evaluateDetour` (route-matching-service) en su lugar.
 
 

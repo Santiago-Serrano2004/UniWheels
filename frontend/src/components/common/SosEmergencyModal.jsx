@@ -98,7 +98,7 @@ export const SosEmergencyModal = ({
             onClose();
           }
         }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 select-none backdrop-blur-sm"
+        className="fixed inset-0 z-[9999999] flex items-center justify-center p-4 bg-slate-950/80 select-none backdrop-blur-sm"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.92, y: 15 }}

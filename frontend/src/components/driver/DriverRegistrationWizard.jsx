@@ -12,8 +12,19 @@ import { requiereTecnomecanica, haExpiradoFecha } from '../../utils/colombianVeh
 import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+// Convierte un data URL (base64, capturado por PhotoPickerModal) en un File real
+// para poder enviarlo como multipart/form-data al endpoint de documentos.
+const dataUrlToFile = (dataUrl, filename) => {
+  const [header, base64] = dataUrl.split(',');
+  const mime = header.match(/:(.*?);/)?.[1] || 'image/jpeg';
+  const binario = atob(base64);
+  const bytes = new Uint8Array(binario.length);
+  for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+  return new File([bytes], filename, { type: mime });
+};
+
 export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
-  const { user, updateDriverStatus, theme } = useAppStore();
+  const { updateDriverStatus, theme } = useAppStore();
   const isDark = theme === 'dark';
 
   const [pasoActual, setPasoActual] = useState(1);
@@ -261,30 +272,58 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
         console.warn('Auth registerDriver notice:', authErr);
       }
 
-      try {
-        await vehicleService.registerVehicle({
-          user_id: user?.id,
-          vehicle_type: tipoVehiculo,
-          plate_number: placa.toUpperCase(),
-          brand: marcaFinal,
-          model_line: modeloFinal,
-          year: parseInt(ano, 10),
-          color,
-          propulsion_type: tipoPropulsion,
-          available_seats: cupos,
-          soat_number: numeroSoat,
-          soat_expires_at: vencimientoSoat,
-          soat_photo: fotoSoat,
-          rtm_number: requiereTecno ? numeroTecno : null,
-          rtm_expires_at: requiereTecno ? vencimientoTecno : null,
-          rtm_photo: requiereTecno ? fotoTecno : null,
-          driver_license_number: numeroLicencia,
-          driver_license_category: categoriaLicencia,
-          driver_license_expires_at: vencimientoLicencia,
-          driver_license_photo: fotoLicencia,
-        });
-      } catch (vehErr) {
-        console.warn('Vehicle register notice:', vehErr);
+      // El registro del vehículo SÍ debe bloquear el wizard si falla: sin el id
+      // real del vehículo no hay forma de subir los documentos legales después.
+      const respuestaVehiculo = await vehicleService.registerVehicle({
+        vehicle_type: tipoVehiculo,
+        plate_number: placa.toUpperCase(),
+        brand: marcaFinal,
+        model_line: modeloFinal,
+        year: parseInt(ano, 10),
+        color,
+        propulsion_type: tipoPropulsion,
+        available_seats: cupos,
+      });
+
+      const vehiculoId = respuestaVehiculo?.data?.id;
+
+      if (vehiculoId) {
+        const documentos = [
+          fotoSoat && {
+            document_type: 'soat',
+            document_number: numeroSoat,
+            expires_at: vencimientoSoat,
+            file: fotoSoat,
+            filename: 'soat.jpg',
+          },
+          requiereTecno && fotoTecno && {
+            document_type: 'revision_tecnico_mecanica',
+            document_number: numeroTecno,
+            expires_at: vencimientoTecno,
+            file: fotoTecno,
+            filename: 'rtm.jpg',
+          },
+          fotoLicencia && {
+            document_type: 'licencia_conduccion',
+            document_number: numeroLicencia,
+            expires_at: vencimientoLicencia,
+            file: fotoLicencia,
+            filename: 'licencia.jpg',
+          },
+        ].filter(Boolean);
+
+        for (const doc of documentos) {
+          try {
+            const formData = new FormData();
+            formData.append('document_type', doc.document_type);
+            formData.append('document_number', doc.document_number || '');
+            if (doc.expires_at) formData.append('expires_at', doc.expires_at);
+            formData.append('document_file', dataUrlToFile(doc.file, doc.filename));
+            await vehicleService.uploadDocument(vehiculoId, formData);
+          } catch (docErr) {
+            console.warn(`No se pudo subir el documento ${doc.document_type}:`, docErr);
+          }
+        }
       }
 
       updateDriverStatus('pending', {

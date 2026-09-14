@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '../../store/useAppStore';
-import { AddCardModal } from '../wallet/AddCardModal';
 import {
   CreditCard,
-  Plus,
   Star,
   Trash2,
   Smartphone,
@@ -13,12 +11,12 @@ import {
   Lock,
   X,
   CheckCircle2,
+  Info,
 } from 'lucide-react';
 
 export const PaymentMethodsManagerModal = ({ isOpen, onClose }) => {
   const { savedCards, deleteCard, setDefaultCard, linkedNequi, theme } = useAppStore();
   const isDark = theme === 'dark';
-  const [modalAddCardOpen, setModalAddCardOpen] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState('');
 
   if (!isOpen) return null;
@@ -79,19 +77,19 @@ export const PaymentMethodsManagerModal = ({ isOpen, onClose }) => {
                 </div>
               )}
 
-              {/* Botón Agregar Tarjeta */}
-              <button
-                type="button"
-                onClick={() => setModalAddCardOpen(true)}
-                className={`w-full py-2.5 px-3 rounded-2xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs ${
+              {/* Agregar una tarjeta guardada no está disponible: el pago con tarjeta se
+                  hace vía el Widget de Wompi en el momento de reservar el viaje, no
+                  registrando una tarjeta de antemano aquí. */}
+              <div
+                className={`w-full py-2.5 px-3 rounded-2xl border text-[11px] font-medium flex items-start gap-2 ${
                   isDark
-                    ? 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-lochmara-400'
-                    : 'bg-lochmara-50 hover:bg-lochmara-100 border-lochmara-200 text-lochmara-800'
+                    ? 'bg-slate-950 border-slate-800 text-slate-400'
+                    : 'bg-slate-50 border-slate-200 text-slate-500'
                 }`}
               >
-                <Plus className="w-4 h-4 text-lochmara-500" />
-                <span>Agregar Nueva Tarjeta Débito / Crédito</span>
-              </button>
+                <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-lochmara-500" />
+                <span>Para pagar con tarjeta, elige esa opción al reservar un viaje — se abre una ventana segura de pago (Wompi) en ese momento.</span>
+              </div>
 
               {/* Listado de Tarjetas Guardadas */}
               <div className="space-y-2 overflow-y-auto max-h-[48vh] pr-0.5">
@@ -215,16 +213,6 @@ export const PaymentMethodsManagerModal = ({ isOpen, onClose }) => {
         </AnimatePresence>,
         document.body
       )}
-
-      {/* MODAL PARA AGREGAR NUEVA TARJETA */}
-      <AddCardModal
-        isOpen={modalAddCardOpen}
-        onClose={() => setModalAddCardOpen(false)}
-        onSuccess={() => {
-          setFeedbackMsg('¡Tarjeta agregada y tokenizada exitosamente!');
-          setTimeout(() => setFeedbackMsg(''), 3500);
-        }}
-      />
     </>
   );
 };

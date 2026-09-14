@@ -154,17 +154,16 @@ export const PassengerTripsView = () => {
       if (data && data.length > 0) {
         const formateados = data.map((d) => ({
           id: d.id,
+          driverId: d.driver_id,
           date: d.date,
           driverName: d.driver_name,
-          vehicle: d.vehicle,
-          plate: d.plate,
-          pickup: d.pickup,
+          vehicle: d.vehicle_model,
+          plate: d.vehicle_plate,
+          pickup: d.origin,
           destination: d.destination,
-          duration: d.duration,
-          distance: d.distance,
-          farePaid: d.fare_paid,
-          rated: d.rated,
-          ratingScore: d.rating_score || 5,
+          farePaid: d.fare_cop,
+          rated: false,
+          ratingScore: 5,
         }));
         setHistorialPasajero(formateados);
         setViajeExpandido(formateados[0]?.id || null);
@@ -176,6 +175,7 @@ export const PassengerTripsView = () => {
     setModalCalificacion({
       abierto: true,
       conductor: {
+        id: viaje.driverId,
         name: viaje.driverName,
         roleInfo: `${viaje.vehicle} • ${viaje.plate}`,
       },
@@ -183,12 +183,24 @@ export const PassengerTripsView = () => {
     });
   };
 
-  const guardarCalificacion = () => {
-    if (!modalCalificacion.tripId) return;
+  const guardarCalificacion = async ({ rating = 5, comment = '' } = {}) => {
+    if (!modalCalificacion.tripId || !modalCalificacion.conductor?.id) return;
+
+    try {
+      await tripsService.submitRating({
+        trip_id: modalCalificacion.tripId,
+        rated_user_id: modalCalificacion.conductor.id,
+        role_rated: 'conductor',
+        score: rating,
+        optional_comment: comment || undefined,
+      });
+    } catch (err) {
+      console.warn('No se pudo registrar la calificación:', err);
+    }
 
     setHistorialPasajero((prev) =>
       prev.map((v) =>
-        v.id === modalCalificacion.tripId ? { ...v, rated: true, ratingScore: 5 } : v
+        v.id === modalCalificacion.tripId ? { ...v, rated: true, ratingScore: rating } : v
       )
     );
   };
@@ -825,7 +837,7 @@ export const PassengerTripsView = () => {
                         $ {viaje.farePaid?.toLocaleString('es-CO')}
                       </span>
                       <p className="text-[10px] font-medium text-slate-400">
-                        {viaje.duration} • {viaje.distance}
+                        {viaje.vehicle} • {viaje.plate}
                       </p>
                     </div>
                   </div>

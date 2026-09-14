@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { tripsService } from '../../services/api';
+import { tripsService, authService, walletService } from '../../services/api';
+import { openWompiWidget } from '../../utils/wompiWidget';
 import {
   Wallet,
   ArrowDownRight,
@@ -9,36 +10,76 @@ import {
   ShieldCheck,
   CheckCircle2,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+const ETIQUETAS_TRANSACCION = {
+  recarga_nequi: 'Recarga Nequi',
+  recarga_pse: 'Recarga PSE',
+  recarga_tarjeta: 'Recarga con Tarjeta',
+  cobro_comision_viaje: 'Comisión de Viaje',
+  pago_recibido_billetera: 'Pago de Viaje (Tarjeta)',
+  ajuste_administrativo: 'Ajuste Administrativo',
+};
+
 export const WalletView = () => {
-  const { driverWalletBalance, rechargeDriverWallet, theme } = useAppStore();
+  const { driverWalletBalance, setDriverWalletBalance, theme } = useAppStore();
 
   const isDark = theme === 'dark';
   const [montoRecarga, setMontoRecarga] = useState(20000);
-  const [metodoPago, setMetodoPago] = useState('nequi');
   const [mensajeExito, setMensajeExito] = useState('');
+  const [mensajeError, setMensajeError] = useState('');
   const [estaProcesando, setEstaProcesando] = useState(false);
   const [historialMovimientos, setHistorialMovimientos] = useState([]);
+  const [cargandoSaldo, setCargandoSaldo] = useState(true);
+
+  const cargarSaldoYMovimientos = useCallback(async () => {
+    const [perfil, transacciones] = await Promise.all([
+      authService.me(),
+      tripsService.getWalletTransactions(),
+    ]);
+    if (perfil?.wallet?.balance_cop != null) {
+      setDriverWalletBalance(perfil.wallet.balance_cop);
+    }
+    setHistorialMovimientos(Array.isArray(transacciones) ? transacciones : []);
+    setCargandoSaldo(false);
+  }, [setDriverWalletBalance]);
 
   useEffect(() => {
-    tripsService.getWalletTransactions().then((res) => {
-      if (res && res.transactions) {
-        setHistorialMovimientos(res.transactions);
-      }
-    });
-  }, []);
+    cargarSaldoYMovimientos();
+  }, [cargarSaldoYMovimientos]);
 
-  const ejecutarRecarga = (e) => {
+  const ejecutarRecarga = async (e) => {
     e.preventDefault();
     setEstaProcesando(true);
-    setTimeout(() => {
-      rechargeDriverWallet(montoRecarga);
+    setMensajeError('');
+    setMensajeExito('');
+
+    try {
+      const widgetParams = await walletService.initRecharge(montoRecarga);
+      const resultado = await openWompiWidget(widgetParams);
+
+      if (!resultado.success) {
+        setMensajeError('El pago no se completó. Puedes intentarlo de nuevo.');
+        setEstaProcesando(false);
+        return;
+      }
+
+      // El saldo se acredita cuando llega el webhook de Wompi (asíncrono) — se
+      // reintenta la consulta unas veces en vez de asumir que ya se reflejó.
+      setMensajeExito('Pago aprobado. Actualizando tu saldo...');
+      for (let intento = 0; intento < 5; intento++) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        await cargarSaldoYMovimientos();
+      }
+      setMensajeExito(`¡Recarga de $ ${montoRecarga.toLocaleString('es-CO')} COP acreditada a tu saldo UniWheels!`);
+    } catch (err) {
+      setMensajeError(err?.message || 'No se pudo procesar la recarga.');
+    } finally {
       setEstaProcesando(false);
-      setMensajeExito(`¡Recarga exitosa de $ ${montoRecarga.toLocaleString('es-CO')} COP mediante ${metodoPago.toUpperCase()} acreditada a tu saldo UniWheels!`);
-      setTimeout(() => setMensajeExito(''), 4000);
-    }, 1000);
+      setTimeout(() => setMensajeExito(''), 6000);
+    }
   };
 
   return (
@@ -65,9 +106,15 @@ export const WalletView = () => {
 
           <div>
             <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Saldo Disponible (Prepago / Ganancias)</span>
-            <h2 className={`text-3xl font-extrabold tracking-tight mt-0.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              $ {driverWalletBalance.toLocaleString('es-CO')} <span className={`text-sm font-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>COP</span>
-            </h2>
+            {cargandoSaldo ? (
+              <div className="h-9 flex items-center">
+                <Loader2 className="w-5 h-5 animate-spin text-lochmara-500" />
+              </div>
+            ) : (
+              <h2 className={`text-3xl font-extrabold tracking-tight mt-0.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                $ {driverWalletBalance.toLocaleString('es-CO')} <span className={`text-sm font-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>COP</span>
+              </h2>
+            )}
           </div>
 
           <div
@@ -90,7 +137,7 @@ export const WalletView = () => {
         </div>
       </section>
 
-      {/* 2. MENSAJE DE ÉXITO */}
+      {/* 2. MENSAJES DE ESTADO DE LA RECARGA */}
       {mensajeExito && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -101,8 +148,18 @@ export const WalletView = () => {
           <p className="font-medium leading-relaxed">{mensajeExito}</p>
         </motion.div>
       )}
+      {mensajeError && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs flex items-start gap-2.5 shadow-2xs font-bold"
+        >
+          <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+          <p className="font-medium leading-relaxed">{mensajeError}</p>
+        </motion.div>
+      )}
 
-      {/* 3. RECARGA DE SALDO DIGITAL */}
+      {/* 3. RECARGA DE SALDO DIGITAL (Wompi: tarjeta, PSE, Nequi según el widget) */}
       <section
         className={`rounded-3xl p-4 border space-y-3 transition-colors ${
           isDark
@@ -135,41 +192,16 @@ export const WalletView = () => {
             ))}
           </div>
 
-          {/* Selector de Método de Recarga */}
-          <div className="space-y-1">
-            <label className={`text-[11px] font-semibold ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Medio de Pago:</label>
-            <div className="grid grid-cols-3 gap-2 text-xs">
-              {[
-                { id: 'nequi', label: 'Nequi' },
-                { id: 'pse', label: 'PSE' },
-                { id: 'bancolombia', label: 'Bancolombia' },
-              ].map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => setMetodoPago(m.id)}
-                  className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                    metodoPago === m.id
-                      ? isDark
-                        ? 'bg-lochmara-600 text-white border-lochmara-600 shadow-xs'
-                        : 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                      : isDark
-                      ? 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            Al continuar se abre una ventana segura de pago (Wompi) con tarjeta, PSE o Nequi.
+          </p>
 
           <button
             type="submit"
             disabled={estaProcesando}
-            className="w-full py-3 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md shadow-lochmara-600/20 cursor-pointer"
+            className="w-full py-3 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 active:bg-lochmara-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md shadow-lochmara-600/20 cursor-pointer disabled:opacity-60"
           >
-            <PlusCircle className="w-4 h-4" />
+            {estaProcesando ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlusCircle className="w-4 h-4" />}
             <span>
               {estaProcesando
                 ? 'Procesando Recarga...'
@@ -193,37 +225,40 @@ export const WalletView = () => {
           }`}
         >
           {historialMovimientos.length > 0 ? (
-            historialMovimientos.map((tx) => (
-              <div key={tx.id} className="p-3.5 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className={`w-8 h-8 rounded-xl flex items-center justify-center border ${
-                      tx.type === 'credit'
-                        ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
-                        : 'bg-rose-500/10 text-rose-500 border-rose-500/30'
-                    }`}
-                  >
-                    {tx.type === 'credit' ? (
-                      <ArrowDownRight className="w-4 h-4" />
-                    ) : (
-                      <ArrowUpRight className="w-4 h-4" />
-                    )}
+            historialMovimientos.map((tx) => {
+              const esCredito = Number(tx.amount_cop) > 0;
+              return (
+                <div key={tx.id} className="p-3.5 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <div
+                      className={`w-8 h-8 rounded-xl flex items-center justify-center border ${
+                        esCredito
+                          ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+                          : 'bg-rose-500/10 text-rose-500 border-rose-500/30'
+                      }`}
+                    >
+                      {esCredito ? (
+                        <ArrowDownRight className="w-4 h-4" />
+                      ) : (
+                        <ArrowUpRight className="w-4 h-4" />
+                      )}
+                    </div>
+                    <div>
+                      <p className={`font-bold leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        {ETIQUETAS_TRANSACCION[tx.transaction_type] || tx.transaction_type}
+                      </p>
+                      <p className={`text-[10px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        {tx.created_at ? new Date(tx.created_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className={`font-bold leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{tx.title || tx.desc}</p>
-                    <p className={`text-[10px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{tx.date || tx.desc}</p>
-                  </div>
-                </div>
 
-                <span
-                  className={`font-extrabold ${
-                    tx.type === 'credit' ? 'text-emerald-500' : 'text-rose-500'
-                  }`}
-                >
-                  {typeof tx.amount === 'number' ? `$ ${tx.amount.toLocaleString('es-CO')}` : tx.amount}
-                </span>
-              </div>
-            ))
+                  <span className={`font-extrabold ${esCredito ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {esCredito ? '+' : ''} $ {Number(tx.amount_cop).toLocaleString('es-CO')}
+                  </span>
+                </div>
+              );
+            })
           ) : (
             <div className="p-4 text-center text-xs text-slate-400">
               No hay movimientos recientes en tu billetera.

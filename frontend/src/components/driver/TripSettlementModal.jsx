@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { QRCodeSVG } from 'qrcode.react';
 import { useAppStore } from '../../store/useAppStore';
 import {
   CheckCircle2,
   AlertTriangle,
-  QrCode,
-  DollarSign,
-  Receipt,
   Smartphone,
-  ShieldCheck,
   X,
   CreditCard,
-  Banknote,
-  ArrowRight,
-  UserCheck,
+  Copy,
+  Check,
+  Receipt,
+  Loader2,
+  Clock,
 } from 'lucide-react';
 
 export const TripSettlementModal = ({
@@ -23,19 +22,33 @@ export const TripSettlementModal = ({
   trip = null,
   onConfirmSettlement,
   onReportIncident,
+  isProcessing = false,
+  errorMessage = '',
 }) => {
-  const { theme } = useAppStore();
+  const { theme, user } = useAppStore();
   const isDark = theme === 'dark';
-  const [reportandoNoPago, setReportandoNoPago] = useState(false);
+  const [numeroCopiado, setNumeroCopiado] = useState(false);
 
   if (!isOpen) return null;
 
-  const totalRecaudado = trip?.price || 5800;
-  const comisionPlataforma = Math.round(totalRecaudado * 0.12); // 12%
-  const gananciaNetaConductor = totalRecaudado - comisionPlataforma; // 88%
+  const totalRecaudado = trip?.fare_cop || trip?.price || 5800;
+  const comisionPlataforma = trip?.platform_commission_cop || Math.round(totalRecaudado * 0.12);
+  const gananciaNetaConductor = trip?.earnings_cop || (totalRecaudado - comisionPlataforma);
 
-  const metodoPago = trip?.paymentMethod || 'nequi_direct';
-  const esPagoDirecto = metodoPago === 'nequi_direct' || metodoPago === 'cash_direct';
+  // trip.payment_method (backend real, snake_case) siempre tiene prioridad
+  // sobre trip.paymentMethod (dato local heredado del store de Zustand).
+  const metodoPago = trip?.payment_method || trip?.paymentMethod || 'nequi_directo';
+  const esPagoConTarjeta = metodoPago === 'tarjeta' || metodoPago === 'card_instant';
+  const pagoConTarjetaConfirmado = Boolean(trip?.payment_confirmed_at);
+  const numeroPagoDirecto = (user?.phone_number || user?.phone || '').replace(/\D/g, '');
+
+  const copiarNumero = () => {
+    if (navigator.clipboard && numeroPagoDirecto) {
+      navigator.clipboard.writeText(numeroPagoDirecto);
+      setNumeroCopiado(true);
+      setTimeout(() => setNumeroCopiado(false), 2000);
+    }
+  };
 
   return createPortal(
     <AnimatePresence>
@@ -84,8 +97,8 @@ export const TripSettlementModal = ({
             </button>
           </div>
 
-          {/* Si es Pago Directo con QR (Nequi / Daviplata), mostrar QR de cobro */}
-          {metodoPago === 'nequi_direct' && (
+          {/* Pago P2P (Nequi/Daviplata/Efectivo): QR real con el número del conductor */}
+          {!esPagoConTarjeta && numeroPagoDirecto && (
             <div
               className={`p-3 border rounded-2xl flex flex-col items-center justify-center space-y-2 text-center ${
                 isDark
@@ -98,17 +111,51 @@ export const TripSettlementModal = ({
                 <span>Cobro Directo Nequi / Daviplata</span>
               </div>
 
-              {/* QR Ilustrativo */}
               <div className="w-28 h-28 bg-white p-2 rounded-xl border border-purple-200 shadow-2xs flex items-center justify-center">
-                <QrCode className="w-24 h-24 text-slate-900" />
+                <QRCodeSVG value={numeroPagoDirecto} size={96} />
               </div>
 
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 <p className={`text-[11px] font-black ${isDark ? 'text-white' : 'text-purple-950'}`}>
                   Monto a Transferir: $ {totalRecaudado.toLocaleString('es-CO')} COP
                 </p>
-                <p className={`text-[10px] font-mono ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Número: <strong>315 892 4410</strong> (Carlos Mendoza)
+                <button
+                  type="button"
+                  onClick={copiarNumero}
+                  className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-1 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-purple-200 dark:border-purple-900/40 cursor-pointer"
+                >
+                  <span>{user?.phone_number || user?.phone}</span>
+                  {numeroCopiado ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3 text-slate-400" />}
+                </button>
+                <p className="text-[9px] text-slate-400 leading-tight">
+                  El pasajero escanea o copia tu número para transferirte directo.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Pago con tarjeta: estado real de confirmación de Wompi */}
+          {esPagoConTarjeta && (
+            <div
+              className={`p-3 border rounded-2xl flex items-center gap-2.5 ${
+                pagoConTarjetaConfirmado
+                  ? isDark ? 'bg-slate-950 border-emerald-900/40' : 'bg-emerald-50/70 border-emerald-200/80'
+                  : isDark ? 'bg-slate-950 border-amber-900/40' : 'bg-amber-50/70 border-amber-200/80'
+              }`}
+            >
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                pagoConTarjetaConfirmado ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'
+              }`}>
+                {pagoConTarjetaConfirmado ? <CreditCard className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+              </div>
+              <div>
+                <p className="text-xs font-bold">
+                  {pagoConTarjetaConfirmado ? 'Pago con tarjeta confirmado' : 'Esperando confirmación del pago'}
+                </p>
+                <p className="text-[10px] text-slate-400">
+                  {pagoConTarjetaConfirmado
+                    ? 'El pasajero ya pagó a través de la plataforma.'
+                    : 'El pasajero debe completar el pago con tarjeta antes de finalizar.'}
                 </p>
               </div>
             </div>
@@ -121,7 +168,7 @@ export const TripSettlementModal = ({
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className={isDark ? 'text-slate-400' : 'text-slate-600'}>Aporte Pasajero (Santiago G.):</span>
+              <span className={isDark ? 'text-slate-400' : 'text-slate-600'}>Aporte del Pasajero:</span>
               <strong className={`font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>$ {totalRecaudado.toLocaleString('es-CO')} COP</strong>
             </div>
 
@@ -137,22 +184,36 @@ export const TripSettlementModal = ({
               <strong className="text-sm font-black">$ {gananciaNetaConductor.toLocaleString('es-CO')} COP</strong>
             </div>
 
-            {esPagoDirecto && (
+            {!esPagoConTarjeta && (
               <p className="text-[9px] text-slate-400 leading-tight pt-1">
                 * La comisión de $ {comisionPlataforma.toLocaleString('es-CO')} COP se descuenta de tu saldo prepago en la plataforma.
               </p>
             )}
           </div>
 
+          {errorMessage && (
+            <p className="text-[11px] font-semibold text-rose-500 text-center px-1">{errorMessage}</p>
+          )}
+
           {/* Botones de Confirmación o Reporte de Incidente */}
           <div className="space-y-2 pt-1">
             <button
               type="button"
               onClick={onConfirmSettlement}
-              className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-600/25"
+              disabled={isProcessing || (esPagoConTarjeta && !pagoConTarjetaConfirmado)}
+              className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-600/25 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Confirmar Pago Recibido ($ {totalRecaudado.toLocaleString('es-CO')})</span>
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Finalizando...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Confirmar Pago Recibido ($ {totalRecaudado.toLocaleString('es-CO')})</span>
+                </>
+              )}
             </button>
 
             <button

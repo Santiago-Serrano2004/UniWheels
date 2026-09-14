@@ -105,6 +105,11 @@ export const useAppStore = create((set, get) => ({
   // --- VIAJE ACTIVO DEL CONDUCTOR ---
   activeDriverTrip: null,
 
+  // Trips reales (trip-service) de pasajeros confirmados en la ruta activa del
+  // conductor — poblado por DriverCockpitCard consultando el backend real.
+  currentRoutePassengerTrips: [],
+  setCurrentRoutePassengerTrips: (trips) => set({ currentRoutePassengerTrips: trips || [] }),
+
   // --- RESERVA ACTIVA DEL PASAJERO ---
   activePassengerBooking: null,
 
@@ -195,6 +200,9 @@ export const useAppStore = create((set, get) => ({
       passengers: [],
     },
   ],
+
+  // Reemplaza la lista completa de viajes publicados con datos reales del backend.
+  setPublishedDriverTrips: (trips) => set({ publishedDriverTrips: trips || [] }),
 
   // Cancelar viaje publicado
   cancelPublishedTrip: (tripId) => {
@@ -368,7 +376,7 @@ export const useAppStore = create((set, get) => ({
       door_pickup_fare: '$ 4.500',
       additional_detour_minutes: 2,
       
-      timestamp: 'Detectado hace 3 min por IA',
+      timestamp: 'Detectado hace 3 min',
       isRead: false,
     },
   ],
@@ -510,7 +518,16 @@ export const useAppStore = create((set, get) => ({
 
     set({
       activeDriverTrip: null,
+      currentRoutePassengerTrips: [],
       driverWalletBalance: nuevoSaldo,
+    });
+  },
+
+  // Cerrar la ruta activa del conductor tras completarla exitosamente (sin penalización).
+  finishActiveDriverTrip: () => {
+    set({
+      activeDriverTrip: null,
+      currentRoutePassengerTrips: [],
     });
   },
 
@@ -519,6 +536,11 @@ export const useAppStore = create((set, get) => ({
     set((state) => ({
       driverWalletBalance: state.driverWalletBalance + Number(monto),
     }));
+  },
+
+  // Sincronizar el saldo local con el saldo real de auth-service (wallet.balance_cop)
+  setDriverWalletBalance: (saldoReal) => {
+    set({ driverWalletBalance: Number(saldoReal) });
   },
 
   // Iniciar Sesión

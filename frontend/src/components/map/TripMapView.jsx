@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { routesService, tripLifecycleService } from '../../services/api';
+import { openWompiWidget } from '../../utils/wompiWidget';
 import { MapContainer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -256,32 +257,52 @@ export const TripMapView = () => {
     };
   }, [hasRouteToDisplay, driverOrigin, campusDestination, selectedPickup]);
 
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
   useEffect(() => {
     let isMounted = true;
-    async function evaluateDetour() {
-      if (!hasRouteToDisplay) return;
-      setIsLoadingEvaluation(true);
-      try {
-        const response = await routesService.evaluateDetourWithAI({
-          driver_origin: driverOrigin,
-          campus_destination: campusDestination,
-          passenger_pickup: selectedPickup,
-          vehicle_type: vehicleType,
-        });
-        if (isMounted && response?.data) {
-          setMatchingData(response.data);
+    if (!hasRouteToDisplay) return undefined;
+    setIsLoadingEvaluation(true);
+
+    async function evaluar() {
+      const routeId = selectedSearchRoute?.id;
+
+      // Si la ruta seleccionada viene de datos reales de route-matching-service,
+      // se evalúa contra el backend real (que a su vez consulta ai-route-service:
+      // desvío ajustado por tráfico TomTom + distancia/instrucciones a pie del
+      // Punto de Encuentro Inteligente).
+      if (routeId && UUID_REGEX.test(routeId)) {
+        const evaluacionReal = await routesService.evaluateDetour(routeId, selectedPickup[0], selectedPickup[1]);
+        if (isMounted && evaluacionReal) {
+          setMatchingData(evaluacionReal);
+          // Polilínea real (con tráfico) calculada por ai-route-service — más precisa
+          // que la geometría lineal local para dibujar el recorrido en el mapa.
+          if (Array.isArray(evaluacionReal.polyline_coordinates) && evaluacionReal.polyline_coordinates.length > 1) {
+            setDetourRouteCoords(evaluacionReal.polyline_coordinates);
+          }
+          setIsLoadingEvaluation(false);
+          return;
         }
-      } catch (e) {
-        console.warn('Evaluación de IA con fallback:', e);
-      } finally {
-        if (isMounted) setIsLoadingEvaluation(false);
       }
+
+      // Estimación local instantánea (sin red) como respaldo si no hay ruta real
+      // o el backend no respondió.
+      const response = routesService.estimateDetourLocally({
+        driver_origin: driverOrigin,
+        campus_destination: campusDestination,
+        passenger_pickup: selectedPickup,
+      });
+      if (isMounted && response?.data) {
+        setMatchingData(response.data);
+      }
+      if (isMounted) setIsLoadingEvaluation(false);
     }
-    evaluateDetour();
+
+    evaluar();
     return () => {
       isMounted = false;
     };
-  }, [hasRouteToDisplay, driverOrigin, campusDestination, selectedPickup, vehicleType]);
+  }, [hasRouteToDisplay, driverOrigin, campusDestination, selectedPickup, vehicleType, selectedSearchRoute?.id]);
 
   const activePath = pickupMode === 'on_route' ? mainRouteCoords : detourRouteCoords;
 
@@ -341,11 +362,38 @@ export const TripMapView = () => {
     setIsSimulatingGps((prev) => !prev);
   };
 
+  // El selector de método de pago usa ids "amigables" heredados de la UI
+  // (nequi_direct/cash_direct/card_instant) — el backend valida contra el
+  // enum real de Trip::PAYMENT_METHODS.
+  const PAYMENT_METHOD_MAP = {
+    nequi_direct: 'nequi_directo',
+    cash_direct: 'efectivo',
+    card_instant: 'tarjeta',
+  };
+
   const manejarReserva = async () => {
+    const metodoPagoBackend = PAYMENT_METHOD_MAP[selectedPaymentMethod] || 'efectivo';
+    const pinReserva = String(Math.floor(1000 + Math.random() * 9000));
+
     try {
-      const pinReserva = String(Math.floor(1000 + Math.random() * 9000));
+      // route_id, tarifa y PIN de abordaje reales los resuelve/genera trip-service
+      // server-side a partir del route_id (ya no se aceptan del cliente).
+      const respuesta = await tripLifecycleService.bookTrip({
+        route_id: selectedSearchRoute?.id,
+        driver_name: selectedSearchRoute?.driverName,
+        vehicle_plate: selectedSearchRoute?.plate,
+        vehicle_model: selectedSearchRoute?.vehicle,
+        pickup_address: pickupMode === 'on_route' ? (selectedSearchRoute?.origin || pickupName) : pickupName,
+        dropoff_address: isTowardsCampus ? campusName : 'Cañaveral / Florida',
+        total_fare_cop: activeFare,
+        scheduled_pickup_time: selectedSearchRoute?.departure_timestamp || new Date().toISOString(),
+        payment_method: metodoPagoBackend,
+      });
+
+      const tripIdReal = respuesta?.data?.trip_id || selectedSearchRoute?.id || 'trip_' + Date.now();
+
       bookPassengerTrip({
-        id: selectedSearchRoute?.id || 'trip_' + Date.now(),
+        id: tripIdReal,
         driverName: selectedSearchRoute?.driverName || (vehicleType === 'motorcycle' ? 'Mateo Silva' : 'Carlos Mendoza'),
         vehicle: selectedSearchRoute?.vehicle || (vehicleType === 'motorcycle' ? 'Yamaha MT-03' : 'Mazda 3 (Rojo)'),
         plate: selectedSearchRoute?.plate || (vehicleType === 'motorcycle' ? 'WTR-82F' : 'KLU-492'),
@@ -353,23 +401,30 @@ export const TripMapView = () => {
         origin: pickupMode === 'on_route' ? (selectedSearchRoute?.origin || pickupName) : pickupName,
         destination: isTowardsCampus ? campusName : 'Cañaveral / Florida',
         fare: activeFare,
-        boardingPin: pinReserva,
+        boardingPin: respuesta?.data?.boarding_pin || pinReserva,
         paymentMethod: selectedPaymentMethod,
-      });
-
-      await tripLifecycleService.createTrip({
-        driver_id: '0198cd6b-3cb8-7201-8b9f-092bf22d4801',
-        passenger_id: user?.id,
-        origin_lat: selectedPickup[0],
-        origin_lng: selectedPickup[1],
+        // Coordenadas reales para el botón "Cómo llegar" (Waze/Google Maps).
+        pickup_lat: selectedPickup[0],
+        pickup_lng: selectedPickup[1],
         destination_lat: campusDestination[0],
         destination_lng: campusDestination[1],
-        fare_cop: activeFare,
-        vehicle_type: vehicleType,
-        boarding_pin: pinReserva,
       });
+
+      // Pago con tarjeta: se cobra de una vez al confirmar la reserva (Wompi),
+      // en vez de esperar hasta la liquidación al final del viaje.
+      if (metodoPagoBackend === 'tarjeta' && respuesta?.data?.trip_id) {
+        try {
+          const widgetParams = await tripLifecycleService.initCardPayment(respuesta.data.trip_id);
+          const resultado = await openWompiWidget(widgetParams);
+          if (!resultado.success) {
+            console.warn('El pago con tarjeta no se completó — el conductor verá el viaje como pago pendiente.');
+          }
+        } catch (errorPago) {
+          console.warn('No se pudo iniciar el cobro con tarjeta:', errorPago);
+        }
+      }
     } catch (e) {
-      console.warn('Reserva guardada en frontend local:', e);
+      console.warn('Reserva guardada en frontend local (no se pudo confirmar con trip-service):', e);
     }
   };
 

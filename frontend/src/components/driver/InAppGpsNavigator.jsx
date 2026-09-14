@@ -133,7 +133,7 @@ function CameraFollower({ position }) {
   return null;
 }
 
-export const InAppGpsNavigator = ({ _trip, onExit, onComplete }) => {
+export const InAppGpsNavigator = ({ trip, onExit, onComplete }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isVoiceMuted, setIsVoiceMuted] = useState(false);
   const [modalSosOpen, setModalSosOpen] = useState(false);

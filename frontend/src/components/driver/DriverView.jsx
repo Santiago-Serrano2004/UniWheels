@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { authService } from '../../services/api';
+import { authService, vehicleService, routesService, tripsService, tripLifecycleService } from '../../services/api';
 import { placesApiService, LUGARES_POPULARES_AMB } from '../../services/placesApiService';
 import { InsufficientBalanceModal } from './InsufficientBalanceModal';
 import { DriverLiveNavigationCockpit } from './DriverLiveNavigationCockpit';
@@ -11,9 +11,15 @@ import { motion } from 'framer-motion';
 
 export const DriverView = () => {
   const {
+    user,
     activeDriverTrip,
     publishDriverTrip,
+    cancelDriverTrip,
+    finishActiveDriverTrip,
     driverWalletBalance,
+    currentRoutePassengerTrips,
+    setCurrentRoutePassengerTrips,
+    setActiveTab,
     theme,
   } = useAppStore();
 
@@ -58,9 +64,36 @@ export const DriverView = () => {
   const [tarifa, setTarifa] = useState('4500');
   const [modalSaldoInsuficiente, setModalSaldoInsuficiente] = useState(false);
   const [showDriverMapModal, setShowDriverMapModal] = useState(false);
+  const [vehiculoId, setVehiculoId] = useState(null);
+  const [publicando, setPublicando] = useState(false);
+  const [errorPublicacion, setErrorPublicacion] = useState('');
 
   const buscadorRef = useRef(null);
   const isSelectingRef = useRef(false);
+
+  // Vehículo aprobado del conductor (requerido por route-matching-service para publicar).
+  useEffect(() => {
+    if (!user?.id) return;
+    vehicleService.checkApprovedVehicle(user.id).then((res) => {
+      if (res?.has_approved_vehicle && res?.data?.id) {
+        setVehiculoId(res.data.id);
+      }
+    }).catch(() => {});
+  }, [user?.id]);
+
+  // Trips reales de pasajeros confirmados en la ruta activa (para la cabina de navegación).
+  const refrescarPasajerosDeRuta = useCallback(async () => {
+    if (!activeDriverTrip?.id) {
+      setCurrentRoutePassengerTrips([]);
+      return;
+    }
+    const trips = await tripsService.getActiveTripsForRoute(activeDriverTrip.id);
+    setCurrentRoutePassengerTrips(trips);
+  }, [activeDriverTrip?.id, setCurrentRoutePassengerTrips]);
+
+  useEffect(() => {
+    refrescarPasajerosDeRuta();
+  }, [refrescarPasajerosDeRuta]);
 
   // Click outside detector
   useEffect(() => {
@@ -170,8 +203,9 @@ export const DriverView = () => {
     }
   }, [sentidoViaje, direccionLugar, sedeSeleccionada, sedeDestinoSeleccionada, puntoCoords, coordsSedeActual, coordsSedeDestino]);
 
-  // Manejar publicación del trayecto
-  const manejarPublicarTrayecto = (e) => {
+  // Manejar publicación del trayecto: llama a route-matching-service (real) y solo
+  // si responde con éxito lo agrega al listado local del conductor.
+  const manejarPublicarTrayecto = async (e) => {
     e.preventDefault();
 
     if (driverWalletBalance < 1500) {
@@ -179,27 +213,121 @@ export const DriverView = () => {
       return;
     }
 
-    const nuevoViaje = {
-      id: `TRIP-${Date.now().toString().slice(-4)}`,
-      direction: sentidoViaje,
-      origin: origenTexto,
-      destination: destinoTexto,
-      meeting_point: (sentidoViaje === 'desde_campus' || sentidoViaje === 'entre_campus') ? puntoEncuentroCampus : null,
-      departure_date: fechaSalida,
-      departure_time: horaSalida,
-      available_seats: cupos,
-      fare_cop: parseInt(tarifa, 10),
-      route_path: trazadoRuta,
-      status: 'publicado',
-      passengers: [],
-    };
+    if (!vehiculoId) {
+      setErrorPublicacion('No tienes un vehículo aprobado para publicar trayectos todavía.');
+      return;
+    }
 
-    publishDriverTrip(nuevoViaje);
+    setErrorPublicacion('');
+    setPublicando(true);
+
+    const origenCoords = trazadoRuta[0];
+    const destinoCoords = trazadoRuta[1];
+    const fechaHoraSalida = new Date(`${fechaSalida}T${horaSalida}:00`);
+    // Sin un campo de hora límite en el formulario: se asume una ventana de 45 min,
+    // suficiente para el corredor universitario (duración real la calcula OSRM server-side).
+    const fechaHoraLlegada = new Date(fechaHoraSalida.getTime() + 45 * 60000);
+    // El campus "involucrado" en la ruta: el destino real en trayectos hacia/entre
+    // campus, o el propio campus de origen en trayectos que salen de él.
+    const sedeInvolucrada = sentidoViaje === 'entre_campus' ? sedeDestinoActual : sedeActual;
+
+    try {
+      const respuesta = await routesService.publishRoute({
+        vehicle_id: vehiculoId,
+        origin_name: origenTexto,
+        origin_lat: origenCoords[0],
+        origin_lng: origenCoords[1],
+        destination_campus_id: sedeInvolucrada?.id,
+        destination_campus_name: sedeInvolucrada?.name,
+        destination_lat: destinoCoords[0],
+        destination_lng: destinoCoords[1],
+        scheduled_departure_time: fechaHoraSalida.toISOString(),
+        target_arrival_time: fechaHoraLlegada.toISOString(),
+        available_seats: cupos,
+        base_contribution_cop: parseInt(tarifa, 10),
+        coordinates: trazadoRuta,
+      });
+
+      const rutaBackend = respuesta?.data || {};
+
+      publishDriverTrip({
+        id: rutaBackend.id,
+        direction: sentidoViaje,
+        origin: origenTexto,
+        destination: destinoTexto,
+        meeting_point: (sentidoViaje === 'desde_campus' || sentidoViaje === 'entre_campus') ? puntoEncuentroCampus : null,
+        departure_date: fechaSalida,
+        departure_time: horaSalida,
+        available_seats: cupos,
+        fare_cop: parseInt(tarifa, 10),
+        origin_lat: origenCoords[0],
+        origin_lng: origenCoords[1],
+        destination_lat: destinoCoords[0],
+        destination_lng: destinoCoords[1],
+        route_path: trazadoRuta,
+        status: 'publicado',
+        passengers: [],
+      });
+    } catch (error) {
+      setErrorPublicacion(error?.message || 'No se pudo publicar el trayecto. Intenta nuevamente.');
+    } finally {
+      setPublicando(false);
+    }
+  };
+
+  // Manejar finalización del viaje actual (llamado desde la cabina tras confirmar el cobro).
+  // Lanza el error hacia arriba si trip-service rechaza el cierre (ej. un pago
+  // con tarjeta que Wompi todavía no confirmó) — nunca se debe dar por
+  // finalizado un viaje localmente si el backend lo rechazó.
+  const manejarFinalizarViaje = async () => {
+    const tripActual = currentRoutePassengerTrips[0];
+    if (tripActual) {
+      await tripLifecycleService.completeTrip(tripActual.id);
+    }
+    const restantes = activeDriverTrip
+      ? await tripsService.getActiveTripsForRoute(activeDriverTrip.id)
+      : [];
+    if (restantes.length === 0) {
+      finishActiveDriverTrip();
+    } else {
+      setCurrentRoutePassengerTrips(restantes);
+    }
+  };
+
+  // Manejar cancelación del viaje actual desde la cabina de navegación
+  const manejarCancelarViajeActivo = async () => {
+    const tripActual = currentRoutePassengerTrips[0];
+    if (tripActual) {
+      try {
+        await tripLifecycleService.cancelTrip(
+          tripActual.id,
+          'conductor',
+          'Cancelado por el conductor desde la aplicación.'
+        );
+      } catch (err) {
+        console.warn('No se pudo cancelar el viaje en trip-service:', err);
+      }
+    }
+    const restantes = activeDriverTrip
+      ? await tripsService.getActiveTripsForRoute(activeDriverTrip.id)
+      : [];
+    if (restantes.length === 0) {
+      cancelDriverTrip(tripActual ? true : false, 3000);
+    } else {
+      setCurrentRoutePassengerTrips(restantes);
+    }
   };
 
   // Si el conductor tiene un viaje activo en curso, renderiza la cabina de navegación GPS en vivo
   if (activeDriverTrip) {
-    return <DriverLiveNavigationCockpit />;
+    return (
+      <DriverLiveNavigationCockpit
+        route={activeDriverTrip}
+        trip={currentRoutePassengerTrips[0] || null}
+        onFinishTrip={manejarFinalizarViaje}
+        onCancelTrip={manejarCancelarViajeActivo}
+      />
+    );
   }
 
   return (
@@ -351,6 +479,8 @@ export const DriverView = () => {
         tarifa={tarifa}
         setTarifa={setTarifa}
         manejarPublicarTrayecto={manejarPublicarTrayecto}
+        publicando={publicando}
+        errorPublicacion={errorPublicacion}
         isDark={isDark}
       />
 
@@ -375,6 +505,8 @@ export const DriverView = () => {
       <InsufficientBalanceModal
         isOpen={modalSaldoInsuficiente}
         onClose={() => setModalSaldoInsuficiente(false)}
+        currentBalance={driverWalletBalance}
+        onGoToRecharge={() => setActiveTab('wallet')}
       />
     </div>
   );

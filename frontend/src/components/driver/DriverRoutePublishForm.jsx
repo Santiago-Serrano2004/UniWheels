@@ -46,6 +46,8 @@ export const DriverRoutePublishForm = ({
   tarifa,
   setTarifa,
   manejarPublicarTrayecto,
+  publicando = false,
+  errorPublicacion = '',
   isDark,
 }) => {
   const { savedHomeLocation } = useAppStore();
@@ -406,12 +408,20 @@ export const DriverRoutePublishForm = ({
       </section>
 
       {/* 5. BOTÓN DE PUBLICAR TRAYECTO */}
+      {errorPublicacion && (
+        <p className="text-[11px] font-semibold text-red-500 text-center px-2">{errorPublicacion}</p>
+      )}
       <button
         type="submit"
-        className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-600/30 cursor-pointer"
+        disabled={publicando}
+        className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-600/30 cursor-pointer disabled:opacity-60"
       >
-        <Car className="w-4 h-4" />
-        <span>Publicar Trayecto Universitario</span>
+        {publicando ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <Car className="w-4 h-4" />
+        )}
+        <span>{publicando ? 'Publicando ruta...' : 'Publicar Trayecto Universitario'}</span>
       </button>
 
       {/* Modal de Configuración de Casa si no ha sido guardada */}

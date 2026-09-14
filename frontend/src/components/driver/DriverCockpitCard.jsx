@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '../../store/useAppStore';
+import { tripsService, tripLifecycleService, routesService } from '../../services/api';
+import { getPlaceCoordinates } from '../../hooks/useOsrmRoute';
 import { CancelTripPenaltyModal } from './CancelTripPenaltyModal';
 import {
   Car,
   Users,
   AlertTriangle,
-  UserPlus,
   ChevronRight,
   History,
+  Navigation,
+  Sparkles,
 } from 'lucide-react';
 
 export const DriverCockpitCard = () => {
@@ -15,13 +18,53 @@ export const DriverCockpitCard = () => {
     activeDriverTrip,
     cancelDriverTrip,
     driverWalletBalance,
-    addPassengerToActiveTrip,
+    currentRoutePassengerTrips,
+    setCurrentRoutePassengerTrips,
     setActiveTab,
     theme,
   } = useAppStore();
 
   const [modalCancelarAbierto, setModalCancelarAbierto] = useState(false);
+  const [cancelando, setCancelando] = useState(false);
+  const [ordenOptimizado, setOrdenOptimizado] = useState(false);
   const isDark = theme === 'dark';
+
+  const refrescarPasajeros = useCallback(async () => {
+    if (!activeDriverTrip?.id) {
+      setCurrentRoutePassengerTrips([]);
+      return;
+    }
+    const trips = await tripsService.getActiveTripsForRoute(activeDriverTrip.id);
+
+    // Con 2+ pasajeros activos, se pide a ai-route-service (ALNS) el orden óptimo
+    // de recogida en vez de mostrarlos en orden de llegada de la reserva.
+    if (trips.length >= 2) {
+      const candidatos = trips.map((t) => {
+        const [lat, lng] = getPlaceCoordinates(t.pickup_address, false);
+        return { id: t.id, name: t.passenger_name, pickup_address: t.pickup_address, pickup_lat: lat, pickup_lng: lng };
+      });
+
+      const optimizacion = await routesService.optimizePassengers(activeDriverTrip.id, candidatos);
+      const stops = optimizacion?.data?.ordered_stops;
+      if (optimizacion?.ai_powered && Array.isArray(stops) && stops.length > 0) {
+        const idsEnOrden = stops.map((s) => s.user_id || s.id).filter(Boolean);
+        const porId = Object.fromEntries(trips.map((t) => [t.id, t]));
+        const ordenados = idsEnOrden.map((id) => porId[id]).filter(Boolean);
+        // Completar con cualquier trip que no haya venido en la respuesta (defensivo).
+        const faltantes = trips.filter((t) => !idsEnOrden.includes(t.id));
+        setCurrentRoutePassengerTrips([...ordenados, ...faltantes]);
+        setOrdenOptimizado(true);
+        return;
+      }
+    }
+
+    setOrdenOptimizado(false);
+    setCurrentRoutePassengerTrips(trips);
+  }, [activeDriverTrip?.id, setCurrentRoutePassengerTrips]);
+
+  useEffect(() => {
+    refrescarPasajeros();
+  }, [refrescarPasajeros]);
 
   if (!activeDriverTrip) {
     return (
@@ -92,27 +135,22 @@ export const DriverCockpitCard = () => {
     );
   }
 
-  const pasajeros = activeDriverTrip.passengers || [];
-  const cuposTotales = activeDriverTrip.seats || 3;
+  const pasajeros = currentRoutePassengerTrips;
+  const cuposTotales = activeDriverTrip.available_seats || activeDriverTrip.availableSeats || 3;
   const cuposDisponibles = Math.max(0, cuposTotales - pasajeros.length);
 
-  // Simular un pasajero universitario para pruebas didácticas
-  const simularPasajero = () => {
-    if (cuposDisponibles <= 0) return;
-    const listaSimulada = [
-      { id: 'p1', name: 'Laura Gómez', studentCode: 'U00294812', program: 'Medicina', pickup: 'Parque San Pío' },
-      { id: 'p2', name: 'Mateo Cárdenas', studentCode: 'U00381920', program: 'Ingeniería de Sistemas', pickup: 'Estación Provenza' },
-      { id: 'p3', name: 'Camila Duarte', studentCode: 'U00194820', program: 'Derecho', pickup: 'Centro Comercial Cañaveral' },
-    ];
-    const siguiente = listaSimulada[pasajeros.length % listaSimulada.length];
-    addPassengerToActiveTrip({
-      id: 'p_' + Date.now(),
-      name: siguiente.name,
-      studentCode: siguiente.studentCode,
-      program: siguiente.program,
-      pickup: siguiente.pickup,
-      confirmedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    });
+  // Cancela cada trip activo asociado a la ruta y luego cierra la ruta publicada.
+  const manejarCancelarPublicacion = async (aplicarPenalizacion) => {
+    setCancelando(true);
+    await Promise.all(
+      pasajeros.map((t) =>
+        tripLifecycleService
+          .cancelTrip(t.id, 'conductor', 'Publicación cancelada por el conductor.')
+          .catch(() => {})
+      )
+    );
+    setCancelando(false);
+    cancelDriverTrip(aplicarPenalizacion, 3000);
   };
 
   return (
@@ -224,20 +262,11 @@ export const DriverCockpitCard = () => {
             </div>
           </div>
 
-          {cuposDisponibles > 0 && (
-            <button
-              type="button"
-              onClick={simularPasajero}
-              className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-xl transition-colors cursor-pointer border ${
-                isDark
-                  ? 'text-lochmara-300 bg-slate-800 border-slate-700 hover:bg-slate-700'
-                  : 'text-lochmara-600 bg-lochmara-50 border-lochmara-200 hover:bg-lochmara-100'
-              }`}
-              title="Simular solicitud de estudiante para probar penalización"
-            >
-              <UserPlus className="w-3 h-3" />
-              <span>+ Simular Pasajero</span>
-            </button>
+          {ordenOptimizado && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-xl bg-lochmara-500/10 text-lochmara-600 dark:text-lochmara-400 border border-lochmara-500/20">
+              <Sparkles className="w-3 h-3" />
+              <span>Orden de recogida optimizado</span>
+            </span>
           )}
         </div>
 
@@ -266,19 +295,19 @@ export const DriverCockpitCard = () => {
                         : 'bg-slate-100 border-slate-200 text-slate-700'
                     }`}
                   >
-                    {p.name.split(' ').map((n) => n[0]).join('')}
+                    {(p.passenger_name || '?').split(' ').map((n) => n[0]).slice(0, 2).join('')}
                   </div>
                   <div>
                     <p className={`font-bold leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      {p.name}
+                      {p.passenger_name || 'Pasajero'}
                     </p>
                     <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      {p.program} • {p.pickup}
+                      {p.pickup_address}
                     </p>
                   </div>
                 </div>
                 <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                  Confirmado
+                  {p.is_pin_verified ? 'A bordo' : 'Confirmado'}
                 </span>
               </div>
             ))}
@@ -286,21 +315,32 @@ export const DriverCockpitCard = () => {
         )}
       </section>
 
-      {/* 3. BOTÓN DE CANCELAR VIAJE CON VALIDACIÓN DE PENALIZACIÓN */}
+      {/* 3. IR A LA CABINA DE NAVEGACIÓN */}
+      <button
+        type="button"
+        onClick={() => setActiveTab('driver')}
+        className="w-full py-3 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-lochmara-600/20"
+      >
+        <Navigation className="w-4 h-4" />
+        <span>Ir a la Cabina de Navegación</span>
+      </button>
+
+      {/* 4. BOTÓN DE CANCELAR VIAJE CON VALIDACIÓN DE PENALIZACIÓN */}
       <button
         type="button"
         onClick={() => setModalCancelarAbierto(true)}
-        className="w-full py-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+        disabled={cancelando}
+        className="w-full py-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs disabled:opacity-60"
       >
         <AlertTriangle className="w-4 h-4 text-rose-500" />
-        <span>Cancelar Publicación de Viaje</span>
+        <span>{cancelando ? 'Cancelando...' : 'Cancelar Publicación de Viaje'}</span>
       </button>
 
       {/* MODAL DE PENALIZACIÓN SI HAY PASAJEROS */}
       <CancelTripPenaltyModal
         isOpen={modalCancelarAbierto}
         onClose={() => setModalCancelarAbierto(false)}
-        onConfirmCancel={(applyPenalty) => cancelDriverTrip(applyPenalty, 3000)}
+        onConfirmCancel={manejarCancelarPublicacion}
         passengersCount={pasajeros.length}
         currentBalance={driverWalletBalance}
         penaltyAmount={3000}

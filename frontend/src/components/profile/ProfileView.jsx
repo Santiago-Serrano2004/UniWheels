@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { tripsService, authService, vehicleService } from '../../services/api';
+import { tripsService, authService, vehicleService, notificationsService } from '../../services/api';
+import { isPushSupported, getExistingPushSubscription, subscribeToPush, unsubscribeFromPush } from '../../utils/pushNotifications';
 import { ReputationStatsModal } from './ReputationStatsModal';
 import { PaymentMethodsManagerModal } from './PaymentMethodsManagerModal';
 import { SetHomeLocationModal } from '../common/SetHomeLocationModal';
@@ -27,6 +28,8 @@ import {
   Search,
   Clock,
   RefreshCw,
+  Bell,
+  BellOff,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -52,6 +55,39 @@ export const ProfileView = () => {
   const [eliminandoCuenta, setEliminandoCuenta] = useState(false);
   const [estadisticasData, setEstadisticasData] = useState(null);
   const [verificandoEstado, setVerificandoEstado] = useState(false);
+
+  // Notificaciones Push del navegador (Web Push)
+  const [pushActivo, setPushActivo] = useState(false);
+  const [cambiandoPush, setCambiandoPush] = useState(false);
+  const [errorPush, setErrorPush] = useState('');
+
+  useEffect(() => {
+    getExistingPushSubscription().then((sub) => setPushActivo(Boolean(sub)));
+  }, []);
+
+  const alternarPush = async () => {
+    setErrorPush('');
+    setCambiandoPush(true);
+    try {
+      if (pushActivo) {
+        const sub = await unsubscribeFromPush();
+        if (sub) await notificationsService.removePushSubscription(sub.endpoint);
+        setPushActivo(false);
+      } else {
+        const vapidKey = await notificationsService.getVapidPublicKey();
+        if (!vapidKey) {
+          throw new Error('El servicio de notificaciones push no está disponible en este momento.');
+        }
+        const subscription = await subscribeToPush(vapidKey);
+        await notificationsService.savePushSubscription(subscription);
+        setPushActivo(true);
+      }
+    } catch (err) {
+      setErrorPush(err?.message || 'No se pudieron activar las notificaciones push.');
+    } finally {
+      setCambiandoPush(false);
+    }
+  };
 
   const institutionLabel = user?.institution?.code || user?.institution || 'Universitaria';
 
@@ -116,7 +152,6 @@ export const ProfileView = () => {
       icon: Home,
       iconBg: isDark ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-700 border border-amber-200',
       action: () => {
-        setDireccionCasaInput(savedHomeLocation?.address || '');
         setModalCasaAbierto(true);
       },
     },
@@ -362,6 +397,47 @@ export const ProfileView = () => {
           );
         })}
       </section>
+
+      {/* 3.b NOTIFICACIONES PUSH DEL NAVEGADOR */}
+      {isPushSupported() && (
+        <section
+          className={`rounded-2xl border p-3.5 transition-colors ${
+            isDark ? 'bg-slate-900 border-slate-800 text-white shadow-md' : 'bg-white border-slate-200 text-slate-900 shadow-sm'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                pushActivo ? 'bg-emerald-500/10 text-emerald-500' : isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-400'
+              }`}>
+                {pushActivo ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+              </div>
+              <div className="min-w-0">
+                <p className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Notificaciones Push</p>
+                <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  {pushActivo ? 'Activas en este dispositivo' : 'Recibe avisos de tus viajes en tiempo real'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={alternarPush}
+              disabled={cambiandoPush}
+              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 cursor-pointer disabled:opacity-60 ${
+                pushActivo ? 'bg-emerald-500' : isDark ? 'bg-slate-700' : 'bg-slate-300'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform ${
+                  pushActivo ? 'translate-x-5' : 'translate-x-0.5'
+                }`}
+              />
+            </button>
+          </div>
+          {errorPush && <p className="text-[10px] text-rose-500 font-semibold mt-2">{errorPush}</p>}
+        </section>
+      )}
 
       {/* 4. ACCIONES DE SESIÓN Y CUENTA */}
       <div className="space-y-2 pt-1">

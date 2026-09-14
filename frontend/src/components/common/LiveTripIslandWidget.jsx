@@ -11,8 +11,10 @@ import {
   Star,
   Car,
   Bike,
+  Navigation,
 } from 'lucide-react';
 import { CancelTripModal } from '../trips/CancelTripModal';
+import { openExternalNavigation } from '../../utils/mapNavigation';
 
 // Modelo Vectorial SVG Superior de Carro (Mazda 3)
 const TopDownCarSvg = ({ width = 48, height = 48, color = '#0284c7', isMoving = true }) => (
@@ -334,6 +336,26 @@ export const LiveTripIslandWidget = () => {
                   >
                     Ver Mapa en Vivo
                   </button>
+
+                  {trip.pickup_lat != null && trip.pickup_lng != null && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openExternalNavigation('google_maps', {
+                          destLat: trip.pickup_lat,
+                          destLng: trip.pickup_lng,
+                        })
+                      }
+                      className={`py-2.5 px-4 rounded-2xl border text-xs font-bold transition-all cursor-pointer shadow-2xs ${
+                        isDark
+                          ? 'bg-slate-800 hover:bg-slate-700 text-white border-slate-700'
+                          : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                      }`}
+                      title="Cómo llegar al punto de encuentro"
+                    >
+                      <Navigation className="w-3.5 h-3.5" />
+                    </button>
+                  )}
 
                   <button
                     type="button"

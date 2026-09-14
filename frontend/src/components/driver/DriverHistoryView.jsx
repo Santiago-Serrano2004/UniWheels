@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { tripsService } from '../../services/api';
+import { tripsService, routesService } from '../../services/api';
 import { RatingFeedbackModal } from '../common/RatingFeedbackModal';
 import {
   Car,
@@ -14,7 +14,6 @@ import {
   Trash2,
   Power,
   Navigation,
-  KeyRound,
   Play,
   X,
   Building2,
@@ -27,6 +26,7 @@ export const DriverHistoryView = () => {
   const {
     theme,
     publishedDriverTrips,
+    setPublishedDriverTrips,
     cancelPublishedTrip,
     startPublishedTrip,
     recurringDriverTrips,
@@ -63,32 +63,66 @@ export const DriverHistoryView = () => {
   const [viajesHistorial, setViajesHistorial] = useState([]);
   const [viajeExpandido, setViajeExpandido] = useState(null);
 
+  // Historial: cada tarjeta es UN viaje real completado (trip-service no agrupa
+  // varios pasajeros bajo una misma ruta en esta respuesta).
   useEffect(() => {
     tripsService.getDriverHistory().then((data) => {
-      if (data && data.length > 0) {
-        const formateados = data.map((d) => ({
-          id: d.id,
-          date: d.date,
-          origin: d.origin,
-          destination: d.destination,
-          duration: d.duration,
-          distance: d.distance,
-          totalEarned: d.total_earned,
-          commissionPaid: d.commission_paid,
-          passengers: d.passengers.map((p) => ({
-            id: p.id,
-            name: p.name,
-            program: p.program,
-            pickup: p.pickup,
-            rated: p.rated,
-            ratingScore: p.rating_score || 5,
-          })),
-        }));
-        setViajesHistorial(formateados);
-        setViajeExpandido(formateados[0]?.id || null);
-      }
+      const completados = (data || []).filter((d) => d.status === 'completado');
+      const formateados = completados.map((d) => ({
+        id: d.id,
+        date: d.date,
+        origin: d.origin,
+        destination: d.destination,
+        totalEarned: Number(d.fare_cop) || 0,
+        driverEarnings: Number(d.earnings_cop) || 0,
+        passenger: {
+          id: d.passenger_id,
+          name: d.passenger_name || 'Pasajero',
+          pickup: d.pickup_address,
+          rated: false,
+        },
+      }));
+      setViajesHistorial(formateados);
+      setViajeExpandido(formateados[0]?.id || null);
     });
   }, []);
+
+  // Publicados: rutas reales del conductor (route-matching-service), enriquecidas
+  // con los pasajeros confirmados de cada una (trip-service).
+  useEffect(() => {
+    routesService.getMyRoutes().then(async (rutas) => {
+      if (!rutas || rutas.length === 0) return;
+
+      const enriquecidas = await Promise.all(
+        rutas.map(async (r) => {
+          const pasajeros = await tripsService.getActiveTripsForRoute(r.id);
+          return {
+            id: r.id,
+            origin: r.origin_name || r.origin,
+            destination: r.destination_campus_name || r.destination,
+            departure_time: r.departure_time,
+            departure_date: r.scheduled_departure_time ? r.scheduled_departure_time.split('T')[0] : '',
+            available_seats: r.available_seats,
+            fare_cop: r.base_contribution_cop,
+            origin_lat: r.origin_lat,
+            origin_lng: r.origin_lng,
+            destination_lat: r.destination_lat,
+            destination_lng: r.destination_lng,
+            route_path: r.route_path,
+            status: r.status === 'publicada' ? 'publicado' : r.status,
+            passengers: pasajeros.map((p) => ({
+              id: p.id,
+              name: p.passenger_name || 'Pasajero',
+              pickup: p.pickup_address,
+              isPinVerified: p.is_pin_verified,
+            })),
+          };
+        })
+      );
+
+      setPublishedDriverTrips(enriquecidas);
+    });
+  }, [setPublishedDriverTrips]);
 
   const abrirCalificarPasajero = (pasajero, tripId) => {
     setModalCalificacion({
@@ -98,23 +132,27 @@ export const DriverHistoryView = () => {
     });
   };
 
-  const guardarCalificacion = () => {
+  const guardarCalificacion = async ({ rating = 5, comment = '' } = {}) => {
     if (!modalCalificacion.pasajero || !modalCalificacion.tripId) return;
 
+    try {
+      await tripsService.submitRating({
+        trip_id: modalCalificacion.tripId,
+        rated_user_id: modalCalificacion.pasajero.id,
+        role_rated: 'pasajero',
+        score: rating,
+        optional_comment: comment || undefined,
+      });
+    } catch (err) {
+      console.warn('No se pudo registrar la calificación:', err);
+    }
+
     setViajesHistorial((prev) =>
-      prev.map((viaje) => {
-        if (viaje.id === modalCalificacion.tripId) {
-          return {
-            ...viaje,
-            passengers: viaje.passengers.map((p) =>
-              p.id === modalCalificacion.pasajero.id
-                ? { ...p, rated: true, ratingScore: 5 }
-                : p
-            ),
-          };
-        }
-        return viaje;
-      })
+      prev.map((viaje) =>
+        viaje.id === modalCalificacion.tripId
+          ? { ...viaje, passenger: { ...viaje.passenger, rated: true, ratingScore: rating } }
+          : viaje
+      )
     );
   };
 
@@ -293,7 +331,7 @@ export const DriverHistoryView = () => {
                     </div>
                   </div>
 
-                  {/* Pasajeros Confirmados con PIN */}
+                  {/* Pasajeros Confirmados */}
                   {viaje.passengers && viaje.passengers.length > 0 ? (
                     <div className="space-y-1.5">
                       <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1">
@@ -311,13 +349,12 @@ export const DriverHistoryView = () => {
                             <div className="min-w-0">
                               <p className="font-black truncate">{p.name}</p>
                               <p className="text-[10px] text-slate-400 truncate">
-                                {p.program} • Recogida: {p.pickup}
+                                Recogida: {p.pickup}
                               </p>
                             </div>
-                            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-lochmara-500/10 text-lochmara-600 dark:text-lochmara-400 border border-lochmara-500/20 font-mono font-black text-xs shrink-0">
-                              <KeyRound className="w-3 h-3" />
-                              <span>PIN: {p.pin}</span>
-                            </div>
+                            <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30 shrink-0">
+                              {p.isPinVerified ? 'A bordo' : 'Confirmado'}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -516,10 +553,10 @@ export const DriverHistoryView = () => {
 
                     <div className="text-right">
                       <span className="text-sm font-extrabold text-emerald-400">
-                        +$ {viaje.totalEarned.toLocaleString('es-CO')}
+                        +$ {viaje.driverEarnings.toLocaleString('es-CO')}
                       </span>
                       <p className={`text-[10px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                        {viaje.duration} • {viaje.distance}
+                        {viaje.passenger?.name}
                       </p>
                     </div>
                   </div>
@@ -538,50 +575,46 @@ export const DriverHistoryView = () => {
                           }`}
                         >
                           <div>
-                            <span className="text-[10px] font-semibold block text-slate-400">Total Recibido</span>
+                            <span className="text-[10px] font-semibold block text-slate-400">Total Cobrado</span>
                             <span className="text-xs font-extrabold">${viaje.totalEarned.toLocaleString('es-CO')}</span>
                           </div>
                           <div>
                             <span className="text-[10px] font-semibold block text-slate-400">Comisión (12%)</span>
-                            <span className="text-xs font-extrabold text-rose-500">-${viaje.commissionPaid.toLocaleString('es-CO')}</span>
+                            <span className="text-xs font-extrabold text-rose-500">-${(viaje.totalEarned - viaje.driverEarnings).toLocaleString('es-CO')}</span>
                           </div>
                           <div>
                             <span className="text-[10px] font-semibold block text-slate-400">Ganancia Neta</span>
-                            <span className="text-xs font-extrabold text-emerald-400">+${(viaje.totalEarned - viaje.commissionPaid).toLocaleString('es-CO')}</span>
+                            <span className="text-xs font-extrabold text-emerald-400">+${viaje.driverEarnings.toLocaleString('es-CO')}</span>
                           </div>
                         </div>
 
-                        {/* Pasajeros */}
-                        <div className="space-y-2">
-                          <p className="text-[11px] font-bold text-slate-400">
-                            Pasajeros Transportados ({viaje.passengers.length}):
-                          </p>
-                          <div className={`space-y-2 divide-y ${isDark ? 'divide-slate-800' : 'divide-slate-100'}`}>
-                            {viaje.passengers.map((pasajero) => (
-                              <div key={pasajero.id} className="pt-2 first:pt-0 flex items-center justify-between text-xs">
-                                <div className="min-w-0">
-                                  <p className="font-bold truncate">{pasajero.name}</p>
-                                  <p className="text-[10px] text-slate-400 truncate">{pasajero.program} • {pasajero.pickup}</p>
-                                </div>
-                                {pasajero.rated ? (
-                                  <div className="flex items-center gap-1 text-[11px] text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30 font-bold">
-                                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                    <span>{pasajero.ratingScore || 5}.0</span>
-                                  </div>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => abrirCalificarPasajero(pasajero, viaje.id)}
-                                    className="px-2.5 py-1 rounded-xl bg-amber-500 hover:bg-amber-400 text-white text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
-                                  >
-                                    <Star className="w-3 h-3 fill-white text-white" />
-                                    <span>Calificar</span>
-                                  </button>
-                                )}
+                        {/* Pasajero */}
+                        {viaje.passenger && (
+                          <div className="space-y-2">
+                            <p className="text-[11px] font-bold text-slate-400">Pasajero Transportado:</p>
+                            <div className="flex items-center justify-between text-xs">
+                              <div className="min-w-0">
+                                <p className="font-bold truncate">{viaje.passenger.name}</p>
+                                <p className="text-[10px] text-slate-400 truncate">{viaje.passenger.pickup}</p>
                               </div>
-                            ))}
+                              {viaje.passenger.rated ? (
+                                <div className="flex items-center gap-1 text-[11px] text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30 font-bold">
+                                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                  <span>{viaje.passenger.ratingScore || 5}.0</span>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => abrirCalificarPasajero(viaje.passenger, viaje.id)}
+                                  className="px-2.5 py-1 rounded-xl bg-amber-500 hover:bg-amber-400 text-white text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                                >
+                                  <Star className="w-3 h-3 fill-white text-white" />
+                                  <span>Calificar</span>
+                                </button>
+                              )}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>

@@ -63,6 +63,7 @@ export const LoginForm = ({ onBack }) => {
           studentCode: u.academic_profile?.student_code || u.student_code || 'U000000',
           profilePhoto: u.profile_photo_url,
           role: u.roles?.includes('conductor') ? 'driver' : 'passenger',
+          isAdmin: u.roles?.includes('administrador') || false,
           institution: u.institution?.name || 'Universidad Autónoma de Bucaramanga',
           campus: u.campus?.name || 'Campus El Jardín',
           institutionWelcomeImage: u.institution?.welcome_image_url || '/assets/institutions/unab-mascot.png',

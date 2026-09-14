@@ -409,8 +409,14 @@ export const TripMapOverlayControls = ({
                 >
                   {/* Selector de Modalidad: En la Ruta vs Con Desvío */}
                   <div className="space-y-1.5">
-                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-0.5">
-                      Modalidad de Abordaje:
+                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-0.5 flex items-center gap-1.5">
+                      <span>Modalidad de Abordaje:</span>
+                      {isLoadingEvaluation && (
+                        <span className="inline-flex items-center gap-1 normal-case font-semibold text-lochmara-500">
+                          <span className="w-2.5 h-2.5 rounded-full border-2 border-lochmara-500 border-t-transparent animate-spin" />
+                          Calculando mejor opción...
+                        </span>
+                      )}
                     </p>
 
                     <div className="grid grid-cols-2 gap-2">
@@ -468,6 +474,43 @@ export const TripMapOverlayControls = ({
                       </button>
                     </div>
                   </div>
+
+                  {/* Estado del Tráfico en Vivo (TomTom vía ai-route-service) */}
+                  {matchingData?.traffic_status && (
+                    <div
+                      className={`px-2.5 py-1.5 rounded-2xl border flex items-center gap-2 text-[10px] font-bold ${
+                        isDark ? 'bg-slate-950 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-600'
+                      }`}
+                    >
+                      <Radio className={`w-3 h-3 shrink-0 ${matchingData?.ai_powered ? 'text-emerald-500' : 'text-slate-400'}`} />
+                      <span className="truncate">{matchingData.traffic_status}</span>
+                    </div>
+                  )}
+
+                  {/* Punto de Encuentro Inteligente: distancia e instrucciones a pie */}
+                  {pickupMode === 'on_route' && matchingData?.walking_distance_meters > 0 && (
+                    <div
+                      className={`p-2.5 rounded-2xl border flex items-start gap-2 ${
+                        isDark ? 'bg-lochmara-500/10 border-lochmara-500/30' : 'bg-lochmara-50 border-lochmara-200'
+                      }`}
+                    >
+                      <Navigation className="w-3.5 h-3.5 text-lochmara-500 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-black text-lochmara-600 dark:text-lochmara-400">
+                          Camina {Math.round(matchingData.walking_distance_meters)} m
+                          {matchingData.walking_time_minutes
+                            ? ` (${Math.round(matchingData.walking_time_minutes)} min)`
+                            : ''}{' '}
+                          hasta el punto de encuentro
+                        </p>
+                        {matchingData.walking_instructions && (
+                          <p className="text-[10px] text-slate-400 leading-snug mt-0.5">
+                            {matchingData.walking_instructions}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Selector Rápido de Método de Pago */}
                   <div
