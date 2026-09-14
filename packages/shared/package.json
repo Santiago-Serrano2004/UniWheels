@@ -1,0 +1,12 @@
+{
+  "name": "@uniwheels/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Capa de API + estado global compartida entre la SPA web (frontend/) y la app móvil (mobile/) de UniWheels. No es un workspace — se consume vía dependencia \"file:\" para no alterar la resolución de dependencias de frontend/.",
+  "type": "module",
+  "main": "src/index.js",
+  "dependencies": {
+    "axios": "^1.19.0",
+    "zustand": "^5.0.15"
+  }
+}

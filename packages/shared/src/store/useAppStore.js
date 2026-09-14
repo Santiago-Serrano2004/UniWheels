@@ -1,0 +1,256 @@
+import { create } from 'zustand';
+import { getStorageAdapter } from '../platform.js';
+import { readStoredSession, writeStoredSession, removeStoredSession } from '../session.js';
+
+/**
+ * @file useAppStore.js
+ * @description Gestor de Estado Global compartido entre frontend/ (web) y
+ * mobile/ (Expo). Autenticación, rol activo, ciclo de vida de viajes activos,
+ * billetera y navegación por pestañas.
+ *
+ * Diferencia clave frente al store original de la web: NO lee la sesión de
+ * storage de forma síncrona al crear el store (localStorage es síncrono, pero
+ * AsyncStorage de React Native no lo es). El store arranca siempre en estado
+ * "sin sesión" y cada plataforma llama a `hydrateSession()` una vez al iniciar
+ * la app, antes de renderizar cualquier pantalla que dependa de `isAuthenticated`.
+ */
+
+const THEME_KEY = 'uniwheels_app_theme';
+const HOME_LOCATION_KEY = 'uniwheels_home_location';
+
+const persistTheme = (tema) => {
+  getStorageAdapter().setItem(THEME_KEY, tema).catch(() => {});
+};
+
+const persistHomeLocation = (location) => {
+  getStorageAdapter().setItem(HOME_LOCATION_KEY, JSON.stringify(location)).catch(() => {});
+};
+
+export const useAppStore = create((set, get) => ({
+  // --- AUTENTICACIÓN Y USUARIO ---
+  // Arranca sin sesión siempre — ver `hydrateSession()` más abajo.
+  isAuthenticated: false,
+  user: null,
+  isHydrating: true,
+
+  // --- TEMA VISUAL DE LA APLICACIÓN (Light / Dark) ---
+  theme: 'light',
+  toggleTheme: () =>
+    set((state) => {
+      const nuevoTema = state.theme === 'dark' ? 'light' : 'dark';
+      persistTheme(nuevoTema);
+      return { theme: nuevoTema };
+    }),
+  setTheme: (nuevoTema) => {
+    persistTheme(nuevoTema);
+    set({ theme: nuevoTema });
+  },
+
+  // Modal de Mascota Institucional de Bienvenida
+  showWelcomeMascot: false,
+  closeWelcomeMascot: () => set({ showWelcomeMascot: false }),
+  openWelcomeMascot: () => set({ showWelcomeMascot: true }),
+
+  // Modal de Invitación a Registro de Conductor
+  showDriverInviteModal: false,
+  closeDriverInviteModal: () => set({ showDriverInviteModal: false }),
+  openDriverInviteModal: () => set({ showDriverInviteModal: true }),
+
+  // --- UBICACIÓN FAVORITA GLOBAL (CASA) ---
+  savedHomeLocation: null,
+  setSavedHomeLocation: (location) => {
+    persistHomeLocation(location);
+    set({ savedHomeLocation: location });
+  },
+
+  // --- NAVEGACIÓN Y PESTAÑAS ---
+  // Pestañas disponibles: 'home' | 'map' | 'driver' | 'history' | 'trips' | 'wallet' | 'profile'
+  activeTab: 'home',
+  setActiveTab: (pestaña) => set({ activeTab: pestaña }),
+
+  // Ruta seleccionada desde la búsqueda para visualizar en el mapa
+  selectedSearchRoute: null,
+  setSelectedSearchRoute: (route) => set({ selectedSearchRoute: route, activeTab: 'map' }),
+  clearSelectedSearchRoute: () => set({ selectedSearchRoute: null }),
+
+  // --- ROL ACTIVO (Pasajero o Conductor) ---
+  activeRole: 'passenger',
+  toggleRole: () =>
+    set((state) => {
+      if (!state.user?.isDriver) {
+        return { activeRole: 'passenger' };
+      }
+      const nuevoRol = state.activeRole === 'passenger' ? 'driver' : 'passenger';
+      const usuarioActualizado = { ...state.user, role: nuevoRol };
+      writeStoredSession(usuarioActualizado);
+      return {
+        activeRole: nuevoRol,
+        user: usuarioActualizado,
+        activeTab: 'home',
+      };
+    }),
+
+  // --- VIAJE ACTIVO DEL CONDUCTOR ---
+  activeDriverTrip: null,
+  currentRoutePassengerTrips: [],
+  setCurrentRoutePassengerTrips: (trips) => set({ currentRoutePassengerTrips: trips || [] }),
+
+  // --- RESERVA ACTIVA DEL PASAJERO ---
+  activePassengerBooking: null,
+
+  bookPassengerTrip: (datosViaje) => {
+    const reserva = {
+      id: 'book_' + Date.now(),
+      bookedAt: new Date().toISOString(),
+      status: 'confirmed',
+      boardingPin: '4829',
+      ...datosViaje,
+    };
+    set({ activePassengerBooking: reserva, activeTab: 'history' });
+    return reserva;
+  },
+
+  cancelPassengerBooking: () => set({ activePassengerBooking: null }),
+
+  startPassengerTrip: () => {
+    set((state) => ({
+      activePassengerBooking: state.activePassengerBooking
+        ? { ...state.activePassengerBooking, status: 'in_progress', isStarted: true, startedAt: new Date().toISOString() }
+        : null,
+    }));
+  },
+
+  completePassengerTrip: () => {
+    set((state) => ({
+      activePassengerBooking: state.activePassengerBooking
+        ? { ...state.activePassengerBooking, status: 'completed', isStarted: false, completedAt: new Date().toISOString() }
+        : null,
+    }));
+  },
+
+  // --- VIAJES PUBLICADOS DEL CONDUCTOR (fuera de alcance de la v1 móvil,
+  // se conserva por paridad con la web / para la Fase 2 del plan móvil) ---
+  publishedDriverTrips: [],
+  setPublishedDriverTrips: (trips) => set({ publishedDriverTrips: trips || [] }),
+  cancelPublishedTrip: (tripId) => {
+    set((state) => ({
+      publishedDriverTrips: state.publishedDriverTrips.map((t) => (t.id === tripId ? { ...t, status: 'cancelado' } : t)),
+    }));
+  },
+  startPublishedTrip: (tripId) => {
+    const trip = get().publishedDriverTrips.find((t) => t.id === tripId);
+    if (!trip) return;
+    set({
+      activeDriverTrip: { ...trip, status: 'active', passengers: trip.passengers || [], availableSeats: trip.available_seats },
+      activeTab: 'home',
+    });
+  },
+
+  // --- BILLETERA PREPAGO ---
+  driverWalletBalance: 0,
+  passengerWalletBalance: 0,
+  linkedNequi: null,
+  pendingOpenPaymentManagerModal: false,
+  setPendingOpenPaymentManagerModal: (val) => set({ pendingOpenPaymentManagerModal: val }),
+  openPaymentSettings: () => set({ activeTab: 'profile', pendingOpenPaymentManagerModal: true }),
+
+  // Sincronizar el saldo local con el saldo real de auth-service (wallet.balance_cop)
+  setDriverWalletBalance: (saldoReal) => set({ driverWalletBalance: Number(saldoReal) }),
+
+  publishDriverTrip: (datosTrayecto) => {
+    const nuevoViaje = {
+      id: 'trip_' + Date.now(),
+      createdAt: new Date().toISOString(),
+      date: datosTrayecto.departure_date || new Date().toISOString().split('T')[0],
+      departure_time: datosTrayecto.departure_time || '06:45 AM',
+      direction: datosTrayecto.direction || 'hacia_campus',
+      available_seats: datosTrayecto.available_seats || 3,
+      total_seats: datosTrayecto.available_seats || 3,
+      fare_cop: datosTrayecto.fare_cop || 4500,
+      status: 'publicado',
+      passengers: [],
+      ...datosTrayecto,
+    };
+    set((state) => ({
+      publishedDriverTrips: [nuevoViaje, ...state.publishedDriverTrips],
+      activeTab: 'history',
+    }));
+    return nuevoViaje;
+  },
+
+  cancelDriverTrip: (aplicarPenalizacion = false, montoPenalizacion = 3000) => {
+    const saldoActual = get().driverWalletBalance;
+    const nuevoSaldo = aplicarPenalizacion ? Math.max(0, saldoActual - montoPenalizacion) : saldoActual;
+    set({ activeDriverTrip: null, currentRoutePassengerTrips: [], driverWalletBalance: nuevoSaldo });
+  },
+
+  finishActiveDriverTrip: () => set({ activeDriverTrip: null, currentRoutePassengerTrips: [] }),
+
+  // --- SESIÓN ---
+
+  /**
+   * Se llama UNA VEZ al arrancar la app (antes de renderizar pantallas que
+   * dependan de `isAuthenticated`) para recuperar la sesión persistida de forma
+   * asíncrona. En web, el adaptador envuelve `localStorage` en una promesa ya
+   * resuelta, así que esto se resuelve en el siguiente microtask; en mobile,
+   * espera a `AsyncStorage` de verdad.
+   */
+  hydrateSession: async () => {
+    const sesion = await readStoredSession();
+    set({
+      isAuthenticated: Boolean(sesion),
+      user: sesion,
+      activeRole: sesion?.isDriver ? sesion?.role || 'passenger' : 'passenger',
+      isHydrating: false,
+    });
+  },
+
+  login: (datosUsuario) => {
+    const usuarioAGuardar = { ...datosUsuario };
+    if (!usuarioAGuardar.isDriver) {
+      usuarioAGuardar.role = 'passenger';
+      usuarioAGuardar.driverStatus = usuarioAGuardar.driverStatus || 'unregistered';
+    }
+    writeStoredSession(usuarioAGuardar);
+    set({
+      isAuthenticated: true,
+      user: usuarioAGuardar,
+      activeRole: 'passenger',
+      activeTab: 'home',
+      showWelcomeMascot: true,
+    });
+  },
+
+  updateDriverStatus: (estado, datosConductor = {}) => {
+    const state = get();
+    if (!state.user) return;
+    const estaAprobado = estado === 'approved';
+    const driverStatus = estaAprobado ? 'approved' : 'pending';
+    const usuarioActualizado = {
+      ...state.user,
+      isDriver: estaAprobado,
+      driverStatus,
+      driverApplication: { ...datosConductor, submittedAt: new Date().toISOString() },
+      driverInfo: datosConductor,
+      role: estaAprobado ? 'driver' : state.user.role || 'passenger',
+    };
+    writeStoredSession(usuarioActualizado);
+    set({
+      user: usuarioActualizado,
+      activeRole: estaAprobado ? 'driver' : state.activeRole || 'passenger',
+    });
+  },
+
+  logout: () => {
+    removeStoredSession();
+    set({
+      isAuthenticated: false,
+      user: null,
+      activeTab: 'home',
+      activeRole: 'passenger',
+      activeDriverTrip: null,
+      activePassengerBooking: null,
+      showWelcomeMascot: false,
+    });
+  },
+}));
