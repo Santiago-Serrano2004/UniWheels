@@ -11,7 +11,7 @@ class NotificationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_se_puede_despachar_una_notificacion_asincrona(): void
+    public function test_se_puede_despachar_una_notificacion_asincrona_desde_un_servicio_interno(): void
     {
         $userId = (string) Str::uuid();
 
@@ -26,7 +26,8 @@ class NotificationTest extends TestCase
             ],
         ];
 
-        $response = $this->postJson('/api/v1/notifications/send', $payload);
+        $response = $this->withToken($this->jwtServicioDePrueba())
+            ->postJson('/api/v1/notifications/send', $payload);
 
         $response->assertStatus(201)
             ->assertJson([
@@ -43,7 +44,20 @@ class NotificationTest extends TestCase
         ]);
     }
 
-    public function test_se_pueden_listar_las_notificaciones_del_usuario(): void
+    public function test_un_usuario_final_no_puede_despachar_notificaciones_directamente(): void
+    {
+        $response = $this->withToken($this->jwtDePrueba((string) Str::uuid()))
+            ->postJson('/api/v1/notifications/send', [
+                'user_id' => (string) Str::uuid(),
+                'title' => 'Falsa alerta',
+                'body' => 'Intento de suplantación',
+                'type' => Notification::TYPE_SEGURIDAD,
+            ]);
+
+        $response->assertStatus(403);
+    }
+
+    public function test_se_pueden_listar_las_notificaciones_del_usuario_autenticado(): void
     {
         $userId = (string) Str::uuid();
 
@@ -64,7 +78,7 @@ class NotificationTest extends TestCase
             'read_at' => now(),
         ]);
 
-        $response = $this->getJson("/api/v1/users/{$userId}/notifications");
+        $response = $this->withToken($this->jwtDePrueba($userId))->getJson('/api/v1/notifications');
 
         $response->assertStatus(200)
             ->assertJson([
@@ -72,6 +86,24 @@ class NotificationTest extends TestCase
                 'unread_count' => 1,
             ])
             ->assertJsonCount(2, 'data');
+    }
+
+    public function test_un_usuario_no_puede_ver_las_notificaciones_de_otro(): void
+    {
+        $propietario = (string) Str::uuid();
+        $otro = (string) Str::uuid();
+
+        Notification::create([
+            'user_id' => $propietario,
+            'title' => 'Alerta privada',
+            'body' => 'Contenido sensible',
+            'type' => Notification::TYPE_SEGURIDAD,
+            'is_read' => false,
+        ]);
+
+        $response = $this->withToken($this->jwtDePrueba($otro))->getJson('/api/v1/notifications');
+
+        $response->assertStatus(200)->assertJsonCount(0, 'data');
     }
 
     public function test_obtiene_el_conteo_exacto_de_no_leidas(): void
@@ -94,7 +126,8 @@ class NotificationTest extends TestCase
             'is_read' => false,
         ]);
 
-        $response = $this->getJson("/api/v1/users/{$userId}/notifications/unread-count");
+        $response = $this->withToken($this->jwtDePrueba($userId))
+            ->getJson('/api/v1/notifications/unread-count');
 
         $response->assertStatus(200)
             ->assertJson([
@@ -103,17 +136,19 @@ class NotificationTest extends TestCase
             ]);
     }
 
-    public function test_marca_una_notificacion_como_leida(): void
+    public function test_marca_una_notificacion_propia_como_leida(): void
     {
+        $userId = (string) Str::uuid();
         $notif = Notification::create([
-            'user_id' => (string) Str::uuid(),
+            'user_id' => $userId,
             'title' => 'Viaje Finalizado',
             'body' => 'Has llegado al Campus El Jardín. Por favor califica tu experiencia.',
             'type' => Notification::TYPE_VIAJE_FINALIZADO,
             'is_read' => false,
         ]);
 
-        $response = $this->postJson("/api/v1/notifications/{$notif->id}/read");
+        $response = $this->withToken($this->jwtDePrueba($userId))
+            ->postJson("/api/v1/notifications/{$notif->id}/read");
 
         $response->assertStatus(200)
             ->assertJson([
@@ -128,7 +163,28 @@ class NotificationTest extends TestCase
         ]);
     }
 
-    public function test_marca_todas_las_notificaciones_como_leidas(): void
+    public function test_no_se_puede_marcar_como_leida_la_notificacion_de_otro_usuario(): void
+    {
+        $notif = Notification::create([
+            'user_id' => (string) Str::uuid(),
+            'title' => 'Notificación ajena',
+            'body' => 'No debería poder leerla otro usuario.',
+            'type' => Notification::TYPE_VIAJE_FINALIZADO,
+            'is_read' => false,
+        ]);
+
+        $response = $this->withToken($this->jwtDePrueba((string) Str::uuid()))
+            ->postJson("/api/v1/notifications/{$notif->id}/read");
+
+        $response->assertStatus(403);
+
+        $this->assertDatabaseHas('notifications', [
+            'id' => $notif->id,
+            'is_read' => false,
+        ]);
+    }
+
+    public function test_marca_todas_las_notificaciones_del_usuario_autenticado_como_leidas(): void
     {
         $userId = (string) Str::uuid();
 
@@ -148,7 +204,8 @@ class NotificationTest extends TestCase
             'is_read' => false,
         ]);
 
-        $response = $this->postJson("/api/v1/users/{$userId}/notifications/mark-all-read");
+        $response = $this->withToken($this->jwtDePrueba($userId))
+            ->postJson('/api/v1/notifications/mark-all-read');
 
         $response->assertStatus(200)
             ->assertJson([
@@ -161,22 +218,26 @@ class NotificationTest extends TestCase
 
     public function test_valida_campos_obligatorios_al_despachar(): void
     {
-        $response = $this->postJson('/api/v1/notifications/send', []);
+        $response = $this->withToken($this->jwtServicioDePrueba())
+            ->postJson('/api/v1/notifications/send', []);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['user_id', 'title', 'body', 'type']);
     }
 
-    public function test_maneja_correctamente_ids_simulados_de_notificaciones(): void
+    public function test_un_id_de_notificacion_inexistente_devuelve_404_en_vez_de_exito_falso(): void
     {
         $simulatedId = 'notif-1786851565644';
 
-        $response = $this->postJson("/api/v1/notifications/{$simulatedId}/read");
+        $response = $this->withToken($this->jwtDePrueba((string) Str::uuid()))
+            ->postJson("/api/v1/notifications/{$simulatedId}/read");
 
-        $response->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'message' => 'Notificación marcada como leída.',
-            ]);
+        $response->assertStatus(404);
+    }
+
+    public function test_rutas_de_notificaciones_rechazan_peticiones_sin_token(): void
+    {
+        $this->getJson('/api/v1/notifications')->assertStatus(401);
+        $this->postJson('/api/v1/notifications/mark-all-read')->assertStatus(401);
     }
 }

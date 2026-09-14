@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\PushSubscriptionController;
+use App\Http\Controllers\Api\V1\RatingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -10,12 +12,25 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->group(function () {
-    // Despacho de notificaciones
-    Route::post('/notifications/send', [NotificationController::class, 'send']);
+    // Despacho de notificaciones — solo servicio-a-servicio (nunca desde la app cliente).
+    Route::post('/notifications/send', [NotificationController::class, 'send'])
+        ->middleware('jwt.service');
 
-    // Consultas y acciones del usuario
-    Route::get('/users/{userId}/notifications', [NotificationController::class, 'index']);
-    Route::get('/users/{userId}/notifications/unread-count', [NotificationController::class, 'unreadCount']);
-    Route::post('/users/{userId}/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
-    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    // Clave pública VAPID — necesaria para suscribirse, sin datos sensibles.
+    Route::get('/push/vapid-public-key', [PushSubscriptionController::class, 'vapidPublicKey']);
+
+    Route::middleware('jwt.auth')->group(function () {
+        Route::post('/push/subscribe', [PushSubscriptionController::class, 'store']);
+        Route::delete('/push/unsubscribe', [PushSubscriptionController::class, 'destroy']);
+
+        // Consultas y acciones del usuario autenticado (identidad siempre desde el JWT).
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+        Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+
+        // Calificaciones bidireccionales 1-5 estrellas.
+        Route::post('/ratings', [RatingController::class, 'store']);
+        Route::get('/ratings/received', [RatingController::class, 'received']);
+    });
 });

@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SendNotificationRequest;
 use App\Models\Notification;
+use App\Services\WebPushService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
+    public function __construct(private WebPushService $webPushService) {}
+
     /**
      * Enviar y registrar una nueva notificación para un usuario.
      */
@@ -25,6 +28,16 @@ class NotificationController extends Controller
             'payload_json' => $datos['payload_json'] ?? null,
             'is_read' => false,
         ]);
+
+        // Entrega real al dispositivo (Web Push) además del registro in-app — si el
+        // usuario no tiene suscripciones activas o VAPID no está configurado, esto
+        // es un no-op silencioso (ver WebPushService).
+        $this->webPushService->sendToUser(
+            $datos['user_id'],
+            $datos['title'],
+            $datos['body'],
+            $datos['payload_json'] ?? []
+        );
 
         return response()->json([
             'success' => true,
@@ -44,8 +57,10 @@ class NotificationController extends Controller
     /**
      * Obtener el listado de notificaciones de un usuario con contador de no leídas.
      */
-    public function index(string $userId): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $userId = $request->attributes->get('user_id');
+
         $notificaciones = Notification::forUser($userId)
             ->latest()
             ->take(30)
@@ -72,16 +87,30 @@ class NotificationController extends Controller
     /**
      * Marcar una notificación específica como leída.
      */
-    public function markAsRead(string $id): JsonResponse
+    public function markAsRead(Request $request, string $id): JsonResponse
     {
+        $userId = $request->attributes->get('user_id');
+
         $notificacion = null;
         if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
             $notificacion = Notification::find($id);
         }
 
-        if ($notificacion) {
-            $notificacion->markAsRead();
+        if (! $notificacion) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Notificación no encontrada.',
+            ], 404);
         }
+
+        if ((string) $notificacion->user_id !== (string) $userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No autorizado para modificar esta notificación.',
+            ], 403);
+        }
+
+        $notificacion->markAsRead();
 
         return response()->json([
             'success' => true,
@@ -95,10 +124,12 @@ class NotificationController extends Controller
     }
 
     /**
-     * Marcar todas las notificaciones de un usuario como leídas.
+     * Marcar todas las notificaciones del usuario autenticado como leídas.
      */
-    public function markAllAsRead(string $userId): JsonResponse
+    public function markAllAsRead(Request $request): JsonResponse
     {
+        $userId = $request->attributes->get('user_id');
+
         Notification::forUser($userId)
             ->unread()
             ->update([
@@ -113,10 +144,11 @@ class NotificationController extends Controller
     }
 
     /**
-     * Obtener solo el contador de no leídas.
+     * Obtener solo el contador de no leídas del usuario autenticado.
      */
-    public function unreadCount(string $userId): JsonResponse
+    public function unreadCount(Request $request): JsonResponse
     {
+        $userId = $request->attributes->get('user_id');
         $count = Notification::forUser($userId)->unread()->count();
 
         return response()->json([
