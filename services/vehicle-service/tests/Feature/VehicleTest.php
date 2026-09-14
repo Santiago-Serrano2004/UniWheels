@@ -2,6 +2,7 @@
 
 use App\Models\Vehicle;
 use App\Models\VehicleDocument;
+use App\Services\HabeasDataAuditService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -42,7 +43,7 @@ test('un conductor puede registrar un automovil con placa colombiana valida', fu
         'has_trunk' => true,
     ];
 
-    $response = $this->postJson('/api/v1/vehicles', $payload);
+    $response = $this->withToken(jwtDePrueba($userId))->postJson('/api/v1/vehicles', $payload);
 
     $response->assertStatus(201)
         ->assertJson([
@@ -74,7 +75,7 @@ test('un conductor puede registrar una moto confirmando casco adicional reglamen
         'has_extra_helmet' => true,
     ];
 
-    $response = $this->postJson('/api/v1/vehicles', $payload);
+    $response = $this->withToken(jwtDePrueba($userId))->postJson('/api/v1/vehicles', $payload);
 
     $response->assertStatus(201)
         ->assertJson([
@@ -99,7 +100,7 @@ test('rechaza registro de moto si no confirma casco adicional', function () {
         'has_extra_helmet' => false,
     ];
 
-    $response = $this->postJson('/api/v1/vehicles', $payload);
+    $response = $this->withToken(jwtDePrueba($userId))->postJson('/api/v1/vehicles', $payload);
 
     $response->assertStatus(422)
         ->assertJsonValidationErrors(['has_extra_helmet']);
@@ -122,7 +123,7 @@ test('un conductor puede subir documentos privados como SOAT y Licencia', functi
 
     $archivoSoat = UploadedFile::fake()->create('soat_digital.pdf', 500, 'application/pdf');
 
-    $response = $this->postJson("/api/v1/vehicles/{$vehiculo->id}/documents", [
+    $response = $this->withToken(jwtDePrueba($userId))->postJson("/api/v1/vehicles/{$vehiculo->id}/documents", [
         'document_type' => 'soat',
         'document_number' => 'POL-99887766',
         'issuer_entity' => 'Seguros Bolivar',
@@ -172,13 +173,13 @@ test('descargar un documento privado genera un registro inmutable de auditoria H
     ]);
 
     // Generar URL firmada
-    $urlFirmada = app(\App\Services\HabeasDataAuditService::class)->generateSignedDownloadUrl($documento, [
+    $urlFirmada = app(HabeasDataAuditService::class)->generateSignedDownloadUrl($documento, [
         'auditor_id' => $auditorId,
         'purpose' => 'verificacion_inicial',
     ]);
 
-    // Ejecutar descarga
-    $response = $this->get($urlFirmada);
+    // Ejecutar descarga (como administrador/auditor de Bienestar Universitario)
+    $response = $this->withToken(jwtDePrueba($auditorId, ['administrador']))->get($urlFirmada);
 
     $response->assertStatus(200);
 
@@ -218,10 +219,10 @@ test('la verificacion de documentos actualiza el estado del vehiculo a aprobado 
             'is_verified' => false,
         ]);
 
-        $this->patchJson("/api/v1/vehicles/{$vehiculo->id}/documents/{$doc->id}/verify", [
-            'is_verified' => true,
-            'verified_by_user_id' => $adminId,
-        ]);
+        $this->withToken(jwtDePrueba($adminId, ['administrador']))
+            ->patchJson("/api/v1/vehicles/{$vehiculo->id}/documents/{$doc->id}/verify", [
+                'is_verified' => true,
+            ]);
     }
 
     $this->assertEquals('aprobado', $vehiculo->fresh()->status);

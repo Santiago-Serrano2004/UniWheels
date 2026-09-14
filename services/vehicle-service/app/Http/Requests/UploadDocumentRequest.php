@@ -19,7 +19,23 @@ class UploadDocumentRequest extends FormRequest
                 'string',
                 'in:licencia_conduccion,soat,tarjeta_propiedad,revision_tecnico_mecanica',
             ],
-            'document_number' => ['nullable', 'string', 'max:50'],
+            'document_number' => [
+                'nullable',
+                'string',
+                'max:50',
+                function ($attribute, $value, $fail) {
+                    if (empty($value)) {
+                        return;
+                    }
+                    $tipo = $this->input('document_type');
+                    if ($tipo === 'soat' && ! preg_match('/^[A-Z0-9-]{6,20}$/', $value)) {
+                        $fail('El número de póliza SOAT debe ser alfanumérico de 6 a 20 caracteres.');
+                    }
+                    if ($tipo === 'licencia_conduccion' && ! preg_match('/^\d{6,12}$/', $value)) {
+                        $fail('El número de licencia de conducción debe tener entre 6 y 12 dígitos.');
+                    }
+                },
+            ],
             'issuer_entity' => ['nullable', 'string', 'max:100'],
             'issued_at' => ['nullable', 'date'],
             'expires_at' => [
@@ -30,7 +46,7 @@ class UploadDocumentRequest extends FormRequest
                     if (in_array($tipo, ['soat', 'revision_tecnico_mecanica']) && empty($value)) {
                         $fail('La fecha de vencimiento es obligatoria para el SOAT y la Revisión Técnico-Mecánica.');
                     }
-                    if (!empty($value) && strtotime($value) < strtotime(date('Y-m-d'))) {
+                    if (! empty($value) && strtotime($value) < strtotime(date('Y-m-d'))) {
                         $fail('El documento que intentas adjuntar ya se encuentra vencido.');
                     }
                 },

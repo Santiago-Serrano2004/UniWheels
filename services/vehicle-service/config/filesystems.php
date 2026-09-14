@@ -38,6 +38,31 @@ return [
             'report' => false,
         ],
 
+        // Documentos legales (SOAT, licencia, RTM) — Habeas Data (Ley 1581/2012).
+        // Nunca se sirve públicamente; solo accesible vía URLs firmadas de 10 min.
+        //
+        // Driver configurable: 'local' por defecto (disco del contenedor, no
+        // sobrevive un redeploy) o 's3' para apuntar a un bucket S3-compatible real
+        // (Cloudflare R2 en producción — mismas 6 variables de entorno que el disco
+        // 's3' de abajo, sin tocar código: PRIVATE_DOCS_DISK_DRIVER=s3 + las
+        // credenciales R2_*). El controlador ya usa Storage::disk('private')-
+        // >download() en vez de ->path(), que funciona igual con ambos drivers.
+        'private' => [
+            'driver' => env('PRIVATE_DOCS_DISK_DRIVER', 'local'),
+            'root' => storage_path('app/private'),
+            'visibility' => 'private',
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+            // Solo se usan cuando PRIVATE_DOCS_DISK_DRIVER=s3 — ignoradas en 'local'.
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('R2_BUCKET'),
+            'endpoint' => env('R2_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

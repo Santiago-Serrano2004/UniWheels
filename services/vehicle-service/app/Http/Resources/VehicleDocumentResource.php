@@ -17,6 +17,9 @@ class VehicleDocumentResource extends JsonResource
     {
         $servicioAuditoria = app(HabeasDataAuditService::class);
 
+        $esAdmin = in_array('administrador', $request->attributes->get('user_roles', []), true);
+        $esDueno = (string) $this->user_id === (string) $request->attributes->get('user_id');
+
         return [
             'id' => $this->id,
             'document_type' => $this->document_type,
@@ -27,7 +30,11 @@ class VehicleDocumentResource extends JsonResource
             'is_expired' => $this->isExpired(),
             'is_verified' => (bool) $this->is_verified,
             'verified_at' => $this->verified_at?->toISOString(),
-            'secure_download_url' => $servicioAuditoria->generateSignedDownloadUrl($this->resource),
+            // Solo se entrega la URL firmada al dueño del documento o a un administrador —
+            // nunca a un tercero que simplemente liste/consulte el vehículo.
+            'secure_download_url' => ($esDueno || $esAdmin)
+                ? $servicioAuditoria->generateSignedDownloadUrl($this->resource)
+                : null,
             'created_at' => $this->created_at?->toISOString(),
         ];
     }

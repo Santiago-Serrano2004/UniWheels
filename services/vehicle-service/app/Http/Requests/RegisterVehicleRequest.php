@@ -34,7 +34,15 @@ class RegisterVehicleRequest extends FormRequest
                 'string',
                 'min:5',
                 'max:7',
-                'regex:/^[A-Z]{3}\d{2}[A-Z\d]$/', // Formatos válidos: AAA123 (Carros) o AAA12D (Motos)
+                function ($attribute, $value, $fail) {
+                    $esCarro = $this->input('vehicle_type') === 'carro';
+                    $patron = $esCarro ? '/^[A-Z]{3}\d{3}$/' : '/^[A-Z]{3}\d{2}[A-Z]$/';
+                    if (! preg_match($patron, (string) $value)) {
+                        $fail($esCarro
+                            ? 'La placa de un automóvil debe tener el formato AAA123.'
+                            : 'La placa de una motocicleta debe tener el formato AAA12D.');
+                    }
+                },
             ],
             'brand' => ['required', 'string', 'max:80'],
             'model_line' => ['required', 'string', 'max:100'],
@@ -58,7 +66,7 @@ class RegisterVehicleRequest extends FormRequest
             'has_extra_helmet' => [
                 'boolean',
                 function ($attribute, $value, $fail) {
-                    if ($this->input('vehicle_type') === 'moto' && !$value) {
+                    if ($this->input('vehicle_type') === 'moto' && ! $value) {
                         $fail('Para registrar una motocicleta debes confirmar que dispones de un casco adicional reglamentario.');
                     }
                 },

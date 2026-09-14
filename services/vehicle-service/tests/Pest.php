@@ -1,6 +1,8 @@
 <?php
 
+use Firebase\JWT\JWT;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /*
@@ -44,7 +46,22 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Genera un JWT válido (mismo formato/secreto que emite auth-service) para usar
+ * en tests de este servicio, que solo verifica tokens, no los emite.
+ */
+function jwtDePrueba(string $userId, array $roles = []): string
 {
-    // ..
+    $ahora = time();
+
+    return JWT::encode([
+        'iss' => 'uniwheels-auth-service',
+        'sub' => $userId,
+        'email' => 'test@unab.edu.co',
+        'roles' => $roles,
+        'type' => 'user',
+        'jti' => (string) Str::uuid(),
+        'iat' => $ahora,
+        'exp' => $ahora + 3600,
+    ], config('jwt.secret'), config('jwt.algo'));
 }

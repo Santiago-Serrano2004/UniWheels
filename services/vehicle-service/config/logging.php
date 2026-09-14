@@ -1,5 +1,6 @@
 <?php
 
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -63,6 +64,11 @@ return [
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
+            // Logs en JSON por línea (un objeto por evento) en vez de texto plano de
+            // Monolog — así un agregador (Loki, jq, etc.) los puede parsear sin
+            // reescribir nada aguas abajo. Poner LOG_JSON=false vuelve al formato
+            // legible de siempre si hace falta depurar a ojo en desarrollo.
+            'formatter' => env('LOG_JSON', true) ? JsonFormatter::class : null,
         ],
 
         'daily' => [
