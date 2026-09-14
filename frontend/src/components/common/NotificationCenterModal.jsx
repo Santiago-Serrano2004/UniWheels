@@ -17,36 +17,44 @@ import {
 export const NotificationCenterModal = ({ isOpen, onClose }) => {
   const { user, theme } = useAppStore();
   const isDark = theme === 'dark';
+  const isAdmin = Boolean(user?.isAdmin);
   const userId = user?.id || '01a00000-0000-0000-0000-000000000001';
 
-  const [notifications, setNotifications] = useState([
-    {
-      id: 'notif-1',
-      title: '¡Carlos Mendoza inició el recorrido!',
-      body: 'Tu conductor viene en camino hacia Parque San Pío en su Mazda 3 (KLU-492). Tiempo estimado: 6 minutos.',
-      type: 'conductor_en_camino',
-      is_read: false,
-      created_at: new Date(Date.now() - 3 * 60000).toISOString(),
-    },
-    {
-      id: 'notif-2',
-      title: 'PIN de Abordaje Seguro emitido',
-      body: 'Tu código de verificación es 4829. Dictaselo a Carlos al momento de subirte al vehículo.',
-      type: 'abordaje_verificado',
-      is_read: false,
-      created_at: new Date(Date.now() - 10 * 60000).toISOString(),
-    },
-    {
-      id: 'notif-3',
-      title: 'Recarga de Billetera Exitosa',
-      body: 'Se acreditaron $ 25.000 COP a tu billetera UniWheels vía Nequi.',
-      type: 'billetera',
-      is_read: true,
-      created_at: new Date(Date.now() - 120 * 60000).toISOString(),
-    },
-  ]);
+  // Semillas de ejemplo (solo para pasajero/conductor, nunca para admin): se
+  // reemplazan por notificaciones reales en cuanto el backend devuelve al
+  // menos una — ver el useEffect de abajo.
+  const [notifications, setNotifications] = useState(
+    isAdmin
+      ? []
+      : [
+          {
+            id: 'notif-1',
+            title: '¡Carlos Mendoza inició el recorrido!',
+            body: 'Tu conductor viene en camino hacia Parque San Pío en su Mazda 3 (KLU-492). Tiempo estimado: 6 minutos.',
+            type: 'conductor_en_camino',
+            is_read: false,
+            created_at: new Date(Date.now() - 3 * 60000).toISOString(),
+          },
+          {
+            id: 'notif-2',
+            title: 'PIN de Abordaje Seguro emitido',
+            body: 'Tu código de verificación es 4829. Dictaselo a Carlos al momento de subirte al vehículo.',
+            type: 'abordaje_verificado',
+            is_read: false,
+            created_at: new Date(Date.now() - 10 * 60000).toISOString(),
+          },
+          {
+            id: 'notif-3',
+            title: 'Recarga de Billetera Exitosa',
+            body: 'Se acreditaron $ 25.000 COP a tu billetera UniWheels vía Nequi.',
+            type: 'billetera',
+            is_read: true,
+            created_at: new Date(Date.now() - 120 * 60000).toISOString(),
+          },
+        ]
+  );
 
-  const [unreadCount, setUnreadCount] = useState(2);
+  const [unreadCount, setUnreadCount] = useState(isAdmin ? 0 : 2);
 
   // Bloquear scroll del fondo mientras está abierto
   useEffect(() => {
@@ -254,17 +262,19 @@ export const NotificationCenterModal = ({ isOpen, onClose }) => {
             )}
           </div>
 
-          {/* Botón inferior fijo */}
-          <div className={`pt-2 border-t shrink-0 ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
-            <button
-              type="button"
-              onClick={simularNotificacionEnVivo}
-              className="w-full py-2 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 text-white text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
-            >
-              <Send className="w-3 h-3 text-white" />
-              <span>Simular Alerta en Vivo</span>
-            </button>
-          </div>
+          {/* Botón inferior fijo (herramienta de demo, no aplica a admin) */}
+          {!isAdmin && (
+            <div className={`pt-2 border-t shrink-0 ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
+              <button
+                type="button"
+                onClick={simularNotificacionEnVivo}
+                className="w-full py-2 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 text-white text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+              >
+                <Send className="w-3 h-3 text-white" />
+                <span>Simular Alerta en Vivo</span>
+              </button>
+            </div>
+          )}
         </motion.div>
       </div>
     </AnimatePresence>,

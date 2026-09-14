@@ -3,7 +3,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { Emblem } from './Emblem';
 import { NotificationCenterModal } from './NotificationCenterModal';
 import { SosEmergencyModal } from './SosEmergencyModal';
-import { UserCheck, Car, Bell, ShieldAlert } from 'lucide-react';
+import { UserCheck, Car, Bell, ShieldAlert, ShieldCheck } from 'lucide-react';
 
 export const Header = () => {
   const {
@@ -20,9 +20,14 @@ export const Header = () => {
   const [modalSosAbierto, setModalSosAbierto] = useState(false);
 
   const isDriverVerified = Boolean(user?.isDriver);
+  const isAdmin = Boolean(user?.isAdmin);
   const hasActiveTrip = Boolean(activeDriverTrip || activePassengerBooking);
 
   const manejarClickRol = () => {
+    if (isAdmin) {
+      // El admin no tiene modo pasajero/conductor que alternar.
+      return;
+    }
     if (isDriverVerified) {
       toggleRole();
       if (activeRole === 'passenger') {
@@ -78,16 +83,25 @@ export const Header = () => {
 
         <button
           onClick={manejarClickRol}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-bold transition-all cursor-pointer border shadow-2xs ${
-            isDriverVerified && activeRole === 'driver'
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-bold transition-all border shadow-2xs ${
+            isAdmin ? 'cursor-default' : 'cursor-pointer'
+          } ${
+            isAdmin
+              ? 'bg-violet-700 text-white border-violet-600 shadow-violet-700/20'
+              : isDriverVerified && activeRole === 'driver'
               ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500 shadow-emerald-600/20'
               : theme === 'dark'
               ? 'bg-slate-900 hover:bg-slate-800 text-white border-slate-800'
               : 'bg-slate-900 hover:bg-slate-800 text-white border-slate-900'
           }`}
-          title={isDriverVerified ? 'Cambiar modo de la aplicación' : 'Toca para registrarte como conductor'}
+          title={isAdmin ? 'Cuenta de administrador' : isDriverVerified ? 'Cambiar modo de la aplicación' : 'Toca para registrarte como conductor'}
         >
-          {isDriverVerified && activeRole === 'driver' ? (
+          {isAdmin ? (
+            <>
+              <ShieldCheck className="w-3.5 h-3.5 text-violet-200" />
+              <span>Administrador</span>
+            </>
+          ) : isDriverVerified && activeRole === 'driver' ? (
             <>
               <Car className="w-3.5 h-3.5 text-emerald-200" />
               <span>Conductor</span>

@@ -47,6 +47,7 @@ export const ProfileView = () => {
   } = useAppStore();
   const isDark = theme === 'dark';
   const isDriverVerified = Boolean(user?.isDriver);
+  const isAdmin = Boolean(user?.isAdmin);
 
   const [modalReputacionAbierto, setModalReputacionAbierto] = useState(false);
   const [modalPagosAbierto, setModalPagosAbierto] = useState(false);
@@ -145,32 +146,36 @@ export const ProfileView = () => {
   };
 
   const menuOptions = [
-    {
-      id: 'home_location',
-      title: 'Ubicación Favorita (Casa)',
-      subtitle: savedHomeLocation?.address || 'Configura tu dirección habitual de recogida',
-      icon: Home,
-      iconBg: isDark ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-700 border border-amber-200',
-      action: () => {
-        setModalCasaAbierto(true);
-      },
-    },
-    {
-      id: 'payments',
-      title: 'Métodos de Pago y Tarjetas',
-      subtitle: `${savedCards.length} tarjeta(s) guardada(s) • Nequi`,
-      icon: CreditCard,
-      iconBg: isDark ? 'bg-slate-800 text-lochmara-400 border border-slate-700' : 'bg-lochmara-50 text-lochmara-700 border border-lochmara-200',
-      action: () => setModalPagosAbierto(true),
-    },
-    {
-      id: 'reputation',
-      title: 'Reputación y Calificaciones',
-      subtitle: 'Puntaje promedio y variables evaluadas por la comunidad',
-      icon: Star,
-      iconBg: isDark ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-700 border border-amber-200',
-      action: () => setModalReputacionAbierto(true),
-    },
+    ...(isAdmin
+      ? []
+      : [
+          {
+            id: 'home_location',
+            title: 'Ubicación Favorita (Casa)',
+            subtitle: savedHomeLocation?.address || 'Configura tu dirección habitual de recogida',
+            icon: Home,
+            iconBg: isDark ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-700 border border-amber-200',
+            action: () => {
+              setModalCasaAbierto(true);
+            },
+          },
+          {
+            id: 'payments',
+            title: 'Métodos de Pago y Tarjetas',
+            subtitle: `${savedCards.length} tarjeta(s) guardada(s) • Nequi`,
+            icon: CreditCard,
+            iconBg: isDark ? 'bg-slate-800 text-lochmara-400 border border-slate-700' : 'bg-lochmara-50 text-lochmara-700 border border-lochmara-200',
+            action: () => setModalPagosAbierto(true),
+          },
+          {
+            id: 'reputation',
+            title: 'Reputación y Calificaciones',
+            subtitle: 'Puntaje promedio y variables evaluadas por la comunidad',
+            icon: Star,
+            iconBg: isDark ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-700 border border-amber-200',
+            action: () => setModalReputacionAbierto(true),
+          },
+        ]),
     ...(isDriverVerified
       ? [
           {
@@ -259,13 +264,13 @@ export const ProfileView = () => {
                 : 'bg-slate-100 border-slate-200 text-slate-700'
             }`}
           >
-            <span>{isDriverVerified ? 'Conductor Verificado' : 'Pasajero Institucional'}</span>
+            <span>{isAdmin ? 'Administrador' : isDriverVerified ? 'Conductor Verificado' : 'Pasajero Institucional'}</span>
           </div>
         </div>
       </section>
 
-      {/* 2. ESTADO DE LA SOLICITUD DE CONDUCTOR O INVITACIÓN A REGISTRARSE */}
-      {(user?.driverStatus === 'pending' || user?.driverApplication) && !isDriverVerified ? (
+      {/* 2. ESTADO DE LA SOLICITUD DE CONDUCTOR O INVITACIÓN A REGISTRARSE (no aplica a admin) */}
+      {!isAdmin && ((user?.driverStatus === 'pending' || user?.driverApplication) && !isDriverVerified ? (
         <section
           className={`border rounded-3xl p-4 shadow-sm transition-all space-y-3 ${
             isDark
@@ -361,7 +366,7 @@ export const ProfileView = () => {
             <ChevronRight className="w-4 h-4 text-lochmara-500 group-hover:translate-x-0.5 transition-transform shrink-0" />
           </div>
         </section>
-      )}
+      ))}
 
       {/* 3. MENÚ DE CONFIGURACIÓN Y ESTADÍSTICAS */}
       <section
