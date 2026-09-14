@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Dict, Any, List
+from app.core.security import require_service_caller
 from app.schemas.route_optimization import (
     RouteEvaluationRequest,
     RouteEvaluationResponse,
@@ -11,6 +12,7 @@ from app.schemas.route_optimization import (
     ModalityEnum,
     LatLng,
 )
+from app.services.time_context import parse_departure_hour, current_day_of_week
 from app.services.osrm_client import osrm_client
 from app.services.tomtom_traffic_service import tomtom_traffic_service
 from app.services.xgboost_eta_predictor import eta_predictor
@@ -20,7 +22,11 @@ from app.services.turn_penalty_service import turn_penalty_engine
 from app.services.affinity_safety_service import affinity_safety_engine
 from app.services.carbon_emission_service import carbon_emission_engine
 
-router = APIRouter(prefix="/optimize", tags=["AI Route Optimization"])
+router = APIRouter(
+    prefix="/optimize",
+    tags=["AI Route Optimization"],
+    dependencies=[Depends(require_service_caller)],
+)
 
 
 @router.post("/match", response_model=RouteEvaluationResponse)
@@ -101,9 +107,12 @@ async def evaluate_single_passenger_match(
     ]
     detour_route = await osrm_client.get_route(detour_coords)
 
-    # 5. Predicción precisa con XGBoost
+    # 5. Predicción precisa con XGBoost — hora y día reales de la ruta evaluada,
+    # no los valores por defecto que se usaban sin importar el viaje real.
     eta_calc = eta_predictor.predict_travel_time_minutes(
         distance_km=detour_route["distance_meters"] / 1000.0,
+        departure_hour=parse_departure_hour(driver.departure_time),
+        day_of_week=current_day_of_week(),
         traffic_kappa=traffic_kappa,
         num_stops=1,
     )

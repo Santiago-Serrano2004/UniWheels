@@ -19,7 +19,35 @@ class XGBoostETAPredictor:
     def __init__(self):
         self.model: xgb.XGBRegressor = None
         self.metrics: Dict[str, float] = {}
+        self._load_or_train_model()
+
+    def _load_or_train_model(self):
+        """
+        Carga el modelo persistido si existe (evita reentrenar en cada arranque
+        del servicio) o lo entrena y lo guarda por primera vez. El pipeline de
+        reentrenamiento con datos reales (scripts/retrain_eta_model.py) reemplaza
+        este mismo archivo cuando un modelo candidato supera al actual.
+        """
+        metrics_path = self.MODEL_PATH.replace(".json", "_metrics.joblib")
+
+        if os.path.exists(self.MODEL_PATH) and os.path.exists(metrics_path):
+            try:
+                loaded = xgb.XGBRegressor()
+                loaded.load_model(self.MODEL_PATH)
+                self.model = loaded
+                self.metrics = joblib.load(metrics_path)
+                return
+            except Exception:
+                # Modelo persistido corrupto/incompatible — se reentrena desde cero.
+                pass
+
         self._initialize_or_train_model()
+        self._save_model()
+
+    def _save_model(self):
+        os.makedirs(os.path.dirname(self.MODEL_PATH), exist_ok=True)
+        self.model.save_model(self.MODEL_PATH)
+        joblib.dump(self.metrics, self.MODEL_PATH.replace(".json", "_metrics.joblib"))
 
     def _generate_synthetic_calibration_dataset(
         self, n_samples: int = 12000

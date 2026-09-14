@@ -6,8 +6,10 @@ from app.schemas.route_optimization import (
     RouteStop,
     PassengerRequestSchema,
 )
+from datetime import datetime
 from app.services.osrm_client import osrm_client
 from app.services.xgboost_eta_predictor import eta_predictor
+from app.services.time_context import current_day_of_week
 from app.services.affinity_safety_service import affinity_safety_engine
 from app.services.turn_penalty_service import turn_penalty_engine
 
@@ -157,9 +159,13 @@ class DynamicReoptimizerEngine:
 
         final_route = await osrm_client.get_route(final_eval_coords)
 
-        # Ajuste de duración con XGBoost en vivo
+        # Ajuste de duración con XGBoost en vivo — re-optimización en caliente,
+        # ocurre "ahora", así que la hora/día reales son los del reloj del servidor.
+        _ahora = datetime.now()
         eta_res = eta_predictor.predict_travel_time_minutes(
             distance_km=final_route["distance_meters"] / 1000.0,
+            departure_hour=_ahora.hour + _ahora.minute / 60.0,
+            day_of_week=current_day_of_week(),
             traffic_kappa=1.15,
             num_stops=len(best_cand_stops),
         )

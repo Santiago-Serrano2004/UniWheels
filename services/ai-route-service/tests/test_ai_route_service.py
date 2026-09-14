@@ -1,11 +1,28 @@
 import pytest
 import asyncio
+import time
+import jwt as pyjwt
 from httpx import AsyncClient, ASGITransport
 from app.main import app
+from app.core.config import settings
 from app.services.xgboost_eta_predictor import eta_predictor
 from app.services.osrm_client import osrm_client
 from app.services.tomtom_traffic_service import tomtom_traffic_service
 from app.schemas.route_optimization import DriverRouteSchema, PassengerRequestSchema, LatLng
+
+
+def _service_token() -> str:
+    """Token servicio-a-servicio de prueba: los endpoints de /optimize solo
+    aceptan llamadas de otros microservicios del backend, nunca de la app cliente."""
+    now = int(time.time())
+    return pyjwt.encode(
+        {"sub": "test-service", "type": "service", "iat": now, "exp": now + 60},
+        settings.JWT_SECRET,
+        algorithm=settings.JWT_ALGORITHM,
+    )
+
+
+AUTH_HEADERS = {"Authorization": f"Bearer {_service_token()}"}
 
 
 # ==============================================================================
@@ -113,7 +130,7 @@ async def test_alns_precedence_constraint_enforcement():
         ),
     ]
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS) as client:
         resp = await client.post(
             "/api/v1/optimize/multi-passenger-alns",
             json={"driver_route": driver.model_dump(), "candidate_passengers": [p.model_dump() for p in passengers]},
@@ -156,7 +173,7 @@ async def test_alns_vehicle_capacity_constraint():
         for i in range(5)
     ]
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS) as client:
         resp = await client.post(
             "/api/v1/optimize/multi-passenger-alns",
             json={"driver_route": driver.model_dump(), "candidate_passengers": [p.model_dump() for p in passengers]},
@@ -193,7 +210,7 @@ async def test_alns_hard_detour_rejection():
         )
     ]
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS) as client:
         resp = await client.post(
             "/api/v1/optimize/multi-passenger-alns",
             json={"driver_route": driver.model_dump(), "candidate_passengers": [p.model_dump() for p in passengers]},
@@ -228,7 +245,7 @@ async def test_invalid_latitude_schema_rejection():
         },
     }
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS) as client:
         resp = await client.post("/api/v1/optimize/match", json=payload)
         assert resp.status_code == 422
 
@@ -256,7 +273,7 @@ async def test_stress_concurrent_evaluations():
         },
     }
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS) as client:
         tasks = [client.post("/api/v1/optimize/match", json=payload) for _ in range(25)]
         responses = await asyncio.gather(*tasks)
 
@@ -295,7 +312,7 @@ async def test_smart_walking_within_radius_projection():
         },
     }
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS) as client:
         resp = await client.post("/api/v1/optimize/match", json=payload)
         assert resp.status_code == 200
         data = resp.json()
@@ -333,7 +350,7 @@ async def test_smart_walking_exceeding_radius_no_projection():
         },
     }
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS) as client:
         resp = await client.post("/api/v1/optimize/match", json=payload)
         assert resp.status_code == 200
         data = resp.json()
@@ -415,7 +432,7 @@ async def test_women_only_protocol_male_driver_rejection():
         },
     }
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS) as client:
         resp = await client.post("/api/v1/optimize/match", json=payload)
         assert resp.status_code == 200
         data = resp.json()
@@ -452,7 +469,7 @@ async def test_women_only_protocol_female_driver_success():
         },
     }
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS) as client:
         resp = await client.post("/api/v1/optimize/match", json=payload)
         assert resp.status_code == 200
         data = resp.json()
@@ -508,7 +525,7 @@ async def test_dynamic_reoptimization_in_transit_success():
         "destination_location": {"lat": 7.1193, "lng": -73.1042},
     }
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS) as client:
         resp = await client.post("/api/v1/optimize/dynamic-reoptimize", json=payload)
         assert resp.status_code == 200
         data = resp.json()
@@ -544,7 +561,7 @@ async def test_dynamic_reoptimization_capacity_exhaustion():
         "destination_location": {"lat": 7.1193, "lng": -73.1042},
     }
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS) as client:
         resp = await client.post("/api/v1/optimize/dynamic-reoptimize", json=payload)
         assert resp.status_code == 200
         data = resp.json()
@@ -563,7 +580,7 @@ async def test_demand_forecast_peak_morning_intensity():
     Verifica que a las 07:00 AM de un día entre semana haya alta intensidad de demanda (>= 0.70)
     en los corredores hacia la UNAB y múltiples zonas de alta prioridad identificadas.
     """
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS) as client:
         resp = await client.get("/api/v1/optimize/demand-forecast?hour=7.0&day_of_week=1&is_raining=false")
         assert resp.status_code == 200
         data = resp.json()
@@ -579,7 +596,7 @@ async def test_demand_forecast_midnight_low_intensity():
     """
     Verifica que en la madrugada (03:00 AM) la demanda sea mínima (< 0.20) y no existan alertas críticas.
     """
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS) as client:
         resp = await client.get("/api/v1/optimize/demand-forecast?hour=3.0&day_of_week=1&is_raining=false")
         assert resp.status_code == 200
         data = resp.json()
@@ -595,7 +612,7 @@ async def test_driver_proactive_departure_recommendations():
     """
     driver_origin = {"lat": 7.0678, "lng": -73.1066}
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS) as client:
         resp = await client.post(
             "/api/v1/optimize/driver-departure-recommendations?departure_hour=6.8&day_of_week=1",
             json=driver_origin,
@@ -676,7 +693,7 @@ async def test_carbon_report_in_alns_multi_passenger_response():
         ),
     ]
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=AUTH_HEADERS) as client:
         resp = await client.post(
             "/api/v1/optimize/multi-passenger-alns",
             json={"driver_route": driver.model_dump(), "candidate_passengers": [p.model_dump() for p in passengers]},

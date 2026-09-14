@@ -45,7 +45,7 @@ class DriverRouteSchema(BaseModel):
     driver_gender: str = Field(default="M", description="Género del conductor: 'F' o 'M'")
     driver_faculty: Optional[str] = Field(default=None, description="Facultad del conductor")
     driver_rating: float = Field(default=5.0, ge=1.0, le=5.0)
-    waypoints: List[LatLng] = []
+    waypoints: List[LatLng] = Field(default=[], max_length=25)
     vehicle_capacity: int = Field(default=3, ge=1, le=6)
     departure_time: str
     max_allowed_detour_minutes: float = Field(default=12.0, ge=2.0, le=30.0)
@@ -105,7 +105,9 @@ class RouteStop(BaseModel):
 
 class MultiPassengerALNSRequest(BaseModel):
     driver_route: DriverRouteSchema
-    candidate_passengers: List[PassengerRequestSchema]
+    # Acotado a la capacidad máxima realista de un pool de candidatos evaluable por
+    # viaje — sin límite, un payload gigante puede saturar el solver O(n²) (DoS).
+    candidate_passengers: List[PassengerRequestSchema] = Field(..., max_length=30)
     traffic_layer_enabled: bool = True
 
 
@@ -136,8 +138,8 @@ class DynamicReoptimizationRequest(BaseModel):
     driver_gender: str = "M"
     driver_capacity: int = 3
     max_allowed_detour_minutes: float = 10.0
-    passengers_on_board_ids: List[str] = []
-    active_remaining_stops: List[Dict[str, Any]] = []
+    passengers_on_board_ids: List[str] = Field(default=[], max_length=6)
+    active_remaining_stops: List[Dict[str, Any]] = Field(default=[], max_length=20)
     new_candidate_passenger: PassengerRequestSchema
     destination_location: LatLng
     destination_address: str = "UNAB Campus El Jardín"

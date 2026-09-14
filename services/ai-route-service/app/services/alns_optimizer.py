@@ -12,6 +12,7 @@ from app.schemas.route_optimization import (
 from app.services.osrm_client import osrm_client
 from app.services.tomtom_traffic_service import tomtom_traffic_service
 from app.services.xgboost_eta_predictor import eta_predictor
+from app.services.time_context import parse_departure_hour, current_day_of_week
 from app.services.affinity_safety_service import affinity_safety_engine
 from app.services.carbon_emission_service import carbon_emission_engine
 
@@ -394,6 +395,8 @@ class ALNSOptimizer:
 
         eta_res = eta_predictor.predict_travel_time_minutes(
             distance_km=route_geo["distance_meters"] / 1000.0,
+            departure_hour=parse_departure_hour(driver_route.departure_time),
+            day_of_week=current_day_of_week(),
             traffic_kappa=traffic_kappa,
             num_stops=len(best_accepted),
             elevation_gain_m=35.0,
