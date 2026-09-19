@@ -14,6 +14,9 @@ class TripTrackingPoint extends Model
 {
     use HasUuids;
 
+    // La migración no trae created_at/updated_at — solo recorded_at.
+    public $timestamps = false;
+
     protected $fillable = [
         'trip_id',
         'latitude',

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\TrainingDataController;
 use App\Http\Controllers\Api\V1\TripLifecycleController;
 use App\Http\Controllers\Api\V1\TripPaymentController;
+use App\Http\Controllers\Api\V1\TripTrackingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -32,6 +33,11 @@ Route::prefix('v1')->middleware('jwt.auth')->group(function () {
     Route::post('/trips/{id}/complete', [TripLifecycleController::class, 'complete']);
     Route::post('/trips/{id}/cancel', [TripLifecycleController::class, 'cancel']);
     Route::post('/trips/{id}/payment/card/init', [TripPaymentController::class, 'initCardPayment']);
+
+    // Telemetría GPS en vivo del conductor durante el viaje
+    Route::post('/trips/{id}/tracking', [TripTrackingController::class, 'report'])
+        ->middleware('throttle:30,1');
+    Route::get('/trips/{id}/tracking/latest', [TripTrackingController::class, 'latest']);
 
     // Consultas de estado activo e historial — el usuario siempre se toma del JWT, no de la URL.
     Route::get('/passenger/active-trip', [TripLifecycleController::class, 'activePassengerTrip']);
