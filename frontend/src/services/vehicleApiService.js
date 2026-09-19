@@ -357,9 +357,14 @@ export const vehicleApiService = {
           .filter((m) => m && m.length > 1 && !m.toLowerCase().includes('unknown'));
       }
 
-      // Unir modelos de la API de NHTSA con los modelos colombianos conocidos
-      const modelosUnificados = Array.from(new Set([...fallbackLocal, ...modelosApi]))
-        .sort((a, b) => a.localeCompare(b, 'es', { numeric: true, sensitivity: 'base' }));
+      // Modelos colombianos curados primero (así el default preseleccionado siempre
+      // es un modelo real de la marca, no un modelo de camión/carga que la API de
+      // NHTSA devuelve mezclado y que el orden alfabético pondría primero, ej. "3 Ton").
+      const modelosSoloApi = modelosApi.filter((m) => !fallbackLocal.includes(m));
+      const modelosUnificados = [
+        ...fallbackLocal,
+        ...modelosSoloApi.sort((a, b) => a.localeCompare(b, 'es', { numeric: true, sensitivity: 'base' })),
+      ];
 
       if (modelosUnificados.length > 0) {
         modelosUnificados.push('Otro modelo / Escribir manualmente...');
