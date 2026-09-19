@@ -102,6 +102,11 @@ class Trip extends Model
         ];
     }
 
+    public function trackingPoints(): HasMany
+    {
+        return $this->hasMany(TripTrackingPoint::class);
+    }
+
     public function isPaymentByCard(): bool
     {
         return $this->payment_method === self::PAYMENT_METHOD_TARJETA;
