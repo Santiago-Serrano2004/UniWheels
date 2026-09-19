@@ -8,7 +8,7 @@ import { getPlaceCoordinates } from '../../hooks/useOsrmRoute';
 import { useTurnByTurnNavigation } from '../../hooks/useTurnByTurnNavigation';
 import { haversineDistanceMeters, formatDistance } from '../../utils/geo';
 import L from 'leaflet';
-import { Volume2, VolumeX, ShieldAlert, X } from 'lucide-react';
+import { Volume2, VolumeX, ShieldAlert, X, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { speechGuidanceService } from '../../services/speechGuidanceService';
 import { SosEmergencyModal } from '../common/SosEmergencyModal';
@@ -59,14 +59,15 @@ function CameraFollower({ position }) {
 // (requeriría integrar algo como OSRM con steps=true); eso queda para una
 // iteración futura, ver specs/gps-tracking-real.md.
 export const InAppGpsNavigator = ({ trip, route, onExit, onComplete }) => {
-  const { user } = useAppStore();
+  const { user, theme } = useAppStore();
+  const isDark = theme === 'dark';
   const [isVoiceMuted, setIsVoiceMuted] = useState(false);
   const [modalSosOpen, setModalSosOpen] = useState(false);
   const [driverCoords, setDriverCoords] = useState(
     route?.origin_lat != null ? [route.origin_lat, route.origin_lng] : [7.0856, -73.1142]
   );
-  const [speedKmh, setSpeedKmh] = useState(0);
   const [heading, setHeading] = useState(0);
+  const [errorUbicacion, setErrorUbicacion] = useState('');
 
   const pickupCoords = trip?.pickup_address ? getPlaceCoordinates(trip.pickup_address, false) : null;
   const campusCoords = route?.destination_lat != null
@@ -90,11 +91,14 @@ export const InAppGpsNavigator = ({ trip, route, onExit, onComplete }) => {
   // trip-service cada ~5s (mismo mecanismo que la cabina compacta).
   const ultimoReporteRef = useRef(0);
   useEffect(() => {
-    if (!navigator.geolocation) return undefined;
+    if (!navigator.geolocation) {
+      setErrorUbicacion('Este dispositivo no soporta geolocalización.');
+      return undefined;
+    }
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
+        setErrorUbicacion('');
         setDriverCoords([pos.coords.latitude, pos.coords.longitude]);
-        setSpeedKmh(pos.coords.speed != null ? Math.round(pos.coords.speed * 3.6) : 0);
         if (pos.coords.heading != null) setHeading(pos.coords.heading);
 
         const ahora = Date.now();
@@ -109,7 +113,18 @@ export const InAppGpsNavigator = ({ trip, route, onExit, onComplete }) => {
           });
         }
       },
-      () => {}
+      (err) => {
+        // Motivo más común en un dispositivo real: la app se sirve por HTTP en
+        // vez de HTTPS — los navegadores bloquean la Geolocation API fuera de
+        // un contexto seguro (localhost es la única excepción), y el mapa
+        // queda mostrando el origen de la ruta en vez de la posición real.
+        setErrorUbicacion(
+          err.code === err.PERMISSION_DENIED
+            ? 'Ubicación no disponible: permiso denegado o la app no se abrió por una conexión segura (HTTPS).'
+            : 'No se pudo obtener tu ubicación real en este momento.'
+        );
+      },
+      { enableHighAccuracy: true }
     );
     return () => navigator.geolocation.clearWatch(watchId);
   }, [trip?.id]);
@@ -123,26 +138,43 @@ export const InAppGpsNavigator = ({ trip, route, onExit, onComplete }) => {
     : textoDistanciaAproximada;
   const textoObjetivo = turnByTurn.tieneIndicacionesReales ? turnByTurn.instruccion : textoObjetivoAproximado;
 
+  // Anunciar por voz cada vez que cambia la instrucción real (nueva maniobra)
+  const ultimaInstruccionAnunciadaRef = useRef(null);
+  useEffect(() => {
+    if (!turnByTurn.instruccion || isVoiceMuted) return;
+    if (ultimaInstruccionAnunciadaRef.current === turnByTurn.instruccion) return;
+    ultimaInstruccionAnunciadaRef.current = turnByTurn.instruccion;
+    speechGuidanceService.speak(turnByTurn.instruccion);
+  }, [turnByTurn.instruccion, isVoiceMuted]);
+
   const toggleVoice = () => {
     const muted = speechGuidanceService.toggleMute();
     setIsVoiceMuted(muted);
   };
 
+  const routePositions = turnByTurn.routeCoordinates.length > 1
+    ? turnByTurn.routeCoordinates
+    : destinoActualNav
+    ? [driverCoords, destinoActualNav]
+    : [];
+
   return createPortal(
-    <div className="fixed inset-0 z-[999999] w-screen h-screen bg-slate-950 flex flex-col overflow-hidden select-none pointer-events-auto">
-      {/* 1. SEÑALÉTICA SUPERIOR: DISTANCIA REAL AL PRÓXIMO PUNTO */}
-      <div className="absolute top-0 left-0 right-0 z-[500] pointer-events-auto p-3 sm:p-5">
+    <div className={`fixed inset-0 z-[999999] w-screen h-screen flex flex-col overflow-hidden select-none pointer-events-auto ${isDark ? 'bg-slate-950' : 'bg-slate-100'}`}>
+      {/* 1. SEÑALÉTICA SUPERIOR: DISTANCIA/MANIOBRA REAL AL PRÓXIMO PUNTO */}
+      <div className="absolute top-0 left-0 right-0 z-[500] pointer-events-auto p-3 sm:p-5 space-y-2">
         <motion.div
           initial={{ y: -30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className="w-full max-w-4xl mx-auto bg-slate-900/95 text-white p-4 sm:p-5 rounded-3xl border-b-4 border-lochmara-500 shadow-2xl backdrop-blur-xl flex items-center justify-between gap-4"
+          className={`w-full max-w-4xl mx-auto p-4 sm:p-5 rounded-3xl border-b-4 border-lochmara-500 shadow-2xl backdrop-blur-xl flex items-center gap-4 ${
+            isDark ? 'bg-slate-900/95 text-white' : 'bg-white/95 text-slate-900'
+          }`}
         >
           <div className="flex-1 min-w-0">
-            <span className="text-2xl sm:text-4xl font-black tracking-tight text-white font-mono">
+            <span className="text-2xl sm:text-3xl font-black tracking-tight font-mono block">
               {textoDistancia}
             </span>
-            <h2 className="text-sm sm:text-base font-bold text-lochmara-300 uppercase tracking-wide">
+            <h2 className={`text-xs sm:text-sm font-bold break-words leading-snug ${isDark ? 'text-lochmara-300' : 'text-lochmara-700'}`}>
               {textoObjetivo}
             </h2>
           </div>
@@ -156,12 +188,24 @@ export const InAppGpsNavigator = ({ trip, route, onExit, onComplete }) => {
               }
               onExit();
             }}
-            className="p-3 sm:p-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all cursor-pointer border border-slate-700 shadow-md"
+            className={`p-3 sm:p-3.5 rounded-2xl transition-all cursor-pointer border shadow-md shrink-0 ${
+              isDark
+                ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border-slate-700'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900 border-slate-200'
+            }`}
             title="Salir de Navegación Completa"
           >
             <X className="w-5 sm:w-6 h-5 sm:h-6" />
           </button>
         </motion.div>
+
+        {/* Aviso si no se pudo obtener la ubicación real del dispositivo */}
+        {errorUbicacion && (
+          <div className="w-full max-w-4xl mx-auto p-3 rounded-2xl bg-amber-500/95 text-amber-950 text-xs font-semibold flex items-center gap-2 shadow-lg">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span className="break-words">{errorUbicacion}</span>
+          </div>
+        )}
       </div>
 
       {/* 2. MAPA 100% PANTALLA COMPLETA 2D CON CÁMARA SEGUIDORA */}
@@ -177,9 +221,17 @@ export const InAppGpsNavigator = ({ trip, route, onExit, onComplete }) => {
 
           <CameraFollower position={driverCoords} />
 
-          {/* Línea recta hacia el objetivo actual (sin motor de ruteo turn-by-turn en esta v1) */}
-          {destinoActualNav && (
-            <Polyline positions={[driverCoords, destinoActualNav]} pathOptions={{ color: '#0284c7', weight: 6, opacity: 0.8, dashArray: '2, 10' }} />
+          {/* Ruta real siguiendo las calles (OSRM steps=true); si aún no llegó,
+              línea recta temporal hacia el objetivo como respaldo */}
+          {routePositions.length > 1 && (
+            <Polyline
+              positions={routePositions}
+              pathOptions={
+                turnByTurn.routeCoordinates.length > 1
+                  ? { color: '#0284c7', weight: 6, opacity: 0.85 }
+                  : { color: '#0284c7', weight: 6, opacity: 0.8, dashArray: '2, 10' }
+              }
+            />
           )}
 
           {/* Vehículo en Movimiento (posición real) */}
@@ -193,34 +245,30 @@ export const InAppGpsNavigator = ({ trip, route, onExit, onComplete }) => {
         </MapContainer>
       </div>
 
-      {/* 3. BARRA INFERIOR PANORÁMICA DE TELEMETRÍA (VELOCÍMETRO REAL + SOS) */}
+      {/* 3. BARRA INFERIOR: MANIOBRA/DISTANCIA + CONTROLES */}
       <div className="absolute bottom-4 left-0 right-0 z-[500] pointer-events-auto p-3 sm:p-5">
-        <div className="w-full max-w-4xl mx-auto bg-slate-950/95 text-white rounded-3xl p-4 sm:p-5 shadow-2xl border border-slate-800 backdrop-blur-2xl flex items-center justify-between gap-4">
-          {/* Velocímetro Circular */}
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="w-14 sm:w-16 h-14 sm:h-16 rounded-2xl bg-slate-900 border border-slate-700 flex flex-col items-center justify-center shadow-inner">
-              <span className="text-xl sm:text-2xl font-black font-mono text-emerald-400 leading-none">
-                {speedKmh}
-              </span>
-              <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">km/h</span>
-            </div>
-
-            <div>
-              <span className="text-sm sm:text-base font-bold text-white block">{textoObjetivo}</span>
-              <span className="text-xs sm:text-sm text-slate-400 font-mono">{textoDistancia} restantes</span>
-            </div>
+        <div className={`w-full max-w-4xl mx-auto rounded-3xl p-4 sm:p-5 shadow-2xl border backdrop-blur-2xl flex items-center gap-4 ${
+          isDark ? 'bg-slate-950/95 text-white border-slate-800' : 'bg-white/95 text-slate-900 border-slate-200'
+        }`}>
+          <div className="flex-1 min-w-0">
+            <span className="text-sm sm:text-base font-bold block break-words leading-snug">{textoObjetivo}</span>
+            <span className={`text-xs sm:text-sm font-mono ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{textoDistancia} restantes</span>
           </div>
 
           {/* Botones de Control Rápido */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Silencio / Voz */}
             <button
               type="button"
               onClick={toggleVoice}
               className={`p-3 sm:p-3.5 rounded-2xl border transition-colors cursor-pointer ${
                 isVoiceMuted
-                  ? 'bg-slate-900 border-slate-700 text-slate-500'
-                  : 'bg-lochmara-600/30 border-lochmara-500 text-lochmara-300'
+                  ? isDark
+                    ? 'bg-slate-900 border-slate-700 text-slate-500'
+                    : 'bg-slate-100 border-slate-200 text-slate-400'
+                  : isDark
+                  ? 'bg-lochmara-600/30 border-lochmara-500 text-lochmara-300'
+                  : 'bg-lochmara-50 border-lochmara-300 text-lochmara-600'
               }`}
               title={isVoiceMuted ? 'Activar Voz' : 'Silenciar'}
             >

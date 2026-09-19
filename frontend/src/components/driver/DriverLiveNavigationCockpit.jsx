@@ -35,7 +35,6 @@ export const DriverLiveNavigationCockpit = ({ route, trip, onFinishTrip, onCance
   const { user, theme } = useAppStore();
   const isDark = theme === 'dark';
   const [modoNavegadorCompleto, setModoNavegadorCompleto] = useState(false);
-  const [speedKmh, setSpeedKmh] = useState(0);
   const [pinIngresado, setPinIngresado] = useState('');
   const [pinVerificado, setPinVerificado] = useState(Boolean(trip?.is_pin_verified));
   const [errorPin, setErrorPin] = useState('');
@@ -74,12 +73,16 @@ export const DriverLiveNavigationCockpit = ({ route, trip, onFinishTrip, onCance
   // ~5s (throttle vía ref) para que el pasajero pueda ver la posición real, no una
   // animación de demostración.
   const ultimoReporteRef = useRef(0);
+  const [errorUbicacion, setErrorUbicacion] = useState('');
   useEffect(() => {
-    if (!navigator.geolocation) return undefined;
+    if (!navigator.geolocation) {
+      setErrorUbicacion('Este dispositivo no soporta geolocalización.');
+      return undefined;
+    }
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
+        setErrorUbicacion('');
         setDriverCoords([pos.coords.latitude, pos.coords.longitude]);
-        setSpeedKmh(pos.coords.speed != null ? Math.round(pos.coords.speed * 3.6) : 0);
 
         const ahora = Date.now();
         if (trip?.id && ahora - ultimoReporteRef.current >= 5000) {
@@ -93,7 +96,17 @@ export const DriverLiveNavigationCockpit = ({ route, trip, onFinishTrip, onCance
           });
         }
       },
-      () => {}
+      (err) => {
+        // Motivo más común en un dispositivo real: la app se sirve por HTTP en
+        // vez de HTTPS — los navegadores bloquean la Geolocation API fuera de
+        // un contexto seguro (localhost es la única excepción).
+        setErrorUbicacion(
+          err.code === err.PERMISSION_DENIED
+            ? 'Ubicación no disponible: permiso denegado o la app no se abrió por una conexión segura (HTTPS).'
+            : 'No se pudo obtener tu ubicación real en este momento.'
+        );
+      },
+      { enableHighAccuracy: true }
     );
     return () => navigator.geolocation.clearWatch(watchId);
   }, [trip?.id]);
@@ -130,7 +143,9 @@ export const DriverLiveNavigationCockpit = ({ route, trip, onFinishTrip, onCance
     );
   }
 
-  const routePolyline = route?.route_path && route.route_path.length >= 2
+  const routePolyline = turnByTurn.routeCoordinates.length >= 2
+    ? turnByTurn.routeCoordinates
+    : route?.route_path && route.route_path.length >= 2
     ? route.route_path
     : [driverCoords, campusCoords];
 
@@ -184,21 +199,15 @@ export const DriverLiveNavigationCockpit = ({ route, trip, onFinishTrip, onCance
 
       {/* 1. HUD DE NAVEGACIÓN PASO A PASO (TURN-BY-TURN) */}
       <div className={`rounded-3xl p-4 shadow-xl border space-y-3 ${
-        isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-slate-900 text-white border-slate-800'
+        isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
       }`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-lochmara-600 flex items-center justify-center text-white shadow-xs">
-              <ArrowUpRight className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-[10px] text-lochmara-300 font-bold uppercase">Siguiente Maniobra</p>
-              <h3 className="text-xs font-extrabold text-white">{currentManeuver}</h3>
-            </div>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-lochmara-600 flex items-center justify-center text-white shadow-xs shrink-0">
+            <ArrowUpRight className="w-5 h-5" />
           </div>
-
-          <div className="text-right bg-slate-800/80 px-2.5 py-1 rounded-xl border border-slate-700">
-            <span className="text-xs font-mono font-extrabold text-emerald-400">{speedKmh} km/h</span>
+          <div className="min-w-0">
+            <p className={`text-[10px] font-bold uppercase ${isDark ? 'text-lochmara-300' : 'text-lochmara-600'}`}>Siguiente Maniobra</p>
+            <h3 className={`text-xs font-extrabold break-words leading-snug ${isDark ? 'text-white' : 'text-slate-900'}`}>{currentManeuver}</h3>
           </div>
         </div>
 
@@ -235,8 +244,20 @@ export const DriverLiveNavigationCockpit = ({ route, trip, onFinishTrip, onCance
         </div>
       </div>
 
+      {/* Aviso si no se pudo obtener la ubicación real del dispositivo */}
+      {errorUbicacion && (
+        <div className="p-3 rounded-2xl bg-amber-500/95 text-amber-950 text-xs font-semibold flex items-center gap-2 shadow-md">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span className="break-words">{errorUbicacion}</span>
+        </div>
+      )}
+
       {/* 2. MAPA DE NAVEGACIÓN EN TIEMPO REAL */}
-      <div className={`relative w-full h-56 rounded-3xl overflow-hidden border shadow-md ${
+      {/* `isolate` contiene el z-[400] del botón SOS dentro de esta tarjeta —
+          sin esto, se sale por encima de modales renderizados después (ej.
+          TripSettlementModal) que usan un z-index menor pero se pintan más
+          tarde en el DOM. */}
+      <div className={`relative isolate w-full h-56 rounded-3xl overflow-hidden border shadow-md ${
         isDark ? 'border-slate-800' : 'border-slate-200'
       }`}>
         <MapContainer

@@ -14,6 +14,7 @@ const UMBRAL_AVANCE_METROS = 25;
  */
 export function useTurnByTurnNavigation(driverCoords, destino) {
   const [steps, setSteps] = useState([]);
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const destinoConsultadoRef = useRef(null);
 
@@ -24,9 +25,10 @@ export function useTurnByTurnNavigation(driverCoords, destino) {
     destinoConsultadoRef.current = key;
 
     let activo = true;
-    fetchTurnByTurnRoute([driverCoords, destino]).then(({ steps: nuevosSteps }) => {
+    fetchTurnByTurnRoute([driverCoords, destino]).then(({ coordinates, steps: nuevosSteps }) => {
       if (activo) {
         setSteps(nuevosSteps);
+        setRouteCoordinates(coordinates);
         setCurrentStepIndex(0);
       }
     });
@@ -56,5 +58,6 @@ export function useTurnByTurnNavigation(driverCoords, destino) {
     calle: pasoActual?.streetName || null,
     distanciaFormateada: distanciaAlPaso != null ? formatDistance(distanciaAlPaso) : null,
     haLlegado: currentStepIndex === steps.length - 1 && pasoActual?.instruction === 'Has llegado a tu destino',
+    routeCoordinates,
   };
 }
