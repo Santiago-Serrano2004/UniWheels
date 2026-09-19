@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '../../store/useAppStore';
 import { liveTripNotificationService } from '../../services/liveTripNotificationService';
+import { tripLifecycleService } from '../../services/api';
+import { haversineDistanceMeters } from '../../utils/geo';
 import {
   ShieldCheck,
   ChevronUp,
@@ -79,6 +81,7 @@ export const LiveTripIslandWidget = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [etaMinutes, setEtaMinutes] = useState(4);
+  const [driverPosition, setDriverPosition] = useState(null);
 
   const trip = activePassengerBooking;
 
@@ -89,8 +92,51 @@ export const LiveTripIslandWidget = () => {
 
   const isStarted = trip?.status === 'in_progress' || Boolean(trip?.isStarted);
   const isMotorcycle = trip?.vehicle?.toLowerCase().includes('moto') || trip?.vehicle?.toLowerCase().includes('yamaha');
-  const destinationEtaMinutes = Math.max(1, etaMinutes + 8);
-  const tripProgressPercent = isStarted ? Math.min(95, Math.max(25, 100 - destinationEtaMinutes * 7)) : Math.max(20, 100 - etaMinutes * 20);
+
+  // Consultar la posición GPS real del conductor (polling) mientras haya un viaje activo.
+  useEffect(() => {
+    if (!trip?.id) return undefined;
+    let activo = true;
+    const consultar = () => {
+      tripLifecycleService.getLatestPosition(trip.id).then((pos) => {
+        if (activo && pos) setDriverPosition(pos);
+      });
+    };
+    consultar();
+    const poll = setInterval(consultar, 6000);
+    return () => {
+      activo = false;
+      clearInterval(poll);
+    };
+  }, [trip?.id]);
+
+  const objetivoActual = isStarted
+    ? trip?.destination_lat != null && trip?.destination_lng != null
+      ? [trip.destination_lat, trip.destination_lng]
+      : null
+    : trip?.pickup_lat != null && trip?.pickup_lng != null
+    ? [trip.pickup_lat, trip.pickup_lng]
+    : null;
+
+  const distanciaRealMetros =
+    driverPosition && objetivoActual
+      ? haversineDistanceMeters([driverPosition.latitude, driverPosition.longitude], objetivoActual)
+      : null;
+
+  // Con posición real: ETA por distancia/velocidad. Sin ella (conductor aún no reportó
+  // ninguna posición): se mantiene el estimado aproximado como respaldo, nunca un error.
+  const velocidadPromedioKmh = driverPosition?.speed_kmh > 5 ? driverPosition.speed_kmh : 25;
+  const etaMinutesReal = distanciaRealMetros != null
+    ? Math.max(1, Math.round((distanciaRealMetros / 1000 / velocidadPromedioKmh) * 60))
+    : null;
+
+  const etaMinutesMostrado = !isStarted && etaMinutesReal != null ? etaMinutesReal : etaMinutes;
+  const destinationEtaMinutes = isStarted && etaMinutesReal != null ? etaMinutesReal : Math.max(1, etaMinutes + 8);
+  const tripProgressPercent = distanciaRealMetros != null
+    ? Math.min(97, Math.max(5, Math.round(100 - (distanciaRealMetros / 3000) * 100)))
+    : isStarted
+    ? Math.min(95, Math.max(25, 100 - destinationEtaMinutes * 7))
+    : Math.max(20, 100 - etaMinutes * 20);
 
   useEffect(() => {
     if (!trip) return;
@@ -100,7 +146,7 @@ export const LiveTripIslandWidget = () => {
         driverName: trip.driverName || 'Carlos Mendoza',
         vehicle: trip.vehicle || 'Mazda 3',
         plate: trip.plate || 'KLU-492',
-        etaMinutes: isStarted ? destinationEtaMinutes : etaMinutes,
+        etaMinutes: isStarted ? destinationEtaMinutes : etaMinutesMostrado,
         boardingPin: trip.boardingPin || '4829',
         destination: trip.destination || 'Campus El Jardín',
       });
@@ -113,7 +159,7 @@ export const LiveTripIslandWidget = () => {
     return () => {
       clearInterval(timer);
     };
-  }, [trip, etaMinutes, isStarted, destinationEtaMinutes]);
+  }, [trip, etaMinutes, etaMinutesMostrado, isStarted, destinationEtaMinutes]);
 
   // Si no hay viaje o si el usuario ya está viendo el mapa en vivo, ocultar el widget flotante
   if (!trip || activeTab === 'map') return null;
@@ -206,7 +252,7 @@ export const LiveTripIslandWidget = () => {
                   ) : (
                     <>
                       <span>Llega en</span>
-                      <strong className={`font-black ${isDark ? 'text-lochmara-400' : 'text-lochmara-800'}`}>~{etaMinutes} min</strong>
+                      <strong className={`font-black ${isDark ? 'text-lochmara-400' : 'text-lochmara-800'}`}>~{etaMinutesMostrado} min</strong>
                     </>
                   )}
                 </p>
@@ -298,7 +344,7 @@ export const LiveTripIslandWidget = () => {
                         : `En camino al punto de recogida (${trip.pickup || 'San Pío'})`}
                     </span>
                     <span className={`font-bold ${isDark ? 'text-lochmara-400' : 'text-lochmara-700'}`}>
-                      ~ {isStarted ? destinationEtaMinutes : etaMinutes} min
+                      ~ {isStarted ? destinationEtaMinutes : etaMinutesMostrado} min
                     </span>
                   </div>
 
