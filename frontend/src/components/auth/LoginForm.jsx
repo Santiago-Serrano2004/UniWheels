@@ -31,6 +31,17 @@ export const LoginForm = ({ onBack }) => {
   const [codigoVerificacion, setCodigoVerificacion] = useState('');
   const [nuevaClave, setNuevaClave] = useState('');
 
+  // El navegador valida los <input type="email"> nativamente, pero su mensaje
+  // sale en el idioma del navegador (a menudo inglés) en una app 100% en español.
+  const avisarCorreoInvalido = (e) => {
+    e.target.setCustomValidity(
+      e.target.validity.valueMissing
+        ? 'Por favor completa este campo.'
+        : 'Ingresa un correo electrónico válido (ej: usuario@unab.edu.co).'
+    );
+  };
+  const limpiarValidezCorreo = (e) => e.target.setCustomValidity('');
+
   const procesarInicioSesion = async (e) => {
     e.preventDefault();
     setMensajeError('');
@@ -220,7 +231,8 @@ export const LoginForm = ({ onBack }) => {
                     type="email"
                     required
                     value={correo}
-                    onChange={(e) => setCorreo(e.target.value)}
+                    onChange={(e) => { setCorreo(e.target.value); limpiarValidezCorreo(e); }}
+                    onInvalid={avisarCorreoInvalido}
                     placeholder="ej: usuario@unab.edu.co"
                     className={`w-full text-xs rounded-2xl px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-lochmara-500 transition-all shadow-2xs ${
                       isDark
@@ -305,7 +317,8 @@ export const LoginForm = ({ onBack }) => {
                         type="email"
                         required
                         value={correoRecuperacion}
-                        onChange={(e) => setCorreoRecuperacion(e.target.value)}
+                        onChange={(e) => { setCorreoRecuperacion(e.target.value); limpiarValidezCorreo(e); }}
+                        onInvalid={avisarCorreoInvalido}
                         placeholder="ej: usuario@unab.edu.co"
                         className={`w-full text-xs rounded-2xl px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-lochmara-500 transition-all shadow-2xs ${
                           isDark

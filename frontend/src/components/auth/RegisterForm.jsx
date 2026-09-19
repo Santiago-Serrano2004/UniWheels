@@ -88,15 +88,21 @@ export const RegisterForm = ({ onBack }) => {
 
   const clavesCoinciden = confirmarClave.length > 0 && clave === confirmarClave;
 
+  // La sede por defecto debe ser la marcada como sede principal, no la primera
+  // que devuelva el backend — el orden de filas de una consulta sin ORDER BY
+  // explícito no está garantizado, así que no se puede asumir que campuses[0]
+  // sea la principal.
+  const sedePorDefecto = (campuses) =>
+    campuses?.find((sede) => sede.is_main_campus) || campuses?.[0];
+
   // Cargar catálogo de instituciones
   useEffect(() => {
     authService.getInstitutions().then((data) => {
       if (data && data.length > 0) {
         setInstituciones(data);
         setInstitucionId(data[0].id);
-        if (data[0].campuses && data[0].campuses.length > 0) {
-          setSedeId(data[0].campuses[0].id);
-        }
+        const sede = sedePorDefecto(data[0].campuses);
+        if (sede) setSedeId(sede.id);
       }
     });
   }, []);
@@ -109,9 +115,8 @@ export const RegisterForm = ({ onBack }) => {
   const manejarCambioInstitucion = (id) => {
     setInstitucionId(Number(id));
     const inst = instituciones.find((i) => i.id === Number(id));
-    if (inst && inst.campuses && inst.campuses.length > 0) {
-      setSedeId(inst.campuses[0].id);
-    }
+    const sede = sedePorDefecto(inst?.campuses);
+    if (sede) setSedeId(sede.id);
   };
 
   const avanzarPasoDos = (e) => {
