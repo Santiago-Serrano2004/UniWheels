@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { tripLifecycleService } from '../../services/api';
 import { getPlaceCoordinates } from '../../hooks/useOsrmRoute';
 import { openExternalNavigation, isIOS } from '../../utils/mapNavigation';
+import { haversineDistanceMeters, formatDistance } from '../../utils/geo';
 import { MapContainer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { AppMapTileLayer } from '../map/AppMapTileLayer';
@@ -33,9 +34,7 @@ export const DriverLiveNavigationCockpit = ({ route, trip, onFinishTrip, onCance
   const { user, theme } = useAppStore();
   const isDark = theme === 'dark';
   const [modoNavegadorCompleto, setModoNavegadorCompleto] = useState(false);
-  const [currentManeuver, setCurrentManeuver] = useState('En 350m gire a la derecha hacia Carrera 33');
-  const [distanceRemainingMeters, setDistanceRemainingMeters] = useState(2400);
-  const [speedKmh, setSpeedKmh] = useState(38);
+  const [speedKmh, setSpeedKmh] = useState(0);
   const [pinIngresado, setPinIngresado] = useState('');
   const [pinVerificado, setPinVerificado] = useState(Boolean(trip?.is_pin_verified));
   const [errorPin, setErrorPin] = useState('');
@@ -59,14 +58,51 @@ export const DriverLiveNavigationCockpit = ({ route, trip, onFinishTrip, onCance
     setErrorPin('');
   }, [trip?.id]);
 
-  // Ubicación real del conductor si el navegador la concede; si no, se usa el origen de la ruta.
+  // Punto de recogida: coordenadas aproximadas por dirección de texto (trip-service
+  // no persiste lat/lng por viaje) — hasta tener pasajero abordado se navega hacia él;
+  // ya verificado el PIN, se navega hacia el destino final de la ruta publicada.
+  const pickupCoords = trip?.pickup_address ? getPlaceCoordinates(trip.pickup_address, false) : null;
+  const campusCoords = route?.destination_lat != null
+    ? [route.destination_lat, route.destination_lng]
+    : getPlaceCoordinates(route?.destination, true);
+
+  const destinoActualNav = pinVerificado || !pickupCoords ? campusCoords : pickupCoords;
+
+  // Ubicación real del conductor, seguida en vivo mientras dure el viaje (no una sola
+  // lectura): actualiza el marcador propio y reporta la posición a trip-service cada
+  // ~5s (throttle vía ref) para que el pasajero pueda ver la posición real, no una
+  // animación de demostración.
+  const ultimoReporteRef = useRef(0);
   useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setDriverCoords([pos.coords.latitude, pos.coords.longitude]),
+    if (!navigator.geolocation) return undefined;
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        setDriverCoords([pos.coords.latitude, pos.coords.longitude]);
+        setSpeedKmh(pos.coords.speed != null ? Math.round(pos.coords.speed * 3.6) : 0);
+
+        const ahora = Date.now();
+        if (trip?.id && ahora - ultimoReporteRef.current >= 5000) {
+          ultimoReporteRef.current = ahora;
+          tripLifecycleService.reportPosition(trip.id, {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            speed_kmh: pos.coords.speed != null ? pos.coords.speed * 3.6 : null,
+            heading_degrees: pos.coords.heading,
+            accuracy_meters: pos.coords.accuracy,
+          });
+        }
+      },
       () => {}
     );
-  }, []);
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [trip?.id]);
+
+  const distanciaAlDestinoActual = destinoActualNav ? haversineDistanceMeters(driverCoords, destinoActualNav) : null;
+  const currentManeuver = distanciaAlDestinoActual == null
+    ? 'Calculando posición…'
+    : pinVerificado
+    ? `A ${formatDistance(distanciaAlDestinoActual)} del destino`
+    : `A ${formatDistance(distanciaAlDestinoActual)} del punto de encuentro`;
 
   const iniciarNavegacion = () => {
     if (document.documentElement.requestFullscreen) {
@@ -88,16 +124,6 @@ export const DriverLiveNavigationCockpit = ({ route, trip, onFinishTrip, onCance
       />
     );
   }
-
-  // Punto de recogida: coordenadas aproximadas por dirección de texto (trip-service
-  // no persiste lat/lng por viaje) — hasta tener pasajero abordado se navega hacia él;
-  // ya verificado el PIN, se navega hacia el destino final de la ruta publicada.
-  const pickupCoords = trip?.pickup_address ? getPlaceCoordinates(trip.pickup_address, false) : null;
-  const campusCoords = route?.destination_lat != null
-    ? [route.destination_lat, route.destination_lng]
-    : getPlaceCoordinates(route?.destination, true);
-
-  const destinoActualNav = pinVerificado || !pickupCoords ? campusCoords : pickupCoords;
 
   const routePolyline = route?.route_path && route.route_path.length >= 2
     ? route.route_path
