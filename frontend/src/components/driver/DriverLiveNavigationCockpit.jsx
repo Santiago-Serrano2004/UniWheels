@@ -116,6 +116,7 @@ export const DriverLiveNavigationCockpit = ({ route, trip, onFinishTrip, onCance
     return (
       <InAppGpsNavigator
         trip={trip}
+        route={route}
         onExit={() => setModoNavegadorCompleto(false)}
         onComplete={() => {
           setModoNavegadorCompleto(false);
