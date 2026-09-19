@@ -18,6 +18,7 @@ import {
 import { motion } from 'framer-motion';
 import { speechGuidanceService } from '../../services/speechGuidanceService';
 import { SosEmergencyModal } from '../common/SosEmergencyModal';
+import { useAppStore } from '../../store/useAppStore';
 
 // Geometría y señalética paso a paso
 const WAYPOINTS_DATA = [
@@ -134,6 +135,7 @@ function CameraFollower({ position }) {
 }
 
 export const InAppGpsNavigator = ({ trip, onExit, onComplete }) => {
+  const { user } = useAppStore();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isVoiceMuted, setIsVoiceMuted] = useState(false);
   const [modalSosOpen, setModalSosOpen] = useState(false);
@@ -364,7 +366,7 @@ export const InAppGpsNavigator = ({ trip, onExit, onComplete }) => {
         isOpen={modalSosOpen}
         onClose={() => setModalSosOpen(false)}
         currentCoords={step.coords}
-        tripInfo={{ driverName: 'Carlos Mendoza', plate: 'KLU-492' }}
+        tripInfo={{ driverName: trip?.driver_name || user?.name, plate: trip?.vehicle_plate }}
       />
     </div>,
     document.body
