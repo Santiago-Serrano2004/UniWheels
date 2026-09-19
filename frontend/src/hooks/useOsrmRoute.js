@@ -51,9 +51,88 @@ export async function fetchRoadGeometry(points) {
   return points;
 }
 
+const MODIFICADOR_ES = {
+  uturn: 'da la vuelta en U',
+  'sharp right': 'gira fuertemente a la derecha',
+  right: 'gira a la derecha',
+  'slight right': 'mantente a la derecha',
+  straight: 'continúa recto',
+  'slight left': 'mantente a la izquierda',
+  left: 'gira a la izquierda',
+  'sharp left': 'gira fuertemente a la izquierda',
+};
+
+const capitalizar = (texto) => texto.charAt(0).toUpperCase() + texto.slice(1);
+
+// Traduce una maniobra OSRM (type/modifier) a una instrucción legible en español
+export function maniobraATexto(maneuver, streetName) {
+  const { type, modifier } = maneuver || {};
+  const calle = streetName ? ` hacia ${streetName}` : '';
+  switch (type) {
+    case 'depart':
+      return `Inicia el recorrido${calle}`;
+    case 'arrive':
+      return 'Has llegado a tu destino';
+    case 'roundabout':
+    case 'rotary':
+    case 'roundabout turn':
+      return `Toma la rotonda${calle}`;
+    case 'merge':
+      return `Incorpórate${calle}`;
+    case 'fork':
+      return `${modifier ? capitalizar(MODIFICADOR_ES[modifier] || 'continúa') : 'Continúa'} en la bifurcación${calle}`;
+    case 'end of road':
+      return `Al final de la vía, ${MODIFICADOR_ES[modifier] || 'continúa'}${calle}`;
+    case 'continue':
+    case 'new name':
+      return `Continúa${calle}`;
+    case 'turn':
+    default:
+      return `${capitalizar(MODIFICADOR_ES[modifier] || 'continúa')}${calle}`;
+  }
+}
+
+/**
+ * Consultar ruta con indicaciones giro a giro reales (turn-by-turn) en OSRM
+ * (mismo servidor demo público que ya usa fetchRoadGeometry, con steps=true).
+ * Devuelve la geometría completa y cada maniobra con su ubicación, distancia
+ * e instrucción ya traducida a español.
+ */
+export async function fetchTurnByTurnRoute(points) {
+  if (!points || points.length < 2) return { coordinates: [], steps: [] };
+
+  const coordsParam = points.map((p) => `${p[1]},${p[0]}`).join(';');
+  const url = `https://router.project-osrm.org/route/v1/driving/${coordsParam}?overview=full&geometries=geojson&steps=true`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return { coordinates: points, steps: [] };
+
+    const data = await response.json();
+    const route = data.routes?.[0];
+    if (data.code !== 'Ok' || !route) return { coordinates: points, steps: [] };
+
+    const coordinates = route.geometry.coordinates.map((pt) => [pt[1], pt[0]]);
+    const steps = (route.legs || []).flatMap((leg) =>
+      (leg.steps || []).map((step) => ({
+        distanceMeters: step.distance,
+        streetName: step.name || '',
+        instruction: maniobraATexto(step.maneuver, step.name),
+        maneuverLocation: [step.maneuver.location[1], step.maneuver.location[0]],
+      }))
+    );
+
+    return { coordinates, steps };
+  } catch (e) {
+    console.warn('Fallo OSRM turn-by-turn, usando fallback lineal:', e);
+    return { coordinates: points, steps: [] };
+  }
+}
+
 export function useOsrmRoute() {
   return {
     fetchRoadGeometry,
+    fetchTurnByTurnRoute,
     lerpAngle,
     getPlaceCoordinates,
   };

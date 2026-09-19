@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import { AppMapTileLayer } from '../map/AppMapTileLayer';
 import { createPickupMarker, createCampusMarker } from '../map/mapIcons';
 import { getPlaceCoordinates } from '../../hooks/useOsrmRoute';
+import { useTurnByTurnNavigation } from '../../hooks/useTurnByTurnNavigation';
 import { haversineDistanceMeters, formatDistance } from '../../utils/geo';
 import L from 'leaflet';
 import { Volume2, VolumeX, ShieldAlert, X } from 'lucide-react';
@@ -114,8 +115,13 @@ export const InAppGpsNavigator = ({ trip, route, onExit, onComplete }) => {
   }, [trip?.id]);
 
   const distanciaAlDestino = destinoActualNav ? haversineDistanceMeters(driverCoords, destinoActualNav) : null;
-  const textoDistancia = distanciaAlDestino == null ? 'Calculando posición…' : formatDistance(distanciaAlDestino);
-  const textoObjetivo = trip?.is_pin_verified ? 'Rumbo al destino' : 'Rumbo al punto de encuentro';
+  const turnByTurn = useTurnByTurnNavigation(driverCoords, destinoActualNav);
+  const textoDistanciaAproximada = distanciaAlDestino == null ? 'Calculando posición…' : formatDistance(distanciaAlDestino);
+  const textoObjetivoAproximado = trip?.is_pin_verified ? 'Rumbo al destino' : 'Rumbo al punto de encuentro';
+  const textoDistancia = turnByTurn.tieneIndicacionesReales
+    ? turnByTurn.distanciaFormateada || textoDistanciaAproximada
+    : textoDistanciaAproximada;
+  const textoObjetivo = turnByTurn.tieneIndicacionesReales ? turnByTurn.instruccion : textoObjetivoAproximado;
 
   const toggleVoice = () => {
     const muted = speechGuidanceService.toggleMute();

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { tripLifecycleService } from '../../services/api';
 import { getPlaceCoordinates } from '../../hooks/useOsrmRoute';
+import { useTurnByTurnNavigation } from '../../hooks/useTurnByTurnNavigation';
 import { openExternalNavigation, isIOS } from '../../utils/mapNavigation';
 import { haversineDistanceMeters, formatDistance } from '../../utils/geo';
 import { MapContainer, Marker, Popup, Polyline } from 'react-leaflet';
@@ -98,7 +99,10 @@ export const DriverLiveNavigationCockpit = ({ route, trip, onFinishTrip, onCance
   }, [trip?.id]);
 
   const distanciaAlDestinoActual = destinoActualNav ? haversineDistanceMeters(driverCoords, destinoActualNav) : null;
-  const currentManeuver = distanciaAlDestinoActual == null
+  const turnByTurn = useTurnByTurnNavigation(driverCoords, destinoActualNav);
+  const currentManeuver = turnByTurn.tieneIndicacionesReales
+    ? `${turnByTurn.distanciaFormateada ? `${turnByTurn.distanciaFormateada} · ` : ''}${turnByTurn.instruccion}`
+    : distanciaAlDestinoActual == null
     ? 'Calculando posición…'
     : pinVerificado
     ? `A ${formatDistance(distanciaAlDestinoActual)} del destino`
