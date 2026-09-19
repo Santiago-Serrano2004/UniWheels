@@ -6,8 +6,8 @@ import { InsufficientBalanceModal } from './InsufficientBalanceModal';
 import { DriverLiveNavigationCockpit } from './DriverLiveNavigationCockpit';
 import { LocationPickerModal } from '../map/LocationPickerModal';
 import { DriverRoutePublishForm } from './DriverRoutePublishForm';
-import { Car, Building2, MapPin, Navigation } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Car, Building2, MapPin, Navigation, PartyPopper, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const DriverView = () => {
   const {
@@ -66,6 +66,7 @@ export const DriverView = () => {
   const [showDriverMapModal, setShowDriverMapModal] = useState(false);
   const [vehiculoId, setVehiculoId] = useState(null);
   const [publicando, setPublicando] = useState(false);
+  const [resumenCobro, setResumenCobro] = useState(null);
   const [errorPublicacion, setErrorPublicacion] = useState('');
 
   const buscadorRef = useRef(null);
@@ -282,7 +283,15 @@ export const DriverView = () => {
   const manejarFinalizarViaje = async () => {
     const tripActual = currentRoutePassengerTrips[0];
     if (tripActual) {
-      await tripLifecycleService.completeTrip(tripActual.id);
+      const resultado = await tripLifecycleService.completeTrip(tripActual.id);
+      const datos = resultado?.data || resultado;
+      if (datos?.driver_net_earnings_cop != null) {
+        setResumenCobro({
+          total: datos.total_fare_cop,
+          comision: datos.platform_commission_cop,
+          ganancia: datos.driver_net_earnings_cop,
+        });
+      }
     }
     const restantes = activeDriverTrip
       ? await tripsService.getActiveTripsForRoute(activeDriverTrip.id)
@@ -332,6 +341,44 @@ export const DriverView = () => {
 
   return (
     <div className="space-y-4 pb-12 select-none">
+      {/* CONFIRMACIÓN INMEDIATA DE GANANCIA TRAS COBRAR UN VIAJE */}
+      <AnimatePresence>
+        {resumenCobro && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className={`relative w-full max-w-xs rounded-3xl p-5 text-center shadow-2xl ${
+                isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => setResumenCobro(null)}
+                className={`absolute top-3 right-3 p-1.5 rounded-full cursor-pointer ${isDark ? 'text-slate-400 hover:bg-slate-800' : 'text-slate-400 hover:bg-slate-100'}`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-3">
+                <PartyPopper className="w-7 h-7" />
+              </div>
+              <h3 className="text-lg font-black">¡Ganaste $ {resumenCobro.ganancia.toLocaleString('es-CO')} COP!</h3>
+              <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                Total cobrado $ {resumenCobro.total.toLocaleString('es-CO')} · Comisión UniWheels $ {resumenCobro.comision.toLocaleString('es-CO')}
+              </p>
+              <button
+                type="button"
+                onClick={() => setResumenCobro(null)}
+                className="w-full mt-4 py-3 rounded-2xl bg-lochmara-600 hover:bg-lochmara-500 text-white text-xs font-bold cursor-pointer"
+              >
+                Entendido
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* 1. HERO CARD DEL CONDUCTOR: SENTIDO Y CORREDOR */}
       <section
         className={`rounded-3xl p-4 border shadow-sm space-y-3 transition-colors ${
