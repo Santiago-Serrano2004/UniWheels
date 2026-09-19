@@ -215,6 +215,26 @@ export const TripMapView = () => {
   const [vehiclePos, setVehiclePos] = useState(driverOrigin);
   const [vehicleHeading, setVehicleHeading] = useState(0);
 
+  // Viaje real ya reservado: la posición del vehículo viene de la telemetría GPS
+  // real del conductor (polling), no de la animación de demostración de más abajo.
+  useEffect(() => {
+    if (!isBooked || !activePassengerBooking?.id) return undefined;
+    let activo = true;
+    const consultarPosicion = () => {
+      tripLifecycleService.getLatestPosition(activePassengerBooking.id).then((pos) => {
+        if (!activo || !pos) return;
+        setVehiclePos([pos.latitude, pos.longitude]);
+        if (pos.heading_degrees != null) setVehicleHeading(pos.heading_degrees);
+      });
+    };
+    consultarPosicion();
+    const poll = setInterval(consultarPosicion, 6000);
+    return () => {
+      activo = false;
+      clearInterval(poll);
+    };
+  }, [isBooked, activePassengerBooking?.id]);
+
   const animStateRef = useRef({
     progressIndex: 0,
     subT: 0,

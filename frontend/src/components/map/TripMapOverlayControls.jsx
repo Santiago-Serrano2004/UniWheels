@@ -103,21 +103,24 @@ export const TripMapOverlayControls = ({
 
         {/* Controles de Simulación GPS y Tipo de Vehículo */}
         <div className="flex items-center gap-2">
-          {/* Botón GPS en Vivo */}
-          <button
-            type="button"
-            onClick={toggleGpsSimulation}
-            className={`px-3 py-2 rounded-2xl shadow-lg backdrop-blur-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
-              isSimulatingGps
-                ? 'bg-emerald-600 text-white border-emerald-500 shadow-emerald-600/30'
-                : isDark
-                ? 'bg-slate-900/90 text-slate-200 border-slate-800 hover:bg-slate-800'
-                : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50'
-            }`}
-          >
-            {isSimulatingGps ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-            <span className="text-[11px]">{isSimulatingGps ? 'Pausar' : 'GPS'}</span>
-          </button>
+          {/* Botón GPS en Vivo — solo es una previsualización de demostración antes de
+              reservar; en un viaje ya reservado la posición es real y no se controla a mano. */}
+          {!isBooked && (
+            <button
+              type="button"
+              onClick={toggleGpsSimulation}
+              className={`px-3 py-2 rounded-2xl shadow-lg backdrop-blur-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
+                isSimulatingGps
+                  ? 'bg-emerald-600 text-white border-emerald-500 shadow-emerald-600/30'
+                  : isDark
+                  ? 'bg-slate-900/90 text-slate-200 border-slate-800 hover:bg-slate-800'
+                  : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              {isSimulatingGps ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+              <span className="text-[11px]">{isSimulatingGps ? 'Pausar' : 'GPS'}</span>
+            </button>
+          )}
 
           {/* Badge del Vehículo */}
           <div
