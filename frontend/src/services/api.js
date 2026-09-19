@@ -820,6 +820,28 @@ export const tripLifecycleService = {
     return response.data;
   },
 
+  async reportPosition(tripId, { latitude, longitude, speed_kmh, heading_degrees, accuracy_meters }) {
+    try {
+      const response = await tripLifecycleClient.post(`/trips/${tripId}/tracking`, {
+        latitude, longitude, speed_kmh, heading_degrees, accuracy_meters,
+      });
+      return response.data;
+    } catch {
+      // Este endpoint se llama cada pocos segundos: un fallo puntual de red no debe
+      // interrumpir la navegación ni mostrarle un error al conductor.
+      return null;
+    }
+  },
+
+  async getLatestPosition(tripId) {
+    try {
+      const response = await tripLifecycleClient.get(`/trips/${tripId}/tracking/latest`);
+      return response.data?.data || null;
+    } catch {
+      return null;
+    }
+  },
+
   async getActivePassengerTrip() {
     try {
       const response = await tripLifecycleClient.get('/passenger/active-trip');
