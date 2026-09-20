@@ -44,4 +44,13 @@ USER www-data
 # Migraciones + arranque en un solo entrypoint: cada servicio aplica sus propias
 # migraciones contra su propia base de datos al iniciar (patrón database-per-service
 # ya usado en desarrollo vía `php artisan migrate --force`).
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${SERVICE_PORT}
+#
+# El loop de `schedule:run` cada 60s reemplaza a un cron/supervisor real —
+# mismo criterio de simplicidad que el resto del archivo. Si un servicio no
+# define tareas en routes/console.php, el comando simplemente no hace nada
+# cada minuto (costo despreciable). Corre en background para no bloquear el
+# proceso principal (`php artisan serve`), que sigue siendo el PID 1 del
+# contenedor.
+CMD php artisan migrate --force \
+    && (while true; do php artisan schedule:run >> /dev/null 2>&1; sleep 60; done &) \
+    && php artisan serve --host=0.0.0.0 --port=${SERVICE_PORT}

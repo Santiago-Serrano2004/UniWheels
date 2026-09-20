@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 // Retención: esta tabla crece con cada reporte de posición (aprox. cada 5s por
-// viaje activo) y todavía no tiene una política de purga automática. En
-// producción hace falta un job que borre puntos de viajes ya completados o
-// cancelados con más de N días de antigüedad.
+// viaje activo). Purga automática vía `uniwheels:purge-tracking-points`,
+// programado a diario en routes/console.php (borra puntos de viajes ya
+// finalizados con más de 7 días de antigüedad por defecto).
 class TripTrackingPoint extends Model
 {
     use HasUuids;

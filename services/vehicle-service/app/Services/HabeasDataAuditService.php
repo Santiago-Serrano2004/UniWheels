@@ -23,8 +23,12 @@ class HabeasDataAuditService
         $rutaPrivada = $document->file_path;
         $hashArchivo = '';
 
+        // hash_file() + ->path() solo funcionan en discos locales — con el
+        // driver S3 (Cloudflare R2 en producción) ->path() lanza una excepción
+        // porque no existe una ruta de filesystem local. hash() sobre el
+        // contenido descargado funciona igual en local y en S3.
         if (Storage::disk('private')->exists($rutaPrivada)) {
-            $hashArchivo = hash_file('sha256', Storage::disk('private')->path($rutaPrivada));
+            $hashArchivo = hash('sha256', Storage::disk('private')->get($rutaPrivada));
         }
 
         return DocumentAccessLog::create([
