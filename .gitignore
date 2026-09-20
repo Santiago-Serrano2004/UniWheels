@@ -79,3 +79,4 @@ services/*/storage/framework/sessions/*
 services/*/storage/framework/views/*
 docker/osrm-data/*
 !docker/osrm-data/.gitkeep
+docker/backups/

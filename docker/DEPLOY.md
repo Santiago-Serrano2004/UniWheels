@@ -137,7 +137,27 @@ exponerlo públicamente), crea el usuario admin la primera vez, y agrega un
 monitor HTTP por cada `/up` de los 5 servicios Laravel + `/health` de
 ai-route-service + el dominio público.
 
-## 8. Nota: listo para una futura app React Native
+## 8. Backups de la base de datos
+
+El volumen `postgres_data` protege de un reinicio del contenedor, no de un
+disco corrupto, un `docker compose down -v` accidental, ni de borrar algo por
+error en producción. Configura un backup diario en el HOST (no dentro de un
+contenedor, para que sobreviva a que se recree el de Postgres):
+
+```bash
+crontab -e
+# agregar:
+0 3 * * * /home/ubuntu/uniwheels/docker/backup-postgres.sh >> /home/ubuntu/uniwheels/docker/backups/backup.log 2>&1
+```
+
+`docker/backup-postgres.sh` ya está en el repo — hace `pg_dumpall` comprimido
+de las 5 bases de datos a `docker/backups/`, con 14 días de retención local.
+Es un backup solo local: si querés protegerte también contra la pérdida del
+disco de la VM entera, el siguiente paso natural es subir cada dump al mismo
+bucket R2 del paso 4 (gratis hasta 10GB) — no está automatizado todavía, es
+una mejora aparte cuando haya tráfico real que proteger.
+
+## 9. Nota: listo para una futura app React Native
 
 Este despliegue ya sirve sin cambios para el ítem de backlog "App Móvil Nativa"
 del documento de especificación: la app solo necesitaría apuntar a
