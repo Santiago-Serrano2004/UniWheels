@@ -71,20 +71,33 @@ cd uniwheels
      real, solo que el tramo Cloudflare→VM queda sin cifrar (aceptable para un
      piloto, no ideal a largo plazo).
 
-## 4. Cloudflare R2 (documentos de vehículo — reemplaza el disco local)
+## 4. Cloudflare R2
 
+### 4a. Bucket de documentos vehiculares (reemplaza el disco local)
 1. **R2 → Create bucket** (p. ej. `uniwheels-documentos`). 10GB gratis para
    siempre, sin costo de egreso.
 2. **R2 → Manage API tokens → Create API token** con permisos de
-   lectura/escritura sobre ese bucket. Copia el **Access Key ID**, **Secret
+   lectura/escritura sobre ese bucket específico. Copia el **Access Key ID**, **Secret
    Access Key**, y el **endpoint S3** que te muestra (formato
    `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`).
 3. En `services/vehicle-service/.env.production` (paso 5): `PRIVATE_DOCS_DISK_DRIVER=s3`
-   + esas 3 credenciales en `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET` / `R2_ENDPOINT`.
+   + esas credenciales en `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET` / `R2_ENDPOINT`.
+
+### 4b. Bucket SEPARADO para backups de base de datos (Offsite Disaster Recovery)
+1. **R2 → Create bucket** (p. ej. `uniwheels-backups-db`).
+   > **IMPORTANTE**: No reutilizar el bucket de documentos de vehículo para los backups de la base de datos. Separar los buckets garantiza el principio de mínimo privilegio (el microservicio de vehículos no puede leer ni borrar backups de la DB), permite políticas de cifrado y retención independientes (ej. purga automática de dumps >30 días en R2), y evita mezclar datos operativos con respaldos del sistema.
+2. **R2 → Manage API tokens → Create API token** con permisos exclusivos sobre el bucket `uniwheels-backups-db`.
+3. En `docker/.env`:
+   ```bash
+   R2_BACKUPS_BUCKET=uniwheels-backups-db
+   R2_BACKUPS_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+   R2_BACKUPS_ACCESS_KEY_ID=<token-id-backups>
+   R2_BACKUPS_SECRET_ACCESS_KEY=<token-secret-backups>
+   ```
 
 ## 5. Variables de entorno de producción
 
-Crea `docker/.env` (para las variables que usa el propio `docker-compose.prod.yml`):
+Crea `docker/.env` (para las variables que usa el propio `docker-compose.prod.yml` y los scripts de backup/restore):
 
 ```bash
 POSTGRES_PASSWORD=<contraseña fuerte nueva>
@@ -94,6 +107,10 @@ VITE_VEHICLE_API_URL=https://<tu-dominio>/api/v1
 VITE_ROUTE_API_URL=https://<tu-dominio>/api/v1
 VITE_TOMTOM_API_KEY=<tu key real de TomTom>
 VITE_SENTRY_DSN=<tu DSN real de Sentry, si lo activaste>
+R2_BACKUPS_BUCKET=uniwheels-backups-db
+R2_BACKUPS_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+R2_BACKUPS_ACCESS_KEY_ID=<tu-access-key-backups>
+R2_BACKUPS_SECRET_ACCESS_KEY=<tu-secret-key-backups>
 ```
 
 Para cada uno de los 5 servicios Laravel, copia su `.env.example` a
@@ -109,7 +126,7 @@ Para cada uno de los 5 servicios Laravel, copia su `.env.example` a
   `ai-route-service`) — es un secreto compartido entre microservicios, no por
   servicio.
 - Credenciales reales de Wompi (`WOMPI_*`), Sentry (`SENTRY_LARAVEL_DSN`) y,
-  en `vehicle-service`, las `R2_*` del paso 4.
+  en `vehicle-service`, las `R2_*` del paso 4a.
 
 Para `ai-route-service`, copia igual su `.env.example` a `.env.production` y
 ajusta `TRIP_SERVICE_URL=http://trip-service:8004`.
@@ -150,12 +167,7 @@ crontab -e
 0 3 * * * /home/ubuntu/uniwheels/docker/backup-postgres.sh >> /home/ubuntu/uniwheels/docker/backups/backup.log 2>&1
 ```
 
-`docker/backup-postgres.sh` ya está en el repo — hace `pg_dumpall` comprimido
-de las 5 bases de datos a `docker/backups/`, con 14 días de retención local.
-Es un backup solo local: si querés protegerte también contra la pérdida del
-disco de la VM entera, el siguiente paso natural es subir cada dump al mismo
-bucket R2 del paso 4 (gratis hasta 10GB) — no está automatizado todavía, es
-una mejora aparte cuando haya tráfico real que proteger.
+`docker/backup-postgres.sh` hace `pg_dumpall` comprimido de las 5 bases de datos a `docker/backups/`, mantiene 14 días de retención local y, si `R2_BACKUPS_BUCKET` está configurado en `docker/.env`, sube automáticamente cada dump a Cloudflare R2 en el bucket dedicado configurado en el paso 4b.
 
 ## 9. Nota: listo para una futura app React Native
 
