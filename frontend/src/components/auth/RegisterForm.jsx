@@ -28,6 +28,13 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const formatColombianPhone = (digits = '') => {
+  const clean = digits.replace(/\D/g, '').slice(0, 10);
+  if (clean.length <= 3) return clean;
+  if (clean.length <= 6) return `${clean.slice(0, 3)} ${clean.slice(3)}`;
+  return `${clean.slice(0, 3)} ${clean.slice(3, 6)} ${clean.slice(6)}`;
+};
+
 export const RegisterForm = ({ onBack }) => {
   const { login, theme } = useAppStore();
   const isDark = theme === 'dark';
@@ -579,9 +586,9 @@ export const RegisterForm = ({ onBack }) => {
                   <input
                     type="tel"
                     required
-                    value={telefono}
-                    onChange={(e) => setTelefono(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
-                    placeholder="3151234567"
+                    value={formatColombianPhone(telefono)}
+                    onChange={(e) => setTelefono(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="315 123 4567"
                     className={`w-full text-xs rounded-2xl px-4 py-2.5 border transition-all shadow-2xs focus:outline-none focus:ring-2 focus:ring-lochmara-500 ${
                       isDark
                         ? 'bg-slate-900 border-slate-800 text-white placeholder-slate-500'
