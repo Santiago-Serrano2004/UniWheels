@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Trip;
+use App\Models\WompiWebhookEvent;
 use App\Services\WompiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -51,20 +52,42 @@ class TripPaymentController extends Controller
     /**
      * Webhook público de Wompi para pagos de viaje (prefijo TP-). Los eventos
      * de recarga de billetera (prefijo WR-) los procesa auth-service en el suyo.
+     *
+     * Persiste el payload completo de CADA webhook recibido para auditoría y conciliación.
      */
     public function wompiWebhook(Request $request): JsonResponse
     {
         $payload = $request->all();
-
-        if (! $this->wompiService->verifyWebhookSignature($payload)) {
-            Log::warning('Webhook de Wompi con firma inválida recibido en trip-service.');
-
-            return response()->json(['success' => false, 'message' => 'Firma inválida.'], 403);
-        }
+        $isValid = $this->wompiService->verifyWebhookSignature($payload);
 
         $transaccion = $payload['data']['transaction'] ?? null;
         $referencia = $transaccion['reference'] ?? null;
         $estado = $transaccion['status'] ?? null;
+        $transactionId = $transaccion['id'] ?? null;
+        $amountInCents = isset($transaccion['amount_in_cents']) ? (int) $transaccion['amount_in_cents'] : null;
+        $currency = $transaccion['currency'] ?? 'COP';
+        $eventType = $payload['event'] ?? 'transaction.updated';
+        $checksum = $payload['signature']['checksum'] ?? null;
+
+        // Persistir el evento completo de CADA webhook recibido
+        $webhookEvent = WompiWebhookEvent::create([
+            'event_type' => $eventType,
+            'transaction_id' => $transactionId,
+            'reference' => $referencia,
+            'status' => $estado,
+            'amount_in_cents' => $amountInCents,
+            'currency' => $currency,
+            'checksum' => $checksum,
+            'signature_valid' => $isValid,
+            'payload' => $payload,
+        ]);
+
+        if (! $isValid) {
+            Log::warning('Webhook de Wompi con firma inválida recibido en trip-service.', ['reference' => $referencia]);
+            $webhookEvent->update(['error_message' => 'Firma inválida']);
+
+            return response()->json(['success' => false, 'message' => 'Firma inválida.'], 403);
+        }
 
         if (! $referencia || ! str_starts_with($referencia, 'TP-')) {
             return response()->json(['success' => true, 'message' => 'Evento recibido, sin acción para esta referencia.']);
@@ -74,16 +97,20 @@ class TripPaymentController extends Controller
 
         if (! $trip) {
             Log::warning('Webhook de Wompi: no se encontró un viaje para la referencia.', ['reference' => $referencia]);
+            $webhookEvent->update(['error_message' => 'Viaje no encontrado para referencia: '.$referencia]);
 
             return response()->json(['success' => true, 'message' => 'Referencia no reconocida.']);
         }
 
         if ($trip->payment_confirmed_at) {
+            $webhookEvent->update(['processed' => true, 'processed_at' => now()]);
+
             return response()->json(['success' => true, 'message' => 'Evento ya procesado previamente.']);
         }
 
         if ($estado === 'APPROVED') {
             $trip->update(['payment_confirmed_at' => now()]);
+            $webhookEvent->update(['processed' => true, 'processed_at' => now()]);
         }
 
         return response()->json(['success' => true]);

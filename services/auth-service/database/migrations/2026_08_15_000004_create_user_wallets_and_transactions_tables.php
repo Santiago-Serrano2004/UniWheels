@@ -26,7 +26,7 @@ return new class extends Migration
             $table->decimal('amount_cop', 12, 2); // Positivo (ingreso) o Negativo (débito de comisión)
             $table->decimal('balance_before_cop', 12, 2);
             $table->decimal('balance_after_cop', 12, 2);
-            $table->string('reference_id', 100)->nullable(); // trip_id o pasarela_ref
+            $table->string('reference_id', 100)->nullable()->unique(); // trip_id o pasarela_ref (clave de idempotencia)
             $table->string('status', 20)->default('completado'); // pendiente, completado, fallido, revertido
             $table->text('notes')->nullable();
             $table->timestamps();

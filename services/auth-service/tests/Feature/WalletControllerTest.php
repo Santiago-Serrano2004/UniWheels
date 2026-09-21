@@ -132,15 +132,23 @@ test('trip-service puede debitar la comision de un conductor y bloquear la bille
     $this->assertDatabaseHas('user_wallets', ['user_id' => $user->id, 'balance_cop' => -6000.00, 'is_locked' => true]);
 });
 
-test('el webhook de wompi rechaza eventos con firma invalida', function () {
+use App\Models\WompiWebhookEvent;
+use Illuminate\Database\UniqueConstraintViolationException;
+
+test('el webhook de wompi rechaza eventos con firma invalida pero persiste el evento para auditoria', function () {
     $this->postJson('/api/v1/webhooks/wompi', [
         'timestamp' => time(),
         'signature' => ['checksum' => 'firma-falsa', 'properties' => ['transaction.id']],
         'data' => ['transaction' => ['id' => 'x', 'reference' => 'WR-fake', 'status' => 'APPROVED']],
     ])->assertStatus(403);
+
+    $this->assertDatabaseHas('wompi_webhook_events', [
+        'reference' => 'WR-fake',
+        'signature_valid' => false,
+    ]);
 });
 
-test('el webhook de wompi acredita el saldo cuando la firma es valida y la recarga fue aprobada', function () {
+test('el webhook de wompi acredita el saldo cuando la firma es valida y la recarga fue aprobada, y persiste el evento procesado', function () {
     $user = crearUsuarioConBilletera(0.0);
     $referencia = 'WR-'.$user->id.'-20260101000000-abc123';
 
@@ -151,6 +159,12 @@ test('el webhook de wompi acredita el saldo cuando la firma es valida y la recar
     $response->assertStatus(200);
     $this->assertDatabaseHas('user_wallets', ['user_id' => $user->id, 'balance_cop' => 15000.00]);
     $this->assertDatabaseHas('wallet_transactions', ['reference_id' => $referencia, 'transaction_type' => 'recarga_tarjeta']);
+    $this->assertDatabaseHas('wompi_webhook_events', [
+        'reference' => $referencia,
+        'status' => 'APPROVED',
+        'signature_valid' => true,
+        'processed' => true,
+    ]);
 });
 
 test('el webhook de wompi es idempotente: no acredita dos veces la misma referencia', function () {
@@ -163,9 +177,37 @@ test('el webhook de wompi es idempotente: no acredita dos veces la misma referen
 
     $this->assertDatabaseHas('user_wallets', ['user_id' => $user->id, 'balance_cop' => 15000.00]);
     expect(WalletTransaction::where('reference_id', $referencia)->count())->toBe(1);
+    expect(WompiWebhookEvent::where('reference', $referencia)->count())->toBe(2);
 });
 
-test('el webhook de wompi ignora eventos no aprobados', function () {
+test('la base de datos rechaza duplicados de reference_id gracias a la restriccion unique', function () {
+    $user = crearUsuarioConBilletera(0.0);
+    $referencia = 'WR-'.$user->id.'-20260101000000-unique-test';
+
+    WalletTransaction::create([
+        'wallet_id' => $user->wallet->id,
+        'transaction_type' => 'recarga_tarjeta',
+        'amount_cop' => 10000.00,
+        'balance_before_cop' => 0.00,
+        'balance_after_cop' => 10000.00,
+        'reference_id' => $referencia,
+        'status' => 'completado',
+    ]);
+
+    expect(function () use ($user, $referencia) {
+        WalletTransaction::create([
+            'wallet_id' => $user->wallet->id,
+            'transaction_type' => 'recarga_tarjeta',
+            'amount_cop' => 10000.00,
+            'balance_before_cop' => 10000.00,
+            'balance_after_cop' => 20000.00,
+            'reference_id' => $referencia,
+            'status' => 'completado',
+        ]);
+    })->toThrow(UniqueConstraintViolationException::class);
+});
+
+test('el webhook de wompi persiste eventos no aprobados sin acreditar saldo', function () {
     $user = crearUsuarioConBilletera(0.0);
     $referencia = 'WR-'.$user->id.'-20260101000000-abc123';
     $payload = buildWompiWebhookPayload($referencia, 15000, 'DECLINED');
@@ -173,6 +215,11 @@ test('el webhook de wompi ignora eventos no aprobados', function () {
     $this->postJson('/api/v1/webhooks/wompi', $payload)->assertStatus(200);
 
     $this->assertDatabaseHas('user_wallets', ['user_id' => $user->id, 'balance_cop' => 0.00]);
+    $this->assertDatabaseHas('wompi_webhook_events', [
+        'reference' => $referencia,
+        'status' => 'DECLINED',
+        'signature_valid' => true,
+    ]);
 });
 
 function buildWompiWebhookPayload(string $referencia, int $montoCop, string $estado): array
