@@ -15,17 +15,16 @@ import {
 import { createCarVehicleMarker, createMotoVehicleMarker } from './VehicleGpsMarker';
 import { fetchRoadGeometry, lerpAngle, getPlaceCoordinates } from '../../hooks/useOsrmRoute';
 import { TripMapOverlayControls } from './TripMapOverlayControls';
-import { Route, Search, Calendar } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Route, Search, Calendar, Locate } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const pickupIcon = createPickupMarker('Punto de recogida');
 const directPickupIcon = createDirectPickupMarker('En ruta');
 const campusIcon = createCampusMarker('Campus');
 
-// Componente para auto-ajustar el zoom y encuadre del mapa de forma dinámica con auto-reset
-function MapAutoBounds({ routeCoords, origin, destination, isExpanded }) {
+// Componente para auto-ajustar el zoom y encuadre inicial de la ruta.
+function MapAutoBounds({ routeCoords, origin, destination, isExpanded, setIsMapPanned, fitRouteRef }) {
   const map = useMap();
-  const resetTimerRef = useRef(null);
   const isProgrammaticMoveRef = useRef(false);
 
   const getRouteBounds = () => {
@@ -42,6 +41,7 @@ function MapAutoBounds({ routeCoords, origin, destination, isExpanded }) {
 
   const fitRouteToScreen = (duration = 0.5) => {
     if (!map) return;
+    setIsMapPanned(false);
     const bounds = getRouteBounds();
     if (bounds) {
       try {
@@ -73,6 +73,8 @@ function MapAutoBounds({ routeCoords, origin, destination, isExpanded }) {
     }
   };
 
+  fitRouteRef.current = fitRouteToScreen;
+
   // Auto-fit inicial y cuando cambia la ruta o expansión de la tarjeta
   useEffect(() => {
     if (!map) return;
@@ -80,20 +82,13 @@ function MapAutoBounds({ routeCoords, origin, destination, isExpanded }) {
     fitRouteToScreen(0.45);
   }, [map, routeCoords, origin, destination, isExpanded]);
 
-  // Si el usuario hace zoom o mueve el mapa, esperar 4.5 segundos de inactividad y resetear a la vista normal
+  // Conservar el control de la cámara cuando el usuario mueve o amplía el mapa.
   useEffect(() => {
     if (!map) return;
 
     const handleUserInteraction = () => {
       if (isProgrammaticMoveRef.current) return;
-
-      if (resetTimerRef.current) {
-        clearTimeout(resetTimerRef.current);
-      }
-
-      resetTimerRef.current = setTimeout(() => {
-        fitRouteToScreen(0.65);
-      }, 4500);
+      setIsMapPanned(true);
     };
 
     map.on('dragstart', handleUserInteraction);
@@ -101,14 +96,11 @@ function MapAutoBounds({ routeCoords, origin, destination, isExpanded }) {
     map.on('movestart', handleUserInteraction);
 
     return () => {
-      if (resetTimerRef.current) {
-        clearTimeout(resetTimerRef.current);
-      }
       map.off('dragstart', handleUserInteraction);
       map.off('zoomstart', handleUserInteraction);
       map.off('movestart', handleUserInteraction);
     };
-  }, [map, routeCoords, origin, destination, isExpanded]);
+  }, [map, setIsMapPanned]);
 
   return null;
 }
@@ -128,6 +120,8 @@ export const TripMapView = () => {
 
   const isDark = theme === 'dark';
   const [isCardExpanded, setIsCardExpanded] = useState(false);
+  const [isMapPanned, setIsMapPanned] = useState(false);
+  const fitRouteRef = useRef(null);
   const hasRouteToDisplay = Boolean(selectedSearchRoute || activePassengerBooking);
 
   const isBooked = Boolean(activePassengerBooking);
@@ -518,12 +512,14 @@ export const TripMapView = () => {
       >
         <AppMapTileLayer isDark={isDark} />
 
-        {/* Dynamic Auto-Fit Bounds Handler con Auto-Recenter */}
+        {/* Dynamic Auto-Fit Bounds Handler */}
         <MapAutoBounds
           routeCoords={activePath}
           origin={driverOrigin}
           destination={campusDestination}
           isExpanded={isCardExpanded}
+          setIsMapPanned={setIsMapPanned}
+          fitRouteRef={fitRouteRef}
         />
 
         <Marker position={driverOrigin} icon={createTeardropPin(isTowardsCampus ? 'Origen Conductor' : campusName, '#0284c7')}>
@@ -573,6 +569,26 @@ export const TripMapView = () => {
           />
         )}
       </MapContainer>
+
+      <AnimatePresence>
+        {isMapPanned && (
+          <motion.button
+            type="button"
+            initial={{ opacity: 0, scale: 0.9, y: -4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: -4 }}
+            onClick={() => {
+              fitRouteRef.current?.(0.45);
+              setIsMapPanned(false);
+            }}
+            className="absolute top-16 right-3 z-30 rounded-full p-3 backdrop-blur-md bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 shadow-lg text-slate-700 dark:text-slate-200 transition-colors hover:text-lochmara-600 dark:hover:text-lochmara-400 cursor-pointer"
+            title="Recentrar ruta"
+            aria-label="Recentrar"
+          >
+            <Locate className="w-4 h-4" />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* CONTROLES Y DRAWER INFERIOR FLOTANTE */}
       <TripMapOverlayControls
