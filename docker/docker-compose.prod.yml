@@ -156,8 +156,10 @@ services:
     restart: unless-stopped
     volumes:
       - ../gateway/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ../gateway/certs:/etc/nginx/certs:ro
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - auth-service
       - vehicle-service
