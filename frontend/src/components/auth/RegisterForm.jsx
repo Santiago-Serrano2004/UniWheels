@@ -67,6 +67,7 @@ export const RegisterForm = ({ onBack }) => {
   const [codigoSms, setCodigoSms] = useState('');
   const [reenviandoCodigo, setReenviandoCodigo] = useState(false);
   const [reenviandoSms, setReenviandoSms] = useState(false);
+  const [smsCooldown, setSmsCooldown] = useState(45);
   const [mensajeReenvio, setMensajeReenvio] = useState('');
 
   // Estados de control UX
@@ -113,6 +114,16 @@ export const RegisterForm = ({ onBack }) => {
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (pasoActual !== 3 || smsCooldown <= 0) return undefined;
+
+    const timer = setInterval(() => {
+      setSmsCooldown((currentCooldown) => Math.max(currentCooldown - 1, 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [pasoActual, smsCooldown]);
 
   const institucionSeleccionada =
     instituciones.find((inst) => inst.id === Number(institucionId)) || instituciones[0];
@@ -208,6 +219,7 @@ export const RegisterForm = ({ onBack }) => {
         authService.sendSmsCode(telefonoLimpio),
       ]);
       setEstaProcesando(false);
+      setSmsCooldown(45);
       setPasoActual(3);
     } catch (err) {
       setEstaProcesando(false);
@@ -244,6 +256,7 @@ export const RegisterForm = ({ onBack }) => {
     try {
       await authService.sendSmsCode(telefonoLimpio);
       setReenviandoSms(false);
+      setSmsCooldown(45);
       setMensajeReenvio('¡Nuevo código enviado por SMS!');
       setTimeout(() => setMensajeReenvio(''), 4000);
     } catch (err) {
@@ -833,15 +846,18 @@ export const RegisterForm = ({ onBack }) => {
                         : 'bg-white border-slate-200 text-slate-900 placeholder-slate-300'
                     }`}
                   />
+                  <p className="text-[10px] text-slate-400 text-center">
+                    ¿No recibiste el SMS? Revisa la cobertura de tu celular o solicita un nuevo código al expirar el temporizador.
+                  </p>
                   <div className="text-center">
                     <button
                       type="button"
-                      disabled={reenviandoSms}
+                      disabled={reenviandoSms || smsCooldown > 0}
                       onClick={reenviarSms}
                       className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer disabled:opacity-50"
                     >
                       <RotateCw className={`w-3 h-3 ${reenviandoSms ? 'animate-spin' : ''}`} />
-                      <span>{reenviandoSms ? 'Reenviando...' : 'Reenviar código SMS'}</span>
+                      <span>{reenviandoSms ? 'Reenviando...' : smsCooldown > 0 ? `Reenviar código en ${smsCooldown}s` : 'Reenviar código SMS'}</span>
                     </button>
                   </div>
                 </div>
