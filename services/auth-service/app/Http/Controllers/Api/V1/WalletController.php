@@ -96,6 +96,18 @@ class WalletController extends Controller
             ]);
         } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'El conductor no tiene una billetera registrada.'], 404);
+        } catch (UniqueConstraintViolationException $e) {
+            // reference_id (trip_id) ya tiene una comisión debitada — un reintento
+            // de trip-service para el mismo viaje no debe duplicar el cobro.
+            $transaccionExistente = WalletTransaction::where('reference_id', $datos['trip_id'] ?? null)->first();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'wallet_locked' => $transaccionExistente?->wallet?->fresh()?->is_locked,
+                    'transaction' => $transaccionExistente,
+                ],
+            ]);
         }
     }
 
