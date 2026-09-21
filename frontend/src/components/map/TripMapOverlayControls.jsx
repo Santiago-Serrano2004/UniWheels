@@ -338,7 +338,10 @@ export const TripMapOverlayControls = ({
                     </span>
                     <ShieldCheck className="w-3.5 h-3.5 text-lochmara-500 shrink-0" />
                     <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.2 rounded-md shrink-0">
-                      {ratingValue} ★
+                      <span className="inline-flex items-center gap-1">
+                        {ratingValue}
+                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                      </span>
                     </span>
                   </div>
 

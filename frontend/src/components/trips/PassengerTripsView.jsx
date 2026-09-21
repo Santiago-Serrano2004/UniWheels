@@ -25,6 +25,7 @@ import {
   Search,
   Loader2,
   ChevronRight,
+  ArrowRight,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -568,8 +569,10 @@ export const PassengerTripsView = () => {
                           Completado
                         </span>
                       </div>
-                      <p className={`text-xs font-bold truncate max-w-[200px] ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                        {viaje.pickup.split('-')[0]} ➔ {viaje.destination}
+                      <p className={`flex items-center gap-1 text-xs font-bold max-w-[200px] ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                        <span className="truncate">{viaje.pickup.split('-')[0]}</span>
+                        <ArrowRight className="w-3 h-3 shrink-0 opacity-70" />
+                        <span className="truncate">{viaje.destination}</span>
                       </p>
                     </div>
 

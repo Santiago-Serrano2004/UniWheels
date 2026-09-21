@@ -506,7 +506,10 @@ export const ProfileView = () => {
                   isDark ? 'bg-slate-950 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-600'
                 }`}
               >
-                <p className="font-semibold text-slate-700 dark:text-slate-300">📧 Te enviaremos un correo de despedida:</p>
+                <p className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300">
+                  <Mail className="w-3.5 h-3.5 text-lochmara-500 shrink-0" />
+                  Te enviaremos un correo de despedida:
+                </p>
                 <p className="text-[11px] font-mono text-lochmara-600 dark:text-lochmara-400">{user?.email}</p>
               </div>
 

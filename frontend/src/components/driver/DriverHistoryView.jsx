@@ -19,6 +19,7 @@ import {
   Building2,
   Layers,
   Sparkles,
+  ArrowRight,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -501,8 +502,10 @@ export const DriverHistoryView = () => {
                       $ {plantilla.fare_cop?.toLocaleString('es-CO')} • {plantilla.seats} cupos
                     </span>
                   </div>
-                  <p className="font-bold truncate text-[11px]">
-                    {plantilla.origin} ➔ {plantilla.destination}
+                  <p className="flex items-center gap-1 font-bold text-[11px]">
+                    <span className="truncate">{plantilla.origin}</span>
+                    <ArrowRight className="w-3 h-3 shrink-0 opacity-70" />
+                    <span className="truncate">{plantilla.destination}</span>
                   </p>
                 </div>
               </div>
@@ -546,8 +549,10 @@ export const DriverHistoryView = () => {
                           Completado
                         </span>
                       </div>
-                      <p className={`text-xs font-bold truncate max-w-[200px] ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                        {viaje.origin.split('-')[0]} ➔ {viaje.destination}
+                      <p className={`flex items-center gap-1 text-xs font-bold max-w-[200px] ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                        <span className="truncate">{viaje.origin.split('-')[0]}</span>
+                        <ArrowRight className="w-3 h-3 shrink-0 opacity-70" />
+                        <span className="truncate">{viaje.destination}</span>
                       </p>
                     </div>
 

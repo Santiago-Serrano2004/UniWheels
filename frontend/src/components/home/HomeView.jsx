@@ -6,7 +6,7 @@ import { LocationPickerModal } from '../map/LocationPickerModal';
 import { CampusSelectorModal } from './CampusSelectorModal';
 import { HomeHeroRouteCard } from './HomeHeroRouteCard';
 import { AvailableRideCard } from './AvailableRideCard';
-import { Navigation, Car, Sparkles, CheckCircle2, X, Calendar, Loader2 } from 'lucide-react';
+import { Navigation, Car, Sparkles, CheckCircle2, X, Calendar, Loader2, Star } from 'lucide-react';
 
 export const HomeView = () => {
   const {
@@ -374,7 +374,12 @@ export const HomeView = () => {
                     <div className="flex items-center gap-1">
                       <p className="font-black truncate text-xs">{topMatch.driver_name}</p>
                       <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.2 rounded-md">
-                        {topMatch.rating ? `${topMatch.rating} ★` : 'Sin calificación'}
+                        {topMatch.rating ? (
+                          <span className="inline-flex items-center gap-1">
+                            {topMatch.rating}
+                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                          </span>
+                        ) : 'Sin calificación'}
                       </span>
                     </div>
                     <p className="text-[10px] text-slate-400 truncate">

@@ -71,8 +71,10 @@ export const ActiveRoleConflictBlocker = ({
 
             <div className="flex items-center gap-2 text-white font-bold truncate">
               <MapPin className="w-3.5 h-3.5 text-lochmara-400 shrink-0" />
-              <span className="truncate">
-                {activeTrip.origin} ➔ {activeTrip.destination}
+              <span className="flex items-center gap-1 truncate">
+                <span className="truncate">{activeTrip.origin}</span>
+                <ArrowRight className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                <span className="truncate">{activeTrip.destination}</span>
               </span>
             </div>
           </div>

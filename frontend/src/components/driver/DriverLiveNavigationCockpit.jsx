@@ -25,6 +25,7 @@ import {
   ArrowUpRight,
   ShieldAlert,
   Car,
+  X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SosEmergencyModal } from '../common/SosEmergencyModal';
@@ -476,7 +477,7 @@ export const DriverLiveNavigationCockpit = ({ route, trip, onFinishTrip, onCance
                   onClick={() => setModalQrAbierto(false)}
                   className="text-slate-400 hover:text-slate-200 text-xs font-bold"
                 >
-                  ✕
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 

@@ -14,6 +14,7 @@ import {
   Car,
   Bike,
   Navigation,
+  ArrowRight,
 } from 'lucide-react';
 import { CancelTripModal } from '../trips/CancelTripModal';
 import { openExternalNavigation } from '../../utils/mapNavigation';
@@ -317,8 +318,10 @@ export const LiveTripIslandWidget = () => {
                       <span>• {isMotorcycle ? '1 cupo' : '3 cupos'}</span>
                     </div>
 
-                    <p className="text-[10px] text-slate-400">
-                      {trip.origin || 'Cañaveral'} ➔ {trip.destination || 'Campus El Jardín'}
+                    <p className="flex items-center gap-1 text-[10px] text-slate-400">
+                      <span className="truncate">{trip.origin || 'Cañaveral'}</span>
+                      <ArrowRight className="w-3 h-3 shrink-0 opacity-70" />
+                      <span className="truncate">{trip.destination || 'Campus El Jardín'}</span>
                     </p>
                   </div>
 
