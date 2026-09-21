@@ -49,11 +49,15 @@ export const BottomNav = () => {
               onClick={() => setActiveTab(item.id)}
               className="relative flex flex-col items-center justify-center py-1 px-3.5 rounded-2xl transition-colors cursor-pointer"
             >
-              {/* Indicador de Fondo Activo (Solo en modo claro) */}
-              {isActive && theme !== 'dark' && (
+              {/* Indicador de Fondo Activo */}
+              {isActive && (
                 <motion.div
                   layoutId="activeTabIndicator"
-                  className="absolute inset-0 rounded-xl -z-10 bg-lochmara-50/80 border border-lochmara-200/60"
+                  className={`absolute inset-0 rounded-xl -z-10 ${
+                    theme === 'dark'
+                      ? 'bg-slate-800/80 border border-slate-700/60 shadow-xs'
+                      : 'bg-lochmara-50/80 border border-lochmara-200/60'
+                  }`}
                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                 />
               )}
