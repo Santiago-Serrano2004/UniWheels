@@ -127,7 +127,12 @@ export const HomeHeroRouteCard = ({
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             />
           )}
-          <span>Desde Campus</span>
+          <span className="inline-flex items-center justify-center gap-1">
+            Desde Campus
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 dark:text-amber-400 border border-amber-500/20">
+              Próx.
+            </span>
+          </span>
         </button>
 
         <button
@@ -146,12 +151,35 @@ export const HomeHeroRouteCard = ({
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             />
           )}
-          <span>Entre Sedes</span>
+          <span className="inline-flex items-center justify-center gap-1">
+            Entre Sedes
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 dark:text-amber-400 border border-amber-500/20">
+              Próx.
+            </span>
+          </span>
         </button>
       </div>
 
       {/* CORREDOR ORIGEN / DESTINO */}
       <div className={`p-3 rounded-2xl border relative ${isDark ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+        {directionFilter !== 'towards' ? (
+          <div className="py-3 px-2 text-center space-y-3">
+            <div className="w-9 h-9 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto">
+              <Clock className="w-4 h-4" />
+            </div>
+            <p className={`text-xs font-bold leading-relaxed ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+              Esta modalidad de trayecto estará disponible próximamente en tu campus. Por ahora, selecciona 'Hacia Campus' para encontrar cupos en tiempo real.
+            </p>
+            <button
+              type="button"
+              onClick={() => setDirectionFilter('towards')}
+              className="px-3 py-2 rounded-xl bg-lochmara-600 hover:bg-lochmara-500 text-white text-[11px] font-bold transition-colors cursor-pointer"
+            >
+              Ir a Hacia Campus
+            </button>
+          </div>
+        ) : (
+          <>
         {/* ORIGEN */}
         <div className="flex items-center gap-2.5">
           <div className="w-2.5 h-2.5 rounded-full bg-lochmara-500 shrink-0 ring-4 ring-lochmara-500/20" />
@@ -371,6 +399,8 @@ export const HomeHeroRouteCard = ({
             </motion.div>
           )}
         </AnimatePresence>
+          </>
+        )}
       </div>
 
       {/* 4. BARRA DE CONTROL DE FECHA Y HORARIO (AJUSTE COMPACTO CON ANIMACIÓN FLUIDA SPRING) */}
