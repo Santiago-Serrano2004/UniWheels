@@ -86,7 +86,7 @@ export const CampusSelectorModal = ({
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-colors cursor-pointer shrink-0"
+              className="min-w-[44px] min-h-[44px] rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-colors cursor-pointer shrink-0"
               title="Cerrar modal"
             >
               <X className="w-4 h-4" />

@@ -356,7 +356,7 @@ export const HomeView = () => {
                 <button
                   type="button"
                   onClick={() => setFeaturedDismissed(true)}
-                  className="w-5 h-5 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
+                  className="min-w-[44px] min-h-[44px] -mr-2 -mt-2 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors cursor-pointer shrink-0"
                   title="Descartar sugerencia"
                 >
                   <X className="w-3.5 h-3.5" />

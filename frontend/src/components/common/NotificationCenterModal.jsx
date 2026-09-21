@@ -176,9 +176,7 @@ export const NotificationCenterModal = ({ isOpen, onClose }) => {
               <button
                 type="button"
                 onClick={onClose}
-                className={`p-1 rounded-full transition-colors cursor-pointer ${
-                  isDark ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-700'
-                }`}
+                className="min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-colors cursor-pointer text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
               >
                 <X className="w-4 h-4" />
               </button>
