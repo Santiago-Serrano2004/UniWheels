@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import MapView, { Marker, Polyline, UrlTile } from 'react-native-maps';
+import { LeafletMap, type LeafletMapRef, type LeafletMarker, type LeafletPolyline } from '@/components/map/LeafletMap';
 import {
   ArrowLeft,
   Calendar,
@@ -29,7 +29,6 @@ import {
 import {
   fetchRoadGeometry,
   getPlaceCoordinates,
-  getMapTileProvider,
   tripLifecycleService,
   useAppStore,
 } from '@uniwheels/shared';
@@ -154,8 +153,7 @@ export default function MapScreen() {
  */
 function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
   const colorScheme = useColorScheme();
-  const provider = getMapTileProvider(colorScheme === 'dark' ? 'dark' : 'light');
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<LeafletMapRef>(null);
 
   const [sosModalOpen, setSosModalOpen] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(false);
@@ -213,110 +211,88 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
     if (cameraMode === 'overview') {
       // Enfocar vehículo del conductor
       setCameraMode('driver');
-      mapRef.current.animateCamera(
-        {
-          center: { latitude: currentDriverPos[0], longitude: currentDriverPos[1] },
-          zoom: 17,
-          heading: currentHeading,
-          pitch: 35,
-        },
-        { duration: 600 }
-      );
+      mapRef.current.animateTo(currentDriverPos, 17, 600);
     } else if (cameraMode === 'driver') {
       // Enfocar punto de recogida del pasajero
       setCameraMode('pickup');
-      mapRef.current.animateCamera(
-        {
-          center: { latitude: pickupCoord[0], longitude: pickupCoord[1] },
-          zoom: 17,
-          pitch: 0,
-        },
-        { duration: 600 }
-      );
+      mapRef.current.animateTo(pickupCoord, 17, 600);
     } else {
-      // Vista general de ambos puntos
+      // Vista general de todos los puntos
       setCameraMode('overview');
       mapRef.current.fitToCoordinates(
-        [
-          { latitude: currentDriverPos[0], longitude: currentDriverPos[1] },
-          { latitude: pickupCoord[0], longitude: pickupCoord[1] },
-          { latitude: destinationCoord[0], longitude: destinationCoord[1] },
-        ],
-        {
-          edgePadding: { top: 120, right: 60, bottom: 240, left: 60 },
-          animated: true,
-        }
+        [currentDriverPos, pickupCoord, destinationCoord],
+        { top: 120, right: 60, bottom: 240, left: 60 },
+        600
       );
     }
-  }, [cameraMode, currentDriverPos, currentHeading, pickupCoord, destinationCoord]);
+  }, [cameraMode, currentDriverPos, pickupCoord, destinationCoord]);
 
   const lineColor = colorScheme === 'dark' ? '#38bdf8' : '#0284c7';
 
+  const markers: LeafletMarker[] = useMemo(
+    () => [
+      {
+        id: 'pickup',
+        coordinate: pickupCoord,
+        kind: 'pickup',
+        label: booking.origin || 'Tu punto de recogida',
+        color: '#f59e0b',
+      },
+      {
+        id: 'destination',
+        coordinate: destinationCoord,
+        kind: 'destination',
+        label: booking.destination || 'Campus de destino',
+        color: '#10b981',
+        forceBirrete: true,
+      },
+      {
+        id: 'driver-vehicle',
+        coordinate: currentDriverPos,
+        kind: isMoto ? 'vehicle-moto' : 'vehicle-car',
+        rotation: currentHeading,
+        isMoving: currentSpeed > 0,
+        label: booking.driverName ? `Conductor: ${booking.driverName}` : 'Conductor',
+        color: '#0284c7',
+      },
+    ],
+    [
+      pickupCoord,
+      destinationCoord,
+      currentDriverPos,
+      isMoto,
+      currentHeading,
+      currentSpeed,
+      booking.origin,
+      booking.destination,
+      booking.driverName,
+    ]
+  );
+
+  const polylines: LeafletPolyline[] = useMemo(() => {
+    if (routeCoords && routeCoords.length > 1) {
+      return [
+        {
+          id: 'live-route',
+          coordinates: routeCoords,
+          color: lineColor,
+          weight: 5,
+          opacity: 0.9,
+        },
+      ];
+    }
+    return [];
+  }, [routeCoords, lineColor]);
+
   return (
     <View className="flex-1 bg-slate-100 dark:bg-slate-950">
-      <MapView
+      <LeafletMap
         ref={mapRef}
-        style={{ flex: 1 }}
-        mapType="none"
-        initialRegion={{
-          latitude: (pickupCoord[0] + destinationCoord[0]) / 2,
-          longitude: (pickupCoord[1] + destinationCoord[1]) / 2,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        }}
-        showsCompass={false}
-      >
-        <UrlTile urlTemplate={provider.url} maximumZ={provider.maxZoom} flipY={false} />
-
-        {/* Polilínea de la ruta */}
-        {routeCoords.length > 1 && (
-          <Polyline
-            coordinates={routeCoords.map(([lat, lng]) => ({ latitude: lat, longitude: lng }))}
-            strokeColor={lineColor}
-            strokeWidth={5}
-          />
-        )}
-
-        {/* Marcador Punto de Recogida Pasajero */}
-        <Marker
-          coordinate={{ latitude: pickupCoord[0], longitude: pickupCoord[1] }}
-          title="Tu punto de recogida"
-          description={booking.origin || 'Lugar de abordaje'}
-          pinColor="#0284c7"
-        />
-
-        {/* Marcador Campus Destino */}
-        <Marker
-          coordinate={{ latitude: destinationCoord[0], longitude: destinationCoord[1] }}
-          title="Campus de destino"
-          description={booking.destination || 'Llegada'}
-          pinColor="#10b981"
-        />
-
-        {/* Marcador en Vivo del Conductor (con rotación de rumbo) */}
-        <Marker
-          coordinate={{ latitude: currentDriverPos[0], longitude: currentDriverPos[1] }}
-          anchor={{ x: 0.5, y: 0.5 }}
-          flat
-          rotation={currentHeading}
-          title={`Conductor: ${booking.driverName || 'En camino'}`}
-          description={`${booking.vehicle || 'Vehículo'} • ${booking.plate || ''}`}
-        >
-          <View
-            style={{ transform: [{ rotate: `${currentHeading}deg` }] }}
-            className="items-center justify-center"
-          >
-            <View className="w-11 h-11 rounded-full bg-lochmara-600 dark:bg-lochmara-500 items-center justify-center border-2 border-white shadow-xl">
-              {isMoto ? <Bike size={20} color="#ffffff" /> : <Car size={20} color="#ffffff" />}
-            </View>
-            {currentSpeed > 0 && (
-              <View className="bg-slate-900/90 px-1.5 py-0.5 rounded-md mt-0.5 border border-slate-700">
-                <Text className="text-[9px] font-mono font-black text-white">{currentSpeed} km/h</Text>
-              </View>
-            )}
-          </View>
-        </Marker>
-      </MapView>
+        initialCenter={[(pickupCoord[0] + destinationCoord[0]) / 2, (pickupCoord[1] + destinationCoord[1]) / 2]}
+        initialZoom={13}
+        markers={markers}
+        polylines={polylines}
+      />
 
       {/* Cabecera Flotante con ETA y Telemetría en Vivo */}
       <SafeAreaView edges={['top']} className="absolute top-0 left-0 right-0" pointerEvents="box-none">
