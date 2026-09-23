@@ -5,6 +5,7 @@ import { Car, Calendar, MapPin, Star, X } from 'lucide-react-native';
 import { tripsService, useAppStore } from '@uniwheels/shared';
 import { RatingFeedbackModal } from '@/components/RatingFeedbackModal';
 import { ActiveRoleConflictBlocker } from '@/components/ActiveRoleConflictBlocker';
+import { DriverHistoryView } from '@/components/driver/DriverHistoryView';
 
 /**
  * Equivalente simplificado a frontend/src/components/trips/PassengerTripsView.jsx
@@ -74,6 +75,10 @@ export default function HistoryScreen() {
         }}
       />
     );
+  }
+
+  if (activeRole === 'driver') {
+    return <DriverHistoryView />;
   }
 
   return (
