@@ -805,6 +805,9 @@ export const notificationsService = {
   },
 
   // --- MOBILE PUSH (expo-notifications / FCM / APNs) ---
+  /**
+   * @param {{ token: string, platform: 'android' | 'ios' | 'expo' | string, deviceName?: string | null, appVersion?: string }} params
+   */
   async registerDeviceToken({ token, platform, deviceName = null, appVersion = '1.0.0' }) {
     try {
       const response = await notificationApiClient.post('/push/device-tokens', {
@@ -820,6 +823,9 @@ export const notificationsService = {
     }
   },
 
+  /**
+   * @param {string} token
+   */
   async unregisterDeviceToken(token) {
     try {
       const response = await notificationApiClient.post('/push/device-tokens/remove', { token });
