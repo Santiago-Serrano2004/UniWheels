@@ -37,8 +37,6 @@ class AuthController extends Controller
         $datosValidados = $request->validated();
         $correo = $request->input('email');
         $codigoIngresado = $datosValidados['verification_code'] ?? null;
-        $telefono = $datosValidados['phone_number'];
-        $codigoSmsIngresado = $datosValidados['phone_verification_code'];
 
         // Validar que el código PIN coincida con el almacenado en Cache
         $codigoAlmacenado = Cache::get('email_verification_'.$correo);
@@ -50,16 +48,10 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Validar el código SMS de forma independiente al de correo — ambos canales
-        // deben confirmarse antes de crear la cuenta.
-        $codigoSmsAlmacenado = Cache::get('sms_verification_'.$telefono);
-
-        if (! $codigoSmsAlmacenado || $codigoSmsAlmacenado !== $codigoSmsIngresado) {
-            return response()->json([
-                'success' => false,
-                'message' => 'El código de verificación SMS es inválido o ha expirado. Por favor solicita uno nuevo.',
-            ], 422);
-        }
+        // Solo se verifica el correo institucional (prueba pertenencia a la
+        // universidad); el celular se guarda sin verificar porque el SMS cuesta
+        // dinero por mensaje. phone_verification_code se acepta pero se ignora
+        // porque la web (congelada) lo sigue enviando.
 
         $usuario = DB::transaction(function () use ($datosValidados, $request) {
             $nuevoUsuario = User::create([
@@ -94,9 +86,7 @@ class AuthController extends Controller
             return $nuevoUsuario;
         });
 
-        // Limpiar códigos de verificación usados de la caché
         Cache::forget('email_verification_'.$correo);
-        Cache::forget('sms_verification_'.$telefono);
 
         // Enviar correo de bienvenida
         try {

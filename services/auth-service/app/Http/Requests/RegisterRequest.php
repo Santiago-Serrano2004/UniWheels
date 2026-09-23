@@ -68,7 +68,7 @@ class RegisterRequest extends FormRequest
             'profile_photo' => ['nullable'],
             'profile_photo_path' => ['nullable', 'string'],
             'verification_code' => ['required', 'string', 'size:6'],
-            'phone_verification_code' => ['required', 'string', 'size:6'],
+            'phone_verification_code' => ['nullable', 'string', 'size:6'],
         ];
     }
 
@@ -85,9 +85,8 @@ class RegisterRequest extends FormRequest
             'password.required' => 'La contraseña es obligatoria.',
             'verification_code.required' => 'El código de verificación PIN es obligatorio.',
             'verification_code.size' => 'El código de verificación debe tener exactamente 6 dígitos.',
-            'phone_number.required' => 'Tu número de celular es obligatorio para verificación por SMS.',
+            'phone_number.required' => 'Tu número de celular es obligatorio.',
             'phone_number.regex' => 'Ingresa un celular colombiano válido de 10 dígitos (ej: 3151234567).',
-            'phone_verification_code.required' => 'El código de verificación SMS es obligatorio.',
             'phone_verification_code.size' => 'El código de verificación SMS debe tener exactamente 6 dígitos.',
         ];
     }

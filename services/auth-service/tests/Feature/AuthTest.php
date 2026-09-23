@@ -41,13 +41,11 @@ test('un estudiante puede registrarse exitosamente con prefijo y codigo estudian
 
     // Mock OTP verification code in cache
     Cache::put('email_verification_crodriguez@unab.edu.co', '123456', 300);
-    Cache::put('sms_verification_3159876543', '654321', 300);
 
     $payload = [
         'name' => 'Carlos Rodriguez',
         'email_prefix' => 'crodriguez',
         'verification_code' => '123456',
-        'phone_verification_code' => '654321',
         'institution_id' => $institution->id,
         'campus_id' => $campus->id,
         'id_document_number' => '1098998877',
@@ -87,6 +85,33 @@ test('un estudiante puede registrarse exitosamente con prefijo y codigo estudian
         'total_trips_as_driver' => 0,
         'total_trips_as_passenger' => 0,
     ]);
+});
+
+test('rechaza registro si el codigo de verificacion del correo es incorrecto', function () {
+    $institution = Institution::where('code', 'UNAB')->first();
+    $campus = InstitutionCampus::where('code', 'JARDIN')->first();
+
+    Cache::put('email_verification_lgomez@unab.edu.co', '123456', 300);
+
+    $response = $this->postJson('/api/v1/auth/register', [
+        'name' => 'Laura Gomez',
+        'email_prefix' => 'lgomez',
+        'verification_code' => '999999',
+        'institution_id' => $institution->id,
+        'campus_id' => $campus->id,
+        'id_document_number' => '1098112233',
+        'id_document_type' => 'CC',
+        'phone_number' => '3151112233',
+        'member_type' => 'estudiante',
+        'student_code' => 'U00011223',
+        'academic_program_or_department' => 'Ingeniería de Sistemas',
+        'semester' => 2,
+        'password' => 'Clave'.Str::random(10).'1!',
+        'is_driver' => false,
+    ]);
+
+    $response->assertStatus(422)->assertJson(['success' => false]);
+    $this->assertDatabaseMissing('users', ['email' => 'lgomez@unab.edu.co']);
 });
 
 test('rechaza registro si el codigo estudiantil no cumple el formato UXXXXXXXX', function () {
