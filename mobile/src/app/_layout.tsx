@@ -12,6 +12,9 @@ import { bootstrapSdk } from '@/lib/sdk';
 import { registerForPushNotificationsAsync } from '@/services/pushNotificationService';
 
 SplashScreen.preventAutoHideAsync();
+// Al importar el módulo, no en un useEffect: la config de API y el storage
+// tienen que estar listos antes de que cualquier pantalla llame al backend.
+bootstrapSdk();
 
 export default function RootLayout() {
   const router = useRouter();
@@ -22,7 +25,6 @@ export default function RootLayout() {
   const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
-    bootstrapSdk();
     hydrateSession();
     // El splash nativo de Expo (pantalla en blanco con el ícono, previa a
     // cualquier JS) se oculta de inmediato — nuestro splash de marca

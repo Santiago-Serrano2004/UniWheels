@@ -83,6 +83,18 @@ const attachAuthInterceptor = (client) => {
 
 const jsonHeaders = { 'Content-Type': 'application/json', Accept: 'application/json' };
 
+// baseURL se resuelve en cada petición (no al crear el cliente): si algo toca un
+// cliente antes de que la plataforma llame a setApiConfig, sin esto queda atado
+// para siempre a la URL por defecto (localhost) — pasó en iPhone con SDK 57.
+const crearCliente = (claveUrl, timeout) => {
+  const client = axios.create({ headers: jsonHeaders, timeout });
+  client.interceptors.request.use((config) => {
+    config.baseURL = getApiConfig()[claveUrl];
+    return config;
+  });
+  return attachAuthInterceptor(client);
+};
+
 // Los 5 clientes se crean perezosamente (getters) para que `setApiConfig` — que
 // cada plataforma llama una vez al arrancar — ya esté aplicado antes de fijar
 // el `baseURL` de cada uno. Crearlos de forma eager al importar el módulo (como
@@ -93,9 +105,7 @@ let _apiClient, _vehicleApiClient, _routeApiClient, _tripLifecycleClient, _notif
 export const apiClient = new Proxy({}, {
   get(_target, prop) {
     if (!_apiClient) {
-      _apiClient = attachAuthInterceptor(
-        axios.create({ baseURL: getApiConfig().apiBaseUrl, headers: jsonHeaders, timeout: 8000 })
-      );
+      _apiClient = crearCliente('apiBaseUrl', 8000);
     }
     return _apiClient[prop];
   },
@@ -104,9 +114,7 @@ export const apiClient = new Proxy({}, {
 export const vehicleApiClient = new Proxy({}, {
   get(_target, prop) {
     if (!_vehicleApiClient) {
-      _vehicleApiClient = attachAuthInterceptor(
-        axios.create({ baseURL: getApiConfig().vehicleApiBaseUrl, headers: jsonHeaders, timeout: 8000 })
-      );
+      _vehicleApiClient = crearCliente('vehicleApiBaseUrl', 8000);
     }
     return _vehicleApiClient[prop];
   },
@@ -115,9 +123,7 @@ export const vehicleApiClient = new Proxy({}, {
 export const routeApiClient = new Proxy({}, {
   get(_target, prop) {
     if (!_routeApiClient) {
-      _routeApiClient = attachAuthInterceptor(
-        axios.create({ baseURL: getApiConfig().routeApiBaseUrl, headers: jsonHeaders, timeout: 6000 })
-      );
+      _routeApiClient = crearCliente('routeApiBaseUrl', 6000);
     }
     return _routeApiClient[prop];
   },
@@ -126,9 +132,7 @@ export const routeApiClient = new Proxy({}, {
 export const tripLifecycleClient = new Proxy({}, {
   get(_target, prop) {
     if (!_tripLifecycleClient) {
-      _tripLifecycleClient = attachAuthInterceptor(
-        axios.create({ baseURL: getApiConfig().tripApiBaseUrl, headers: jsonHeaders, timeout: 6000 })
-      );
+      _tripLifecycleClient = crearCliente('tripApiBaseUrl', 6000);
     }
     return _tripLifecycleClient[prop];
   },
@@ -137,9 +141,7 @@ export const tripLifecycleClient = new Proxy({}, {
 export const notificationApiClient = new Proxy({}, {
   get(_target, prop) {
     if (!_notificationApiClient) {
-      _notificationApiClient = attachAuthInterceptor(
-        axios.create({ baseURL: getApiConfig().notificationApiBaseUrl, headers: jsonHeaders, timeout: 6000 })
-      );
+      _notificationApiClient = crearCliente('notificationApiBaseUrl', 6000);
     }
     return _notificationApiClient[prop];
   },
