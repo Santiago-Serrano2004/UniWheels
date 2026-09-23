@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useAppStore } from '@uniwheels/shared';
 
 import { BrandedSplash } from '@/components/BrandedSplash';
+import { LiveTripIslandWidget } from '@/components/LiveTripIslandWidget';
 import { bootstrapSdk } from '@/lib/sdk';
 
 SplashScreen.preventAutoHideAsync();
@@ -39,16 +40,19 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!isAuthenticated}>
-        <Stack.Screen name="welcome" />
-        <Stack.Screen name="login" />
-        <Stack.Screen name="register" />
-      </Stack.Protected>
+    <View style={{ flex: 1 }}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Protected guard={!isAuthenticated}>
+          <Stack.Screen name="welcome" />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="register" />
+        </Stack.Protected>
 
-      <Stack.Protected guard={isAuthenticated}>
-        <Stack.Screen name="(tabs)" />
-      </Stack.Protected>
-    </Stack>
+        <Stack.Protected guard={isAuthenticated}>
+          <Stack.Screen name="(tabs)" />
+        </Stack.Protected>
+      </Stack>
+      {isAuthenticated && <LiveTripIslandWidget />}
+    </View>
   );
 }
