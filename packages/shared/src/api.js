@@ -654,8 +654,9 @@ export const tripLifecycleService = {
         accuracy_meters,
       });
       return response.data;
-    } catch {
-      return null;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'Error al emitir telemetría GPS.' };
     }
   },
 
@@ -663,8 +664,24 @@ export const tripLifecycleService = {
     try {
       const response = await tripLifecycleClient.get(`/trips/${tripId}/tracking/latest`);
       return response.data?.data || null;
-    } catch {
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
       return null;
+    }
+  },
+
+  async triggerEmergencySos(tripId, { latitude, longitude, emergencyType = 'panico_usuario' }) {
+    try {
+      const response = await tripLifecycleClient.post(`/trips/${tripId}/sos`, {
+        latitude,
+        longitude,
+        emergency_type: emergencyType,
+        timestamp: new Date().toISOString(),
+      });
+      return response.data;
+    } catch {
+      // Si el endpoint no existe o falla, no bloquear el flujo de llamada telefónica del dispositivo
+      return { success: false, fallback: true };
     }
   },
 
