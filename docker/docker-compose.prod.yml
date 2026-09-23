@@ -185,12 +185,21 @@ services:
     restart: unless-stopped
     networks: [uniwheels_net]
 
+  admin:
+    build:
+      context: ../admin
+      dockerfile: ../docker/admin.Dockerfile
+    container_name: uniwheels_admin
+    restart: unless-stopped
+    networks: [uniwheels_net]
+
   gateway:
     image: docker.io/library/nginx:1.27-alpine
     container_name: uniwheels_gateway
     restart: unless-stopped
     volumes:
       - ../gateway/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ../gateway/api-locations.conf:/etc/nginx/api-locations.conf:ro
       - ../gateway/certs:/etc/nginx/certs:ro
     ports:
       - "80:80"
@@ -203,6 +212,7 @@ services:
       notification-service: { condition: service_healthy }
       ai-route-service: { condition: service_healthy }
       landing: { condition: service_started }
+      admin: { condition: service_started }
     networks: [uniwheels_net]
 
 networks:
