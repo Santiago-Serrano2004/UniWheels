@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import {
+  ArrowLeft,
   Car,
   ShieldCheck,
   FileCheck,
@@ -107,6 +108,12 @@ export function DriverOnboardingView({ onBack, onRegistered }: DriverOnboardingV
       className="flex-1 bg-slate-50 dark:bg-slate-950 px-4 py-4"
       contentContainerStyle={{ paddingBottom: 32 }}
     >
+      {onBack && (
+        <Pressable onPress={onBack} hitSlop={8} className="flex-row items-center gap-1.5 self-start mb-3 py-1">
+          <ArrowLeft size={16} color="#64748b" />
+          <Text className="text-xs font-bold text-slate-500 dark:text-slate-400">Volver a modo pasajero</Text>
+        </Pressable>
+      )}
       {/* 1. ESTADO: PENDIENTE DE REVISIÓN */}
       {isPending ? (
         <View className="gap-4">

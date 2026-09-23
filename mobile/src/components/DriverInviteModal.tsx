@@ -1,4 +1,5 @@
-import { Alert, Modal, Pressable, Text, View } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { ArrowRight, Car, CheckCircle2, X } from 'lucide-react-native';
 import { useAppStore } from '@uniwheels/shared';
 
@@ -11,15 +12,16 @@ export function DriverInviteModal() {
   const showDriverInviteModal = useAppStore((state) => state.showDriverInviteModal);
   const closeDriverInviteModal = useAppStore((state) => state.closeDriverInviteModal);
 
+  const router = useRouter();
+
+  // Igual que la web (App.jsx: setActiveTab('driver')): pasar a la vista de
+  // conductor, que para quien aún no es conductor muestra el onboarding con
+  // el wizard. Se setea activeRole directo porque toggleRole no deja pasar a
+  // conductor a quien todavía no lo es.
   const handleRegister = () => {
     closeDriverInviteModal();
-    // El wizard completo de registro de conductor es Fase 2 de este plan —
-    // por ahora se informa que está en camino, igual que el resto de la UI
-    // de "conductor" que aparece con un CTA equivalente en Perfil.
-    Alert.alert(
-      'Registro de conductor',
-      'El registro completo de conductor (vehículo, documentos, SOAT) llega en una próxima actualización.'
-    );
+    useAppStore.setState({ activeRole: 'driver' });
+    router.navigate('/(tabs)');
   };
 
   return (

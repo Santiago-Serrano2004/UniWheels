@@ -330,7 +330,7 @@ export default function HomeScreen() {
     if (!user?.isDriver) {
       return (
         <SafeAreaView edges={[]} className="flex-1 bg-slate-100 dark:bg-slate-950">
-          <DriverOnboardingView />
+          <DriverOnboardingView onBack={() => useAppStore.setState({ activeRole: 'passenger' })} />
         </SafeAreaView>
       );
     }
