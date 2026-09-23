@@ -10,6 +10,12 @@ import {
   ActivityIndicator,
   Share,
 } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import * as Location from 'expo-location';
 import {
   ShieldAlert,
@@ -53,6 +59,32 @@ export function SosEmergencyModal({
   const [coords, setCoords] = useState<[number, number]>(currentCoords || DEFAULT_COORDS);
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
+
+  const contentOpacity = useSharedValue(0);
+  const contentScale = useSharedValue(0.92);
+
+  useEffect(() => {
+    if (isOpen) {
+      contentOpacity.value = 0;
+      contentScale.value = 0.92;
+      contentOpacity.value = withTiming(1, {
+        duration: 220,
+        easing: Easing.bezier(0.16, 1, 0.3, 1),
+      });
+      contentScale.value = withTiming(1, {
+        duration: 220,
+        easing: Easing.bezier(0.16, 1, 0.3, 1),
+      });
+    } else {
+      contentOpacity.value = 0;
+      contentScale.value = 0.92;
+    }
+  }, [isOpen, contentOpacity, contentScale]);
+
+  const contentAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: contentOpacity.value,
+    transform: [{ scale: contentScale.value }],
+  }));
 
   // Extraer datos del viaje activo o props
   const driverName =
@@ -201,12 +233,16 @@ export function SosEmergencyModal({
   return (
     <Modal visible={isOpen} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable className="flex-1 bg-slate-950/85 items-center justify-center p-4" onPress={onClose}>
-        <Pressable
-          className="w-full max-w-sm bg-slate-900 rounded-3xl p-5 border-2 border-rose-500/60 shadow-2xl shadow-rose-950/80 gap-3.5"
-          style={{ maxHeight: '90%' }}
-          onPress={(e) => e.stopPropagation()}
+        <Animated.View
+          style={[contentAnimatedStyle, { maxHeight: '90%', width: '100%' }]}
+          className="w-full max-w-sm"
         >
-          {/* Cabecera de Emergencia */}
+          <Pressable
+            className="w-full bg-slate-900 rounded-3xl p-5 border-2 border-rose-500/60 shadow-2xl shadow-rose-950/80 gap-3.5"
+            style={{ maxHeight: '100%' }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {/* Cabecera de Emergencia */}
           <View className="flex-row items-center justify-between pb-3 border-b border-rose-900/40">
             <View className="flex-row items-center gap-2.5 flex-1 min-w-0">
               <View className="w-10 h-10 rounded-2xl bg-rose-500/20 border border-rose-500/50 items-center justify-center">
@@ -371,7 +407,8 @@ export function SosEmergencyModal({
               </Pressable>
             </View>
           </ScrollView>
-        </Pressable>
+          </Pressable>
+        </Animated.View>
       </Pressable>
     </Modal>
   );

@@ -9,6 +9,12 @@ import {
   ActivityIndicator,
   Linking,
 } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import {
   Car,
   MapPin,
@@ -60,6 +66,33 @@ export function DriverCockpitCard({
   const [isUpdatingLifecycle, setIsUpdatingLifecycle] = useState(false);
   const [generalError, setGeneralError] = useState('');
   const [optimizedOrder, setOptimizedOrder] = useState(false);
+
+  const isPinModalOpen = Boolean(selectedPassengerForPin);
+  const pinModalOpacity = useSharedValue(0);
+  const pinModalScale = useSharedValue(0.9);
+
+  useEffect(() => {
+    if (isPinModalOpen) {
+      pinModalOpacity.value = 0;
+      pinModalScale.value = 0.9;
+      pinModalOpacity.value = withTiming(1, {
+        duration: 220,
+        easing: Easing.bezier(0.16, 1, 0.3, 1),
+      });
+      pinModalScale.value = withTiming(1, {
+        duration: 220,
+        easing: Easing.bezier(0.16, 1, 0.3, 1),
+      });
+    } else {
+      pinModalOpacity.value = 0;
+      pinModalScale.value = 0.9;
+    }
+  }, [isPinModalOpen, pinModalOpacity, pinModalScale]);
+
+  const pinModalAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: pinModalOpacity.value,
+    transform: [{ scale: pinModalScale.value }],
+  }));
 
   // Sincronizar pasajeros de la ruta activa
   const refreshPassengers = useCallback(async () => {
@@ -501,7 +534,7 @@ export function DriverCockpitCard({
 
       {/* MODAL DE VERIFICACIÓN DE PIN */}
       <Modal
-        visible={Boolean(selectedPassengerForPin)}
+        visible={isPinModalOpen}
         transparent
         animationType="fade"
         onRequestClose={() => setSelectedPassengerForPin(null)}
@@ -510,66 +543,68 @@ export function DriverCockpitCard({
           className="flex-1 bg-black/75 items-center justify-center p-4"
           onPress={() => setSelectedPassengerForPin(null)}
         >
-          <Pressable
-            className="w-full max-w-[320px] bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 gap-3.5 shadow-2xl"
-            onPress={(e) => e.stopPropagation()}
-          >
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center gap-2">
-                <KeyRound size={18} color="#0284c7" />
-                <Text className="text-sm font-black text-slate-900 dark:text-white">
-                  Validar PIN de Abordaje
-                </Text>
-              </View>
-              <Pressable
-                onPress={() => setSelectedPassengerForPin(null)}
-                className="p-1 rounded-full bg-slate-100 dark:bg-slate-800"
-              >
-                <X size={16} color="#94a3b8" />
-              </Pressable>
-            </View>
-
-            <Text className="text-xs text-slate-500 dark:text-slate-400">
-              Ingresa el código de 4 dígitos que{' '}
-              <Text className="font-bold text-slate-900 dark:text-white">
-                {selectedPassengerForPin?.passenger_name || 'el estudiante'}
-              </Text>{' '}
-              tiene en su pantalla.
-            </Text>
-
-            <TextInput
-              value={pinInput}
-              onChangeText={(t) => setPinInput(t.replace(/\D/g, '').slice(0, 4))}
-              keyboardType="number-pad"
-              maxLength={4}
-              placeholder="••••"
-              placeholderTextColor="#94a3b8"
-              autoFocus
-              className="py-3 px-4 rounded-2xl text-2xl font-mono font-black text-center tracking-[0.5em] border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
-            />
-
-            {pinError ? (
-              <Text className="text-xs font-medium text-rose-600 dark:text-rose-400 text-center">
-                {pinError}
-              </Text>
-            ) : null}
-
+          <Animated.View style={pinModalAnimatedStyle} className="w-full max-w-[320px]">
             <Pressable
-              disabled={isVerifyingPin || pinInput.length !== 4}
-              onPress={handleVerifyPin}
-              className={`w-full py-3 rounded-2xl flex-row items-center justify-center gap-2 ${
-                isVerifyingPin || pinInput.length !== 4
-                  ? 'bg-lochmara-600/50'
-                  : 'bg-lochmara-600 active:bg-lochmara-700 shadow-md shadow-lochmara-600/30'
-              }`}
+              className="w-full bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 gap-3.5 shadow-2xl"
+              onPress={(e) => e.stopPropagation()}
             >
-              {isVerifyingPin ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <Text className="text-xs font-bold text-white">Confirmar Abordaje</Text>
-              )}
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-2">
+                  <KeyRound size={18} color="#0284c7" />
+                  <Text className="text-sm font-black text-slate-900 dark:text-white">
+                    Validar PIN de Abordaje
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => setSelectedPassengerForPin(null)}
+                  className="p-1 rounded-full bg-slate-100 dark:bg-slate-800"
+                >
+                  <X size={16} color="#94a3b8" />
+                </Pressable>
+              </View>
+
+              <Text className="text-xs text-slate-500 dark:text-slate-400">
+                Ingresa el código de 4 dígitos que{' '}
+                <Text className="font-bold text-slate-900 dark:text-white">
+                  {selectedPassengerForPin?.passenger_name || 'el estudiante'}
+                </Text>{' '}
+                tiene en su pantalla.
+              </Text>
+
+              <TextInput
+                value={pinInput}
+                onChangeText={(t) => setPinInput(t.replace(/\D/g, '').slice(0, 4))}
+                keyboardType="number-pad"
+                maxLength={4}
+                placeholder="••••"
+                placeholderTextColor="#94a3b8"
+                autoFocus
+                className="py-3 px-4 rounded-2xl text-2xl font-mono font-black text-center tracking-[0.5em] border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
+              />
+
+              {pinError ? (
+                <Text className="text-xs font-medium text-rose-600 dark:text-rose-400 text-center">
+                  {pinError}
+                </Text>
+              ) : null}
+
+              <Pressable
+                disabled={isVerifyingPin || pinInput.length !== 4}
+                onPress={handleVerifyPin}
+                className={`w-full py-3 rounded-2xl flex-row items-center justify-center gap-2 ${
+                  isVerifyingPin || pinInput.length !== 4
+                    ? 'bg-lochmara-600/50'
+                    : 'bg-lochmara-600 active:bg-lochmara-700 shadow-md shadow-lochmara-600/30'
+                }`}
+              >
+                {isVerifyingPin ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text className="text-xs font-bold text-white">Confirmar Abordaje</Text>
+                )}
+              </Pressable>
             </Pressable>
-          </Pressable>
+          </Animated.View>
         </Pressable>
       </Modal>
     </ScrollView>
