@@ -34,4 +34,15 @@ export { MAP_TILE_PROVIDERS, getMapTileProvider } from './utils/mapTileProviders
 
 export { lerpAngle, getPlaceCoordinates, fetchRoadGeometry } from './utils/osrmRoute.js';
 
+export {
+  FORMATO_PLACA_CARRO,
+  FORMATO_PLACA_MOTO,
+  COLORES_VEHICULOS,
+  ANOS_VEHICULOS,
+  validarPlacaColombiana,
+  formatearPlacaVisual,
+  requiereTecnomecanica,
+  haExpiradoFecha,
+} from './utils/colombianVehicleRules.js';
+
 export { placesApiService, LUGARES_POPULARES_AMB } from './placesApiService.js';
