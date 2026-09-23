@@ -14,10 +14,14 @@ import {
   Home,
   X,
   Clock,
+  CreditCard,
+  Sparkles,
 } from 'lucide-react-native';
 import { authService, tripsService, useAppStore } from '@uniwheels/shared';
 import { SetHomeLocationModal } from '@/components/SetHomeLocationModal';
 import { ReputationStatsModal } from '@/components/ReputationStatsModal';
+import { PaymentMethodsManagerModal } from '@/components/PaymentMethodsManagerModal';
+import { SmartMatchAlertsModal } from '@/components/SmartMatchAlertsModal';
 
 /**
  * Equivalente a frontend/src/components/profile/ProfileView.jsx — tarjeta de
@@ -30,6 +34,8 @@ export default function ProfileScreen() {
   const openDriverInviteModal = useAppStore((state) => state.openDriverInviteModal);
   const logout = useAppStore((state) => state.logout);
   const savedHomeLocation = useAppStore((state) => state.savedHomeLocation);
+  const pendingOpenPaymentManagerModal = useAppStore((state) => state.pendingOpenPaymentManagerModal);
+  const setPendingOpenPaymentManagerModal = useAppStore((state) => state.setPendingOpenPaymentManagerModal);
   const isDriver = Boolean(user?.isDriver);
 
   const [stats, setStats] = useState<any>(null);
@@ -37,6 +43,15 @@ export default function ProfileScreen() {
   const [modalEliminarAbierto, setModalEliminarAbierto] = useState(false);
   const [modalCasaAbierto, setModalCasaAbierto] = useState(false);
   const [modalReputacionAbierto, setModalReputacionAbierto] = useState(false);
+  const [modalPagosAbierto, setModalPagosAbierto] = useState(false);
+  const [modalAlertasAbierto, setModalAlertasAbierto] = useState(false);
+
+  useEffect(() => {
+    if (pendingOpenPaymentManagerModal) {
+      setModalPagosAbierto(true);
+      setPendingOpenPaymentManagerModal(false);
+    }
+  }, [pendingOpenPaymentManagerModal, setPendingOpenPaymentManagerModal]);
 
   useEffect(() => {
     tripsService.getUserReputationStats().then(setStats);
@@ -178,6 +193,38 @@ export default function ProfileScreen() {
             <ChevronRight size={15} color="#94a3b8" />
           </Pressable>
 
+          <Pressable
+            onPress={() => setModalPagosAbierto(true)}
+            className="flex-row items-center gap-3 p-3.5 border-b border-slate-100 dark:border-slate-800"
+          >
+            <View className="w-9 h-9 rounded-xl bg-lochmara-50 dark:bg-lochmara-500/10 border border-lochmara-200 dark:border-lochmara-500/30 items-center justify-center">
+              <CreditCard size={16} color="#0284c7" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-xs font-bold text-slate-900 dark:text-white">Métodos de Pago</Text>
+              <Text className="text-[10px] text-slate-500" numberOfLines={1}>
+                Tarjetas guardadas y billetera digital Nequi
+              </Text>
+            </View>
+            <ChevronRight size={15} color="#94a3b8" />
+          </Pressable>
+
+          <Pressable
+            onPress={() => setModalAlertasAbierto(true)}
+            className="flex-row items-center gap-3 p-3.5 border-b border-slate-100 dark:border-slate-800"
+          >
+            <View className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 items-center justify-center">
+              <Sparkles size={16} color="#f59e0b" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-xs font-bold text-slate-900 dark:text-white">Alertas Smart Match</Text>
+              <Text className="text-[10px] text-slate-500" numberOfLines={1}>
+                Rutinas de clase y sugerencias automáticas de conductores
+              </Text>
+            </View>
+            <ChevronRight size={15} color="#94a3b8" />
+          </Pressable>
+
           <Pressable onPress={() => setModalReputacionAbierto(true)} className="flex-row items-center gap-3 p-3.5">
             <View className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 items-center justify-center">
               <Star size={16} color="#f59e0b" />
@@ -272,6 +319,8 @@ export default function ProfileScreen() {
 
       <SetHomeLocationModal isOpen={modalCasaAbierto} onClose={() => setModalCasaAbierto(false)} />
       <ReputationStatsModal isOpen={modalReputacionAbierto} onClose={() => setModalReputacionAbierto(false)} stats={stats} />
+      <PaymentMethodsManagerModal isOpen={modalPagosAbierto} onClose={() => setModalPagosAbierto(false)} />
+      <SmartMatchAlertsModal isOpen={modalAlertasAbierto} onClose={() => setModalAlertasAbierto(false)} />
     </SafeAreaView>
   );
 }

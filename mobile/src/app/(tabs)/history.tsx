@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { Car, Calendar, Star } from 'lucide-react-native';
+import { Car, Calendar, Sparkles, Star } from 'lucide-react-native';
 import { tripsService, useAppStore } from '@uniwheels/shared';
 import { RatingFeedbackModal } from '@/components/RatingFeedbackModal';
 import { ActiveRoleConflictBlocker } from '@/components/ActiveRoleConflictBlocker';
 import { DriverHistoryView } from '@/components/driver/DriverHistoryView';
 import { PassengerActiveTripCard } from '@/components/PassengerActiveTripCard';
+import { SmartMatchAlertsModal } from '@/components/SmartMatchAlertsModal';
 
 /**
  * Equivalente simplificado a frontend/src/components/trips/PassengerTripsView.jsx
@@ -19,10 +20,12 @@ export default function HistoryScreen() {
   const activeRole = useAppStore((state) => state.activeRole);
   const activeDriverTrip = useAppStore((state) => state.activeDriverTrip);
   const activePassengerBooking = useAppStore((state) => state.activePassengerBooking);
+  const recurringPassengerAlerts = useAppStore((state) => state.recurringPassengerAlerts);
   const toggleRole = useAppStore((state) => state.toggleRole);
   const [history, setHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [modalCalificacion, setModalCalificacion] = useState<{ trip: any } | null>(null);
+  const [modalAlertasAbierto, setModalAlertasAbierto] = useState(false);
 
   useEffect(() => {
     tripsService.getPassengerHistory().then((data) => {
@@ -85,6 +88,29 @@ export default function HistoryScreen() {
     <ScrollView className="flex-1 bg-slate-100 dark:bg-slate-950" contentContainerStyle={{ padding: 16, gap: 12 }}>
       {activePassengerBooking && <PassengerActiveTripCard />}
 
+      {/* Rutinas Smart Match */}
+      <View className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 flex-row items-center justify-between">
+        <View className="flex-row items-center gap-2.5 flex-1 mr-2">
+          <View className="w-9 h-9 rounded-2xl bg-amber-500/10 border border-amber-500/20 items-center justify-center">
+            <Sparkles size={16} color="#f59e0b" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-xs font-black text-slate-900 dark:text-white">Alertas Smart Match</Text>
+            <Text className="text-[10px] text-slate-400">
+              {recurringPassengerAlerts.length > 0
+                ? `${recurringPassengerAlerts.length} rutina(s) activa(s)`
+                : 'Configura tus horarios de clase'}
+            </Text>
+          </View>
+        </View>
+        <Pressable
+          onPress={() => setModalAlertasAbierto(true)}
+          className="px-3.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30"
+        >
+          <Text className="text-[11px] font-black text-amber-600 dark:text-amber-400">Gestionar</Text>
+        </Pressable>
+      </View>
+
       <Text className="text-xs font-bold uppercase tracking-wider text-slate-500 px-1">Historial de Viajes</Text>
 
       {isLoading ? (
@@ -134,6 +160,11 @@ export default function HistoryScreen() {
         targetType="driver"
         targetName={modalCalificacion?.trip?.driver_name || 'Conductor Universitario'}
         onSubmitRating={guardarCalificacion}
+      />
+
+      <SmartMatchAlertsModal
+        isOpen={modalAlertasAbierto}
+        onClose={() => setModalAlertasAbierto(false)}
       />
     </ScrollView>
   );
