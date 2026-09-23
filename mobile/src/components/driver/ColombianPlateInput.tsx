@@ -34,7 +34,7 @@ export function ColombianPlateInput({
   const displayError = error || (value.length > 0 && !isValid ? validation.error : undefined);
 
   return (
-    <View className="space-y-2.5">
+    <View className="gap-2.5">
       {/* Encabezado con etiquetas */}
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-1.5">

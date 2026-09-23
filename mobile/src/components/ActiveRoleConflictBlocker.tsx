@@ -44,9 +44,9 @@ export function ActiveRoleConflictBlocker({
       contentContainerStyle={{ paddingBottom: 32 }}
       showsVerticalScrollIndicator={false}
     >
-      <View className="space-y-4">
+      <View className="gap-4">
         {/* Tarjeta de Alerta de Exclusión Mutua */}
-        <View className="rounded-3xl p-5 shadow-lg border border-slate-800 bg-slate-900 dark:bg-slate-900 text-white space-y-4">
+        <View className="rounded-3xl p-5 shadow-lg border border-slate-800 bg-slate-900 dark:bg-slate-900 text-white gap-4">
           <View className="flex-row items-center justify-between mb-3">
             <View className="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-400/30 items-center justify-center">
               <ShieldAlert size={24} color="#fcd34d" />
@@ -73,7 +73,7 @@ export function ActiveRoleConflictBlocker({
 
           {/* Resumen del Viaje en Conflicto */}
           {activeTrip ? (
-            <View className="p-3.5 bg-white/10 rounded-2xl border border-white/10 mb-3 space-y-2">
+            <View className="p-3.5 bg-white/10 rounded-2xl border border-white/10 mb-3 gap-2">
               <View className="flex-row items-center justify-between mb-1.5">
                 <Text className="text-[11px] font-semibold text-lochmara-300">
                   {isDriverActive ? 'Tu Ruta Publicada' : 'Tu Reserva Universitaria'}

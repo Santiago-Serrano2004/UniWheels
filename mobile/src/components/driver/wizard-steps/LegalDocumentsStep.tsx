@@ -36,7 +36,7 @@ export function LegalDocumentsStep({
   abrirSelectorFoto,
 }: LegalDocumentsStepProps) {
   return (
-    <View className="space-y-4">
+    <View className="gap-3.5">
       {/* 1. TARJETA PÓLIZA SOAT */}
       <View className="p-4 rounded-3xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 gap-3 shadow-xs">
         <View className="flex-row items-center justify-between">

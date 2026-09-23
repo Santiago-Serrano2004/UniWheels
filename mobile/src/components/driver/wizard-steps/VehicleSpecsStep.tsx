@@ -102,7 +102,7 @@ export function VehicleSpecsStep({
   const esModeloPersonalizado = (typeof modelo === 'string' && (modelo.startsWith('Otro') || modelo === 'Otro Modelo')) || (modelos.length === 0 && !cargandoModelos && !esMarcaPersonalizada);
 
   return (
-    <View className="space-y-4">
+    <View className="gap-4">
       {/* 1. Selector de Tipo: Carro vs Moto */}
       <View className="flex-row p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
         <Pressable

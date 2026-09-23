@@ -7,7 +7,7 @@ import {
   PanResponder,
   GestureResponderEvent,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import {
   ShieldCheck,
@@ -84,7 +84,9 @@ export function HabeasDataSignatureStep({
     ? (modeloPersonalizado?.trim() || 'Modelo Particular')
     : modelo;
 
-  // Estado del modal de firma a pantalla completa
+  const insets = useSafeAreaInsets();
+
+  // Estado del modal de firma
   const [modalFirmaAbierto, setModalFirmaAbierto] = useState(false);
   const [tempPaths, setTempPaths] = useState<string[]>([]);
   const tempCurrentPathRef = useRef<string>('');
@@ -141,7 +143,7 @@ export function HabeasDataSignatureStep({
   };
 
   return (
-    <View className="space-y-4">
+    <View className="gap-3.5">
       {/* 1. FICHA COMPLETA DEL VEHÍCULO */}
       <View className="p-4 rounded-3xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 gap-3 shadow-xs">
         <View className="flex-row items-center justify-between border-b pb-2.5 border-slate-100 dark:border-slate-800">
@@ -383,101 +385,90 @@ export function HabeasDataSignatureStep({
         </Pressable>
       </View>
 
-      {/* Modal a pantalla completa para el lienzo de firma */}
-      <Modal
-        visible={modalFirmaAbierto}
-        animationType="slide"
-        presentationStyle="fullScreen"
-        onRequestClose={cerrarModalFirma}
-      >
-        <SafeAreaView edges={['top', 'bottom']} className="flex-1 bg-white dark:bg-slate-900">
-          {/* Header del modal */}
-          <View className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex-row items-center justify-between">
-            <View className="flex-row items-center gap-2">
-              <View className="w-8 h-8 rounded-xl bg-lochmara-50 dark:bg-slate-800 items-center justify-center">
-                <PenTool size={16} color="#0284c7" />
+      {/* Modal de firma: tarjeta centrada, mismo patrón que SosEmergencyModal. El
+          lienzo vive fuera del ScrollView del wizard, así que el scroll no le roba
+          el gesto. */}
+      <Modal visible={modalFirmaAbierto} transparent animationType="fade" onRequestClose={cerrarModalFirma}>
+        <View
+          className="flex-1 bg-slate-950/80 items-center justify-center px-4"
+          style={{ paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }}
+        >
+          <View className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 gap-4 shadow-2xl">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center gap-2.5 flex-1 min-w-0">
+                <View className="w-9 h-9 rounded-2xl bg-lochmara-50 dark:bg-slate-800 border border-lochmara-200 dark:border-slate-700 items-center justify-center">
+                  <PenTool size={16} color="#0284c7" />
+                </View>
+                <View className="flex-1 min-w-0">
+                  <Text className="text-sm font-black text-slate-900 dark:text-white" numberOfLines={1}>
+                    Firma Digital
+                  </Text>
+                  <Text className="text-[10px] text-slate-500 dark:text-slate-400" numberOfLines={1}>
+                    Dibuja tu firma con el dedo dentro del recuadro
+                  </Text>
+                </View>
               </View>
-              <View>
-                <Text className="text-sm font-black text-slate-900 dark:text-white">
-                  Lienzo de Firma Digital
-                </Text>
-                <Text className="text-[10px] text-slate-500 dark:text-slate-400">
-                  Dibuja tu firma con el dedo en el espacio inferior
-                </Text>
-              </View>
+              <Pressable
+                onPress={cerrarModalFirma}
+                hitSlop={8}
+                className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+              >
+                <X size={15} color="#94a3b8" />
+              </Pressable>
             </View>
 
-            <Pressable onPress={cerrarModalFirma} hitSlop={8} className="p-1.5 rounded-lg">
-              <X size={18} color="#94a3b8" />
-            </Pressable>
-          </View>
-
-          {/* Lienzo de dibujo táctil sin ScrollView */}
-          <View
-            {...panResponder.panHandlers}
-            className="flex-1 bg-slate-50 dark:bg-slate-950 justify-center items-center relative overflow-hidden"
-          >
-            {tempPaths.length === 0 && (
-              <View className="items-center gap-1.5 pointer-events-none opacity-40">
-                <PenTool size={28} color="#64748b" />
-                <Text className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                  Dibuja tu firma aquí
-                </Text>
-              </View>
-            )}
-
-            <Svg height="100%" width="100%" className="absolute inset-0">
-              {tempPaths.map((d, index) => (
-                <Path
-                  key={index}
-                  d={d}
-                  stroke="#0284c7"
-                  strokeWidth={3.5}
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              ))}
-            </Svg>
-          </View>
-
-          {/* Botones inferiores: Limpiar, Cancelar y Guardar firma */}
-          <View className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-row items-center gap-2.5">
-            <Pressable
-              onPress={limpiarLienzoModal}
-              className="py-3 px-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 flex-row items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-700"
+            <View
+              {...panResponder.panHandlers}
+              style={{ height: 220 }}
+              className="rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 items-center justify-center overflow-hidden"
             >
-              <RotateCcw size={15} color="#64748b" />
-              <Text className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Limpiar
-              </Text>
-            </Pressable>
+              {tempPaths.length === 0 && (
+                <View pointerEvents="none" className="items-center gap-1.5 opacity-50">
+                  <PenTool size={24} color="#64748b" />
+                  <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">Firma aquí</Text>
+                </View>
+              )}
+              <Svg
+                pointerEvents="none"
+                width="100%"
+                height="100%"
+                style={{ position: 'absolute', top: 0, left: 0 }}
+              >
+                {tempPaths.map((d, index) => (
+                  <Path
+                    key={index}
+                    d={d}
+                    stroke="#0284c7"
+                    strokeWidth={3}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                ))}
+              </Svg>
+            </View>
 
-            <Pressable
-              onPress={cerrarModalFirma}
-              className="py-3 px-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 flex-row items-center justify-center border border-slate-200 dark:border-slate-700"
-            >
-              <Text className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Cancelar
-              </Text>
-            </Pressable>
-
-            <Pressable
-              onPress={guardarFirmaModal}
-              disabled={tempPaths.length === 0}
-              className={`flex-1 py-3 px-4 rounded-2xl flex-row items-center justify-center gap-2 ${
-                tempPaths.length > 0
-                  ? 'bg-lochmara-600 active:bg-lochmara-700 shadow-md shadow-lochmara-600/30'
-                  : 'bg-slate-200 dark:bg-slate-800 opacity-60'
-              }`}
-            >
-              <Check size={16} color="#ffffff" />
-              <Text className="text-xs font-bold text-white">
-                Guardar firma
-              </Text>
-            </Pressable>
+            <View className="flex-row items-center gap-2">
+              <Pressable
+                onPress={limpiarLienzoModal}
+                className="py-3 px-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 flex-row items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-700"
+              >
+                <RotateCcw size={14} color="#64748b" />
+                <Text className="text-xs font-bold text-slate-700 dark:text-slate-300">Limpiar</Text>
+              </Pressable>
+              <Pressable
+                onPress={guardarFirmaModal}
+                disabled={tempPaths.length === 0}
+                className={`flex-1 py-3 px-4 rounded-2xl flex-row items-center justify-center gap-2 ${
+                  tempPaths.length > 0 ? 'bg-lochmara-600 active:bg-lochmara-700' : 'bg-slate-300 dark:bg-slate-700'
+                }`}
+              >
+                <Check size={15} color="#ffffff" />
+                <Text className="text-xs font-bold text-white">Guardar firma</Text>
+              </Pressable>
+            </View>
           </View>
-        </SafeAreaView>
+        </View>
       </Modal>
     </View>
   );
