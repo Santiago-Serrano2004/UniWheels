@@ -260,6 +260,11 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
           ref={webViewRef}
           source={{ html: htmlContent }}
           onMessage={handleMessage}
+          onLoadStart={() => {
+            // Al recargar (cambio de tema) el mapa anterior deja de existir:
+            // encolar las inyecciones hasta el próximo 'onReady'.
+            isReadyRef.current = false;
+          }}
           style={[styles.webview, style]}
           containerStyle={{ backgroundColor: bgThemeColor }}
           originWhitelist={['*']}
