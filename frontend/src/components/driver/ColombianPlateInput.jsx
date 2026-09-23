@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAppStore } from '../../store/useAppStore';
+import { validarPlacaColombiana } from '../../utils/colombianVehicleRules';
 import { Car, Bike, CheckCircle2, Hash } from 'lucide-react';
 
 export const ColombianPlateInput = ({
@@ -34,7 +35,7 @@ export const ColombianPlateInput = ({
     return value;
   };
 
-  const esValida = value.length === 6;
+  const esValida = validarPlacaColombiana(value, vehicleType).valida;
 
   return (
     <div className="space-y-2 select-none">

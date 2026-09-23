@@ -8,7 +8,7 @@ import { VehicleSpecsStep } from './wizard-steps/VehicleSpecsStep';
 import { LegalDocumentsStep } from './wizard-steps/LegalDocumentsStep';
 import { DriverLicenseStep } from './wizard-steps/DriverLicenseStep';
 import { HabeasDataSignatureStep, RegistrationSuccessStep } from './wizard-steps/HabeasDataSignatureStep';
-import { requiereTecnomecanica, haExpiradoFecha } from '../../utils/colombianVehicleRules';
+import { requiereTecnomecanica, haExpiradoFecha, validarPlacaColombiana } from '../../utils/colombianVehicleRules';
 import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -160,8 +160,9 @@ export const DriverRegistrationWizard = ({ onBack, onComplete }) => {
   const validarPaso = () => {
     setMensajeError('');
     if (pasoActual === 1) {
-      if (!placa || placa.length < 5) {
-        setMensajeError('Por favor ingresa una placa vehicular válida (ej: ABC-123 o ABC-12D).');
+      const { valida: placaValida, error: errorPlaca } = validarPlacaColombiana(placa, tipoVehiculo);
+      if (!placaValida) {
+        setMensajeError(errorPlaca || 'Por favor ingresa una placa vehicular válida (ej: KLU492 o UAB12D).');
         return false;
       }
       if ((marca === 'Otra Marca / Personalizada' || marca === 'Otra Marca') && !marcaPersonalizada.trim()) {
