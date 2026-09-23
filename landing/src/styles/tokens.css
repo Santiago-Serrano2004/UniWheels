@@ -1,0 +1,44 @@
+@theme {
+  /* Paleta cromatica oficial UniWheels: Lochmara */
+  --color-lochmara-50: #f0f9ff;
+  --color-lochmara-100: #e0f2fe;
+  --color-lochmara-200: #bae6fd;
+  --color-lochmara-300: #7dd3fc;
+  --color-lochmara-400: #38bdf8;
+  --color-lochmara-500: #0ea5e9;
+  --color-lochmara-600: #0284c7;
+  --color-lochmara-700: #0369a1;
+  --color-lochmara-800: #075985;
+  --color-lochmara-900: #0c4a6e;
+  --color-lochmara-950: #082f49;
+
+  /* Asignacion de tokens semanticos de interfaz */
+  --color-brand-primary: var(--color-lochmara-600);
+  --color-brand-hover: var(--color-lochmara-700);
+  --color-brand-active: var(--color-lochmara-800);
+  --color-brand-light: var(--color-lochmara-50);
+  --color-brand-glow: var(--color-lochmara-400);
+  --color-brand-dark: var(--color-lochmara-950);
+
+  /* Superficies y estados */
+  --color-surface-base: #ffffff;
+  --color-surface-muted: #f8fafc;
+  --color-surface-card: rgba(255, 255, 255, 0.95);
+  --color-surface-border: #e2e8f0;
+  --color-surface-border-subtle: #f1f5f9;
+
+  /* Jerarquia tipografica */
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+  --color-text-on-primary: #ffffff;
+
+  /* Estados semanticos del viaje */
+  --color-status-success: #10b981;
+  --color-status-warning: #f59e0b;
+  --color-status-danger: #ef4444;
+  --color-status-info: #0ea5e9;
+
+  /* Tipografia oficial */
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
