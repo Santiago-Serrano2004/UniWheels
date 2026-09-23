@@ -38,12 +38,7 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false,
-      "config": {
-        "googleMaps": {
-          "apiKey": "${EXPO_PUBLIC_GOOGLE_MAPS_KEY}"
-        }
-      }
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",

@@ -14,7 +14,7 @@ Aplicación móvil nativa de **UniWheels — Plataforma de Movilidad Universitar
   - `expo-location`: Rastreo GPS y geolocalización en primer plano para matching y navegación en vivo.
   - `expo-notifications` & `expo-device`: Recepción de notificaciones push remotas (FCM v1 / APNs) y canales nativos Android.
   - `expo-image-picker`: Captura de fotos de perfil y documentación vehicular (SOAT, tarjeta de propiedad).
-  - `react-native-maps`: Renderizado de mapas interactivos con marcadores de conductores y puntos de encuentro.
+  - `react-native-webview`: Renderizado de mapas interactivos con Leaflet 1.9.4, marcadores vectoriales y rutas con las mismas capas que la web.
   - `react-native-reanimated`: Animaciones fluidas a 60/120 fps en el hilo nativo de UI.
 
 ---
@@ -41,8 +41,7 @@ EXPO_PUBLIC_API_URL=https://uniwheels.org/api/v1
 # Entorno de la aplicación (development | staging | production)
 EXPO_PUBLIC_APP_ENV=development
 
-# Claves de Servicios de Mapas y Geocodificación
-EXPO_PUBLIC_GOOGLE_MAPS_KEY=AIzaSy...
+# Claves de Servicios de Tráfico y Geocodificación
 EXPO_PUBLIC_TOMTOM_KEY=tu_tomtom_api_key
 
 # Pasarela de Pagos Wompi
