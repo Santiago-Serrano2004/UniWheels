@@ -803,4 +803,29 @@ export const notificationsService = {
       return { success: true };
     }
   },
+
+  // --- MOBILE PUSH (expo-notifications / FCM / APNs) ---
+  async registerDeviceToken({ token, platform, deviceName = null, appVersion = '1.0.0' }) {
+    try {
+      const response = await notificationApiClient.post('/push/device-tokens', {
+        token,
+        platform, // 'android' | 'ios' | 'expo'
+        device_name: deviceName,
+        app_version: appVersion,
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'Error al registrar token de notificaciones push.' };
+    }
+  },
+
+  async unregisterDeviceToken(token) {
+    try {
+      const response = await notificationApiClient.post('/push/device-tokens/remove', { token });
+      return response.data;
+    } catch {
+      return { success: false };
+    }
+  },
 };
