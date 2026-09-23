@@ -92,6 +92,7 @@ export const useAppStore = create((set, get) => ({
 
   // --- VIAJE ACTIVO DEL CONDUCTOR ---
   activeDriverTrip: null,
+  setActiveDriverTrip: (trip) => set({ activeDriverTrip: trip }),
   currentRoutePassengerTrips: [],
   setCurrentRoutePassengerTrips: (trips) => set({ currentRoutePassengerTrips: trips || [] }),
 
@@ -128,8 +129,7 @@ export const useAppStore = create((set, get) => ({
     }));
   },
 
-  // --- VIAJES PUBLICADOS DEL CONDUCTOR (fuera de alcance de la v1 móvil,
-  // se conserva por paridad con la web / para la Fase 2 del plan móvil) ---
+  // --- VIAJES PUBLICADOS DEL CONDUCTOR ---
   publishedDriverTrips: [],
   setPublishedDriverTrips: (trips) => set({ publishedDriverTrips: trips || [] }),
   cancelPublishedTrip: (tripId) => {
@@ -146,9 +146,68 @@ export const useAppStore = create((set, get) => ({
     });
   },
 
-  // --- BILLETERA PREPAGO ---
+  // --- PLANTILLAS DE VIAJES RECURRENTES DEL CONDUCTOR ---
+  recurringDriverTrips: [],
+  setRecurringDriverTrips: (trips) => set({ recurringDriverTrips: trips || [] }),
+  toggleRecurringDriverTrip: (templateId) =>
+    set((state) => ({
+      recurringDriverTrips: state.recurringDriverTrips.map((t) =>
+        t.id === templateId ? { ...t, isActive: !t.isActive } : t
+      ),
+    })),
+  addRecurringDriverTrip: (nuevoTemplate) =>
+    set((state) => ({
+      recurringDriverTrips: [
+        { id: 'rec_d_' + Date.now(), isActive: true, ...nuevoTemplate },
+        ...state.recurringDriverTrips,
+      ],
+    })),
+  deleteRecurringDriverTrip: (templateId) =>
+    set((state) => ({
+      recurringDriverTrips: state.recurringDriverTrips.filter((t) => t.id !== templateId),
+    })),
+
+  // --- ALERTAS DE TRAYECTOS RECURRENTES DEL PASAJERO (SMART MATCH ALERTS) ---
+  recurringPassengerAlerts: [],
+  setRecurringPassengerAlerts: (alerts) => set({ recurringPassengerAlerts: alerts || [] }),
+  togglePassengerAlert: (alertId) =>
+    set((state) => ({
+      recurringPassengerAlerts: state.recurringPassengerAlerts.map((a) =>
+        a.id === alertId ? { ...a, isActive: !a.isActive } : a
+      ),
+    })),
+  addPassengerAlert: (nuevaAlerta) =>
+    set((state) => ({
+      recurringPassengerAlerts: [
+        { id: 'alert_p_' + Date.now(), isActive: true, ...nuevaAlerta },
+        ...state.recurringPassengerAlerts,
+      ],
+    })),
+  deletePassengerAlert: (alertId) =>
+    set((state) => ({
+      recurringPassengerAlerts: state.recurringPassengerAlerts.filter((a) => a.id !== alertId),
+    })),
+
+  // --- BILLETERA PREPAGO Y MÉTODOS DE PAGO ---
   driverWalletBalance: 0,
   passengerWalletBalance: 0,
+  savedCards: [],
+  setSavedCards: (cards) => set({ savedCards: cards || [] }),
+  addCard: (nuevaTarjeta) =>
+    set((state) => ({
+      savedCards: [
+        ...state.savedCards.map((c) => (nuevaTarjeta.isDefault ? { ...c, isDefault: false } : c)),
+        { id: 'card-' + Date.now(), ...nuevaTarjeta },
+      ],
+    })),
+  deleteCard: (cardId) =>
+    set((state) => ({
+      savedCards: state.savedCards.filter((c) => c.id !== cardId),
+    })),
+  setDefaultCard: (cardId) =>
+    set((state) => ({
+      savedCards: state.savedCards.map((c) => ({ ...c, isDefault: c.id === cardId })),
+    })),
   linkedNequi: null,
   pendingOpenPaymentManagerModal: false,
   setPendingOpenPaymentManagerModal: (val) => set({ pendingOpenPaymentManagerModal: val }),
@@ -156,6 +215,10 @@ export const useAppStore = create((set, get) => ({
 
   // Sincronizar el saldo local con el saldo real de auth-service (wallet.balance_cop)
   setDriverWalletBalance: (saldoReal) => set({ driverWalletBalance: Number(saldoReal) }),
+  rechargeDriverWallet: (monto) =>
+    set((state) => ({
+      driverWalletBalance: state.driverWalletBalance + Number(monto),
+    })),
 
   publishDriverTrip: (datosTrayecto) => {
     const nuevoViaje = {
