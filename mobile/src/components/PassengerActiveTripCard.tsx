@@ -1,5 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Image, Linking, Pressable, Text, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import {
   AlertTriangle,
   Clock,
@@ -21,6 +26,19 @@ export function PassengerActiveTripCard({ trip: propTrip, onCancel }: PassengerA
   const storeTrip = useAppStore((state) => state.activePassengerBooking);
   const cancelPassengerBooking = useAppStore((state) => state.cancelPassengerBooking);
   const [isCancelling, setIsCancelling] = useState(false);
+
+  const opacity = useSharedValue(0);
+  const scale = useSharedValue(0.96);
+
+  useEffect(() => {
+    opacity.value = withTiming(1, { duration: 300 });
+    scale.value = withTiming(1, { duration: 300 });
+  }, [opacity, scale]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
 
   const trip = propTrip || storeTrip;
   if (!trip) return null;
@@ -132,7 +150,10 @@ export function PassengerActiveTripCard({ trip: propTrip, onCancel }: PassengerA
   };
 
   return (
-    <View className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 gap-3.5 shadow-sm">
+    <Animated.View
+      style={animatedStyle}
+      className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 gap-3.5 shadow-sm"
+    >
       {/* Estado con badge de color y hora */}
       <View className="flex-row items-center justify-between gap-2">
         <View className={`flex-row items-center gap-1.5 px-2.5 py-1 rounded-full ${statusInfo.badgeBg}`}>
@@ -286,6 +307,6 @@ export function PassengerActiveTripCard({ trip: propTrip, onCancel }: PassengerA
           <Text className="text-xs font-bold text-rose-600 dark:text-rose-400">Cancelar</Text>
         </Pressable>
       </View>
-    </View>
+    </Animated.View>
   );
 }
