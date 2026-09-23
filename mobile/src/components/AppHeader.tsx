@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { Bell, Car, CheckCheck, Clock, Send, ShieldCheck, Sparkles, UserCheck, X } from 'lucide-react-native';
+import { Bell, Car, CheckCheck, Clock, Send, ShieldAlert, ShieldCheck, Sparkles, UserCheck, X } from 'lucide-react-native';
 import { notificationsService, useAppStore } from '@uniwheels/shared';
 import { Emblem } from './Emblem';
+import { SosEmergencyModal } from './SosEmergencyModal';
 
 /**
  * Header persistente equivalente a frontend/src/components/common/Header.jsx
@@ -51,11 +52,16 @@ export function AppHeader() {
   const activeRole = useAppStore((state) => state.activeRole);
   const toggleRole = useAppStore((state) => state.toggleRole);
   const openDriverInviteModal = useAppStore((state) => state.openDriverInviteModal);
+  const activeDriverTrip = useAppStore((state) => state.activeDriverTrip);
+  const activePassengerBooking = useAppStore((state) => state.activePassengerBooking);
   const isDriverVerified = Boolean(user?.isDriver);
 
   const [notifOpen, setNotifOpen] = useState(false);
+  const [sosModalOpen, setSosModalOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>(MOCK_NOTIFICATIONS);
   const [unreadCount, setUnreadCount] = useState(2);
+
+  const hasActiveTrip = Boolean(activeDriverTrip || activePassengerBooking);
 
   const handleRolePress = () => {
     if (isDriverVerified) {
@@ -119,6 +125,17 @@ export function AppHeader() {
       </Pressable>
 
       <View className="flex-row items-center gap-1.5">
+        {/* Botón de Pánico SOS si hay viaje activo */}
+        {hasActiveTrip && (
+          <Pressable
+            onPress={() => setSosModalOpen(true)}
+            className="flex-row items-center gap-1 px-2.5 py-1.5 rounded-full bg-rose-600 active:bg-rose-700 shadow-sm shadow-rose-950/40"
+          >
+            <ShieldAlert size={14} color="#ffffff" />
+            <Text className="text-white text-[11px] font-black tracking-wide">SOS</Text>
+          </Pressable>
+        )}
+
         <Pressable
           onPress={handleRolePress}
           className={`flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full ${
@@ -267,6 +284,22 @@ export function AppHeader() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {/* Modal de Emergencia SOS */}
+      <SosEmergencyModal
+        isOpen={sosModalOpen}
+        onClose={() => setSosModalOpen(false)}
+        tripInfo={{
+          id: activePassengerBooking?.id || activeDriverTrip?.id,
+          driverName:
+            activePassengerBooking?.driverName ||
+            activeDriverTrip?.driverName ||
+            (activeRole === 'driver' ? user?.name : 'Carlos Mendoza') ||
+            'Conductor Asignado',
+          plate: activePassengerBooking?.plate || activeDriverTrip?.plate || 'KLU-492',
+          vehicle: activePassengerBooking?.vehicle || activeDriverTrip?.vehicle || 'Vehículo en servicio',
+        }}
+      />
     </View>
   );
 }
