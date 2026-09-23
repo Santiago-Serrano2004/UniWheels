@@ -10,6 +10,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { AnimatedUniWheelsLogo } from './AnimatedUniWheelsLogo';
 
 const EXIT_EASING = Easing.bezier(0.7, 0, 0.84, 0);
@@ -108,16 +109,29 @@ export function BrandedSplash({ onFinish, durationMs = 3600 }: { onFinish: () =>
             position: 'absolute',
             top: '50%',
             left: '50%',
-            width: 288,
-            height: 288,
-            marginLeft: -144,
-            marginTop: -144,
-            borderRadius: 144,
-            backgroundColor: '#0ea5e9',
+            width: 416,
+            height: 416,
+            marginLeft: -208,
+            marginTop: -208,
           },
           glowStyle,
         ]}
-      />
+      >
+        <Svg width={416} height={416} viewBox="0 0 416 416">
+          <Defs>
+            <RadialGradient id="splashGlow" cx="50%" cy="50%" rx="50%" ry="50%" fx="50%" fy="50%">
+              <Stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.25} />
+              <Stop offset="30%" stopColor="#0ea5e9" stopOpacity={0.25} />
+              <Stop offset="50%" stopColor="#0ea5e9" stopOpacity={0.21} />
+              <Stop offset="65%" stopColor="#0ea5e9" stopOpacity={0.14} />
+              <Stop offset="80%" stopColor="#0ea5e9" stopOpacity={0.07} />
+              <Stop offset="92%" stopColor="#0ea5e9" stopOpacity={0.02} />
+              <Stop offset="100%" stopColor="#0ea5e9" stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Rect x="0" y="0" width={416} height={416} fill="url(#splashGlow)" />
+        </Svg>
+      </Animated.View>
 
       <Animated.View style={[{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }, containerStyle]}>
         <View style={{ width: '100%', maxWidth: 280, aspectRatio: 677 / 378 }}>
