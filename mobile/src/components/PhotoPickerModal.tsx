@@ -1,6 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import { Modal, Pressable, Text, View } from 'react-native';
-import { Camera, Image as ImageIcon, X } from 'lucide-react-native';
+import { Camera, FileText, Image as ImageIcon, X } from 'lucide-react-native';
 
 /**
  * Equivalente FUNCIONAL a frontend/src/components/common/PhotoPickerModal.jsx.
@@ -23,12 +24,14 @@ export function PhotoPickerModal({
   onPhotoSelected,
   title = 'Foto de Perfil',
   subtitle = 'Usa la cámara o sube desde tu galería',
+  allowPdf = false,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onPhotoSelected: (dataUrl: string, asset?: PhotoPickerAsset) => void;
   title?: string;
   subtitle?: string;
+  allowPdf?: boolean;
 }) {
   const tomarFoto = async () => {
     const permiso = await ImagePicker.requestCameraPermissionsAsync();
@@ -83,6 +86,23 @@ export function PhotoPickerModal({
     }
   };
 
+  const elegirPdf = async () => {
+    const resultado = await DocumentPicker.getDocumentAsync({
+      type: 'application/pdf',
+      copyToCacheDirectory: true,
+    });
+    if (!resultado.canceled && resultado.assets && resultado.assets[0]) {
+      const docAsset = resultado.assets[0];
+      onPhotoSelected('', {
+        uri: docAsset.uri,
+        mimeType: docAsset.mimeType || 'application/pdf',
+        fileSize: docAsset.size,
+        fileName: docAsset.name ?? null,
+      });
+      onClose();
+    }
+  };
+
   return (
     <Modal visible={isOpen} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable className="flex-1 bg-black/70 items-center justify-center p-4" onPress={onClose}>
@@ -125,6 +145,21 @@ export function PhotoPickerModal({
               <Text className="text-[10px] text-slate-500 dark:text-slate-400">Selecciona una imagen en JPG o PNG</Text>
             </View>
           </Pressable>
+
+          {allowPdf && (
+            <Pressable
+              onPress={elegirPdf}
+              className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 flex-row items-center gap-3.5"
+            >
+              <View className="w-11 h-11 rounded-2xl bg-rose-600 items-center justify-center">
+                <FileText size={20} color="#ffffff" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-xs font-bold text-slate-900 dark:text-white">Subir PDF</Text>
+                <Text className="text-[10px] text-slate-500 dark:text-slate-400">Selecciona un documento en formato PDF</Text>
+              </View>
+            </Pressable>
+          )}
         </Pressable>
       </Pressable>
     </Modal>
