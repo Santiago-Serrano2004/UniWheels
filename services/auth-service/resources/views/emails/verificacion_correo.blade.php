@@ -29,7 +29,7 @@
             </div>
         </div>
         <div class="email-pin-timer" style="color: #0369a1;">
-            ⏳ Válido durante los próximos <strong>15 minutos</strong>
+            Válido durante los próximos <strong>15 minutos</strong>
         </div>
     </div>
 
