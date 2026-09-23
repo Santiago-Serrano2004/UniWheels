@@ -25,6 +25,7 @@ import {
   X,
   Check,
 } from 'lucide-react-native';
+import type { PhotoPickerAsset } from '@/components/PhotoPickerModal';
 
 export interface HabeasDataSignatureStepProps {
   tipoVehiculo?: 'car' | 'motorcycle' | string;
@@ -39,12 +40,18 @@ export interface HabeasDataSignatureStepProps {
   cupos?: number;
   numeroSoat?: string;
   vencimientoSoat?: string;
+  fotoSoat?: string | null;
+  assetSoat?: PhotoPickerAsset | null;
   numeroTecno?: string;
   vencimientoTecno?: string;
+  fotoTecno?: string | null;
+  assetTecno?: PhotoPickerAsset | null;
   requiereTecno?: boolean;
   numeroLicencia?: string;
   categoriaLicencia?: string;
   vencimientoLicencia?: string;
+  fotoLicencia?: string | null;
+  assetLicencia?: PhotoPickerAsset | null;
   aceptaTerminos: boolean;
   setAceptaTerminos: (acepta: boolean) => void;
   signatureSvgPath?: string;
@@ -64,12 +71,18 @@ export function HabeasDataSignatureStep({
   cupos = 3,
   numeroSoat = '',
   vencimientoSoat = '',
+  fotoSoat,
+  assetSoat,
   numeroTecno = '',
   vencimientoTecno = '',
+  fotoTecno,
+  assetTecno,
   requiereTecno = false,
   numeroLicencia = '',
   categoriaLicencia = 'B1',
   vencimientoLicencia = '',
+  fotoLicencia,
+  assetLicencia,
   aceptaTerminos = false,
   setAceptaTerminos,
   signatureSvgPath = '',
@@ -209,11 +222,18 @@ export function HabeasDataSignatureStep({
         </Text>
 
         <View className="flex-row items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-center gap-2 flex-1 mr-2">
             <Shield size={14} color="#0284c7" />
-            <View>
-              <Text className="text-[10px] font-bold text-slate-400">Póliza SOAT</Text>
-              <Text className="text-xs font-bold text-slate-900 dark:text-white">
+            <View className="flex-1">
+              <View className="flex-row items-center gap-1.5">
+                <Text className="text-[10px] font-bold text-slate-400">Póliza SOAT</Text>
+                {assetSoat?.mimeType === 'application/pdf' ? (
+                  <Text className="text-[9px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded">PDF</Text>
+                ) : (fotoSoat || assetSoat) ? (
+                  <Text className="text-[9px] font-bold text-lochmara-500 bg-lochmara-50 dark:bg-lochmara-950/40 px-1.5 py-0.5 rounded">Foto</Text>
+                ) : null}
+              </View>
+              <Text className="text-xs font-bold text-slate-900 dark:text-white" numberOfLines={1}>
                 No. {numeroSoat || 'N/A'}
               </Text>
             </View>
@@ -225,11 +245,18 @@ export function HabeasDataSignatureStep({
 
         {requiereTecno ? (
           <View className="flex-row items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
-            <View className="flex-row items-center gap-2">
+            <View className="flex-row items-center gap-2 flex-1 mr-2">
               <FileCheck size={14} color="#f59e0b" />
-              <View>
-                <Text className="text-[10px] font-bold text-slate-400">Certificado RTM</Text>
-                <Text className="text-xs font-bold text-slate-900 dark:text-white">
+              <View className="flex-1">
+                <View className="flex-row items-center gap-1.5">
+                  <Text className="text-[10px] font-bold text-slate-400">Certificado RTM</Text>
+                  {assetTecno?.mimeType === 'application/pdf' ? (
+                    <Text className="text-[9px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded">PDF</Text>
+                  ) : (fotoTecno || assetTecno) ? (
+                    <Text className="text-[9px] font-bold text-lochmara-500 bg-lochmara-50 dark:bg-lochmara-950/40 px-1.5 py-0.5 rounded">Foto</Text>
+                  ) : null}
+                </View>
+                <Text className="text-xs font-bold text-slate-900 dark:text-white" numberOfLines={1}>
                   No. {numeroTecno || 'N/A'}
                 </Text>
               </View>
@@ -253,13 +280,20 @@ export function HabeasDataSignatureStep({
         )}
 
         <View className="flex-row items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-center gap-2 flex-1 mr-2">
             <CreditCard size={14} color="#0284c7" />
-            <View>
-              <Text className="text-[10px] font-bold text-slate-400">
-                Licencia ({categoriaLicencia})
-              </Text>
-              <Text className="text-xs font-bold text-slate-900 dark:text-white">
+            <View className="flex-1">
+              <View className="flex-row items-center gap-1.5">
+                <Text className="text-[10px] font-bold text-slate-400">
+                  Licencia ({categoriaLicencia})
+                </Text>
+                {assetLicencia?.mimeType === 'application/pdf' ? (
+                  <Text className="text-[9px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded">PDF</Text>
+                ) : (fotoLicencia || assetLicencia) ? (
+                  <Text className="text-[9px] font-bold text-lochmara-500 bg-lochmara-50 dark:bg-lochmara-950/40 px-1.5 py-0.5 rounded">Foto</Text>
+                ) : null}
+              </View>
+              <Text className="text-xs font-bold text-slate-900 dark:text-white" numberOfLines={1}>
                 No. {numeroLicencia || 'N/A'}
               </Text>
             </View>

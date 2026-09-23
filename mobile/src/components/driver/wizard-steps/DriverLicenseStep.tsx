@@ -1,8 +1,16 @@
 import React from 'react';
 import { View, Text, TextInput, Pressable } from 'react-native';
-import { CreditCard, Camera, CheckCircle2, Hash } from 'lucide-react-native';
+import { CreditCard, Camera, CheckCircle2, Hash, FileText } from 'lucide-react-native';
 import { FormDatePicker } from '@/components/FormDatePicker';
 import { FormSelect } from '@/components/FormSelect';
+import type { PhotoPickerAsset } from '@/components/PhotoPickerModal';
+
+function formatFileSize(bytes?: number): string {
+  if (!bytes || bytes <= 0) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 export interface DriverLicenseStepProps {
   numeroLicencia: string;
@@ -12,6 +20,7 @@ export interface DriverLicenseStepProps {
   vencimientoLicencia: string;
   setVencimientoLicencia: (val: string) => void;
   fotoLicencia: string | null;
+  assetLicencia?: PhotoPickerAsset | null;
   tipoVehiculo: string;
   abrirSelectorFoto: (tipo: 'licencia') => void;
 }
@@ -24,10 +33,13 @@ export function DriverLicenseStep({
   vencimientoLicencia,
   setVencimientoLicencia,
   fotoLicencia,
+  assetLicencia,
   tipoVehiculo,
   abrirSelectorFoto,
 }: DriverLicenseStepProps) {
   const isMoto = tipoVehiculo === 'motorcycle' || tipoVehiculo === 'moto';
+  const tieneDocLicencia = Boolean(fotoLicencia || assetLicencia);
+  const esPdfLicencia = assetLicencia?.mimeType === 'application/pdf' || assetLicencia?.fileName?.toLowerCase().endsWith('.pdf');
 
   const categoryOptions = isMoto
     ? [
@@ -101,29 +113,49 @@ export function DriverLicenseStep({
           </View>
         </View>
 
-        {/* Carga de Foto Licencia */}
+        {/* Carga de Foto/PDF Licencia */}
         <Pressable
           onPress={() => abrirSelectorFoto('licencia')}
           className={`py-3 px-3.5 rounded-2xl border-2 border-dashed flex-row items-center justify-center gap-2 ${
-            fotoLicencia
+            tieneDocLicencia
               ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-400'
               : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800'
           }`}
         >
-          {fotoLicencia ? (
-            <CheckCircle2 size={16} color="#10b981" />
+          {tieneDocLicencia ? (
+            esPdfLicencia ? (
+              <View className="flex-row items-center justify-between w-full">
+                <View className="flex-row items-center gap-2.5 flex-1 pr-2">
+                  <View className="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-950/40 items-center justify-center">
+                    <FileText size={18} color="#e11d48" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-xs font-bold text-slate-900 dark:text-white" numberOfLines={1}>
+                      {assetLicencia?.fileName || 'licencia_conduccion.pdf'}
+                    </Text>
+                    <Text className="text-[10px] text-slate-500 dark:text-slate-400">
+                      Documento PDF{assetLicencia?.fileSize ? ` • ${formatFileSize(assetLicencia.fileSize)}` : ''}
+                    </Text>
+                  </View>
+                </View>
+                <CheckCircle2 size={16} color="#10b981" />
+              </View>
+            ) : (
+              <>
+                <CheckCircle2 size={16} color="#10b981" />
+                <Text className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                  Foto frontal de licencia adjunta
+                </Text>
+              </>
+            )
           ) : (
-            <Camera size={16} color="#0284c7" />
+            <>
+              <Camera size={16} color="#0284c7" />
+              <Text className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Tomar foto o subir PDF de la licencia
+              </Text>
+            </>
           )}
-          <Text
-            className={`text-xs font-bold ${
-              fotoLicencia
-                ? 'text-emerald-700 dark:text-emerald-300'
-                : 'text-slate-700 dark:text-slate-300'
-            }`}
-          >
-            {fotoLicencia ? 'Foto frontal de licencia adjunta' : 'Tomar o subir foto de la licencia'}
-          </Text>
         </Pressable>
       </View>
     </View>

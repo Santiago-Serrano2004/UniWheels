@@ -180,26 +180,26 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
       setConfigFotoActual({
         tipo: 'soat',
         titulo: 'Póliza SOAT',
-        subtitulo: 'Asegúrate de que el número y la fecha de vencimiento sean legibles',
+        subtitulo: 'Asegúrate de que el documento sea legible (JPG, PNG o PDF)',
       });
     } else if (tipo === 'tecno') {
       setConfigFotoActual({
         tipo: 'tecno',
         titulo: 'Revisión Técnico-Mecánica (RTM)',
-        subtitulo: 'Sube la foto del certificado expedido por el CDA autorizado',
+        subtitulo: 'Sube la foto o PDF del certificado expedido por el CDA autorizado',
       });
     } else if (tipo === 'licencia') {
       setConfigFotoActual({
         tipo: 'licencia',
         titulo: 'Licencia de Conducción',
-        subtitulo: 'Fotografía legible del frente de tu licencia',
+        subtitulo: 'Fotografía legible o PDF de tu licencia de conducción',
       });
     }
     setModalFotoAbierto(true);
   };
 
   const handleFotoSeleccionada = (dataUrl: string, asset?: PhotoPickerAsset) => {
-    const selectedAsset = asset || { uri: dataUrl, mimeType: 'image/jpeg' };
+    const selectedAsset = asset || (dataUrl ? { uri: dataUrl, mimeType: 'image/jpeg' } : null);
     if (configFotoActual.tipo === 'soat') {
       setFotoSoat(dataUrl);
       setAssetSoat(selectedAsset);
@@ -224,7 +224,7 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
     nombreDocumento: string
   ): { valido: boolean; error?: string } => {
     if (!foto && !asset) {
-      return { valido: false, error: `Debes adjuntar la foto o documento de ${nombreDocumento}.` };
+      return { valido: false, error: `Debes adjuntar el documento de ${nombreDocumento}.` };
     }
 
     const mime = (
@@ -301,7 +301,7 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
       }
       const valSoat = validarFormatoYTamanioFoto(fotoSoat, assetSoat, 'la póliza SOAT');
       if (!valSoat.valido) {
-        setMensajeError(valSoat.error || 'Debes adjuntar la foto de la póliza SOAT.');
+        setMensajeError(valSoat.error || 'Debes adjuntar el documento de la póliza SOAT.');
         return false;
       }
 
@@ -320,7 +320,7 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
         }
         const valTecno = validarFormatoYTamanioFoto(fotoTecno, assetTecno, 'la Revisión Técnico-Mecánica (RTM)');
         if (!valTecno.valido) {
-          setMensajeError(valTecno.error || 'Debes adjuntar la foto de la Revisión Técnico-Mecánica (RTM).');
+          setMensajeError(valTecno.error || 'Debes adjuntar el documento de la Revisión Técnico-Mecánica (RTM).');
           return false;
         }
       }
@@ -341,7 +341,7 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
       }
       const valLicencia = validarFormatoYTamanioFoto(fotoLicencia, assetLicencia, 'la licencia de conducción');
       if (!valLicencia.valido) {
-        setMensajeError(valLicencia.error || 'Debes adjuntar la foto de la licencia de conducción.');
+        setMensajeError(valLicencia.error || 'Debes adjuntar el documento de la licencia de conducción.');
         return false;
       }
     }
@@ -386,33 +386,33 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
       return;
     }
 
-    if (!fotoSoat) {
-      setMensajeError('Falta la foto de la póliza SOAT. Por favor regresa al paso 2 y adjúntala.');
+    if (!fotoSoat && !assetSoat) {
+      setMensajeError('Falta el documento de la póliza SOAT. Por favor regresa al paso 2 y adjúntalo.');
       return;
     }
     const valSoat = validarFormatoYTamanioFoto(fotoSoat, assetSoat, 'la póliza SOAT');
     if (!valSoat.valido) {
-      setMensajeError(valSoat.error || 'La foto de la póliza SOAT no es válida.');
+      setMensajeError(valSoat.error || 'El documento de la póliza SOAT no es válido.');
       return;
     }
     if (requiereTecno) {
-      if (!fotoTecno) {
-        setMensajeError('Falta la foto de la Revisión Técnico-Mecánica. Por favor regresa al paso 2 y adjúntala.');
+      if (!fotoTecno && !assetTecno) {
+        setMensajeError('Falta el documento de la Revisión Técnico-Mecánica. Por favor regresa al paso 2 y adjúntalo.');
         return;
       }
       const valTecno = validarFormatoYTamanioFoto(fotoTecno, assetTecno, 'la Revisión Técnico-Mecánica (RTM)');
       if (!valTecno.valido) {
-        setMensajeError(valTecno.error || 'La foto de la Revisión Técnico-Mecánica no es válida.');
+        setMensajeError(valTecno.error || 'El documento de la Revisión Técnico-Mecánica no es válido.');
         return;
       }
     }
-    if (!fotoLicencia) {
-      setMensajeError('Falta la foto de la licencia de conducción. Por favor regresa al paso 3 y adjúntala.');
+    if (!fotoLicencia && !assetLicencia) {
+      setMensajeError('Falta el documento de la licencia de conducción. Por favor regresa al paso 3 y adjúntalo.');
       return;
     }
     const valLicencia = validarFormatoYTamanioFoto(fotoLicencia, assetLicencia, 'la licencia de conducción');
     if (!valLicencia.valido) {
-      setMensajeError(valLicencia.error || 'La foto de la licencia de conducción no es válida.');
+      setMensajeError(valLicencia.error || 'El documento de la licencia de conducción no es válido.');
       return;
     }
 
@@ -476,7 +476,8 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
         throw { message: 'No se pudo obtener el identificador del vehículo registrado.' };
       }
 
-      if (fotoSoat && !documentosSubidos.soat) {
+      if ((fotoSoat || assetSoat) && !documentosSubidos.soat) {
+        const isPdf = assetSoat?.mimeType === 'application/pdf' || assetSoat?.fileName?.toLowerCase().endsWith('.pdf');
         await vehicleService.uploadVehicleDocument(
           vehiculoId,
           'soat',
@@ -484,14 +485,15 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
           {
             documentNumber: numeroSoat.trim() || undefined,
             expiresAt: vencimientoSoat || undefined,
-            fileName: assetSoat?.fileName || 'soat.jpg',
-            mimeType: assetSoat?.mimeType || 'image/jpeg',
+            fileName: assetSoat?.fileName || (isPdf ? 'soat.pdf' : 'soat.jpg'),
+            mimeType: assetSoat?.mimeType || (isPdf ? 'application/pdf' : 'image/jpeg'),
           }
         );
         setDocumentosSubidos((prev) => ({ ...prev, soat: true }));
       }
 
-      if (requiereTecno && fotoTecno && !documentosSubidos.rtm) {
+      if (requiereTecno && (fotoTecno || assetTecno) && !documentosSubidos.rtm) {
+        const isPdf = assetTecno?.mimeType === 'application/pdf' || assetTecno?.fileName?.toLowerCase().endsWith('.pdf');
         await vehicleService.uploadVehicleDocument(
           vehiculoId,
           'revision_tecnico_mecanica',
@@ -499,14 +501,15 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
           {
             documentNumber: numeroTecno.trim() || undefined,
             expiresAt: vencimientoTecno || undefined,
-            fileName: assetTecno?.fileName || 'rtm.jpg',
-            mimeType: assetTecno?.mimeType || 'image/jpeg',
+            fileName: assetTecno?.fileName || (isPdf ? 'rtm.pdf' : 'rtm.jpg'),
+            mimeType: assetTecno?.mimeType || (isPdf ? 'application/pdf' : 'image/jpeg'),
           }
         );
         setDocumentosSubidos((prev) => ({ ...prev, rtm: true }));
       }
 
-      if (fotoLicencia && !documentosSubidos.licencia) {
+      if ((fotoLicencia || assetLicencia) && !documentosSubidos.licencia) {
+        const isPdf = assetLicencia?.mimeType === 'application/pdf' || assetLicencia?.fileName?.toLowerCase().endsWith('.pdf');
         await vehicleService.uploadVehicleDocument(
           vehiculoId,
           'licencia_conduccion',
@@ -514,8 +517,8 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
           {
             documentNumber: numeroLicencia.trim() || undefined,
             expiresAt: vencimientoLicencia || undefined,
-            fileName: assetLicencia?.fileName || 'licencia.jpg',
-            mimeType: assetLicencia?.mimeType || 'image/jpeg',
+            fileName: assetLicencia?.fileName || (isPdf ? 'licencia.pdf' : 'licencia.jpg'),
+            mimeType: assetLicencia?.mimeType || (isPdf ? 'application/pdf' : 'image/jpeg'),
           }
         );
         setDocumentosSubidos((prev) => ({ ...prev, licencia: true }));
@@ -636,11 +639,13 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
               vencimientoSoat={vencimientoSoat}
               setVencimientoSoat={setVencimientoSoat}
               fotoSoat={fotoSoat}
+              assetSoat={assetSoat}
               numeroTecno={numeroTecno}
               setNumeroTecno={setNumeroTecno}
               vencimientoTecno={vencimientoTecno}
               setVencimientoTecno={setVencimientoTecno}
               fotoTecno={fotoTecno}
+              assetTecno={assetTecno}
               requiereTecno={requiereTecno}
               ano={ano}
               tipoVehiculo={tipoVehiculo}
@@ -657,6 +662,7 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
               vencimientoLicencia={vencimientoLicencia}
               setVencimientoLicencia={setVencimientoLicencia}
               fotoLicencia={fotoLicencia}
+              assetLicencia={assetLicencia}
               tipoVehiculo={tipoVehiculo}
               abrirSelectorFoto={abrirSelectorFoto}
             />
@@ -676,12 +682,18 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
               cupos={cupos}
               numeroSoat={numeroSoat}
               vencimientoSoat={vencimientoSoat}
+              fotoSoat={fotoSoat}
+              assetSoat={assetSoat}
               numeroTecno={numeroTecno}
               vencimientoTecno={vencimientoTecno}
+              fotoTecno={fotoTecno}
+              assetTecno={assetTecno}
               requiereTecno={requiereTecno}
               numeroLicencia={numeroLicencia}
               categoriaLicencia={categoriaLicencia}
               vencimientoLicencia={vencimientoLicencia}
+              fotoLicencia={fotoLicencia}
+              assetLicencia={assetLicencia}
               aceptaTerminos={aceptaTerminos}
               setAceptaTerminos={setAceptaTerminos}
               signatureSvgPath={signatureSvgPath}
@@ -728,13 +740,14 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
           </View>
         )}
 
-        {/* Modal de Cámara / Galería para fotos */}
+        {/* Modal de Cámara / Galería / PDF para documentos */}
         <PhotoPickerModal
           isOpen={modalFotoAbierto}
           onClose={() => setModalFotoAbierto(false)}
           title={configFotoActual.titulo}
           subtitle={configFotoActual.subtitulo}
           onPhotoSelected={handleFotoSeleccionada}
+          allowPdf={true}
         />
       </KeyboardAvoidingView>
     </View>

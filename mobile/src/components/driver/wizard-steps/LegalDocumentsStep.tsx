@@ -1,7 +1,15 @@
 import React from 'react';
 import { View, Text, TextInput, Pressable } from 'react-native';
-import { ShieldCheck, FileCheck, Camera, CheckCircle2, Hash } from 'lucide-react-native';
+import { ShieldCheck, FileCheck, Camera, CheckCircle2, Hash, FileText } from 'lucide-react-native';
 import { FormDatePicker } from '@/components/FormDatePicker';
+import type { PhotoPickerAsset } from '@/components/PhotoPickerModal';
+
+function formatFileSize(bytes?: number): string {
+  if (!bytes || bytes <= 0) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 export interface LegalDocumentsStepProps {
   numeroSoat: string;
@@ -9,11 +17,13 @@ export interface LegalDocumentsStepProps {
   vencimientoSoat: string;
   setVencimientoSoat: (val: string) => void;
   fotoSoat: string | null;
+  assetSoat?: PhotoPickerAsset | null;
   numeroTecno: string;
   setNumeroTecno: (val: string) => void;
   vencimientoTecno: string;
   setVencimientoTecno: (val: string) => void;
   fotoTecno: string | null;
+  assetTecno?: PhotoPickerAsset | null;
   requiereTecno: boolean;
   ano: string;
   tipoVehiculo: string;
@@ -26,15 +36,21 @@ export function LegalDocumentsStep({
   vencimientoSoat,
   setVencimientoSoat,
   fotoSoat,
+  assetSoat,
   numeroTecno,
   setNumeroTecno,
   vencimientoTecno,
   setVencimientoTecno,
   fotoTecno,
+  assetTecno,
   requiereTecno,
   ano,
   abrirSelectorFoto,
 }: LegalDocumentsStepProps) {
+  const tieneDocSoat = Boolean(fotoSoat || assetSoat);
+  const esPdfSoat = assetSoat?.mimeType === 'application/pdf' || assetSoat?.fileName?.toLowerCase().endsWith('.pdf');
+  const tieneDocTecno = Boolean(fotoTecno || assetTecno);
+  const esPdfTecno = assetTecno?.mimeType === 'application/pdf' || assetTecno?.fileName?.toLowerCase().endsWith('.pdf');
   return (
     <View className="gap-3.5">
       {/* 1. TARJETA PÓLIZA SOAT */}
@@ -85,29 +101,49 @@ export function LegalDocumentsStep({
           />
         </View>
 
-        {/* Botón de Carga Foto SOAT */}
+        {/* Botón de Carga Foto/PDF SOAT */}
         <Pressable
           onPress={() => abrirSelectorFoto('soat')}
           className={`py-3 px-3.5 rounded-2xl border-2 border-dashed flex-row items-center justify-center gap-2 ${
-            fotoSoat
+            tieneDocSoat
               ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-400'
               : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800'
           }`}
         >
-          {fotoSoat ? (
-            <CheckCircle2 size={16} color="#10b981" />
+          {tieneDocSoat ? (
+            esPdfSoat ? (
+              <View className="flex-row items-center justify-between w-full">
+                <View className="flex-row items-center gap-2.5 flex-1 pr-2">
+                  <View className="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-950/40 items-center justify-center">
+                    <FileText size={18} color="#e11d48" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-xs font-bold text-slate-900 dark:text-white" numberOfLines={1}>
+                      {assetSoat?.fileName || 'documento_soat.pdf'}
+                    </Text>
+                    <Text className="text-[10px] text-slate-500 dark:text-slate-400">
+                      Documento PDF{assetSoat?.fileSize ? ` • ${formatFileSize(assetSoat.fileSize)}` : ''}
+                    </Text>
+                  </View>
+                </View>
+                <CheckCircle2 size={16} color="#10b981" />
+              </View>
+            ) : (
+              <>
+                <CheckCircle2 size={16} color="#10b981" />
+                <Text className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                  Foto de póliza SOAT adjunta
+                </Text>
+              </>
+            )
           ) : (
-            <Camera size={16} color="#0284c7" />
+            <>
+              <Camera size={16} color="#0284c7" />
+              <Text className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Tomar foto o subir PDF de la póliza SOAT
+              </Text>
+            </>
           )}
-          <Text
-            className={`text-xs font-bold ${
-              fotoSoat
-                ? 'text-emerald-700 dark:text-emerald-300'
-                : 'text-slate-700 dark:text-slate-300'
-            }`}
-          >
-            {fotoSoat ? 'Foto de póliza SOAT adjunta' : 'Tomar o subir foto de la póliza SOAT'}
-          </Text>
         </Pressable>
       </View>
 
@@ -160,29 +196,49 @@ export function LegalDocumentsStep({
             />
           </View>
 
-          {/* Botón de Carga Foto RTM */}
+          {/* Botón de Carga Foto/PDF RTM */}
           <Pressable
             onPress={() => abrirSelectorFoto('tecno')}
             className={`py-3 px-3.5 rounded-2xl border-2 border-dashed flex-row items-center justify-center gap-2 ${
-              fotoTecno
+              tieneDocTecno
                 ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-400'
                 : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800'
             }`}
           >
-            {fotoTecno ? (
-              <CheckCircle2 size={16} color="#10b981" />
+            {tieneDocTecno ? (
+              esPdfTecno ? (
+                <View className="flex-row items-center justify-between w-full">
+                  <View className="flex-row items-center gap-2.5 flex-1 pr-2">
+                    <View className="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-950/40 items-center justify-center">
+                      <FileText size={18} color="#e11d48" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-xs font-bold text-slate-900 dark:text-white" numberOfLines={1}>
+                        {assetTecno?.fileName || 'documento_rtm.pdf'}
+                      </Text>
+                      <Text className="text-[10px] text-slate-500 dark:text-slate-400">
+                        Documento PDF{assetTecno?.fileSize ? ` • ${formatFileSize(assetTecno.fileSize)}` : ''}
+                      </Text>
+                    </View>
+                  </View>
+                  <CheckCircle2 size={16} color="#10b981" />
+                </View>
+              ) : (
+                <>
+                  <CheckCircle2 size={16} color="#10b981" />
+                  <Text className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                    Certificado RTM adjunto
+                  </Text>
+                </>
+              )
             ) : (
-              <Camera size={16} color="#f59e0b" />
+              <>
+                <Camera size={16} color="#f59e0b" />
+                <Text className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Tomar foto o subir PDF de la RTM
+                </Text>
+              </>
             )}
-            <Text
-              className={`text-xs font-bold ${
-                fotoTecno
-                  ? 'text-emerald-700 dark:text-emerald-300'
-                  : 'text-slate-700 dark:text-slate-300'
-              }`}
-            >
-              {fotoTecno ? 'Certificado RTM adjunto' : 'Tomar o subir foto de la RTM'}
-            </Text>
           </Pressable>
         </View>
       ) : (
