@@ -19,6 +19,9 @@ import {
   AlertCircle,
   Home,
   MapPin,
+  Power,
+  Plus,
+  Wallet,
 } from 'lucide-react-native';
 import { authService, placesApiService, routesService, useAppStore } from '@uniwheels/shared';
 import { CampusSelectorModal, type Campus } from '@/components/CampusSelectorModal';
@@ -26,6 +29,12 @@ import { SetHomeLocationModal } from '@/components/SetHomeLocationModal';
 import { LocationPickerModal } from '@/components/LocationPickerModal';
 import { AnimatedSegmentedControl } from '@/components/AnimatedSegmentedControl';
 import { ActiveRoleConflictBlocker } from '@/components/ActiveRoleConflictBlocker';
+import { DriverOnboardingView } from '@/components/driver/DriverOnboardingView';
+import { DriverCockpitCard } from '@/components/driver/DriverCockpitCard';
+import { DriverRoutePublishForm } from '@/components/driver/DriverRoutePublishForm';
+import { InAppGpsNavigator } from '@/components/driver/InAppGpsNavigator';
+import { TripSettlementModal } from '@/components/driver/TripSettlementModal';
+import { CancelTripPenaltyModal } from '@/components/driver/CancelTripPenaltyModal';
 
 const DEFAULT_CAMPUSES: Campus[] = [
   { id: 1, name: 'Campus El Jardín' },
@@ -75,6 +84,17 @@ export default function HomeScreen() {
   const toggleRole = useAppStore((state) => state.toggleRole);
   const setSelectedSearchRoute = useAppStore((state) => state.setSelectedSearchRoute);
   const savedHomeLocation = useAppStore((state) => state.savedHomeLocation);
+  const publishedDriverTrips = useAppStore((state) => state.publishedDriverTrips);
+  const recurringDriverTrips = useAppStore((state) => state.recurringDriverTrips);
+  const driverWalletBalance = useAppStore((state) => state.driverWalletBalance);
+  const startPublishedTrip = useAppStore((state) => state.startPublishedTrip);
+  const cancelPublishedTrip = useAppStore((state) => state.cancelPublishedTrip);
+  const toggleRecurringDriverTrip = useAppStore((state) => state.toggleRecurringDriverTrip);
+
+  const [showPublishForm, setShowPublishForm] = useState(false);
+  const [showNavigator, setShowNavigator] = useState(false);
+  const [showSettlement, setShowSettlement] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const [direction, setDirection] = useState<'towards' | 'from' | 'inter_campus'>('towards');
   const [campuses, setCampuses] = useState<Campus[]>(DEFAULT_CAMPUSES);
@@ -267,11 +287,266 @@ export default function HomeScreen() {
     );
   }
 
+  const initials = user?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || 'UN';
+
+  if (activeRole === 'driver') {
+    if (!user?.isDriver) {
+      return (
+        <SafeAreaView edges={[]} className="flex-1 bg-slate-100 dark:bg-slate-950">
+          <DriverOnboardingView />
+        </SafeAreaView>
+      );
+    }
+
+    if (activeDriverTrip) {
+      if (showNavigator) {
+        return (
+          <SafeAreaView edges={[]} className="flex-1 bg-slate-100 dark:bg-slate-950">
+            <InAppGpsNavigator
+              trip={activeDriverTrip}
+              onExit={() => setShowNavigator(false)}
+              onComplete={() => {
+                setShowNavigator(false);
+                setShowSettlement(true);
+              }}
+            />
+          </SafeAreaView>
+        );
+      }
+
+      return (
+        <SafeAreaView edges={[]} className="flex-1 bg-slate-100 dark:bg-slate-950">
+          <DriverCockpitCard
+            onOpenNavigator={() => setShowNavigator(true)}
+            onOpenSettlement={() => setShowSettlement(true)}
+            onOpenCancelModal={() => setShowCancelModal(true)}
+          />
+          <TripSettlementModal
+            isOpen={showSettlement}
+            onClose={() => setShowSettlement(false)}
+            trip={activeDriverTrip}
+          />
+          <CancelTripPenaltyModal
+            isOpen={showCancelModal}
+            onClose={() => setShowCancelModal(false)}
+            passengersCount={activeDriverTrip.passengers?.length || 0}
+            currentBalance={driverWalletBalance}
+          />
+        </SafeAreaView>
+      );
+    }
+
+    if (showPublishForm) {
+      return (
+        <SafeAreaView edges={[]} className="flex-1 bg-slate-100 dark:bg-slate-950">
+          <DriverRoutePublishForm
+            onBack={() => setShowPublishForm(false)}
+            onPublished={() => setShowPublishForm(false)}
+          />
+        </SafeAreaView>
+      );
+    }
+
+    const driverPlate =
+      user?.driverApplication?.plate_number ||
+      user?.driverInfo?.plate_number ||
+      user?.vehiclePlate ||
+      'Vehículo Registrado';
+    const pendingPublishedTrips = publishedDriverTrips.filter((t: any) => t.status === 'publicado');
+
+    return (
+      <SafeAreaView edges={[]} className="flex-1 bg-slate-100 dark:bg-slate-950">
+        <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, gap: 14 }}>
+          {/* Tarjeta de Bienvenida y Estado del Conductor */}
+          <View className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 gap-3">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1">
+                <View className="flex-row items-center gap-1.5 mb-0.5">
+                  <Text className="text-base font-black text-slate-900 dark:text-white" numberOfLines={1}>
+                    Hola, {user?.name?.split(' ')[0] || 'Conductor'}
+                  </Text>
+                  <ShieldCheck size={16} color="#10b981" />
+                </View>
+                <Text className="text-xs text-slate-500 dark:text-slate-400">
+                  {driverPlate} • Conductor Verificado
+                </Text>
+              </View>
+              <View className="w-10 h-10 rounded-2xl bg-emerald-600 items-center justify-center">
+                <Text className="text-white font-black text-xs">{initials}</Text>
+              </View>
+            </View>
+
+            <View className="flex-row items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+              <View className="flex-row items-center gap-2">
+                <View className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 items-center justify-center">
+                  <Wallet size={15} color="#10b981" />
+                </View>
+                <View>
+                  <Text className="text-[10px] font-bold uppercase text-slate-400">Saldo en Billetera</Text>
+                  <Text className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                    ${driverWalletBalance.toLocaleString('es-CO')} COP
+                  </Text>
+                </View>
+              </View>
+              <View className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+                <Text className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Activo</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Botón Destacado: Publicar Nueva Ruta */}
+          <Pressable
+            onPress={() => setShowPublishForm(true)}
+            className="w-full py-4 rounded-3xl bg-emerald-600 active:bg-emerald-700 flex-row items-center justify-center gap-2 shadow-lg shadow-emerald-600/30"
+          >
+            <Plus size={18} color="#ffffff" />
+            <Car size={18} color="#ffffff" />
+            <Text className="text-sm font-black text-white ml-1">Publicar Nueva Ruta</Text>
+          </Pressable>
+
+          {/* Próximas Salidas Programadas */}
+          <View className="gap-2.5">
+            <View className="flex-row items-center justify-between px-1">
+              <View className="flex-row items-center gap-1.5">
+                <Car size={13} color="#10b981" />
+                <Text className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Próximas Salidas ({pendingPublishedTrips.length})
+                </Text>
+              </View>
+              <Pressable onPress={() => router.push('/(tabs)/history')}>
+                <Text className="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400">Ver Todas</Text>
+              </Pressable>
+            </View>
+
+            {pendingPublishedTrips.length === 0 ? (
+              <View className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 items-center gap-2">
+                <Car size={20} color="#10b981" />
+                <Text className="text-xs font-black text-slate-900 dark:text-white text-center">
+                  No tienes salidas programadas hoy
+                </Text>
+                <Text className="text-[11px] text-slate-400 text-center">
+                  Publica tu ruta hacia la universidad para empezar a compartir vehículo.
+                </Text>
+              </View>
+            ) : (
+              pendingPublishedTrips.slice(0, 3).map((trip: any) => (
+                <View
+                  key={trip.id}
+                  className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-800 gap-2.5"
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-1.5">
+                      <View className="flex-row items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                        <Calendar size={10} color="#10b981" />
+                        <Text className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">{trip.date}</Text>
+                      </View>
+                      <View className="flex-row items-center gap-1 px-2 py-0.5 rounded-full bg-lochmara-500/10 border border-lochmara-500/20">
+                        <Clock size={10} color="#0284c7" />
+                        <Text className="text-[9px] font-bold text-lochmara-600 dark:text-lochmara-400">{trip.departure_time}</Text>
+                      </View>
+                    </View>
+                    <Text className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                      ${Number(trip.fare_cop || 0).toLocaleString('es-CO')} COP
+                    </Text>
+                  </View>
+
+                  <View className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 gap-1">
+                    <Text className="text-xs font-bold text-slate-900 dark:text-white" numberOfLines={1}>
+                      {trip.origin} → {trip.destination}
+                    </Text>
+                    <Text className="text-[10px] text-slate-400">
+                      {trip.passengers?.length || 0} de {trip.available_seats || 3} puestos reservados
+                    </Text>
+                  </View>
+
+                  <View className="flex-row items-center gap-2">
+                    <Pressable
+                      onPress={() => startPublishedTrip(trip.id)}
+                      className="flex-1 py-2 rounded-xl bg-emerald-600 flex-row items-center justify-center gap-1.5"
+                    >
+                      <Navigation size={12} color="#ffffff" />
+                      <Text className="text-xs font-black text-white">Abrir Cabina GPS</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => cancelPublishedTrip(trip.id)}
+                      className="px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20"
+                    >
+                      <Text className="text-[11px] font-bold text-rose-600 dark:text-rose-400">Cancelar</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ))
+            )}
+          </View>
+
+          {/* Rutas Recurrentes Activas */}
+          <View className="gap-2.5">
+            <View className="flex-row items-center justify-between px-1">
+              <View className="flex-row items-center gap-1.5">
+                <Calendar size={13} color="#0284c7" />
+                <Text className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Rutinas Recurrentes ({recurringDriverTrips.length})
+                </Text>
+              </View>
+              <Pressable onPress={() => router.push('/(tabs)/history')}>
+                <Text className="text-[11px] font-extrabold text-lochmara-600 dark:text-lochmara-400">Gestionar</Text>
+              </Pressable>
+            </View>
+
+            {recurringDriverTrips.length === 0 ? (
+              <View className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 items-center gap-2">
+                <Calendar size={20} color="#0284c7" />
+                <Text className="text-xs font-black text-slate-900 dark:text-white text-center">
+                  Sin rutinas semanales
+                </Text>
+                <Text className="text-[11px] text-slate-400 text-center">
+                  Crea plantillas automáticas en la pestaña de historial para publicar tus viajes diarios.
+                </Text>
+              </View>
+            ) : (
+              recurringDriverTrips.slice(0, 2).map((routine: any) => (
+                <View
+                  key={routine.id}
+                  className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-800 flex-row items-center justify-between"
+                >
+                  <View className="flex-1 pr-2">
+                    <Text className="text-xs font-black text-slate-900 dark:text-white" numberOfLines={1}>
+                      {routine.title}
+                    </Text>
+                    <Text className="text-[10px] text-slate-400">
+                      {routine.days?.join(', ')} • {routine.departure_time}
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={() => toggleRecurringDriverTrip(routine.id)}
+                    className={`flex-row items-center gap-1 px-2.5 py-1 rounded-xl border ${
+                      routine.isActive
+                        ? 'bg-emerald-500/10 border-emerald-500/30'
+                        : 'bg-slate-500/10 border-slate-500/20'
+                    }`}
+                  >
+                    <Power size={11} color={routine.isActive ? '#10b981' : '#94a3b8'} />
+                    <Text
+                      className={`text-[10px] font-bold ${
+                        routine.isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'
+                      }`}
+                    >
+                      {routine.isActive ? 'Activa' : 'Pausada'}
+                    </Text>
+                  </Pressable>
+                </View>
+              ))
+            )}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   const isToday = selectedDate === todayStr();
   const isTomorrow = selectedDate === tomorrowStr();
   const isCustomDate = !isToday && !isTomorrow;
   const dateMode: 'today' | 'tomorrow' | 'custom' = isToday ? 'today' : isTomorrow ? 'tomorrow' : 'custom';
-  const initials = user?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || 'UN';
 
   return (
     <SafeAreaView edges={[]} className="flex-1 bg-slate-100 dark:bg-slate-950">
