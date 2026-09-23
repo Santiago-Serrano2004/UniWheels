@@ -3,9 +3,8 @@ import { Modal, Pressable, Text, View } from 'react-native';
 export type PickedLocation = { coords: [number, number]; address: string };
 
 /**
- * Fallback web — react-native-maps no es seguro de importar al empaquetar
- * para web (rompe el bundling, ver AppMapView.web.tsx). El picker de mapa es
- * una funcionalidad exclusivamente nativa en esta fase.
+ * Fallback web — el picker de mapa interactivo en WebView está optimizado
+ * para la app móvil (Android/iOS).
  */
 export function LocationPickerModal({
   isOpen,
