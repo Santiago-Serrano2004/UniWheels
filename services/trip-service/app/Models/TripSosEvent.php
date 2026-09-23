@@ -19,6 +19,9 @@ class TripSosEvent extends Model
         'longitude',
         'emergency_type',
         'triggered_at',
+        'attended_at',
+        'attended_by_user_id',
+        'attention_notes',
     ];
 
     protected function casts(): array
@@ -27,6 +30,7 @@ class TripSosEvent extends Model
             'latitude' => 'float',
             'longitude' => 'float',
             'triggered_at' => 'datetime',
+            'attended_at' => 'datetime',
         ];
     }
 

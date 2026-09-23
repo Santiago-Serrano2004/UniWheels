@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\AdminSosEventController;
 use App\Http\Controllers\Api\V1\TrainingDataController;
 use App\Http\Controllers\Api\V1\TripLifecycleController;
 use App\Http\Controllers\Api\V1\TripPaymentController;
@@ -47,4 +48,10 @@ Route::prefix('v1')->middleware('jwt.auth')->group(function () {
     Route::get('/passenger/active-trip', [TripLifecycleController::class, 'activePassengerTrip']);
     Route::get('/passenger/history', [TripLifecycleController::class, 'passengerHistory']);
     Route::get('/driver/history', [TripLifecycleController::class, 'driverHistory']);
+
+    // Rutas de administración
+    Route::prefix('admin')->middleware('admin')->group(function () {
+        Route::get('/sos-events', [AdminSosEventController::class, 'index']);
+        Route::patch('/sos-events/{id}/attend', [AdminSosEventController::class, 'attend']);
+    });
 });
