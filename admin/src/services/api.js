@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 const SESSION_KEY = 'uniwheels_admin_session';
 
 // Estado de sesión en memoria
@@ -50,6 +50,14 @@ export const clearSession = () => {
   setSession(null);
 };
 
+// Formatea la URL para garantizar que siempre lleve el prefijo /api/v1
+const formatApiUrl = (url) => {
+  if (!url) return '/api/v1';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/api/v1')) return url;
+  return `/api/v1${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 // Cliente sin interceptores para evitar recursión al refrescar token
 const rawRefreshClient = axios.create({
   baseURL: API_BASE_URL,
@@ -58,6 +66,11 @@ const rawRefreshClient = axios.create({
     Accept: 'application/json',
   },
   timeout: 8000,
+});
+
+rawRefreshClient.interceptors.request.use((config) => {
+  config.url = formatApiUrl(config.url);
+  return config;
 });
 
 let refreshInFlight = null;
@@ -87,9 +100,10 @@ const solicitarNuevoToken = () => {
   return refreshInFlight;
 };
 
-// Interceptor de autenticación para Axios
+// Interceptor de autenticación y prefijo para Axios
 const attachAuthInterceptor = (client) => {
   client.interceptors.request.use((config) => {
+    config.url = formatApiUrl(config.url);
     try {
       const session = getSession();
       if (session?.token) {
@@ -293,7 +307,6 @@ export const vehicleService = {
   },
 
   async fetchDocumentBlob(secureDownloadUrl) {
-    // Si la URL es relativa o absoluta, hacer la petición autenticada para obtener el blob
     const response = await apiClient.get(secureDownloadUrl, { responseType: 'blob' });
     return URL.createObjectURL(response.data);
   },
