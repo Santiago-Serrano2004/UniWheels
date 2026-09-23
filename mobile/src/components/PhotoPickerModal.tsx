@@ -10,6 +10,13 @@ import { Camera, Image as ImageIcon, X } from 'lucide-react-native';
  * (mismo resultado real: una foto elegida por cámara o galería), sin
  * reconstruir una previsualización en vivo propia.
  */
+export interface PhotoPickerAsset {
+  uri: string;
+  mimeType?: string;
+  fileSize?: number;
+  fileName?: string | null;
+}
+
 export function PhotoPickerModal({
   isOpen,
   onClose,
@@ -19,7 +26,7 @@ export function PhotoPickerModal({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onPhotoSelected: (dataUrl: string) => void;
+  onPhotoSelected: (dataUrl: string, asset?: PhotoPickerAsset) => void;
   title?: string;
   subtitle?: string;
 }) {
@@ -35,8 +42,16 @@ export function PhotoPickerModal({
       quality: 0.7,
       base64: true,
     });
-    if (!resultado.canceled && resultado.assets[0]?.base64) {
-      onPhotoSelected(`data:image/jpeg;base64,${resultado.assets[0].base64}`);
+    if (!resultado.canceled && resultado.assets[0]) {
+      const asset = resultado.assets[0];
+      const mimeType = asset.mimeType || 'image/jpeg';
+      const dataUrl = asset.base64 ? `data:${mimeType};base64,${asset.base64}` : asset.uri;
+      onPhotoSelected(dataUrl, {
+        uri: asset.uri,
+        mimeType,
+        fileSize: asset.fileSize,
+        fileName: asset.fileName ?? null,
+      });
       onClose();
     }
   };
@@ -54,8 +69,16 @@ export function PhotoPickerModal({
       quality: 0.7,
       base64: true,
     });
-    if (!resultado.canceled && resultado.assets[0]?.base64) {
-      onPhotoSelected(`data:image/jpeg;base64,${resultado.assets[0].base64}`);
+    if (!resultado.canceled && resultado.assets[0]) {
+      const asset = resultado.assets[0];
+      const mimeType = asset.mimeType || 'image/jpeg';
+      const dataUrl = asset.base64 ? `data:${mimeType};base64,${asset.base64}` : asset.uri;
+      onPhotoSelected(dataUrl, {
+        uri: asset.uri,
+        mimeType,
+        fileSize: asset.fileSize,
+        fileName: asset.fileName ?? null,
+      });
       onClose();
     }
   };
