@@ -3,7 +3,12 @@
 @custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
 @import "./styles/tokens.css";
 
-:root {
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   font-family: var(--font-sans);
   color-scheme: light dark;
   -webkit-font-smoothing: antialiased;
@@ -11,11 +16,8 @@
 }
 
 body {
-  margin: 0;
-  padding: 0;
   min-height: 100vh;
   min-height: 100dvh;
-  overflow-x: hidden;
   background-color: var(--color-surface-muted);
   color: var(--color-text-primary);
   transition: background-color 0.2s ease, color 0.2s ease;
