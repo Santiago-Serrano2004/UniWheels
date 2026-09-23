@@ -60,6 +60,20 @@ En `mobile/`: `npx expo export --platform ios --output-dir /tmp/uniwheels-export
 
 ---
 
+## Resultados de la implementación (2026-09-23)
+
+- `expo-doctor`: 20/21. El único check que falla, `resolver.disableHierarchicalLookup` en `metro.config.js`, es intencional (ver el comentario en ese archivo) y se deja así.
+- `typescript` queda en 5.9.3: `expo install --fix` no lo subió y `expo-doctor` no lo exige.
+- `.npmrc` con `legacy-peer-deps=true`: `@react-native-community/datetimepicker@9.1.0` declara `react-native-windows` como peer opcional atado a RN 0.84, y npm lo trata como conflicto aunque nunca se instale.
+
+### Pendiente (backlog, fuera de esta migración)
+
+`eslint-config-expo` 57 trae las reglas del React Compiler de `eslint-plugin-react-hooks` 7.x. Quedaron en `warn` en `mobile/eslint.config.mjs` porque marcan patrones preexistentes, no regresiones. En runtime no rompen nada: el compilador solo omite optimizar esos componentes. Para refactorizarlos hace falta una spec propia, porque tocan código auditado (GPS, cockpit, PIN):
+
+- `react-hooks/set-state-in-effect` (16): `(tabs)/index.tsx:240`, `(tabs)/profile.tsx:51`, `(tabs)/wallet.tsx:37`, `LocationPickerModal.tsx:48`, `SetHomeLocationModal.tsx:28,33`, `driver/DriverCockpitCard.tsx:144`, `driver/DriverOnboardingView.tsx:56`, `driver/DriverRegistrationWizard.tsx:92,115,139`, `driver/DriverRoutePublishForm.tsx:94`, `hooks/use-color-scheme.web.ts:11`, `hooks/useDriverGpsTracking.ts:45`, `hooks/usePassengerLiveTracking.ts:106`, `hooks/useTurnByTurnNavigation.ts:67`.
+- `react-hooks/refs` (3): `wizard-steps/HabeasDataSignatureStep.tsx:80,271`, `hooks/useDriverGpsTracking.ts:38`.
+- `react-hooks/preserve-manual-memoization` (2): `driver/DriverCockpitCard.tsx:96`, `driver/DriverOnboardingView.tsx:34`.
+
 ## Verificación final (manual, la hace Santiago)
 
 Abrir la app en Expo Go en el iPhone con `npx expo start --tunnel` desde `mobile/`, y revisar el splash y las pantallas principales. Claude captura y compara el resultado contra la web.
