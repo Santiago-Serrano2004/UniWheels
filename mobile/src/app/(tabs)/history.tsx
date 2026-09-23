@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { Car, Calendar, MapPin, Star, X } from 'lucide-react-native';
+import { Car, Calendar, Star } from 'lucide-react-native';
 import { tripsService, useAppStore } from '@uniwheels/shared';
 import { RatingFeedbackModal } from '@/components/RatingFeedbackModal';
 import { ActiveRoleConflictBlocker } from '@/components/ActiveRoleConflictBlocker';
 import { DriverHistoryView } from '@/components/driver/DriverHistoryView';
+import { PassengerActiveTripCard } from '@/components/PassengerActiveTripCard';
 
 /**
  * Equivalente simplificado a frontend/src/components/trips/PassengerTripsView.jsx
@@ -18,7 +19,6 @@ export default function HistoryScreen() {
   const activeRole = useAppStore((state) => state.activeRole);
   const activeDriverTrip = useAppStore((state) => state.activeDriverTrip);
   const activePassengerBooking = useAppStore((state) => state.activePassengerBooking);
-  const cancelPassengerBooking = useAppStore((state) => state.cancelPassengerBooking);
   const toggleRole = useAppStore((state) => state.toggleRole);
   const [history, setHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -83,30 +83,7 @@ export default function HistoryScreen() {
 
   return (
     <ScrollView className="flex-1 bg-slate-100 dark:bg-slate-950" contentContainerStyle={{ padding: 16, gap: 12 }}>
-      {activePassengerBooking && (
-        <View className="bg-lochmara-600 rounded-3xl p-4 gap-2">
-          <Text className="text-[10px] font-bold uppercase tracking-wider text-lochmara-100">Reserva activa</Text>
-          <Text className="text-sm font-black text-white">{activePassengerBooking.driverName || 'Conductor'}</Text>
-          <View className="flex-row items-center gap-1.5">
-            <MapPin size={12} color="#e0f2fe" />
-            <Text className="text-xs text-lochmara-50 flex-1" numberOfLines={1}>
-              {activePassengerBooking.origin} → {activePassengerBooking.destination}
-            </Text>
-          </View>
-          <Pressable
-            onPress={() =>
-              Alert.alert('Cancelar reserva', '¿Seguro que quieres cancelar este viaje?', [
-                { text: 'No', style: 'cancel' },
-                { text: 'Sí, cancelar', style: 'destructive', onPress: cancelPassengerBooking },
-              ])
-            }
-            className="self-start flex-row items-center gap-1 bg-white/15 px-3 py-1.5 rounded-xl mt-1"
-          >
-            <X size={12} color="#ffffff" />
-            <Text className="text-[11px] font-bold text-white">Cancelar</Text>
-          </Pressable>
-        </View>
-      )}
+      {activePassengerBooking && <PassengerActiveTripCard />}
 
       <Text className="text-xs font-bold uppercase tracking-wider text-slate-500 px-1">Historial de Viajes</Text>
 

@@ -35,6 +35,7 @@ import { DriverRoutePublishForm } from '@/components/driver/DriverRoutePublishFo
 import { InAppGpsNavigator } from '@/components/driver/InAppGpsNavigator';
 import { TripSettlementModal } from '@/components/driver/TripSettlementModal';
 import { CancelTripPenaltyModal } from '@/components/driver/CancelTripPenaltyModal';
+import { PassengerActiveTripCard } from '@/components/PassengerActiveTripCard';
 
 const CAMPUS_COORDINATES: Record<string, [number, number]> = {
   'Campus El Jardín': [7.1166, -73.1054],
@@ -586,7 +587,9 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView edges={[]} className="flex-1 bg-slate-100 dark:bg-slate-950">
-      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, gap: 8 }} keyboardShouldPersistTaps="handled">
+      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, gap: 10 }} keyboardShouldPersistTaps="handled">
+        {activePassengerBooking && <PassengerActiveTripCard />}
+
         {/* Cabecera con saludo + avatar */}
         <View className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800">
           <View className="flex-row items-center justify-between mb-3">
