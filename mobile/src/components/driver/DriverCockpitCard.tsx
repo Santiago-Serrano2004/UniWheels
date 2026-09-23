@@ -10,7 +10,6 @@ import {
   Linking,
 } from 'react-native';
 import Animated, {
-  Easing,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -75,14 +74,13 @@ export function DriverCockpitCard({
     if (isPinModalOpen) {
       pinModalOpacity.value = 0;
       pinModalScale.value = 0.9;
-      pinModalOpacity.value = withTiming(1, {
-        duration: 220,
-        easing: Easing.bezier(0.16, 1, 0.3, 1),
-      });
-      pinModalScale.value = withTiming(1, {
-        duration: 220,
-        easing: Easing.bezier(0.16, 1, 0.3, 1),
-      });
+      // Sin transition= explicito en la web (DriverLiveNavigationCockpit.jsx),
+      // asi que corre con el default de framer-motion -- medido empiricamente
+      // (no adivinado): ~300ms, ease suave sin overshoot, igual que se
+      // implemento para PassengerActiveTripCard.tsx. duration:300 sin easing
+      // custom para usar el default de Reanimated, mismo criterio.
+      pinModalOpacity.value = withTiming(1, { duration: 300 });
+      pinModalScale.value = withTiming(1, { duration: 300 });
     } else {
       pinModalOpacity.value = 0;
       pinModalScale.value = 0.9;
