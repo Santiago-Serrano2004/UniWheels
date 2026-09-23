@@ -50,6 +50,9 @@ Route::prefix('v1')->group(function () {
 
     // Rutas de administración
     Route::prefix('admin')->middleware(['jwt.auth', 'admin'])->group(function () {
+        Route::get('/users', [AdminUserController::class, 'index']);
+        Route::get('/users/{id}', [AdminUserController::class, 'show']);
+        Route::post('/users/lookup', [AdminUserController::class, 'lookup']);
         Route::patch('/users/{id}/suspension', [AdminUserController::class, 'updateSuspension']);
     });
 
