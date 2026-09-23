@@ -39,6 +39,10 @@ Route::prefix('v1')->middleware('jwt.auth')->group(function () {
         ->middleware('throttle:30,1');
     Route::get('/trips/{id}/tracking/latest', [TripTrackingController::class, 'latest']);
 
+    // Botón de pánico SOS — auditoría server-side de cada activación
+    Route::post('/trips/{id}/sos', [TripTrackingController::class, 'sos'])
+        ->middleware('throttle:10,1');
+
     // Consultas de estado activo e historial — el usuario siempre se toma del JWT, no de la URL.
     Route::get('/passenger/active-trip', [TripLifecycleController::class, 'activePassengerTrip']);
     Route::get('/passenger/history', [TripLifecycleController::class, 'passengerHistory']);

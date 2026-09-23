@@ -107,4 +107,35 @@ class TripTrackingController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Registra la activación del botón de pánico SOS. No bloquea ni depende del
+     * estado del viaje: si el usuario pulsa SOS, el evento se audita siempre que
+     * pertenezca al viaje. El flujo real de emergencia (llamada, WhatsApp) ya
+     * ocurre en el cliente de forma independiente a esta llamada.
+     */
+    public function sos(Request $request, string $id): JsonResponse
+    {
+        $trip = Trip::findOrFail($id);
+
+        if ($authError = $this->checkTripAuthorization($request, $trip)) {
+            return $authError;
+        }
+
+        $data = $request->validate([
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'emergency_type' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $trip->sosEvents()->create([
+            'triggered_by_user_id' => $request->attributes->get('user_id'),
+            'latitude' => $data['latitude'],
+            'longitude' => $data['longitude'],
+            'emergency_type' => $data['emergency_type'] ?? 'panico_usuario',
+            'triggered_at' => now(),
+        ]);
+
+        return response()->json(['success' => true], 201);
+    }
 }
