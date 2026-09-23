@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\AdminPaymentController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\InstitutionController;
@@ -54,6 +55,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/users/{id}', [AdminUserController::class, 'show']);
         Route::post('/users/lookup', [AdminUserController::class, 'lookup']);
         Route::patch('/users/{id}/suspension', [AdminUserController::class, 'updateSuspension']);
+        Route::get('/payments/topups', [AdminPaymentController::class, 'topups']);
     });
 
     // Webhook público de Wompi — verificado por firma propia (Wompi no puede
