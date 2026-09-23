@@ -3,10 +3,12 @@ import { Alert, Pressable, Text, View } from 'react-native';
 import { router, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
+  Easing,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withSequence,
+  withSpring,
   withTiming,
   FadeIn,
   FadeOut,
@@ -37,11 +39,34 @@ export function LiveTripIslandWidget() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [etaMinutes, setEtaMinutes] = useState(6);
 
+  // Entrada con spring (stiffness: 400, damping: 30) replicando framer-motion web
+  const entranceY = useSharedValue(-20);
+  const entranceScale = useSharedValue(0.95);
+  const entranceOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    entranceY.value = withSpring(0, { stiffness: 400, damping: 30 });
+    entranceScale.value = withSpring(1, { stiffness: 400, damping: 30 });
+    entranceOpacity.value = withTiming(1, { duration: 200 });
+  }, [entranceY, entranceScale, entranceOpacity]);
+
+  const containerEntranceStyle = useAnimatedStyle(() => ({
+    opacity: entranceOpacity.value,
+    transform: [
+      { translateY: entranceY.value },
+      { scale: entranceScale.value },
+    ],
+  }));
+
+  // Pulso continuo: 2000ms total (1000ms ida + 1000ms vuelta) con easing in-out
   const pulseOpacity = useSharedValue(1);
 
   useEffect(() => {
     pulseOpacity.value = withRepeat(
-      withSequence(withTiming(0.3, { duration: 800 }), withTiming(1, { duration: 800 })),
+      withSequence(
+        withTiming(0.3, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.ease) })
+      ),
       -1,
       true
     );
@@ -108,16 +133,18 @@ export function LiveTripIslandWidget() {
 
   return (
     <Animated.View
-      entering={FadeIn.duration(300)}
+      style={[
+        {
+          position: 'absolute',
+          top: Math.max(insets.top + 6, 12),
+          left: 16,
+          right: 16,
+          zIndex: 9999,
+        },
+        containerEntranceStyle,
+      ]}
       exiting={FadeOut.duration(200)}
       layout={LinearTransition.springify()}
-      style={{
-        position: 'absolute',
-        top: Math.max(insets.top + 6, 12),
-        left: 16,
-        right: 16,
-        zIndex: 9999,
-      }}
       className="bg-white dark:bg-slate-900 rounded-3xl border-2 border-lochmara-500 shadow-xl shadow-lochmara-500/20 overflow-hidden"
     >
       {/* Barra Compacta (Isla Dinámica) */}
