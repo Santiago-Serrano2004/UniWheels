@@ -3,11 +3,20 @@
 // v3 aquí vía NativeWind — misma fuente de verdad de color, mecanismo de
 // definición distinto entre ambos proyectos). Actualizar ambos archivos juntos
 // si la paleta cambia.
+const { platformSelect } = require('nativewind/theme');
+
 module.exports = {
   content: ['./src/app/**/*.{js,jsx,ts,tsx}', './src/components/**/*.{js,jsx,ts,tsx}'],
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
+      // font-mono de Tailwind es una lista CSS (ui-monospace, SFMono-Regular, ...);
+      // NativeWind toma solo el primer nombre y ui-monospace no existe en iOS,
+      // asi que caia a la fuente normal del sistema. Menlo es la monoespaciada
+      // del sistema en iOS (la web en Apple usa SF Mono, que iOS no expone).
+      fontFamily: {
+        mono: platformSelect({ ios: 'Menlo', android: 'monospace', default: 'monospace' }),
+      },
       colors: {
         lochmara: {
           50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc',
