@@ -399,6 +399,29 @@ export const vehicleService = {
     }
   },
 
+  async uploadVehicleDocument(vehicleId, documentType, fileUri, fileName, mimeType) {
+    try {
+      const formData = new FormData();
+      formData.append('document_type', documentType);
+      if (typeof fileUri === 'object' && fileUri !== null && !fileUri.uri) {
+        formData.append('file', fileUri);
+      } else {
+        formData.append('file', {
+          uri: typeof fileUri === 'string' ? fileUri : fileUri?.uri,
+          name: fileName || `${documentType}.jpg`,
+          type: mimeType || 'image/jpeg',
+        });
+      }
+      const response = await vehicleApiClient.post(`/vehicles/${vehicleId}/documents`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'Error al subir el documento del vehículo.' };
+    }
+  },
+
   async getCatalogBrands() {
     try {
       const response = await vehicleApiClient.get('/vehicles/catalog/brands');
@@ -618,6 +641,30 @@ export const tripLifecycleService = {
     } catch (error) {
       if (error.response?.data) throw error.response.data;
       throw { message: 'Error al reservar el viaje.' };
+    }
+  },
+
+  async reportPosition(tripId, { latitude, longitude, speed_kmh, heading_degrees, accuracy_meters }) {
+    try {
+      const response = await tripLifecycleClient.post(`/trips/${tripId}/tracking`, {
+        latitude,
+        longitude,
+        speed_kmh,
+        heading_degrees,
+        accuracy_meters,
+      });
+      return response.data;
+    } catch {
+      return null;
+    }
+  },
+
+  async getLatestPosition(tripId) {
+    try {
+      const response = await tripLifecycleClient.get(`/trips/${tripId}/tracking/latest`);
+      return response.data?.data || null;
+    } catch {
+      return null;
     }
   },
 
