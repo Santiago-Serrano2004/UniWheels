@@ -128,7 +128,7 @@ class DemandForecastingEngine:
 
             status = "Baja Demanda"
             if intensity >= 0.75:
-                status = "🔴 Alta Escasez de Cupos (Zona Crítica)"
+                status = "Alta Escasez de Cupos (Zona Crítica)"
                 high_demand_zones.append({
                     "zone_id": z["zone_id"],
                     "zone_name": z["name"],
@@ -137,7 +137,7 @@ class DemandForecastingEngine:
                     "recommendation": f"Alta demanda hacia Campus El Jardín. Ocupación rápida de cupos.",
                 })
             elif intensity >= 0.45:
-                status = "🟡 Demanda Moderada"
+                status = "Demanda Moderada"
 
             # Generar nube de calor gaussiana alrededor del centro de la zona
             center_lat, center_lng = z["center"]
@@ -200,9 +200,9 @@ class DemandForecastingEngine:
         if intensity >= 0.70:
             suggested_time = f"{int(driver_departure_hour):02d}:{(int((driver_departure_hour % 1) * 60) - 5) % 60:02d} AM"
             tips = [
-                f"🔥 {closest_zone['name']} presenta alta concentración de pasajeros hacia la UNAB.",
-                f"💡 Sal 5 minutos antes ({suggested_time}) para asegurar tus 3 cupos completos sobre la ruta.",
-                f"💰 Ganancia estimada en este horario: ~$17.400 COP por trayecto completo.",
+                f"{closest_zone['name']} presenta alta concentración de pasajeros hacia la UNAB.",
+                f"Sal 5 minutos antes ({suggested_time}) para asegurar tus 3 cupos completos sobre la ruta.",
+                f"Ganancia estimada en este horario: ~$17.400 COP por trayecto completo.",
             ]
         else:
             tips = [

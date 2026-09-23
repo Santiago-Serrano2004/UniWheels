@@ -67,17 +67,17 @@ class AffinitySafetyEngine:
         d_rating = getattr(driver, "driver_rating", 5.0)
         if p_rating >= 4.8 and d_rating >= 4.8:
             affinity_points += cls.WEIGHT_RATING
-            tags.append("⭐ Usuarios con Reputación Elite")
+            tags.append("Usuarios con Reputación Elite")
 
         # 3. Amigos o Compañeros en Común
         mutual = getattr(passenger, "mutual_friends_count", 0)
         if mutual > 0:
             affinity_points += min(3.0, mutual * cls.WEIGHT_MUTUAL_FRIENDS)
-            tags.append(f"👥 {mutual} contactos en común en la UNAB")
+            tags.append(f"{mutual} contactos en común en la UNAB")
 
         # 4. Modo Solo Mujeres
         if getattr(passenger, "women_only_required", False):
-            tags.append("🛡️ Modo Exclusivo Solo Mujeres")
+            tags.append("Modo Exclusivo Solo Mujeres")
 
         score_normalized = min(10.0, round(5.0 + affinity_points, 1))
 

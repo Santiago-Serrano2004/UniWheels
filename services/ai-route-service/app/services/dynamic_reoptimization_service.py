@@ -207,7 +207,7 @@ class DynamicReoptimizerEngine:
             )
 
         notification_text = (
-            f"🚗 ¡Nuevo compañero añadido en ruta! {new_passenger.passenger_name} "
+            f"¡Nuevo compañero añadido en ruta! {new_passenger.passenger_name} "
             f"en {new_passenger.pickup_address} (+{round(best_detour, 1)} min)."
         )
 

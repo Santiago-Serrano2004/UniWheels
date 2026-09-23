@@ -10,12 +10,12 @@ use App\Services\SpatialMatchingService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class AuditAiPerformanceCommand extends Command
 {
     protected $signature = 'uniwheels:audit-ai';
+
     protected $description = 'Auditoría integral de rendimiento de IA, fidelidad matemática y consumo de APIs de telemetría';
 
     public function handle(
@@ -25,7 +25,7 @@ class AuditAiPerformanceCommand extends Command
         SpatialMatchingService $matchingService
     ): int {
         $this->info('================================================================');
-        $this->info('   🧠 AUDITORÍA DE RENDIMIENTO, CONSUMO Y FIDELIDAD DE IA       ');
+        $this->info('   AUDITORÍA DE RENDIMIENTO, CONSUMO Y FIDELIDAD DE IA       ');
         $this->info('   Plataforma UniWheels — Área Metropolitana de Bucaramanga      ');
         $this->info('================================================================');
         $this->newLine();
@@ -33,7 +33,7 @@ class AuditAiPerformanceCommand extends Command
         // -------------------------------------------------------------
         // 1. AUDITORÍA DE LATENCIAS Y RENDIMIENTO DE COMPONENTES
         // -------------------------------------------------------------
-        $this->info('⚡ 1. BENCHMARK DE LATENCIAS POR CAPA ARQUITECTURAL');
+        $this->info('1. BENCHMARK DE LATENCIAS POR CAPA ARQUITECTURAL');
 
         // Sembrar ruta de prueba para las mediciones
         $driverId = (string) Str::uuid();
@@ -95,10 +95,10 @@ class AuditAiPerformanceCommand extends Command
         $this->table(
             ['Operación / Componente', 'Objetivo Técnico', 'Latencia Medida', 'Estado'],
             [
-                ['PostGIS ST_DWithin (Poda GiST)', '< 5.0 ms', "{$latenciaPostGis} ms", $latenciaPostGis < 5 ? '🟢 ÓPTIMO' : '🟡 ACEPTABLE'],
-                ['PostGIS ST_LineLocatePoint (Sentido)', '< 3.0 ms', "{$latenciaSentido} ms", $latenciaSentido < 3 ? '🟢 ÓPTIMO' : '🟡 ACEPTABLE'],
-                ['OSRM Topológico (Ruteo Real)', '< 100.0 ms', "{$latenciaOsrm} ms", $latenciaOsrm < 100 ? '🟢 ÓPTIMO' : '🟡 ACEPTABLE'],
-                ['Evaluación IA Integral (Tráfico + Tarifa)', '< 50.0 ms', "{$latenciaEvaluacionIa} ms", $latenciaEvaluacionIa < 50 ? '🟢 ÓPTIMO' : '🟡 ACEPTABLE'],
+                ['PostGIS ST_DWithin (Poda GiST)', '< 5.0 ms', "{$latenciaPostGis} ms", $latenciaPostGis < 5 ? 'ÓPTIMO' : 'ACEPTABLE'],
+                ['PostGIS ST_LineLocatePoint (Sentido)', '< 3.0 ms', "{$latenciaSentido} ms", $latenciaSentido < 3 ? 'ÓPTIMO' : 'ACEPTABLE'],
+                ['OSRM Topológico (Ruteo Real)', '< 100.0 ms', "{$latenciaOsrm} ms", $latenciaOsrm < 100 ? 'ÓPTIMO' : 'ACEPTABLE'],
+                ['Evaluación IA Integral (Tráfico + Tarifa)', '< 50.0 ms', "{$latenciaEvaluacionIa} ms", $latenciaEvaluacionIa < 50 ? 'ÓPTIMO' : 'ACEPTABLE'],
             ]
         );
 
@@ -107,7 +107,7 @@ class AuditAiPerformanceCommand extends Command
         // -------------------------------------------------------------
         // 2. AUDITORÍA DE EFICIENCIA DE CONSUMO DE API Y CACHÉ
         // -------------------------------------------------------------
-        $this->info('📊 2. AUDITORÍA DE CONSUMO DE APIS Y EFICIENCIA DE CACHÉ');
+        $this->info('2. AUDITORÍA DE CONSUMO DE APIS Y EFICIENCIA DE CACHÉ');
 
         Cache::flush();
         $puntosPrueba = [
@@ -141,10 +141,10 @@ class AuditAiPerformanceCommand extends Command
         $this->table(
             ['Métrica de Consumo', 'Valor Obtenido', 'Meta de Ahorro', 'Evaluación'],
             [
-                ['Consultas Simuladas de Pasajeros', "{$totalConsultasSimuladas}", 'N/A', '✅ Completado'],
-                ['Peticiones Reales a TomTom API', "{$consultasApiExternas}", '< 10 llamadas', '🟢 MÍNIMO'],
-                ['Consultas Servidas desde Caché RAM', "{$consultasServidasDesdeCache}", '> 40 llamadas', '🟢 EFICIENTE'],
-                ['Tasa Neta de Ahorro de Cuota', "{$tasaAhorro}%", '≥ 80.0%', $tasaAhorro >= 80 ? '🟢 SUPERADA' : '🟡 AJUSTABLE'],
+                ['Consultas Simuladas de Pasajeros', "{$totalConsultasSimuladas}", 'N/A', 'Completado'],
+                ['Peticiones Reales a TomTom API', "{$consultasApiExternas}", '< 10 llamadas', 'MÍNIMO'],
+                ['Consultas Servidas desde Caché RAM', "{$consultasServidasDesdeCache}", '> 40 llamadas', 'EFICIENTE'],
+                ['Tasa Neta de Ahorro de Cuota', "{$tasaAhorro}%", '≥ 80.0%', $tasaAhorro >= 80 ? 'SUPERADA' : 'AJUSTABLE'],
             ]
         );
 
@@ -153,7 +153,7 @@ class AuditAiPerformanceCommand extends Command
         // -------------------------------------------------------------
         // 3. AUDITORÍA DE FIDELIDAD MATEMÁTICA Y REGLAS DE NEGOCIO
         // -------------------------------------------------------------
-        $this->info('🎯 3. AUDITORÍA DE FIDELIDAD MATEMÁTICA DEL MODELO');
+        $this->info('3. AUDITORÍA DE FIDELIDAD MATEMÁTICA DEL MODELO');
 
         // Caso 1: Pasajero en ruta directa (Provenza) -> Modalidad 1
         $matchDirecto = $matchingService->findMatchesForPassenger(7.0856, -73.1142, 1);
@@ -179,16 +179,16 @@ class AuditAiPerformanceCommand extends Command
         $this->table(
             ['Prueba de Fidelidad del Algoritmo', 'Resultado Esperado', 'Resultado Obtenido', 'Veredicto'],
             [
-                ['Clasificación Modalidad 1 (En Ruta)', '0 min desvío, $ 4.500 COP', "{$desvioDirecto} min, Modalidad 1", $esModalidad1 && $desvioDirecto === 0.0 ? '🟢 APROBADO' : '🔴 FALLÓ'],
-                ['Cálculo Desvío Modalidad 2 (San Pío)', 'Desvío > 0 min, Tarifa con recargo', "+{$desvioIa} min, $ {$tarifaSugerida} COP", $esModalidad2 && $desvioIa > 0 ? '🟢 APROBADO' : '🔴 FALLÓ'],
-                ['Restricción Dura: Umbral > 15 min', 'is_viable: false (Rechazado)', $bloqueaExceso ? 'is_viable: false' : 'is_viable: true', $bloqueaExceso ? '🟢 APROBADO' : '🔴 FALLÓ'],
-                ['Poda de Sentido de Circulación (PostGIS)', '0 coincidencias (Descartado)', count($matchInverso) . ' coincidencias', $bloqueaSentidoContrario ? '🟢 APROBADO' : '🔴 FALLÓ'],
+                ['Clasificación Modalidad 1 (En Ruta)', '0 min desvío, $ 4.500 COP', "{$desvioDirecto} min, Modalidad 1", $esModalidad1 && $desvioDirecto === 0.0 ? 'APROBADO' : 'FALLÓ'],
+                ['Cálculo Desvío Modalidad 2 (San Pío)', 'Desvío > 0 min, Tarifa con recargo', "+{$desvioIa} min, $ {$tarifaSugerida} COP", $esModalidad2 && $desvioIa > 0 ? 'APROBADO' : 'FALLÓ'],
+                ['Restricción Dura: Umbral > 15 min', 'is_viable: false (Rechazado)', $bloqueaExceso ? 'is_viable: false' : 'is_viable: true', $bloqueaExceso ? 'APROBADO' : 'FALLÓ'],
+                ['Poda de Sentido de Circulación (PostGIS)', '0 coincidencias (Descartado)', count($matchInverso).' coincidencias', $bloqueaSentidoContrario ? 'APROBADO' : 'FALLÓ'],
             ]
         );
 
         $this->newLine();
         $this->info('================================================================');
-        $this->info('   ✅ AUDITORÍA FINALIZADA: 100% DE CRITERIOS APROBADOS        ');
+        $this->info('   AUDITORÍA FINALIZADA: 100% DE CRITERIOS APROBADOS        ');
         $this->info('================================================================');
 
         return Command::SUCCESS;

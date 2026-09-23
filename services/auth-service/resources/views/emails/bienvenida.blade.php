@@ -3,14 +3,14 @@
 @section('title', '¡Bienvenido a UniWheels!')
 
 @section('header_badge')
-    <div class="email-badge email-badge-emerald">✓ Cuenta Verificada</div>
+    <div class="email-badge email-badge-emerald">Cuenta Verificada</div>
 @endsection
 
 @section('header_title', '¡Bienvenido a la Comunidad!')
 @section('header_subtitle', 'Carpooling Inteligente y Seguro')
 
 @section('content')
-    <div class="email-greeting">¡Hola, {{ $usuario->name }}! 🎉</div>
+    <div class="email-greeting">¡Hola, {{ $usuario->name }}!</div>
     <p class="email-description">
         Tu registro ha sido completado exitosamente y tu correo institucional ha sido verificado. Ya puedes acceder y compartir rutas seguras con tu comunidad universitaria.
     </p>

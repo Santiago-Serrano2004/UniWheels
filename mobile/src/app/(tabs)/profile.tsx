@@ -286,7 +286,7 @@ export default function ProfileScreen() {
             </View>
 
             <View className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 gap-1">
-              <Text className="text-xs font-semibold text-slate-700 dark:text-slate-300">📧 Te enviaremos un correo de despedida:</Text>
+              <Text className="text-xs font-semibold text-slate-700 dark:text-slate-300">Te enviaremos un correo de despedida:</Text>
               <Text className="text-[11px] font-mono text-lochmara-600 dark:text-lochmara-400">{user?.email}</Text>
             </View>
 

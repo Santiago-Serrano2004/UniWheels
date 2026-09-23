@@ -185,14 +185,14 @@ export function SosEmergencyModal({
     });
 
     const mensaje =
-      `🚨 *ALERTA DE EMERGENCIA UNIWHEELS* 🚨\n` +
+      `*ALERTA DE EMERGENCIA UNIWHEELS*\n` +
       `Necesito ayuda. Me encuentro en un viaje activo de UniWheels.\n\n` +
-      `👤 *Conductor:* ${driverName}\n` +
-      `🚗 *Vehículo:* ${vehicle}\n` +
-      `🔢 *Placa:* ${plate}\n` +
-      `📍 *Mi ubicación actual:* ${gpsUrl}\n` +
-      `⏱️ *Hora del reporte:* ${horaActual}\n\n` +
-      `⚠️ *Por favor comunícate conmigo de inmediato o alerta a las autoridades.*`;
+      `*Conductor:* ${driverName}\n` +
+      `*Vehículo:* ${vehicle}\n` +
+      `*Placa:* ${plate}\n` +
+      `*Mi ubicación actual:* ${gpsUrl}\n` +
+      `*Hora del reporte:* ${horaActual}\n\n` +
+      `*Por favor comunícate conmigo de inmediato o alerta a las autoridades.*`;
 
     const whatsappAppUrl = `whatsapp://send?text=${encodeURIComponent(mensaje)}`;
     const whatsappWebUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
@@ -209,7 +209,7 @@ export function SosEmergencyModal({
       try {
         await Share.share({
           message: mensaje,
-          title: '🚨 Alerta de Emergencia UniWheels',
+          title: 'Alerta de Emergencia UniWheels',
         });
       } catch {
         Alert.alert('Error', 'No se pudo abrir WhatsApp ni el menú de compartir.');
@@ -220,7 +220,7 @@ export function SosEmergencyModal({
   const compartirEnlaceGps = async () => {
     try {
       await Share.share({
-        message: `🚨 Mi ubicación de emergencia UniWheels: ${gpsUrl}`,
+        message: `Mi ubicación de emergencia UniWheels: ${gpsUrl}`,
         url: gpsUrl,
       });
       setCopiedLink(true);

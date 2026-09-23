@@ -17,7 +17,6 @@
 
     <!-- MESSAGE CARD -->
     <div class="email-alert-card" style="text-align: center; padding: 22px 18px; margin: 20px 0;">
-        <div style="font-size: 32px; margin-bottom: 8px;">👋</div>
         <div style="font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">¡Esperamos que vuelvas pronto!</div>
         <div style="font-size: 12px; color: #64748b; line-height: 1.5;">
             Las puertas de la comunidad universitaria UniWheels siempre estarán abiertas para ti cuando desees compartir rutas sostenibles y seguras.

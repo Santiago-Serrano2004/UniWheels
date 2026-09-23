@@ -107,17 +107,17 @@
         <div style="display: flex; gap: 10px; justify-content: center;">
             <a href="{{ config('app.url') }}/api/v1/vehicles/{{ $vehiculo->id }}/status?action=approve&token={{ $tokenAprobacion }}"
                style="display: inline-block; background: #059669; color: #ffffff; font-size: 13px; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);">
-                ✓ Aprobar Vehículo
+                Aprobar Vehículo
             </a>
             <a href="{{ config('app.url') }}/api/v1/vehicles/{{ $vehiculo->id }}/status?action=reject&token={{ $tokenRechazo }}"
                style="display: inline-block; background: #dc2626; color: #ffffff; font-size: 13px; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); margin-left: 8px;">
-                ✗ Rechazar
+                Rechazar
             </a>
         </div>
     </div>
 
     <!-- AVISO DE SEGURIDAD -->
     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 14px; margin-top: 20px; font-size: 11px; color: #64748b;">
-        🔒 Los enlaces de aprobación contienen firmas criptográficas HMAC-SHA256 válidas exclusivamente para esta solicitud.
+        Los enlaces de aprobación contienen firmas criptográficas HMAC-SHA256 válidas exclusivamente para esta solicitud.
     </div>
 @endsection
