@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\DeviceTokenController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PushSubscriptionController;
 use App\Http\Controllers\Api\V1\RatingController;
@@ -22,6 +23,8 @@ Route::prefix('v1')->group(function () {
     Route::middleware('jwt.auth')->group(function () {
         Route::post('/push/subscribe', [PushSubscriptionController::class, 'store']);
         Route::delete('/push/unsubscribe', [PushSubscriptionController::class, 'destroy']);
+        Route::post('/push/device-tokens', [DeviceTokenController::class, 'store']);
+        Route::post('/push/device-tokens/remove', [DeviceTokenController::class, 'destroy']);
 
         // Consultas y acciones del usuario autenticado (identidad siempre desde el JWT).
         Route::get('/notifications', [NotificationController::class, 'index']);

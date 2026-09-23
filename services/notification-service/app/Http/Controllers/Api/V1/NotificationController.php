@@ -5,13 +5,17 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SendNotificationRequest;
 use App\Models\Notification;
+use App\Services\ExpoPushService;
 use App\Services\WebPushService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
-    public function __construct(private WebPushService $webPushService) {}
+    public function __construct(
+        private WebPushService $webPushService,
+        private ExpoPushService $expoPushService
+    ) {}
 
     /**
      * Enviar y registrar una nueva notificación para un usuario.
@@ -33,6 +37,14 @@ class NotificationController extends Controller
         // usuario no tiene suscripciones activas o VAPID no está configurado, esto
         // es un no-op silencioso (ver WebPushService).
         $this->webPushService->sendToUser(
+            $datos['user_id'],
+            $datos['title'],
+            $datos['body'],
+            $datos['payload_json'] ?? []
+        );
+
+        // Entrega real a dispositivos móviles (Expo Push API / FCM / APNs)
+        $this->expoPushService->sendToUser(
             $datos['user_id'],
             $datos['title'],
             $datos['body'],
