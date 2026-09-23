@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import { Car, Calendar, MapPin, Star, X } from 'lucide-react-native';
 import { tripsService, useAppStore } from '@uniwheels/shared';
 import { RatingFeedbackModal } from '@/components/RatingFeedbackModal';
+import { ActiveRoleConflictBlocker } from '@/components/ActiveRoleConflictBlocker';
 
 /**
  * Equivalente simplificado a frontend/src/components/trips/PassengerTripsView.jsx
@@ -12,8 +14,11 @@ import { RatingFeedbackModal } from '@/components/RatingFeedbackModal';
  * en la web, sin backend real detrás (ver packages/shared/README.md).
  */
 export default function HistoryScreen() {
+  const activeRole = useAppStore((state) => state.activeRole);
+  const activeDriverTrip = useAppStore((state) => state.activeDriverTrip);
   const activePassengerBooking = useAppStore((state) => state.activePassengerBooking);
   const cancelPassengerBooking = useAppStore((state) => state.cancelPassengerBooking);
+  const toggleRole = useAppStore((state) => state.toggleRole);
   const [history, setHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [modalCalificacion, setModalCalificacion] = useState<{ trip: any } | null>(null);
@@ -44,6 +49,32 @@ export default function HistoryScreen() {
     }
     setHistory((prev) => prev.map((v) => (v.id === trip.id ? { ...v, rated: true, ratingScore: rating } : v)));
   };
+
+  if (activeRole === 'passenger' && activeDriverTrip) {
+    return (
+      <ActiveRoleConflictBlocker
+        conflictType="driver_active"
+        activeTrip={activeDriverTrip}
+        onRedirect={() => {
+          toggleRole();
+          router.replace('/(tabs)');
+        }}
+      />
+    );
+  }
+
+  if (activeRole === 'driver' && activePassengerBooking) {
+    return (
+      <ActiveRoleConflictBlocker
+        conflictType="passenger_active"
+        activeTrip={activePassengerBooking}
+        onRedirect={() => {
+          toggleRole();
+          router.replace('/(tabs)/history');
+        }}
+      />
+    );
+  }
 
   return (
     <ScrollView className="flex-1 bg-slate-100 dark:bg-slate-950" contentContainerStyle={{ padding: 16, gap: 12 }}>

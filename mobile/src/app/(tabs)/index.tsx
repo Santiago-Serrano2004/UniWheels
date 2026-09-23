@@ -25,6 +25,7 @@ import { CampusSelectorModal, type Campus } from '@/components/CampusSelectorMod
 import { SetHomeLocationModal } from '@/components/SetHomeLocationModal';
 import { LocationPickerModal } from '@/components/LocationPickerModal';
 import { AnimatedSegmentedControl } from '@/components/AnimatedSegmentedControl';
+import { ActiveRoleConflictBlocker } from '@/components/ActiveRoleConflictBlocker';
 
 const DEFAULT_CAMPUSES: Campus[] = [
   { id: 1, name: 'Campus El Jardín' },
@@ -68,6 +69,10 @@ const isWithinOneHour = (rideTimeStr: string | null | undefined, targetTimeStr: 
 
 export default function HomeScreen() {
   const user = useAppStore((state) => state.user);
+  const activeRole = useAppStore((state) => state.activeRole);
+  const activeDriverTrip = useAppStore((state) => state.activeDriverTrip);
+  const activePassengerBooking = useAppStore((state) => state.activePassengerBooking);
+  const toggleRole = useAppStore((state) => state.toggleRole);
   const setSelectedSearchRoute = useAppStore((state) => state.setSelectedSearchRoute);
   const savedHomeLocation = useAppStore((state) => state.savedHomeLocation);
 
@@ -231,6 +236,36 @@ export default function HomeScreen() {
     // de Expo Router es esta.
     router.push('/(tabs)/map');
   };
+
+  if (activeRole === 'passenger' && activeDriverTrip) {
+    return (
+      <SafeAreaView edges={[]} className="flex-1 bg-slate-100 dark:bg-slate-950">
+        <ActiveRoleConflictBlocker
+          conflictType="driver_active"
+          activeTrip={activeDriverTrip}
+          onRedirect={() => {
+            toggleRole();
+            router.replace('/(tabs)');
+          }}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (activeRole === 'driver' && activePassengerBooking) {
+    return (
+      <SafeAreaView edges={[]} className="flex-1 bg-slate-100 dark:bg-slate-950">
+        <ActiveRoleConflictBlocker
+          conflictType="passenger_active"
+          activeTrip={activePassengerBooking}
+          onRedirect={() => {
+            toggleRole();
+            router.replace('/(tabs)/history');
+          }}
+        />
+      </SafeAreaView>
+    );
+  }
 
   const isToday = selectedDate === todayStr();
   const isTomorrow = selectedDate === tomorrowStr();

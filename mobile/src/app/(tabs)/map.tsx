@@ -16,6 +16,7 @@ import { fetchRoadGeometry, getPlaceCoordinates, tripLifecycleService, useAppSto
 import { TripRouteMap } from '@/components/TripRouteMap';
 import { PaymentMethodSelectorModal, type PaymentMethodId } from '@/components/PaymentMethodSelectorModal';
 import { WompiWidgetModal, type WompiWidgetParams } from '@/components/WompiWidgetModal';
+import { ActiveRoleConflictBlocker } from '@/components/ActiveRoleConflictBlocker';
 
 const PAYMENT_METHOD_BACKEND_MAP: Record<PaymentMethodId, string> = {
   nequi_direct: 'nequi_directo',
@@ -49,9 +50,43 @@ const initialsOf = (name?: string) =>
  * portada — ver AGENTS.md).
  */
 export default function MapScreen() {
+  const activeRole = useAppStore((s) => s.activeRole);
+  const activeDriverTrip = useAppStore((s) => s.activeDriverTrip);
+  const activePassengerBooking = useAppStore((s) => s.activePassengerBooking);
+  const toggleRole = useAppStore((s) => s.toggleRole);
   const selectedSearchRoute = useAppStore((s) => s.selectedSearchRoute);
   const clearSelectedSearchRoute = useAppStore((s) => s.clearSelectedSearchRoute);
   const bookPassengerTrip = useAppStore((s) => s.bookPassengerTrip);
+
+  if (activeRole === 'passenger' && activeDriverTrip) {
+    return (
+      <SafeAreaView edges={[]} className="flex-1 bg-slate-100 dark:bg-slate-950">
+        <ActiveRoleConflictBlocker
+          conflictType="driver_active"
+          activeTrip={activeDriverTrip}
+          onRedirect={() => {
+            toggleRole();
+            router.replace('/(tabs)');
+          }}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (activeRole === 'driver' && activePassengerBooking) {
+    return (
+      <SafeAreaView edges={[]} className="flex-1 bg-slate-100 dark:bg-slate-950">
+        <ActiveRoleConflictBlocker
+          conflictType="passenger_active"
+          activeTrip={activePassengerBooking}
+          onRedirect={() => {
+            toggleRole();
+            router.replace('/(tabs)/history');
+          }}
+        />
+      </SafeAreaView>
+    );
+  }
 
   if (!selectedSearchRoute) {
     return (
