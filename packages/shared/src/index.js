@@ -32,7 +32,15 @@ export {
 
 export { MAP_TILE_PROVIDERS, getMapTileProvider } from './utils/mapTileProviders.js';
 
-export { lerpAngle, getPlaceCoordinates, fetchRoadGeometry } from './utils/osrmRoute.js';
+export {
+  lerpAngle,
+  getPlaceCoordinates,
+  fetchRoadGeometry,
+  fetchTurnByTurnRoute,
+  maniobraATexto,
+  haversineDistanceMeters,
+  formatDistance,
+} from './utils/osrmRoute.js';
 
 export {
   FORMATO_PLACA_CARRO,
