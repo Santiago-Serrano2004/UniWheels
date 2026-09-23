@@ -435,18 +435,19 @@ export const vehicleService = {
     }
   },
 
-  async getCatalogBrands() {
+  async getCatalogBrands(tipoVehiculo = 'carro') {
     try {
-      const response = await vehicleApiClient.get('/vehicles/catalog/brands');
+      const type = (tipoVehiculo === 'motorcycle' || tipoVehiculo === 'moto') ? 'moto' : 'carro';
+      const response = await vehicleApiClient.get('/vehicles/catalog/brands', { params: { type } });
       return response.data?.data || [];
     } catch {
       return [];
     }
   },
 
-  async getCatalogModels(brandId) {
+  async getCatalogModels(marca) {
     try {
-      const response = await vehicleApiClient.get('/vehicles/catalog/models', { params: { brand_id: brandId } });
+      const response = await vehicleApiClient.get('/vehicles/catalog/models', { params: { brand: marca } });
       return response.data?.data || [];
     } catch {
       return [];
