@@ -73,6 +73,12 @@ services:
       postgres_gis: { condition: service_healthy }
       redis: { condition: service_healthy }
     networks: [uniwheels_net]
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 8001) ? 0 : 1);"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   vehicle-service:
     build:
@@ -86,6 +92,12 @@ services:
     depends_on:
       postgres_gis: { condition: service_healthy }
     networks: [uniwheels_net]
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 8002) ? 0 : 1);"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   route-matching-service:
     build:
@@ -99,6 +111,12 @@ services:
     depends_on:
       postgres_gis: { condition: service_healthy }
     networks: [uniwheels_net]
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 8003) ? 0 : 1);"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   trip-service:
     build:
@@ -113,6 +131,12 @@ services:
       postgres_gis: { condition: service_healthy }
       redis: { condition: service_healthy }
     networks: [uniwheels_net]
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 8004) ? 0 : 1);"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   notification-service:
     build:
@@ -127,6 +151,12 @@ services:
       postgres_gis: { condition: service_healthy }
       redis: { condition: service_healthy }
     networks: [uniwheels_net]
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 8005) ? 0 : 1);"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   ai-route-service:
     build:
@@ -136,6 +166,12 @@ services:
     restart: unless-stopped
     env_file: ../services/ai-route-service/.env.production
     networks: [uniwheels_net]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import socket,sys; sys.exit(0 if socket.socket().connect_ex(('127.0.0.1',8006))==0 else 1)"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   frontend:
     build:
@@ -161,13 +197,13 @@ services:
       - "80:80"
       - "443:443"
     depends_on:
-      - auth-service
-      - vehicle-service
-      - route-matching-service
-      - trip-service
-      - notification-service
-      - ai-route-service
-      - frontend
+      auth-service: { condition: service_healthy }
+      vehicle-service: { condition: service_healthy }
+      route-matching-service: { condition: service_healthy }
+      trip-service: { condition: service_healthy }
+      notification-service: { condition: service_healthy }
+      ai-route-service: { condition: service_healthy }
+      frontend: { condition: service_started }
     networks: [uniwheels_net]
 
 networks:
