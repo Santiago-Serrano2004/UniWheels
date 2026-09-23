@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\AdminVehicleController;
 use App\Http\Controllers\Api\V1\VehicleCatalogController;
 use App\Http\Controllers\Api\V1\VehicleController;
 use Illuminate\Support\Facades\Route;
@@ -15,10 +16,6 @@ Route::prefix('v1')->group(function () {
     Route::get('/vehicles/catalog/brands', [VehicleCatalogController::class, 'brands']);
     Route::get('/vehicles/catalog/models', [VehicleCatalogController::class, 'models']);
 
-    // Enlace de aprobación/rechazo por correo (HMAC firmado, sin sesión de usuario —
-    // el administrador lo abre directo desde su bandeja de entrada).
-    Route::get('/vehicles/{id}/status', [VehicleController::class, 'updateStatusByToken']);
-
     Route::middleware('jwt.auth')->group(function () {
         Route::get('/vehicles/check-approved', [VehicleController::class, 'checkApprovedVehicle']);
         Route::get('/vehicles', [VehicleController::class, 'index']);
@@ -31,5 +28,11 @@ Route::prefix('v1')->group(function () {
         Route::get('/vehicles/{vehicleId}/documents/{documentId}/download', [VehicleController::class, 'downloadDocument'])
             ->name('vehicles.documents.download');
         Route::patch('/vehicles/{vehicleId}/documents/{documentId}/verify', [VehicleController::class, 'verifyDocument']);
+    });
+
+    // Rutas de administración
+    Route::prefix('admin')->middleware(['jwt.auth', 'admin'])->group(function () {
+        Route::get('/vehicles', [AdminVehicleController::class, 'index']);
+        Route::get('/vehicles/{id}', [AdminVehicleController::class, 'show']);
     });
 });

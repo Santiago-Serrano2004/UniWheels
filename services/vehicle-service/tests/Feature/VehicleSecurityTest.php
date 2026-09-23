@@ -6,7 +6,7 @@ use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
-test('el backdoor test_approve ya no autoriza la aprobacion de un vehiculo', function () {
+test('la ruta publica de aprobacion por token ya no existe (eliminada por seguridad)', function () {
     $vehiculo = Vehicle::create([
         'user_id' => (string) Str::uuid(),
         'vehicle_type' => 'carro',
@@ -20,7 +20,7 @@ test('el backdoor test_approve ya no autoriza la aprobacion de un vehiculo', fun
     ]);
 
     $this->get("/api/v1/vehicles/{$vehiculo->id}/status?action=approve&token=test_approve")
-        ->assertStatus(403);
+        ->assertStatus(404);
 
     expect($vehiculo->fresh()->status)->toBe('pendiente_revision');
 });

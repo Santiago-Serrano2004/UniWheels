@@ -92,3 +92,12 @@ Al inspeccionar el código real de `services/vehicle-service/app/Http/Controller
    - Conservar `AdminVehicleReviewView.jsx` como la consola administrativa oficial de escritorio para el equipo de Bienestar Universitario, desplegada en `https://uniwheels.org/admin` o mediante el acceso web de la universidad.
 3. **En Backend:**
    - Mantener intacto el flujo de notificación por correo con tokens HMAC en `vehicle-service`.
+
+---
+
+## 6. Nota de Actualización (2026-09-23 — `specs/admin-backend-v1.md`)
+
+Se retiró el mecanismo de aprobación rápida mediante enlace HMAC por correo (`GET /vehicles/{id}/status`).
+
+**Motivo:** Dicho enlace permitía la aprobación o rechazo del vehículo completo sin iniciar sesión, sin auditar la revisión individual de cada documento requerido y con un token determinístico sin vencimiento. A partir de la versión v1 del backend administrativo (`specs/admin-backend-v1.md`), la revisión y aprobación de vehículos se realiza exclusivamente a través del panel web (`https://admin.uniwheels.org/vehiculos/{id}`) con autenticación administrativa (`jwt.auth` + middleware `admin`) y validación granular documento por documento (`PATCH /api/v1/vehicles/{vehicleId}/documents/{documentId}/verify`). El correo pasa a ser un aviso informativo con el botón "Revisar en el panel".
+

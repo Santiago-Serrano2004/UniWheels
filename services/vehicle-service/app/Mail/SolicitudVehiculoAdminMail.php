@@ -13,12 +13,15 @@ class SolicitudVehiculoAdminMail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public string $panelUrl;
+
     public function __construct(
         public Vehicle $vehiculo,
-        public string $tokenAprobacion,
-        public string $tokenRechazo,
         public array $datosDocumentos = []
-    ) {}
+    ) {
+        $baseUrl = rtrim((string) (config('services.admin_panel.url') ?: env('ADMIN_PANEL_URL', 'https://admin.uniwheels.org')), '/');
+        $this->panelUrl = "{$baseUrl}/vehiculos/{$this->vehiculo->id}";
+    }
 
     public function envelope(): Envelope
     {

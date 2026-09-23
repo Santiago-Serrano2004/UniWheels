@@ -5,23 +5,27 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegisterVehicleRequest;
 use App\Http\Requests\UploadDocumentRequest;
+use App\Http\Requests\VerifyDocumentRequest;
 use App\Http\Resources\VehicleDocumentResource;
 use App\Http\Resources\VehicleResource;
 use App\Mail\SolicitudVehiculoAdminMail;
 use App\Models\Vehicle;
 use App\Models\VehicleDocument;
 use App\Services\HabeasDataAuditService;
+use App\Services\VehicleDocumentVerificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class VehicleController extends Controller
 {
+    public function __construct(
+        private readonly VehicleDocumentVerificationService $verificationService
+    ) {}
+
     /**
      * Listar vehículos registrados (opcionalmente filtrados por user_id).
      */
@@ -46,12 +50,40 @@ class VehicleController extends Controller
     }
 
     /**
-     * Registrar un nuevo vehículo (carro o moto) para un conductor.
+     * Verificar si el usuario autenticado tiene un vehículo aprobado y con documentos al día.
+     */
+    public function checkApprovedVehicle(Request $request): JsonResponse
+    {
+        $userId = $request->attributes->get('user_id');
+
+        $vehiculo = Vehicle::with('documents')
+            ->where('user_id', $userId)
+            ->where('status', 'aprobado')
+            ->first();
+
+        if (! $vehiculo) {
+            return response()->json([
+                'success' => true,
+                'has_approved_vehicle' => false,
+                'vehicle' => null,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'has_approved_vehicle' => true,
+            'vehicle' => new VehicleResource($vehiculo),
+        ]);
+    }
+
+    /**
+     * Registrar un nuevo vehículo asociado al usuario autenticado.
      */
     public function store(RegisterVehicleRequest $request): JsonResponse
     {
         $datosValidados = $request->validated();
-        $userId = $request->attributes->get('user_id'); // Identidad verificada del JWT, nunca del payload
+        // El user_id NUNCA se toma del body (previene secuestro de vehículos entre cuentas).
+        $userId = $request->attributes->get('user_id');
 
         // Si la placa ya pertenece a otro usuario, no se permite "secuestrarla" reasignándola.
         $existente = Vehicle::where('plate_number', $datosValidados['plate_number'])->first();
@@ -99,13 +131,11 @@ class VehicleController extends Controller
             'driver_license_photo' => $request->input('driver_license_photo'),
         ];
 
-        // Notificar al administrador sobre la nueva solicitud de vehículo con fotos y botones de aprobación directa
+        // Notificar al administrador sobre la nueva solicitud de vehículo con enlace al panel
         try {
-            $tokenAprobacion = hash_hmac('sha256', $vehiculo->id.':approve', config('app.key'));
-            $tokenRechazo = hash_hmac('sha256', $vehiculo->id.':reject', config('app.key'));
             $adminEmail = env('ADMIN_EMAIL', 'uniwheelscontact@gmail.com');
 
-            Mail::to($adminEmail)->send(new SolicitudVehiculoAdminMail($vehiculo, $tokenAprobacion, $tokenRechazo, $datosDocumentos));
+            Mail::to($adminEmail)->send(new SolicitudVehiculoAdminMail($vehiculo, $datosDocumentos));
         } catch (\Throwable $e) {
             Log::error('Error al enviar correo admin de solicitud vehicular: '.$e->getMessage());
         }
@@ -140,117 +170,32 @@ class VehicleController extends Controller
 
     /**
      * Resumen público mínimo de un vehículo (placa, marca, modelo, color) para que
-     * route-matching-service enriquezca los resultados de búsqueda del pasajero —
-     * estos mismos campos ya se mostraban sin control alguno en el listado público
-     * de rutas, así que no exponen nada que no fuera ya visible.
+     * route-matching-service enriquezca los resultados de búsqueda del pasajero.
      */
-    public function publicSummary(string $id): JsonResponse
+    public function publicSummary(Request $request, string $id): JsonResponse
     {
-        $vehiculo = Vehicle::find($id);
-
-        if (! $vehiculo) {
-            return response()->json(['success' => false, 'message' => 'Vehículo no encontrado.'], 404);
-        }
+        $vehiculo = Vehicle::findOrFail($id);
 
         return response()->json([
             'success' => true,
             'data' => [
                 'id' => $vehiculo->id,
+                'vehicle_type' => $vehiculo->vehicle_type,
                 'plate_number' => $vehiculo->plate_number,
                 'brand' => $vehiculo->brand,
                 'model_line' => $vehiculo->model_line,
+                'year' => $vehiculo->year,
                 'color' => $vehiculo->color,
-                'vehicle_type' => $vehiculo->vehicle_type,
                 'available_seats' => $vehiculo->available_seats,
+                'features' => [
+                    'has_ac' => (bool) $vehiculo->has_ac,
+                    'has_trunk' => (bool) $vehiculo->has_trunk,
+                    'has_extra_helmet' => (bool) $vehiculo->has_extra_helmet,
+                ],
+                'perspective_photo_url' => $vehiculo->perspective_photo_path ? asset('storage/'.$vehiculo->perspective_photo_path) : null,
+                'status' => $vehiculo->status,
             ],
         ]);
-    }
-
-    /**
-     * Verificar si el usuario tiene un vehículo aprobado para operar y publicar trayectos.
-     * GET /api/v1/vehicles/check-approved?user_id={uuid}&plate_number={plate}
-     */
-    public function checkApprovedVehicle(Request $request): JsonResponse
-    {
-        $esAdmin = in_array('administrador', $request->attributes->get('user_roles', []), true);
-        $userId = $esAdmin ? $request->query('user_id') : $request->attributes->get('user_id');
-        $plate = $request->query('plate_number');
-
-        $query = Vehicle::query()->with('documents');
-
-        if ($userId && Str::isUuid($userId)) {
-            $query->where('user_id', $userId);
-        } elseif ($esAdmin && $plate) {
-            $query->where('plate_number', strtoupper(str_replace([' ', '-'], '', trim($plate))));
-        }
-
-        $vehiculo = $query->latest()->first();
-
-        if (! $vehiculo) {
-            return response()->json([
-                'success' => true,
-                'has_approved_vehicle' => false,
-                'status' => 'sin_vehiculo',
-                'message' => 'No tienes ningún vehículo registrado.',
-            ], 200);
-        }
-
-        $esAprobado = $vehiculo->status === 'aprobado';
-
-        return response()->json([
-            'success' => true,
-            'has_approved_vehicle' => $esAprobado,
-            'status' => $vehiculo->status,
-            'message' => $esAprobado
-                ? 'Vehículo aprobado para publicar trayectos.'
-                : 'El vehículo se encuentra en estado: '.$vehiculo->status,
-            'data' => new VehicleResource($vehiculo),
-        ], 200);
-    }
-
-    /**
-     * Actualizar estado del vehículo mediante token seguro desde el correo de administración.
-     * GET /api/v1/vehicles/{id}/status?action=approve|reject&token={token}
-     */
-    public function updateStatusByToken(Request $request, string $id): Response|JsonResponse
-    {
-        $accion = $request->query('action');
-        $token = $request->query('token');
-        $vehiculo = Vehicle::findOrFail($id);
-
-        $tokenEsperado = hash_hmac('sha256', $vehiculo->id.':'.$accion, config('app.key'));
-        $tokenLegacy = hash_hmac('sha256', (string) $vehiculo->id.':'.$accion, env('APP_KEY', ''));
-
-        $tokenValido = hash_equals($tokenEsperado, (string) $token)
-                    || hash_equals($tokenLegacy, (string) $token);
-
-        if (! $tokenValido) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Token de seguridad inválido o expirado.',
-            ], 403);
-        }
-
-        if ($accion === 'approve') {
-            $vehiculo->update(['status' => 'aprobado', 'rejection_reason' => null]);
-            $nuevoEstado = 'aprobado';
-            $mensaje = "El vehículo con placa {$vehiculo->plate_number} ha sido aprobado exitosamente.";
-        } elseif ($accion === 'reject') {
-            $vehiculo->update([
-                'status' => 'rechazado',
-                'rejection_reason' => 'Rechazado por el administrador de UniWheels vía correo.',
-            ]);
-            $nuevoEstado = 'rechazado';
-            $mensaje = "La solicitud del vehículo con placa {$vehiculo->plate_number} ha sido rechazada.";
-        } else {
-            return response()->json(['success' => false, 'message' => 'Acción no válida.'], 400);
-        }
-
-        return response(view('vehicle_status_updated', [
-            'mensaje' => $mensaje,
-            'estado' => $nuevoEstado,
-            'vehiculo' => $vehiculo,
-        ])->render())->header('Content-Type', 'text/html');
     }
 
     /**
@@ -342,16 +287,13 @@ class VehicleController extends Controller
             $request->userAgent() ?? 'N/A'
         );
 
-        // `download()` en vez de `path()` + response()->download(): funciona igual
-        // sobre disco local o sobre un disco S3-compatible (R2 en producción) — el
-        // driver local ya no es el único soportado, ver config/filesystems.php.
         return Storage::disk('private')->download($documento->file_path, basename($documento->file_path));
     }
 
     /**
      * Validar y aprobar o rechazar un documento por parte de Bienestar Universitario.
      */
-    public function verifyDocument(Request $request, string $vehicleId, string $documentId): JsonResponse
+    public function verifyDocument(VerifyDocumentRequest $request, string $vehicleId, string $documentId): JsonResponse
     {
         if (! in_array('administrador', $request->attributes->get('user_roles', []), true)) {
             return response()->json([
@@ -360,37 +302,24 @@ class VehicleController extends Controller
             ], 403);
         }
 
-        $request->validate([
-            'is_verified' => ['required', 'boolean'],
-            'rejection_notes' => ['nullable', 'string', 'max:500'],
-        ]);
-
         $documento = VehicleDocument::where('vehicle_id', $vehicleId)->findOrFail($documentId);
-        $vehiculo = $documento->vehicle;
+        $adminUserId = (string) $request->attributes->get('user_id');
 
-        $documento->update([
-            'is_verified' => $request->boolean('is_verified'),
-            'verified_at' => $request->boolean('is_verified') ? now() : null,
-            'verified_by_user_id' => $request->attributes->get('user_id'),
-            'rejection_notes' => $request->input('rejection_notes'),
-        ]);
+        $documentoActualizado = $this->verificationService->verifyDocument(
+            $documento,
+            $request->boolean('is_verified'),
+            $request->input('rejection_notes'),
+            $adminUserId
+        );
 
-        // Si el vehículo cumple con todos los documentos requeridos, actualizar su estado a aprobado
-        if ($vehiculo->isFullyCompliant()) {
-            $vehiculo->update(['status' => 'aprobado', 'rejection_reason' => null]);
-        } elseif (! $request->boolean('is_verified')) {
-            $vehiculo->update([
-                'status' => 'rechazado',
-                'rejection_reason' => $request->input('rejection_notes', 'Documento rechazado en verificación.'),
-            ]);
-        }
+        $vehiculo = $documentoActualizado->vehicle->fresh();
 
         return response()->json([
             'success' => true,
             'message' => 'Estado del documento actualizado exitosamente.',
             'data' => [
-                'document' => new VehicleDocumentResource($documento),
-                'vehicle_status' => $vehiculo->fresh()->status,
+                'document' => new VehicleDocumentResource($documentoActualizado),
+                'vehicle_status' => $vehiculo->status,
             ],
         ]);
     }
