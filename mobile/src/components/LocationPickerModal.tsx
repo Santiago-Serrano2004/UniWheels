@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, Text, useColorScheme, View } from 'react-native';
-import MapView, { Marker, UrlTile } from 'react-native-maps';
+import { ActivityIndicator, Modal, Pressable, Text, View } from 'react-native';
 import { CheckCircle2, MapPin, Sparkles, X } from 'lucide-react-native';
-import { getMapTileProvider, placesApiService } from '@uniwheels/shared';
+import { placesApiService } from '@uniwheels/shared';
+import { LeafletMap, type LeafletMapRef, type LeafletMarker } from './map/LeafletMap';
 
 export type PickedLocation = { coords: [number, number]; address: string };
 
@@ -11,10 +11,8 @@ const CENTRO_BUCARAMANGA: [number, number] = [7.1193, -73.1042];
 /**
  * Equivalente FUNCIONAL a frontend/src/components/map/LocationPickerModal.jsx
  * (pin arrastrable + geocodificación inversa real vía placesApiService), pero
- * como tarjeta centrada — igual que el resto de los popups de la app
- * (CampusSelectorModal, SetHomeLocationModal, etc.) en vez de pantalla
- * completa, por pedido explícito: el mapa vive embebido y acotado dentro de
- * la tarjeta, no de borde a borde.
+ * como tarjeta centrada con Leaflet en WebView — igual que el resto de los popups
+ * de la app (CampusSelectorModal, SetHomeLocationModal, etc.).
  */
 export function LocationPickerModal({
   isOpen,
@@ -33,9 +31,7 @@ export function LocationPickerModal({
   confirmButtonText?: string;
   onConfirm: (loc: PickedLocation) => void;
 }) {
-  const colorScheme = useColorScheme();
-  const provider = getMapTileProvider(colorScheme === 'dark' ? 'dark' : 'light');
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<LeafletMapRef>(null);
 
   const [coords, setCoords] = useState<[number, number]>(initialCoords || CENTRO_BUCARAMANGA);
   const [placeName, setPlaceName] = useState(initialPlaceName);
@@ -48,6 +44,7 @@ export function LocationPickerModal({
     setCoords(fresh);
     setPlaceName(initialPlaceName);
     setShowHint(true);
+    mapRef.current?.animateTo(fresh, 15);
 
     if (!initialPlaceName) {
       placesApiService.reverseGeocode(fresh[0], fresh[1]).then((name: string) => {
@@ -76,6 +73,16 @@ export function LocationPickerModal({
     onConfirm({ coords, address: resolvedName });
     onClose();
   };
+
+  const markers: LeafletMarker[] = [
+    {
+      id: 'picker-pin',
+      coordinate: coords,
+      kind: 'pin',
+      draggable: true,
+      color: '#0284c7',
+    },
+  ];
 
   return (
     <Modal visible={isOpen} transparent animationType="fade" onRequestClose={onClose}>
@@ -109,29 +116,17 @@ export function LocationPickerModal({
 
           {/* Mapa acotado dentro de la tarjeta */}
           <View className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800" style={{ height: 260 }}>
-            <MapView
+            <LeafletMap
               ref={mapRef}
-              style={{ flex: 1 }}
-              mapType="none"
-              initialRegion={{ latitude: coords[0], longitude: coords[1], latitudeDelta: 0.01, longitudeDelta: 0.01 }}
-              onPress={(e) => {
-                const { latitude, longitude } = e.nativeEvent.coordinate;
-                handleCoordsChange(latitude, longitude);
-              }}
-            >
-              <UrlTile urlTemplate={provider.url} maximumZ={provider.maxZoom} flipY={false} />
-              <Marker
-                coordinate={{ latitude: coords[0], longitude: coords[1] }}
-                draggable
-                onDragEnd={(e) => {
-                  const { latitude, longitude } = e.nativeEvent.coordinate;
-                  handleCoordsChange(latitude, longitude);
-                }}
-              />
-            </MapView>
+              initialCenter={coords}
+              initialZoom={15}
+              markers={markers}
+              onMapPress={(c) => handleCoordsChange(c[0], c[1])}
+              onMarkerDragEnd={(_id, c) => handleCoordsChange(c[0], c[1])}
+            />
 
             {showHint && (
-              <View className="absolute top-2 self-center px-3 py-1 rounded-full bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-700 flex-row items-center gap-1.5">
+              <View className="absolute top-2 self-center px-3 py-1 rounded-full bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-700 flex-row items-center gap-1.5 pointer-events-none">
                 <Sparkles size={12} color="#38bdf8" />
                 <Text className="text-[10px] font-medium text-slate-800 dark:text-slate-200">Toca el mapa o arrastra el pin</Text>
               </View>
