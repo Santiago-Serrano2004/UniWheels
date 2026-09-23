@@ -1,5 +1,13 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, Pressable, PanResponder, GestureResponderEvent } from 'react-native';
+import React, { useState, useRef, useMemo } from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+  Modal,
+  PanResponder,
+  GestureResponderEvent,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import {
   ShieldCheck,
@@ -13,6 +21,9 @@ import {
   CheckSquare,
   Square,
   Sparkles,
+  PenTool,
+  X,
+  Check,
 } from 'lucide-react-native';
 
 export interface HabeasDataSignatureStepProps {
@@ -61,6 +72,7 @@ export function HabeasDataSignatureStep({
   vencimientoLicencia = '',
   aceptaTerminos = false,
   setAceptaTerminos,
+  signatureSvgPath = '',
   setSignatureSvgPath,
 }: HabeasDataSignatureStepProps) {
   const isMoto = tipoVehiculo === 'motorcycle' || tipoVehiculo === 'moto';
@@ -72,45 +84,61 @@ export function HabeasDataSignatureStep({
     ? (modeloPersonalizado?.trim() || 'Modelo Particular')
     : modelo;
 
-  // Manejador del pad de firma táctil nativo
-  const [paths, setPaths] = useState<string[]>([]);
-  const currentPathRef = useRef<string>('');
+  // Estado del modal de firma a pantalla completa
+  const [modalFirmaAbierto, setModalFirmaAbierto] = useState(false);
+  const [tempPaths, setTempPaths] = useState<string[]>([]);
+  const tempCurrentPathRef = useRef<string>('');
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (evt: GestureResponderEvent) => {
-        const { locationX, locationY } = evt.nativeEvent;
-        currentPathRef.current = `M ${locationX.toFixed(1)} ${locationY.toFixed(1)}`;
-        setPaths((prev) => [...prev, currentPathRef.current]);
-      },
-      onPanResponderMove: (evt: GestureResponderEvent) => {
-        const { locationX, locationY } = evt.nativeEvent;
-        currentPathRef.current += ` L ${locationX.toFixed(1)} ${locationY.toFixed(1)}`;
-        setPaths((prev) => {
-          const next = [...prev];
-          next[next.length - 1] = currentPathRef.current;
-          return next;
-        });
-      },
-      onPanResponderRelease: () => {
-        if (setSignatureSvgPath) {
-          setSignatureSvgPath(paths.join(' '));
-        }
-      },
-    })
-  ).current;
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: (evt: GestureResponderEvent) => {
+          const { locationX, locationY } = evt.nativeEvent;
+          tempCurrentPathRef.current = `M ${locationX.toFixed(1)} ${locationY.toFixed(1)}`;
+          setTempPaths((prev) => [...prev, tempCurrentPathRef.current]);
+        },
+        onPanResponderMove: (evt: GestureResponderEvent) => {
+          const { locationX, locationY } = evt.nativeEvent;
+          tempCurrentPathRef.current += ` L ${locationX.toFixed(1)} ${locationY.toFixed(1)}`;
+          setTempPaths((prev) => {
+            const next = [...prev];
+            next[next.length - 1] = tempCurrentPathRef.current;
+            return next;
+          });
+        },
+      }),
+    []
+  );
 
-  const limpiarFirma = () => {
-    setPaths([]);
-    currentPathRef.current = '';
+  const abrirModalFirma = () => {
+    setTempPaths(signatureSvgPath ? [signatureSvgPath] : []);
+    tempCurrentPathRef.current = '';
+    setModalFirmaAbierto(true);
+  };
+
+  const cerrarModalFirma = () => {
+    setModalFirmaAbierto(false);
+  };
+
+  const limpiarLienzoModal = () => {
+    setTempPaths([]);
+    tempCurrentPathRef.current = '';
+  };
+
+  const guardarFirmaModal = () => {
+    if (setSignatureSvgPath) {
+      setSignatureSvgPath(tempPaths.join(' '));
+    }
+    setModalFirmaAbierto(false);
+  };
+
+  const borrarFirma = () => {
     if (setSignatureSvgPath) {
       setSignatureSvgPath('');
     }
   };
-
-  const hasSignature = paths.length > 0;
 
   return (
     <View className="space-y-4">
@@ -240,7 +268,7 @@ export function HabeasDataSignatureStep({
         </View>
       </View>
 
-      {/* 3. FIRMA DIGITAL TÁCTIL (Canvas SVG) */}
+      {/* 3. FIRMA DIGITAL TÁCTIL */}
       <View className="p-4 rounded-3xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 gap-3 shadow-xs">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-2">
@@ -249,47 +277,69 @@ export function HabeasDataSignatureStep({
               Firma Digital de Autorización
             </Text>
           </View>
-          {hasSignature && (
-            <Pressable
-              onPress={limpiarFirma}
-              className="flex-row items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800"
-            >
-              <RotateCcw size={12} color="#64748b" />
-              <Text className="text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                Limpiar
+          {signatureSvgPath ? (
+            <View className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+              <Text className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400">
+                Firmado
               </Text>
-            </Pressable>
+            </View>
+          ) : (
+            <View className="px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+              <Text className="text-[10px] font-extrabold text-amber-600 dark:text-amber-400">
+                Pendiente
+              </Text>
+            </View>
           )}
         </View>
 
         <Text className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-          Dibuja tu firma táctil en el recuadro inferior para autorizar la consulta de antecedentes y validación ante el RUNT.
+          Para autorizar la consulta de antecedentes y validación ante el RUNT, debes registrar tu firma digital.
         </Text>
 
-        {/* Recuadro de dibujo táctil */}
-        <View
-          {...panResponder.panHandlers}
-          className="w-full h-32 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 overflow-hidden relative justify-center items-center"
-        >
-          {!hasSignature && (
-            <Text className="text-xs font-medium text-slate-400 pointer-events-none">
-              Dibuja tu firma aquí con el dedo
-            </Text>
-          )}
-
-          <Svg height="100%" width="100%" className="absolute inset-0">
-            {paths.map((d, index) => (
+        {/* Vista previa de firma o aviso de sin firma */}
+        <View className="w-full h-28 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 overflow-hidden justify-center items-center relative">
+          {signatureSvgPath ? (
+            <Svg height="100%" width="100%" className="absolute inset-0">
               <Path
-                key={index}
-                d={d}
+                d={signatureSvgPath}
                 stroke="#0284c7"
                 strokeWidth={3}
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
-            ))}
-          </Svg>
+            </Svg>
+          ) : (
+            <View className="items-center gap-1">
+              <PenTool size={20} color="#94a3b8" />
+              <Text className="text-xs font-medium text-slate-400">
+                Sin firma registrada
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Botones de acción para firma */}
+        <View className="flex-row gap-2">
+          <Pressable
+            onPress={abrirModalFirma}
+            className="flex-1 py-3 px-4 rounded-2xl bg-lochmara-600 active:bg-lochmara-700 flex-row items-center justify-center gap-2 shadow-sm shadow-lochmara-600/30"
+          >
+            <PenTool size={15} color="#ffffff" />
+            <Text className="text-xs font-bold text-white">
+              {signatureSvgPath ? 'Cambiar Firma' : 'Firmar'}
+            </Text>
+          </Pressable>
+
+          {signatureSvgPath ? (
+            <Pressable
+              onPress={borrarFirma}
+              hitSlop={8}
+              className="py-3 px-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 items-center justify-center"
+            >
+              <RotateCcw size={15} color="#64748b" />
+            </Pressable>
+          ) : null}
         </View>
       </View>
 
@@ -332,6 +382,103 @@ export function HabeasDataSignatureStep({
           </Text>
         </Pressable>
       </View>
+
+      {/* Modal a pantalla completa para el lienzo de firma */}
+      <Modal
+        visible={modalFirmaAbierto}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={cerrarModalFirma}
+      >
+        <SafeAreaView edges={['top', 'bottom']} className="flex-1 bg-white dark:bg-slate-900">
+          {/* Header del modal */}
+          <View className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex-row items-center justify-between">
+            <View className="flex-row items-center gap-2">
+              <View className="w-8 h-8 rounded-xl bg-lochmara-50 dark:bg-slate-800 items-center justify-center">
+                <PenTool size={16} color="#0284c7" />
+              </View>
+              <View>
+                <Text className="text-sm font-black text-slate-900 dark:text-white">
+                  Lienzo de Firma Digital
+                </Text>
+                <Text className="text-[10px] text-slate-500 dark:text-slate-400">
+                  Dibuja tu firma con el dedo en el espacio inferior
+                </Text>
+              </View>
+            </View>
+
+            <Pressable onPress={cerrarModalFirma} hitSlop={8} className="p-1.5 rounded-lg">
+              <X size={18} color="#94a3b8" />
+            </Pressable>
+          </View>
+
+          {/* Lienzo de dibujo táctil sin ScrollView */}
+          <View
+            {...panResponder.panHandlers}
+            className="flex-1 bg-slate-50 dark:bg-slate-950 justify-center items-center relative overflow-hidden"
+          >
+            {tempPaths.length === 0 && (
+              <View className="items-center gap-1.5 pointer-events-none opacity-40">
+                <PenTool size={28} color="#64748b" />
+                <Text className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                  Dibuja tu firma aquí
+                </Text>
+              </View>
+            )}
+
+            <Svg height="100%" width="100%" className="absolute inset-0">
+              {tempPaths.map((d, index) => (
+                <Path
+                  key={index}
+                  d={d}
+                  stroke="#0284c7"
+                  strokeWidth={3.5}
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              ))}
+            </Svg>
+          </View>
+
+          {/* Botones inferiores: Limpiar, Cancelar y Guardar firma */}
+          <View className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-row items-center gap-2.5">
+            <Pressable
+              onPress={limpiarLienzoModal}
+              className="py-3 px-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 flex-row items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-700"
+            >
+              <RotateCcw size={15} color="#64748b" />
+              <Text className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Limpiar
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={cerrarModalFirma}
+              className="py-3 px-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 flex-row items-center justify-center border border-slate-200 dark:border-slate-700"
+            >
+              <Text className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Cancelar
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={guardarFirmaModal}
+              disabled={tempPaths.length === 0}
+              className={`flex-1 py-3 px-4 rounded-2xl flex-row items-center justify-center gap-2 ${
+                tempPaths.length > 0
+                  ? 'bg-lochmara-600 active:bg-lochmara-700 shadow-md shadow-lochmara-600/30'
+                  : 'bg-slate-200 dark:bg-slate-800 opacity-60'
+              }`}
+            >
+              <Check size={16} color="#ffffff" />
+              <Text className="text-xs font-bold text-white">
+                Guardar firma
+              </Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </View>
   );
 }

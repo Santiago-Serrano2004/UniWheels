@@ -307,6 +307,17 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
       }
     }
 
+    if (pasoActual === 4) {
+      if (!signatureSvgPath || !signatureSvgPath.trim()) {
+        setMensajeError('Debes registrar tu firma digital antes de enviar la solicitud.');
+        return false;
+      }
+      if (!aceptaTerminos) {
+        setMensajeError('Debes aceptar los términos y política de tratamiento de datos.');
+        return false;
+      }
+    }
+
     return true;
   };
 
@@ -326,6 +337,11 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
   };
 
   const enviarRegistroConductor = async () => {
+    if (!signatureSvgPath || !signatureSvgPath.trim()) {
+      setMensajeError('Debes registrar tu firma digital antes de enviar la solicitud.');
+      return;
+    }
+
     if (!aceptaTerminos) {
       setMensajeError('Debes aceptar los términos y política de tratamiento de datos.');
       return;
@@ -617,10 +633,10 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
               </Pressable>
             ) : (
               <Pressable
-                disabled={estaEnviando || !aceptaTerminos}
+                disabled={estaEnviando || !aceptaTerminos || !signatureSvgPath}
                 onPress={enviarRegistroConductor}
                 className={`w-full py-3.5 rounded-2xl flex-row items-center justify-center gap-2 shadow-md ${
-                  estaEnviando || !aceptaTerminos
+                  estaEnviando || !aceptaTerminos || !signatureSvgPath
                     ? 'bg-emerald-600/50'
                     : 'bg-emerald-600 active:bg-emerald-700 shadow-emerald-600/30'
                 }`}
