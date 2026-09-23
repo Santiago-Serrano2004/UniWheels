@@ -1,101 +1,40 @@
 import React from 'react';
-import { Mail, ShieldCheck, Car, ExternalLink, Heart } from 'lucide-react';
 
-export const Footer = ({ onOpenPrivacy }) => {
-  return (
-    <footer className="bg-slate-900 text-slate-400 pt-16 pb-12 border-t border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-slate-800">
-          {/* Columna Marca */}
-          <div className="md:col-span-2 space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-lochmara-600 flex items-center justify-center text-white">
-                <Car className="w-5 h-5" />
-              </div>
-              <span className="text-xl font-bold text-white tracking-tight">
-                UniWheels
-              </span>
-            </div>
-            <p className="text-sm text-slate-400 max-w-md leading-relaxed">
-              Plataforma oficial de carpooling universitario para estudiantes, docentes y personal de la Universidad Autónoma de Bucaramanga (UNAB).
-            </p>
-            <div className="flex items-center gap-2 text-xs text-slate-400 pt-1">
-              <span>Bucaramanga, Santander, Colombia</span>
-            </div>
-          </div>
-
-          {/* Columna Enlaces Rápidos */}
-          <div>
-            <h4 className="text-xs uppercase font-bold tracking-wider text-slate-200 mb-4">
-              Navegación
-            </h4>
-            <ul className="space-y-2.5 text-sm">
-              <li>
-                <a href="#como-funciona" className="hover:text-lochmara-400 transition-colors">
-                  Cómo funciona
-                </a>
-              </li>
-              <li>
-                <a href="#modalidades" className="hover:text-lochmara-400 transition-colors">
-                  Modalidades
-                </a>
-              </li>
-              <li>
-                <a href="#seguridad" className="hover:text-lochmara-400 transition-colors">
-                  Seguridad
-                </a>
-              </li>
-              <li>
-                <a href="#conductores" className="hover:text-lochmara-400 transition-colors">
-                  Para conductores
-                </a>
-              </li>
-              <li>
-                <a href="#faq" className="hover:text-lochmara-400 transition-colors">
-                  Preguntas frecuentes
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Columna Contacto y Legal */}
-          <div>
-            <h4 className="text-xs uppercase font-bold tracking-wider text-slate-200 mb-4">
-              Contacto y Legal
-            </h4>
-            <ul className="space-y-3 text-sm">
-              <li>
-                <a
-                  href="mailto:uniwheelscontact@gmail.com"
-                  className="flex items-center gap-2 text-slate-300 hover:text-lochmara-400 transition-colors"
-                >
-                  <Mail className="w-4 h-4 text-lochmara-400 shrink-0" />
-                  <span className="break-all">uniwheelscontact@gmail.com</span>
-                </a>
-              </li>
-              <li>
-                <button
-                  onClick={onOpenPrivacy}
-                  className="flex items-center gap-2 text-slate-300 hover:text-lochmara-400 transition-colors text-left cursor-pointer"
-                >
-                  <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Tratamiento de Datos (Habeas Data)</span>
-                </button>
-              </li>
-            </ul>
-          </div>
+export const Footer = ({ onOpenPrivacy }) => (
+  <footer className="border-t border-[var(--color-linea)] bg-white">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+      <div className="max-w-sm">
+        <div className="flex items-center gap-2.5">
+          <img src="/emblem.svg" alt="" className="w-8 h-8" />
+          <span className="font-[family-name:var(--font-display)] text-xl font-bold tracking-tight text-[var(--color-tinta)]">
+            UniWheels
+          </span>
         </div>
-
-        {/* Barra Inferior */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-          <div>
-            © 2026 UniWheels. Todos los derechos reservados.
-          </div>
-          <div>
-            Comunidad Universitaria UNAB — Movilidad Sostenible
-          </div>
-        </div>
+        <p className="mt-3 text-sm leading-relaxed">
+          Carpooling para la comunidad de la Universidad Autónoma de Bucaramanga.
+        </p>
       </div>
-    </footer>
-  );
-};
+
+      <div className="flex flex-col gap-2 text-sm">
+        <a
+          href="mailto:uniwheelscontact@gmail.com"
+          className="text-[var(--color-tinta)] hover:text-lochmara-700 transition-colors"
+        >
+          uniwheelscontact@gmail.com
+        </a>
+        <button
+          type="button"
+          onClick={onOpenPrivacy}
+          className="text-left text-[var(--color-tinta)] hover:text-lochmara-700 transition-colors"
+        >
+          Política de tratamiento de datos
+        </button>
+      </div>
+    </div>
+    <div className="border-t border-[var(--color-linea)]">
+      <p className="mx-auto max-w-6xl px-4 sm:px-6 py-5 text-xs">
+        © {new Date().getFullYear()} UniWheels. Bucaramanga, Santander.
+      </p>
+    </div>
+  </footer>
+);

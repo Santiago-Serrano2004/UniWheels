@@ -1,7 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
-@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+/* dark: queda atado a una clase que nunca se aplica: la landing es siempre clara. */
+@custom-variant dark (&:where(.dark, .dark *));
 @import "./styles/tokens.css";
+
+/* La landing es solo modo claro (decisión de producto). */
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
 
 html, body {
   margin: 0;
@@ -10,47 +21,78 @@ html, body {
   max-width: 100%;
   overflow-x: hidden;
   font-family: var(--font-sans);
-  color-scheme: light dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  min-height: 100vh;
   min-height: 100dvh;
-  background-color: var(--color-surface-muted);
-  color: var(--color-text-primary);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  background-color: var(--color-papel);
+  color: var(--color-cuerpo);
 }
 
-@media (prefers-color-scheme: dark) {
-  body:not(.light) {
-    background-color: #030712;
-    color: #f8fafc;
+h1, h2, h3 {
+  font-family: var(--font-display);
+  color: var(--color-tinta);
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-lochmara-600);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
-.dark body,
-[data-theme="dark"] body {
-  background-color: #030712;
-  color: #f8fafc;
+/* Único momento animado de la página: la ruta de la portada se dibuja,
+   el carro la recorre y aparece el PIN. */
+.ruta-dibujo {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: ruta-dibujar 1.4s cubic-bezier(0.45, 0, 0.25, 1) 0.2s forwards;
 }
 
-/* Scrollbar estilizada */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+@keyframes ruta-dibujar {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+.pin-aparece {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: pin-aparecer 0.5s ease-out 2.4s forwards;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--color-lochmara-300);
-  border-radius: 9999px;
+@keyframes pin-aparecer {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-lochmara-500);
+/* Respuesta al cambio de rol en "Así funciona": muestra qué cambió. */
+.pasos-cambio {
+  animation: pasos-entrar 0.35s ease-out;
+}
+
+@keyframes pasos-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }
