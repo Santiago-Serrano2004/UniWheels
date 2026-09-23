@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -23,7 +24,6 @@ import {
   Lock,
   Mail,
   MapPin,
-  MessageSquare,
   Phone,
   RotateCw,
   School,
@@ -32,7 +32,6 @@ import {
   Trash2,
   User,
 } from 'lucide-react-native';
-import { Image } from 'react-native';
 import { authService, INSTITUCIONES_PREDETERMINADAS, parseBackendError, useAppStore } from '@uniwheels/shared';
 import { AlertBanner } from '@/components/AlertBanner';
 import { FormSelect } from '@/components/FormSelect';
@@ -42,7 +41,7 @@ import { PhotoPickerModal } from '@/components/PhotoPickerModal';
 /**
  * Equivalente a frontend/src/components/auth/RegisterForm.jsx — wizard de 3
  * pasos (Datos & Universidad → Credenciales & Seguridad → Verificación PIN
- * de correo + SMS). Antes no existía ninguna pantalla de registro en mobile
+ * de correo institucional). Antes no existía ninguna pantalla de registro en mobile
  * (solo login) — un estudiante nuevo no podía crear cuenta desde la app.
  */
 export default function RegisterScreen() {
@@ -71,9 +70,7 @@ export default function RegisterScreen() {
 
   // Paso 3
   const [codigoPin, setCodigoPin] = useState('');
-  const [codigoSms, setCodigoSms] = useState('');
   const [reenviandoCodigo, setReenviandoCodigo] = useState(false);
-  const [reenviandoSms, setReenviandoSms] = useState(false);
 
   const [mensajeError, setMensajeError] = useState('');
   const [mensajeReenvio, setMensajeReenvio] = useState('');
@@ -176,7 +173,7 @@ export default function RegisterScreen() {
     setEstaProcesando(true);
     const correoCompleto = `${usuarioLimpio}@${institucionSeleccionada.domain}`;
     try {
-      await Promise.all([authService.sendVerificationCode(correoCompleto), authService.sendSmsCode(telefonoLimpio)]);
+      await authService.sendVerificationCode(correoCompleto);
       setStep(3);
     } catch (err) {
       setMensajeError(parseBackendError(err));
@@ -202,32 +199,11 @@ export default function RegisterScreen() {
     }
   };
 
-  const reenviarSms = async () => {
-    const telefonoLimpio = telefono.trim().replace(/\D/g, '');
-    setReenviandoSms(true);
-    setMensajeError('');
-    setMensajeReenvio('');
-    try {
-      await authService.sendSmsCode(telefonoLimpio);
-      setMensajeReenvio('¡Nuevo código enviado por SMS!');
-      setTimeout(() => setMensajeReenvio(''), 4000);
-    } catch (err) {
-      setMensajeError(parseBackendError(err));
-    } finally {
-      setReenviandoSms(false);
-    }
-  };
-
   const procesarRegistroFinal = async () => {
     setMensajeError('');
     const pinLimpio = codigoPin.trim();
     if (pinLimpio.length !== 6) {
       setMensajeError('El código de verificación PIN de correo debe tener exactamente 6 dígitos.');
-      return;
-    }
-    const smsLimpio = codigoSms.trim();
-    if (smsLimpio.length !== 6) {
-      setMensajeError('El código de verificación SMS debe tener exactamente 6 dígitos.');
       return;
     }
 
@@ -254,7 +230,6 @@ export default function RegisterScreen() {
         profile_photo_path: fotoPerfilPreview || null,
         is_driver: false,
         verification_code: pinLimpio,
-        phone_verification_code: smsLimpio,
       });
 
       setRegistroExitoso(true);
@@ -330,7 +305,7 @@ export default function RegisterScreen() {
                     ? 'Completa tu información institucional básica'
                     : step === 2
                     ? 'Configura tu acceso institucional seguro'
-                    : 'Ingresa los dos códigos de 6 dígitos que te enviamos por correo y por SMS'}
+                    : 'Ingresa el código de 6 dígitos que te enviamos a tu correo institucional'}
                 </Text>
               </View>
 
@@ -459,7 +434,6 @@ export default function RegisterScreen() {
                       placeholderTextColor="#94a3b8"
                       className="text-xs rounded-2xl px-4 py-3 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                     />
-                    <Text className="text-[10px] text-slate-400">Te enviaremos un código de verificación por SMS, aparte del de tu correo.</Text>
                   </View>
 
                   <View className="gap-1">
@@ -551,11 +525,11 @@ export default function RegisterScreen() {
                     {estaProcesando ? (
                       <>
                         <ActivityIndicator color="#ffffff" />
-                        <Text className="text-white text-xs font-bold">Enviando códigos...</Text>
+                        <Text className="text-white text-xs font-bold">Enviando código...</Text>
                       </>
                     ) : (
                       <>
-                        <Text className="text-white text-xs font-bold">Enviar Códigos de Verificación</Text>
+                        <Text className="text-white text-xs font-bold">Enviar Código de Verificación</Text>
                         <ArrowRight size={14} color="#ffffff" />
                       </>
                     )}
@@ -592,33 +566,9 @@ export default function RegisterScreen() {
                     </Pressable>
                   </View>
 
-                  <View className="p-3 rounded-2xl bg-emerald-50/70 dark:bg-slate-900 border border-emerald-200/80 dark:border-slate-800 gap-2">
-                    <View className="flex-row items-center justify-center gap-1.5">
-                      <MessageSquare size={14} color="#10b981" />
-                      <Text className="text-[11px] font-bold text-slate-900 dark:text-white">
-                        Código SMS enviado a {telefono || 'tu celular'}
-                      </Text>
-                    </View>
-                    <TextInput
-                      value={codigoSms}
-                      onChangeText={(v) => setCodigoSms(v.replace(/[^0-9]/g, '').slice(0, 6))}
-                      keyboardType="number-pad"
-                      maxLength={6}
-                      placeholder="• • • • • •"
-                      placeholderTextColor="#cbd5e1"
-                      className="text-center text-2xl font-mono font-extrabold tracking-widest rounded-2xl py-3 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
-                    />
-                    <Pressable onPress={reenviarSms} disabled={reenviandoSms} className="flex-row items-center justify-center gap-1.5 py-1">
-                      <RotateCw size={12} color="#10b981" />
-                      <Text className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                        {reenviandoSms ? 'Reenviando...' : 'Reenviar código SMS'}
-                      </Text>
-                    </Pressable>
-                  </View>
-
                   <Pressable
                     onPress={procesarRegistroFinal}
-                    disabled={estaProcesando || codigoPin.length !== 6 || codigoSms.length !== 6 || registroExitoso}
+                    disabled={estaProcesando || codigoPin.length !== 6 || registroExitoso}
                     className="py-3.5 rounded-2xl bg-lochmara-600 flex-row items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {estaProcesando ? (
