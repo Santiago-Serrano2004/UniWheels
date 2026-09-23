@@ -411,17 +411,26 @@ export const vehicleService = {
     }
   },
 
-  async uploadVehicleDocument(vehicleId, documentType, fileUri, fileName, mimeType) {
+  async uploadVehicleDocument(vehicleId, documentType, archivo, { documentNumber, expiresAt, fileName, mimeType } = {}) {
     try {
       const formData = new FormData();
       formData.append('document_type', documentType);
-      if (typeof fileUri === 'object' && fileUri !== null && !fileUri.uri) {
-        formData.append('file', fileUri);
+      if (documentNumber) {
+        formData.append('document_number', documentNumber);
+      }
+      if (expiresAt) {
+        formData.append('expires_at', expiresAt);
+      }
+      if (typeof archivo === 'object' && archivo !== null && !archivo.uri) {
+        formData.append('document_file', archivo);
       } else {
-        formData.append('file', {
-          uri: typeof fileUri === 'string' ? fileUri : fileUri?.uri,
-          name: fileName || `${documentType}.jpg`,
-          type: mimeType || 'image/jpeg',
+        const uri = typeof archivo === 'string' ? archivo : archivo?.uri;
+        const resolvedFileName = fileName || archivo?.fileName || archivo?.name || `${documentType}.jpg`;
+        const resolvedMimeType = mimeType || archivo?.mimeType || archivo?.type || 'image/jpeg';
+        formData.append('document_file', {
+          uri,
+          name: resolvedFileName,
+          type: resolvedMimeType,
         });
       }
       const response = await vehicleApiClient.post(`/vehicles/${vehicleId}/documents`, formData, {
@@ -431,7 +440,7 @@ export const vehicleService = {
       return response.data;
     } catch (error) {
       if (error.response?.data) throw error.response.data;
-      throw { message: 'Error al subir el documento del vehículo.' };
+      throw error.message ? error : { message: 'Error al subir el documento del vehículo.' };
     }
   },
 
