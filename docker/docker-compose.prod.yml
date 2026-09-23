@@ -177,16 +177,11 @@ services:
       retries: 10
       start_period: 30s
 
-  frontend:
+  landing:
     build:
-      context: ../frontend
-      args:
-        VITE_API_URL: ${VITE_API_URL}
-        VITE_VEHICLE_API_URL: ${VITE_VEHICLE_API_URL}
-        VITE_ROUTE_API_URL: ${VITE_ROUTE_API_URL}
-        VITE_TOMTOM_API_KEY: ${VITE_TOMTOM_API_KEY}
-        VITE_SENTRY_DSN: ${VITE_SENTRY_DSN}
-    container_name: uniwheels_frontend
+      context: ../landing
+      dockerfile: ../docker/landing.Dockerfile
+    container_name: uniwheels_landing
     restart: unless-stopped
     networks: [uniwheels_net]
 
@@ -207,7 +202,7 @@ services:
       trip-service: { condition: service_healthy }
       notification-service: { condition: service_healthy }
       ai-route-service: { condition: service_healthy }
-      frontend: { condition: service_started }
+      landing: { condition: service_started }
     networks: [uniwheels_net]
 
 networks:
