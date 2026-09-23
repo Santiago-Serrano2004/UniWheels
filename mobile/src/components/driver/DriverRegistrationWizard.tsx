@@ -218,31 +218,41 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
     setModalFotoAbierto(false);
   };
 
-  const validarFormatoYTamanioFoto = (foto: string | null, nombreDocumento: string): { valido: boolean; error?: string } => {
-    if (!foto) {
+  const validarFormatoYTamanioFoto = (
+    foto: string | null,
+    asset: PhotoPickerAsset | null,
+    nombreDocumento: string
+  ): { valido: boolean; error?: string } => {
+    if (!foto && !asset) {
       return { valido: false, error: `Debes adjuntar la foto o documento de ${nombreDocumento}.` };
     }
 
-    if (foto.startsWith('data:')) {
-      const match = foto.match(/^data:([^;]+);base64,/);
-      if (match) {
-        const mime = match[1].toLowerCase();
-        const formatosValidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/heic', 'image/heif', 'image/webp', 'application/pdf'];
-        if (!formatosValidos.includes(mime)) {
-          return {
-            valido: false,
-            error: `El formato de ${nombreDocumento} no es compatible. Usa JPG, PNG, HEIC o PDF.`,
-          };
-        }
-      }
+    const mime = (
+      asset?.mimeType ||
+      (foto?.startsWith('data:') ? foto.match(/^data:([^;]+);base64,/)?.[1] : '') ||
+      ''
+    ).toLowerCase();
+    const formatosValidos = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+
+    if (mime && !formatosValidos.includes(mime)) {
+      return {
+        valido: false,
+        error: `El formato de ${nombreDocumento} no es compatible. Solo se permiten archivos JPG, JPEG, PNG o PDF.`,
+      };
+    }
+
+    let sizeInBytes = asset?.fileSize;
+    if (sizeInBytes === undefined && foto && foto.startsWith('data:')) {
       const base64Content = foto.split(',')[1] || '';
-      const sizeInBytes = (base64Content.length * 3) / 4;
-      if (sizeInBytes > 10 * 1024 * 1024) {
-        return {
-          valido: false,
-          error: `El archivo de ${nombreDocumento} supera el límite máximo permitido de 10 MB.`,
-        };
-      }
+      sizeInBytes = (base64Content.length * 3) / 4;
+    }
+
+    const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+    if (sizeInBytes !== undefined && sizeInBytes > MAX_SIZE_BYTES) {
+      return {
+        valido: false,
+        error: `El archivo de ${nombreDocumento} supera el límite máximo permitido de 5 MB.`,
+      };
     }
 
     return { valido: true };
@@ -289,7 +299,7 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
         setMensajeError('La póliza SOAT ingresada se encuentra vencida. Debe tener fecha futura.');
         return false;
       }
-      const valSoat = validarFormatoYTamanioFoto(fotoSoat, 'la póliza SOAT');
+      const valSoat = validarFormatoYTamanioFoto(fotoSoat, assetSoat, 'la póliza SOAT');
       if (!valSoat.valido) {
         setMensajeError(valSoat.error || 'Debes adjuntar la foto de la póliza SOAT.');
         return false;
@@ -308,7 +318,7 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
           setMensajeError('El certificado de Revisión Técnico-Mecánica (RTM) se encuentra vencido.');
           return false;
         }
-        const valTecno = validarFormatoYTamanioFoto(fotoTecno, 'la Revisión Técnico-Mecánica (RTM)');
+        const valTecno = validarFormatoYTamanioFoto(fotoTecno, assetTecno, 'la Revisión Técnico-Mecánica (RTM)');
         if (!valTecno.valido) {
           setMensajeError(valTecno.error || 'Debes adjuntar la foto de la Revisión Técnico-Mecánica (RTM).');
           return false;
@@ -329,7 +339,7 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
         setMensajeError('Tu licencia de conducción se encuentra vencida. Debe tener vigencia activa.');
         return false;
       }
-      const valLicencia = validarFormatoYTamanioFoto(fotoLicencia, 'la licencia de conducción');
+      const valLicencia = validarFormatoYTamanioFoto(fotoLicencia, assetLicencia, 'la licencia de conducción');
       if (!valLicencia.valido) {
         setMensajeError(valLicencia.error || 'Debes adjuntar la foto de la licencia de conducción.');
         return false;
@@ -380,12 +390,29 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
       setMensajeError('Falta la foto de la póliza SOAT. Por favor regresa al paso 2 y adjúntala.');
       return;
     }
-    if (requiereTecno && !fotoTecno) {
-      setMensajeError('Falta la foto de la Revisión Técnico-Mecánica. Por favor regresa al paso 2 y adjúntala.');
+    const valSoat = validarFormatoYTamanioFoto(fotoSoat, assetSoat, 'la póliza SOAT');
+    if (!valSoat.valido) {
+      setMensajeError(valSoat.error || 'La foto de la póliza SOAT no es válida.');
       return;
+    }
+    if (requiereTecno) {
+      if (!fotoTecno) {
+        setMensajeError('Falta la foto de la Revisión Técnico-Mecánica. Por favor regresa al paso 2 y adjúntala.');
+        return;
+      }
+      const valTecno = validarFormatoYTamanioFoto(fotoTecno, assetTecno, 'la Revisión Técnico-Mecánica (RTM)');
+      if (!valTecno.valido) {
+        setMensajeError(valTecno.error || 'La foto de la Revisión Técnico-Mecánica no es válida.');
+        return;
+      }
     }
     if (!fotoLicencia) {
       setMensajeError('Falta la foto de la licencia de conducción. Por favor regresa al paso 3 y adjúntala.');
+      return;
+    }
+    const valLicencia = validarFormatoYTamanioFoto(fotoLicencia, assetLicencia, 'la licencia de conducción');
+    if (!valLicencia.valido) {
+      setMensajeError(valLicencia.error || 'La foto de la licencia de conducción no es válida.');
       return;
     }
 
