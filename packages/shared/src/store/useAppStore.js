@@ -17,6 +17,8 @@ import { readStoredSession, writeStoredSession, removeStoredSession } from '../s
 
 const THEME_KEY = 'uniwheels_app_theme';
 const HOME_LOCATION_KEY = 'uniwheels_home_location';
+const PASSENGER_ALERTS_KEY = 'uniwheels_recurring_passenger_alerts';
+const SAVED_CARDS_KEY = 'uniwheels_saved_cards';
 
 const persistTheme = (tema) => {
   getStorageAdapter().setItem(THEME_KEY, tema).catch(() => {});
@@ -24,6 +26,14 @@ const persistTheme = (tema) => {
 
 const persistHomeLocation = (location) => {
   getStorageAdapter().setItem(HOME_LOCATION_KEY, JSON.stringify(location)).catch(() => {});
+};
+
+const persistPassengerAlerts = (alerts) => {
+  getStorageAdapter().setItem(PASSENGER_ALERTS_KEY, JSON.stringify(alerts)).catch(() => {});
+};
+
+const persistSavedCards = (cards) => {
+  getStorageAdapter().setItem(SAVED_CARDS_KEY, JSON.stringify(cards)).catch(() => {});
 };
 
 export const useAppStore = create((set, get) => ({
@@ -169,45 +179,84 @@ export const useAppStore = create((set, get) => ({
 
   // --- ALERTAS DE TRAYECTOS RECURRENTES DEL PASAJERO (SMART MATCH ALERTS) ---
   recurringPassengerAlerts: [],
-  setRecurringPassengerAlerts: (alerts) => set({ recurringPassengerAlerts: alerts || [] }),
+  setRecurringPassengerAlerts: (alerts) => {
+    persistPassengerAlerts(alerts || []);
+    set({ recurringPassengerAlerts: alerts || [] });
+  },
   togglePassengerAlert: (alertId) =>
-    set((state) => ({
-      recurringPassengerAlerts: state.recurringPassengerAlerts.map((a) =>
+    set((state) => {
+      const updated = state.recurringPassengerAlerts.map((a) =>
         a.id === alertId ? { ...a, isActive: !a.isActive } : a
-      ),
-    })),
+      );
+      persistPassengerAlerts(updated);
+      return { recurringPassengerAlerts: updated };
+    }),
   addPassengerAlert: (nuevaAlerta) =>
-    set((state) => ({
-      recurringPassengerAlerts: [
-        { id: 'alert_p_' + Date.now(), isActive: true, ...nuevaAlerta },
+    set((state) => {
+      const updated = [
+        { id: `alert_${Date.now()}`, isActive: true, ...nuevaAlerta },
         ...state.recurringPassengerAlerts,
-      ],
-    })),
+      ];
+      persistPassengerAlerts(updated);
+      return { recurringPassengerAlerts: updated };
+    }),
   deletePassengerAlert: (alertId) =>
-    set((state) => ({
-      recurringPassengerAlerts: state.recurringPassengerAlerts.filter((a) => a.id !== alertId),
-    })),
+    set((state) => {
+      const updated = state.recurringPassengerAlerts.filter((a) => a.id !== alertId);
+      persistPassengerAlerts(updated);
+      return { recurringPassengerAlerts: updated };
+    }),
+  removePassengerAlert: (alertId) =>
+    set((state) => {
+      const updated = state.recurringPassengerAlerts.filter((a) => a.id !== alertId);
+      persistPassengerAlerts(updated);
+      return { recurringPassengerAlerts: updated };
+    }),
 
   // --- BILLETERA PREPAGO Y MÉTODOS DE PAGO ---
   driverWalletBalance: 0,
   passengerWalletBalance: 0,
   savedCards: [],
-  setSavedCards: (cards) => set({ savedCards: cards || [] }),
+  setSavedCards: (cards) => {
+    persistSavedCards(cards || []);
+    set({ savedCards: cards || [] });
+  },
   addCard: (nuevaTarjeta) =>
-    set((state) => ({
-      savedCards: [
+    set((state) => {
+      const updated = [
         ...state.savedCards.map((c) => (nuevaTarjeta.isDefault ? { ...c, isDefault: false } : c)),
-        { id: 'card-' + Date.now(), ...nuevaTarjeta },
-      ],
-    })),
+        { id: `card_${Date.now()}`, ...nuevaTarjeta },
+      ];
+      persistSavedCards(updated);
+      return { savedCards: updated };
+    }),
+  addSavedCard: (nuevaTarjeta) =>
+    set((state) => {
+      const updated = [
+        ...state.savedCards.map((c) => (nuevaTarjeta.isDefault ? { ...c, isDefault: false } : c)),
+        { id: `card_${Date.now()}`, ...nuevaTarjeta },
+      ];
+      persistSavedCards(updated);
+      return { savedCards: updated };
+    }),
   deleteCard: (cardId) =>
-    set((state) => ({
-      savedCards: state.savedCards.filter((c) => c.id !== cardId),
-    })),
+    set((state) => {
+      const updated = state.savedCards.filter((c) => c.id !== cardId);
+      persistSavedCards(updated);
+      return { savedCards: updated };
+    }),
+  removeSavedCard: (cardId) =>
+    set((state) => {
+      const updated = state.savedCards.filter((c) => c.id !== cardId);
+      persistSavedCards(updated);
+      return { savedCards: updated };
+    }),
   setDefaultCard: (cardId) =>
-    set((state) => ({
-      savedCards: state.savedCards.map((c) => ({ ...c, isDefault: c.id === cardId })),
-    })),
+    set((state) => {
+      const updated = state.savedCards.map((c) => ({ ...c, isDefault: c.id === cardId }));
+      persistSavedCards(updated);
+      return { savedCards: updated };
+    }),
   linkedNequi: null,
   pendingOpenPaymentManagerModal: false,
   setPendingOpenPaymentManagerModal: (val) => set({ pendingOpenPaymentManagerModal: val }),
@@ -260,6 +309,17 @@ export const useAppStore = create((set, get) => ({
    */
   hydrateSession: async () => {
     const sesion = await readStoredSession();
+    let storedAlerts = [];
+    let storedCards = [];
+    try {
+      const rawAlerts = await getStorageAdapter().getItem(PASSENGER_ALERTS_KEY);
+      if (rawAlerts) storedAlerts = JSON.parse(rawAlerts);
+    } catch {}
+    try {
+      const rawCards = await getStorageAdapter().getItem(SAVED_CARDS_KEY);
+      if (rawCards) storedCards = JSON.parse(rawCards);
+    } catch {}
+
     const isDriver = Boolean(
       sesion?.isDriver ||
       sesion?.is_driver ||
@@ -270,6 +330,8 @@ export const useAppStore = create((set, get) => ({
       isAuthenticated: Boolean(sesion),
       user: sesion ? { ...sesion, isDriver } : null,
       activeRole: isDriver ? sesion?.role || 'passenger' : 'passenger',
+      recurringPassengerAlerts: storedAlerts.length > 0 ? storedAlerts : get().recurringPassengerAlerts,
+      savedCards: storedCards.length > 0 ? storedCards : get().savedCards,
       isHydrating: false,
     });
   },
