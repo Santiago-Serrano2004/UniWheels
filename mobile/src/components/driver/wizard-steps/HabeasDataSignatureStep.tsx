@@ -1,0 +1,382 @@
+import React, { useState, useRef } from 'react';
+import { View, Text, Pressable, PanResponder, GestureResponderEvent } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
+import {
+  ShieldCheck,
+  CheckCircle2,
+  Car,
+  Bike,
+  FileCheck,
+  CreditCard,
+  Shield,
+  RotateCcw,
+  CheckSquare,
+  Square,
+  Sparkles,
+} from 'lucide-react-native';
+
+export interface HabeasDataSignatureStepProps {
+  tipoVehiculo?: 'car' | 'motorcycle' | string;
+  placa?: string;
+  marca?: string;
+  marcaPersonalizada?: string;
+  modelo?: string;
+  modeloPersonalizado?: string;
+  ano?: string;
+  color?: string;
+  tipoPropulsion?: string;
+  cupos?: number;
+  numeroSoat?: string;
+  vencimientoSoat?: string;
+  numeroTecno?: string;
+  vencimientoTecno?: string;
+  requiereTecno?: boolean;
+  numeroLicencia?: string;
+  categoriaLicencia?: string;
+  vencimientoLicencia?: string;
+  aceptaTerminos: boolean;
+  setAceptaTerminos: (acepta: boolean) => void;
+  signatureSvgPath?: string;
+  setSignatureSvgPath?: (svgPath: string) => void;
+}
+
+export function HabeasDataSignatureStep({
+  tipoVehiculo = 'car',
+  placa = '',
+  marca = '',
+  marcaPersonalizada = '',
+  modelo = '',
+  modeloPersonalizado = '',
+  ano = '',
+  color = '',
+  tipoPropulsion = 'gasolina',
+  cupos = 3,
+  numeroSoat = '',
+  vencimientoSoat = '',
+  numeroTecno = '',
+  vencimientoTecno = '',
+  requiereTecno = false,
+  numeroLicencia = '',
+  categoriaLicencia = 'B1',
+  vencimientoLicencia = '',
+  aceptaTerminos = false,
+  setAceptaTerminos,
+  setSignatureSvgPath,
+}: HabeasDataSignatureStepProps) {
+  const isMoto = tipoVehiculo === 'motorcycle' || tipoVehiculo === 'moto';
+  const marcaFinal = (marca === 'Otra Marca / Personalizada' || marca === 'Otra Marca')
+    ? (marcaPersonalizada?.trim() || 'Marca Particular')
+    : marca;
+
+  const modeloFinal = (typeof modelo === 'string' && (modelo.startsWith('Otro') || modelo === 'Otro Modelo'))
+    ? (modeloPersonalizado?.trim() || 'Modelo Particular')
+    : modelo;
+
+  // Manejador del pad de firma táctil nativo
+  const [paths, setPaths] = useState<string[]>([]);
+  const currentPathRef = useRef<string>('');
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt: GestureResponderEvent) => {
+        const { locationX, locationY } = evt.nativeEvent;
+        currentPathRef.current = `M ${locationX.toFixed(1)} ${locationY.toFixed(1)}`;
+        setPaths((prev) => [...prev, currentPathRef.current]);
+      },
+      onPanResponderMove: (evt: GestureResponderEvent) => {
+        const { locationX, locationY } = evt.nativeEvent;
+        currentPathRef.current += ` L ${locationX.toFixed(1)} ${locationY.toFixed(1)}`;
+        setPaths((prev) => {
+          const next = [...prev];
+          next[next.length - 1] = currentPathRef.current;
+          return next;
+        });
+      },
+      onPanResponderRelease: () => {
+        if (setSignatureSvgPath) {
+          setSignatureSvgPath(paths.join(' '));
+        }
+      },
+    })
+  ).current;
+
+  const limpiarFirma = () => {
+    setPaths([]);
+    currentPathRef.current = '';
+    if (setSignatureSvgPath) {
+      setSignatureSvgPath('');
+    }
+  };
+
+  const hasSignature = paths.length > 0;
+
+  return (
+    <View className="space-y-4">
+      {/* 1. FICHA COMPLETA DEL VEHÍCULO */}
+      <View className="p-4 rounded-3xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 gap-3 shadow-xs">
+        <View className="flex-row items-center justify-between border-b pb-2.5 border-slate-100 dark:border-slate-800">
+          <View className="flex-row items-center gap-2">
+            <View className="w-8 h-8 rounded-xl bg-lochmara-50 dark:bg-slate-800 items-center justify-center">
+              {isMoto ? <Bike size={18} color="#0284c7" /> : <Car size={18} color="#0284c7" />}
+            </View>
+            <View>
+              <Text className="text-xs font-black text-slate-900 dark:text-white">
+                Ficha del Vehículo
+              </Text>
+              <Text className="text-[10px] text-slate-400 capitalize">
+                {isMoto ? 'Motocicleta' : 'Automóvil'} • {tipoPropulsion}
+              </Text>
+            </View>
+          </View>
+
+          <View className="px-2.5 py-1 rounded-xl bg-lochmara-50 dark:bg-slate-800 border border-lochmara-200 dark:border-slate-700">
+            <Text className="text-xs font-mono font-black text-lochmara-700 dark:text-lochmara-300">
+              {placa ? placa.toUpperCase() : 'SIN PLACA'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Resumen en 2 columnas */}
+        <View className="flex-row gap-2">
+          <View className="flex-1 p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+            <Text className="text-[10px] font-bold text-slate-400">Marca y Línea:</Text>
+            <Text className="text-xs font-black text-slate-900 dark:text-white mt-0.5" numberOfLines={1}>
+              {marcaFinal} {modeloFinal}
+            </Text>
+          </View>
+
+          <View className="flex-1 p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+            <Text className="text-[10px] font-bold text-slate-400">Año y Color:</Text>
+            <Text className="text-xs font-black text-slate-900 dark:text-white mt-0.5" numberOfLines={1}>
+              {ano} • {color}
+            </Text>
+          </View>
+        </View>
+
+        <View className="flex-row gap-2">
+          <View className="flex-1 p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+            <Text className="text-[10px] font-bold text-slate-400">Cupos Ofertados:</Text>
+            <Text className="text-xs font-black text-slate-900 dark:text-white mt-0.5">
+              {cupos} {cupos === 1 ? 'Cupo' : 'Cupos'}
+            </Text>
+          </View>
+
+          <View className="flex-1 p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+            <Text className="text-[10px] font-bold text-slate-400">Propulsión:</Text>
+            <Text className="text-xs font-black text-slate-900 dark:text-white mt-0.5 capitalize">
+              {tipoPropulsion}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* 2. RESUMEN DE PÓLIZAS */}
+      <View className="p-4 rounded-3xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 gap-2.5 shadow-xs">
+        <Text className="text-[11px] font-black text-slate-400 uppercase tracking-wider">
+          Pólizas y Documentación
+        </Text>
+
+        <View className="flex-row items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+          <View className="flex-row items-center gap-2">
+            <Shield size={14} color="#0284c7" />
+            <View>
+              <Text className="text-[10px] font-bold text-slate-400">Póliza SOAT</Text>
+              <Text className="text-xs font-bold text-slate-900 dark:text-white">
+                No. {numeroSoat || 'N/A'}
+              </Text>
+            </View>
+          </View>
+          <Text className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+            Vence: {vencimientoSoat || 'N/A'}
+          </Text>
+        </View>
+
+        {requiereTecno ? (
+          <View className="flex-row items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+            <View className="flex-row items-center gap-2">
+              <FileCheck size={14} color="#f59e0b" />
+              <View>
+                <Text className="text-[10px] font-bold text-slate-400">Certificado RTM</Text>
+                <Text className="text-xs font-bold text-slate-900 dark:text-white">
+                  No. {numeroTecno || 'N/A'}
+                </Text>
+              </View>
+            </View>
+            <Text className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+              Vence: {vencimientoTecno || 'N/A'}
+            </Text>
+          </View>
+        ) : (
+          <View className="flex-row items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+            <View className="flex-row items-center gap-2">
+              <FileCheck size={14} color="#10b981" />
+              <Text className="text-xs font-bold text-slate-900 dark:text-white">
+                RTM Exenta por antigüedad
+              </Text>
+            </View>
+            <Text className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+              Modelo {ano}
+            </Text>
+          </View>
+        )}
+
+        <View className="flex-row items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+          <View className="flex-row items-center gap-2">
+            <CreditCard size={14} color="#0284c7" />
+            <View>
+              <Text className="text-[10px] font-bold text-slate-400">
+                Licencia ({categoriaLicencia})
+              </Text>
+              <Text className="text-xs font-bold text-slate-900 dark:text-white">
+                No. {numeroLicencia || 'N/A'}
+              </Text>
+            </View>
+          </View>
+          <Text className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+            Vence: {vencimientoLicencia || 'N/A'}
+          </Text>
+        </View>
+      </View>
+
+      {/* 3. FIRMA DIGITAL TÁCTIL (Canvas SVG) */}
+      <View className="p-4 rounded-3xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 gap-3 shadow-xs">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center gap-2">
+            <Sparkles size={16} color="#0284c7" />
+            <Text className="text-xs font-black text-slate-900 dark:text-white">
+              Firma Digital de Autorización
+            </Text>
+          </View>
+          {hasSignature && (
+            <Pressable
+              onPress={limpiarFirma}
+              className="flex-row items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800"
+            >
+              <RotateCcw size={12} color="#64748b" />
+              <Text className="text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                Limpiar
+              </Text>
+            </Pressable>
+          )}
+        </View>
+
+        <Text className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+          Dibuja tu firma táctil en el recuadro inferior para autorizar la consulta de antecedentes y validación ante el RUNT.
+        </Text>
+
+        {/* Recuadro de dibujo táctil */}
+        <View
+          {...panResponder.panHandlers}
+          className="w-full h-32 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 overflow-hidden relative justify-center items-center"
+        >
+          {!hasSignature && (
+            <Text className="text-xs font-medium text-slate-400 pointer-events-none">
+              Dibuja tu firma aquí con el dedo
+            </Text>
+          )}
+
+          <Svg height="100%" width="100%" className="absolute inset-0">
+            {paths.map((d, index) => (
+              <Path
+                key={index}
+                d={d}
+                stroke="#0284c7"
+                strokeWidth={3}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
+          </Svg>
+        </View>
+      </View>
+
+      {/* 4. CLÁUSULA DE HABEAS DATA Y CONSENTIMIENTO */}
+      <View
+        className={`p-4 rounded-3xl border gap-3 ${
+          aceptaTerminos
+            ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800'
+            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+        }`}
+      >
+        <View className="flex-row items-center gap-2">
+          <ShieldCheck size={16} color="#0284c7" />
+          <Text className="text-xs font-bold text-slate-900 dark:text-white">
+            Tratamiento de Datos Personales (Ley 1581 de 2012)
+          </Text>
+        </View>
+
+        <Text className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+          Autorizo de manera voluntaria a UniWheels y a la institución educativa para validar la autenticidad de los documentos vehiculares en el RUNT, SIMIT y entidades de tránsito correspondientes.
+        </Text>
+
+        <Pressable
+          onPress={() => setAceptaTerminos(!aceptaTerminos)}
+          className="flex-row items-start gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800"
+        >
+          {aceptaTerminos ? (
+            <CheckSquare size={18} color="#10b981" />
+          ) : (
+            <Square size={18} color="#94a3b8" />
+          )}
+          <Text
+            className={`text-xs font-bold flex-1 ${
+              aceptaTerminos
+                ? 'text-emerald-700 dark:text-emerald-300'
+                : 'text-slate-700 dark:text-slate-300'
+            }`}
+          >
+            He leído y acepto los Términos de Convivencia y Política de Tratamiento de Datos.
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+export function RegistrationSuccessStep({
+  placa,
+  onComplete,
+}: {
+  placa?: string;
+  onComplete: () => void;
+}) {
+  return (
+    <View className="items-center py-6 gap-4">
+      <View className="w-16 h-16 rounded-3xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 items-center justify-center shadow-lg shadow-emerald-500/10">
+        <CheckCircle2 size={32} color="#10b981" />
+      </View>
+
+      <View className="items-center gap-1">
+        <Text className="text-lg font-black text-slate-900 dark:text-white text-center">
+          ¡Solicitud Enviada para Aprobación!
+        </Text>
+        <Text className="text-xs text-slate-500 dark:text-slate-400 text-center max-w-xs leading-relaxed">
+          Tu vehículo con placa{' '}
+          <Text className="font-mono font-bold text-lochmara-600 dark:text-lochmara-400">
+            {placa ? placa.toUpperCase() : ''}
+          </Text>{' '}
+          ha sido registrado. El equipo de Bienestar Universitario revisará tus documentos y te notificará en la app.
+        </Text>
+      </View>
+
+      <View className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 w-full">
+        <Text className="text-xs font-bold text-amber-900 dark:text-amber-200 mb-0.5">
+          Notificación Institucional
+        </Text>
+        <Text className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
+          Tus datos y pólizas han sido remitidos de forma segura al panel administrativo para la verificación oficial.
+        </Text>
+      </View>
+
+      <Pressable
+        onPress={onComplete}
+        className="w-full py-3.5 rounded-2xl bg-lochmara-600 items-center justify-center shadow-md shadow-lochmara-600/30"
+      >
+        <Text className="text-xs font-bold text-white">Entendido, Volver al Inicio</Text>
+      </Pressable>
+    </View>
+  );
+}
