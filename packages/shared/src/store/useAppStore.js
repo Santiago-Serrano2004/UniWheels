@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { getStorageAdapter } from '../platform.js';
 import { readStoredSession, writeStoredSession, removeStoredSession } from '../session.js';
+import { notificationsService } from '../api.js';
 
 /**
  * @file useAppStore.js
@@ -383,7 +384,15 @@ export const useAppStore = create((set, get) => ({
     });
   },
 
+  // --- TOKEN DE NOTIFICACIONES PUSH MÓVILES ---
+  pushDeviceToken: null,
+  setPushDeviceToken: (token) => set({ pushDeviceToken: token }),
+
   logout: () => {
+    const pushToken = get().pushDeviceToken;
+    if (pushToken) {
+      notificationsService.unregisterDeviceToken(pushToken).catch(() => {});
+    }
     removeStoredSession();
     set({
       isAuthenticated: false,
@@ -393,6 +402,7 @@ export const useAppStore = create((set, get) => ({
       activeDriverTrip: null,
       activePassengerBooking: null,
       showWelcomeMascot: false,
+      pushDeviceToken: null,
     });
   },
 }));

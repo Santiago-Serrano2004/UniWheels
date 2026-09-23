@@ -1,18 +1,22 @@
 import '@/global.css';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Notifications from 'expo-notifications';
 import { useAppStore } from '@uniwheels/shared';
 
 import { BrandedSplash } from '@/components/BrandedSplash';
 import { LiveTripIslandWidget } from '@/components/LiveTripIslandWidget';
 import { bootstrapSdk } from '@/lib/sdk';
+import { registerForPushNotificationsAsync } from '@/services/pushNotificationService';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const router = useRouter();
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
+  const user = useAppStore((state) => state.user);
   const isHydrating = useAppStore((state) => state.isHydrating);
   const hydrateSession = useAppStore((state) => state.hydrateSession);
   const [splashDone, setSplashDone] = useState(false);
@@ -26,6 +30,47 @@ export default function RootLayout() {
     // ahí como una capa JS normal.
     SplashScreen.hideAsync();
   }, [hydrateSession]);
+
+  // Inicializar notificaciones push cuando el usuario esté autenticado
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      registerForPushNotificationsAsync().then((token) => {
+        if (token) {
+          (useAppStore.getState() as any).setPushDeviceToken?.(token);
+        }
+      });
+    }
+  }, [isAuthenticated, user]);
+
+  // Listener de interacción al tocar una notificación push (enrutamiento profundo)
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data;
+      if (!data) return;
+
+      // Enrutamiento según el tipo de notificación
+      switch (data.type) {
+        case 'driver_arrived':
+        case 'trip_started':
+        case 'trip_tracking':
+          router.push('/(tabs)/map');
+          break;
+        case 'trip_completed':
+        case 'rating_pending':
+          router.push('/(tabs)/history');
+          break;
+        case 'vehicle_approved':
+        case 'vehicle_rejected':
+          router.push('/(tabs)/profile');
+          break;
+        default:
+          router.push('/(tabs)');
+          break;
+      }
+    });
+
+    return () => subscription.remove();
+  }, [router]);
 
   // Se muestra hasta que se cumplan AMBAS condiciones: terminó su propia
   // animación Y ya se resolvió si hay sesión guardada — evita un parpadeo de
