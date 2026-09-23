@@ -91,6 +91,10 @@ services:
     env_file: ../services/vehicle-service/.env.production
     depends_on:
       postgres_gis: { condition: service_healthy }
+    volumes:
+      # Documentos de conductores (SOAT, licencia, RTM) en storage/app: sin
+      # volumen se perdian en cada recreacion del contenedor.
+      - vehicle_storage:/app/storage/app
     networks: [uniwheels_net]
     healthcheck:
       test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 8002) ? 0 : 1);"]
@@ -213,3 +217,4 @@ networks:
 volumes:
   postgres_data:
   uptime_kuma_data:
+  vehicle_storage:
