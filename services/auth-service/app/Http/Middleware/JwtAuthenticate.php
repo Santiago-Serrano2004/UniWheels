@@ -6,6 +6,8 @@ use App\Models\User;
 use App\Services\JwtService;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 use Symfony\Component\HttpFoundation\Response;
 
 class JwtAuthenticate
@@ -32,7 +34,21 @@ class JwtAuthenticate
             ], 401);
         }
 
-        $usuario = User::find($claims->sub);
+        $userId = (string) $claims->sub;
+
+        try {
+            if (Redis::exists("uniwheels:suspended_user:{$userId}")) {
+                return response()->json([
+                    'message' => 'Tu cuenta está suspendida.',
+                ], 403);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo verificar el estado de suspensión en Redis: '.$e->getMessage(), [
+                'user_id' => $userId,
+            ]);
+        }
+
+        $usuario = User::find($userId);
 
         if (! $usuario || ! $usuario->is_active) {
             return response()->json([

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\InstitutionController;
 use App\Http\Controllers\Api\V1\PublicProfileController;
@@ -45,6 +46,11 @@ Route::prefix('v1')->group(function () {
         Route::get('/users/{id}/public-profile', [PublicProfileController::class, 'show']);
         Route::post('/wallet/credit', [WalletController::class, 'credit']);
         Route::post('/wallet/debit-commission', [WalletController::class, 'debitCommission']);
+    });
+
+    // Rutas de administración
+    Route::prefix('admin')->middleware(['jwt.auth', 'admin'])->group(function () {
+        Route::patch('/users/{id}/suspension', [AdminUserController::class, 'updateSuspension']);
     });
 
     // Webhook público de Wompi — verificado por firma propia (Wompi no puede
