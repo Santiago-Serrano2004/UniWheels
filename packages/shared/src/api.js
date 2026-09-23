@@ -367,7 +367,14 @@ export const authService = {
 export const vehicleService = {
   async registerVehicle(datosVehiculo) {
     try {
-      const response = await vehicleApiClient.post('/vehicles', datosVehiculo);
+      const isFormData = typeof FormData !== 'undefined' && datosVehiculo instanceof FormData;
+      const config = isFormData
+        ? {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            transformRequest: (data) => data,
+          }
+        : {};
+      const response = await vehicleApiClient.post('/vehicles', datosVehiculo, config);
       return response.data;
     } catch (error) {
       if (error.response?.data) throw error.response.data;
@@ -390,12 +397,15 @@ export const vehicleService = {
   async uploadDocument(vehicleId, formData) {
     try {
       const response = await vehicleApiClient.post(`/vehicles/${vehicleId}/documents`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        transformRequest: (data) => data, // Evitar serializaciones JSON en React Native
       });
       return response.data;
     } catch (error) {
       if (error.response?.data) throw error.response.data;
-      throw { message: 'Error al subir el documento.' };
+      throw { message: 'Error al subir el archivo del documento.' };
     }
   },
 
@@ -414,6 +424,7 @@ export const vehicleService = {
       }
       const response = await vehicleApiClient.post(`/vehicles/${vehicleId}/documents`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        transformRequest: (data) => data,
       });
       return response.data;
     } catch (error) {
