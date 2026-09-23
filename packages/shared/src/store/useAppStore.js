@@ -197,20 +197,37 @@ export const useAppStore = create((set, get) => ({
    */
   hydrateSession: async () => {
     const sesion = await readStoredSession();
+    const isDriver = Boolean(
+      sesion?.isDriver ||
+      sesion?.is_driver ||
+      sesion?.driverStatus === 'approved' ||
+      sesion?.driver_status === 'approved'
+    );
     set({
       isAuthenticated: Boolean(sesion),
-      user: sesion,
-      activeRole: sesion?.isDriver ? sesion?.role || 'passenger' : 'passenger',
+      user: sesion ? { ...sesion, isDriver } : null,
+      activeRole: isDriver ? sesion?.role || 'passenger' : 'passenger',
       isHydrating: false,
     });
   },
 
   login: (datosUsuario) => {
-    const usuarioAGuardar = { ...datosUsuario };
-    if (!usuarioAGuardar.isDriver) {
-      usuarioAGuardar.role = 'passenger';
-      usuarioAGuardar.driverStatus = usuarioAGuardar.driverStatus || 'unregistered';
-    }
+    const isDriver = Boolean(
+      datosUsuario?.isDriver ||
+      datosUsuario?.is_driver ||
+      datosUsuario?.driverStatus === 'approved' ||
+      datosUsuario?.driver_status === 'approved'
+    );
+    const driverStatus =
+      datosUsuario?.driverStatus ||
+      datosUsuario?.driver_status ||
+      (isDriver ? 'approved' : 'unregistered');
+    const usuarioAGuardar = {
+      ...datosUsuario,
+      isDriver,
+      driverStatus,
+      role: isDriver ? (datosUsuario?.role || 'passenger') : 'passenger',
+    };
     writeStoredSession(usuarioAGuardar);
     set({
       isAuthenticated: true,
