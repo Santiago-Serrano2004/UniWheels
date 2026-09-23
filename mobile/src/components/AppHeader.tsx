@@ -48,10 +48,23 @@ const MOCK_NOTIFICATIONS = [
 
 export function AppHeader() {
   const user = useAppStore((state) => state.user);
+  const activeRole = useAppStore((state) => state.activeRole);
+  const toggleRole = useAppStore((state) => state.toggleRole);
   const openDriverInviteModal = useAppStore((state) => state.openDriverInviteModal);
+  const isDriverVerified = Boolean(user?.isDriver);
+
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>(MOCK_NOTIFICATIONS);
   const [unreadCount, setUnreadCount] = useState(2);
+
+  const handleRolePress = () => {
+    if (isDriverVerified) {
+      toggleRole();
+      router.replace('/(tabs)');
+    } else {
+      openDriverInviteModal();
+    }
+  };
 
   useEffect(() => {
     notificationsService.getUserNotifications().then((res: any) => {
@@ -107,11 +120,24 @@ export function AppHeader() {
 
       <View className="flex-row items-center gap-1.5">
         <Pressable
-          onPress={openDriverInviteModal}
-          className="flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-slate-900 dark:bg-slate-800"
+          onPress={handleRolePress}
+          className={`flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full ${
+            isDriverVerified && activeRole === 'driver'
+              ? 'bg-emerald-600 dark:bg-emerald-700'
+              : 'bg-slate-900 dark:bg-slate-800'
+          }`}
         >
-          <UserCheck size={13} color="#7dd3fc" />
-          <Text className="text-[11px] font-bold text-white">Pasajero</Text>
+          {isDriverVerified && activeRole === 'driver' ? (
+            <>
+              <Car size={13} color="#a7f3d0" />
+              <Text className="text-[11px] font-bold text-white">Conductor</Text>
+            </>
+          ) : (
+            <>
+              <UserCheck size={13} color="#7dd3fc" />
+              <Text className="text-[11px] font-bold text-white">Pasajero</Text>
+            </>
+          )}
         </Pressable>
 
         <Pressable
