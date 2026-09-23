@@ -26,7 +26,7 @@ export const Security = ({ onOpenPrivacy }) => {
     },
     {
       title: 'Privacidad y Habeas Data (Ley 1581 de 2012)',
-      description: 'Protección estricta de tus datos personales. Coordenadas y trayectorias cifradas, con cero venta de información a terceros y derecho permanente de rectificación.',
+      description: 'Tus datos se usan solo para operar el servicio y la seguridad de los viajes, viajan cifrados entre la app y los servidores, no se venden a terceros y puedes pedir su rectificación en cualquier momento.',
       icon: DatabaseZap,
       hasAction: true,
     },

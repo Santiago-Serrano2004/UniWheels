@@ -152,8 +152,8 @@ export const Hero = () => {
                 <Sparkles className="w-5 h-5" />
               </div>
               <div className="text-left">
-                <div className="text-sm font-bold text-slate-900 dark:text-white">Billetera Wompi</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">Pagos 100% digitales sin efectivo</div>
+                <div className="text-sm font-bold text-slate-900 dark:text-white">Pagos flexibles</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">Efectivo, Nequi, Daviplata o tarjeta</div>
               </div>
             </div>
           </motion.div>

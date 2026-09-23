@@ -12,15 +12,15 @@ export const FAQ = ({ onOpenPrivacy }) => {
     },
     {
       question: '¿Cómo se pagan y cobran los viajes?',
-      answer: 'Todos los pagos se procesan de forma digital e integrada a través de la pasarela de pagos Wompi (Bancolombia, Nequi, PSE y tarjetas). No se utiliza dinero en efectivo durante el viaje, garantizando transparencia, exactitud en las tarifas y mayor seguridad.',
+      answer: 'Al reservar eliges cómo pagar: en efectivo, por Nequi o Daviplata directamente al conductor, o con tarjeta a través de la pasarela Wompi dentro de la app. La tarifa la ves antes de confirmar la reserva.',
     },
     {
       question: '¿Qué sucede si necesito cancelar una reserva de viaje?',
-      answer: 'Puedes cancelar tu reserva desde la aplicación antes del inicio del viaje. Si la cancelación se realiza con la debida anticipación, el saldo retenido es reembolsado a tu billetera digital según los lineamientos de cancelación comunitaria.',
+      answer: 'Puedes cancelar tu reserva desde la aplicación antes de que inicie el viaje, y el cupo queda libre para otro compañero.',
     },
     {
       question: '¿Cómo se protegen mis datos personales y trayectorias?',
-      answer: 'Damos estricto cumplimiento a la Ley Estatutaria 1581 de 2012 y el Decreto 1377 de 2013 de Colombia. Tu información de contacto y coordenadas de ruta se procesan bajo cifrado y anonimización geoespacial, utilizándose únicamente con fines operativos y de seguridad universitaria, sin venta a terceros.',
+      answer: 'Damos estricto cumplimiento a la Ley Estatutaria 1581 de 2012 y el Decreto 1377 de 2013 de Colombia. Tu información de contacto y tus trayectos se usan únicamente para operar el servicio y para la seguridad de los viajes, sin venta a terceros. La comunicación entre la app y nuestros servidores viaja cifrada.',
       hasPrivacyLink: true,
     },
     {
