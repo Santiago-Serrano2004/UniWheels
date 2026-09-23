@@ -11,7 +11,7 @@ export const Footer = ({ onOpenPrivacy }) => (
           </span>
         </div>
         <p className="mt-3 text-sm leading-relaxed">
-          Carpooling para la comunidad de la Universidad Autónoma de Bucaramanga.
+          Carpooling para comunidades universitarias.
         </p>
       </div>
 

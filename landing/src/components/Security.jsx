@@ -1,11 +1,12 @@
 import React from 'react';
 import { BadgeCheck, KeyRound, Siren, FileCheck2, Lock } from 'lucide-react';
+import { Reveal } from './Reveal';
 
 const GARANTIAS = [
   {
     icono: BadgeCheck,
-    titulo: 'Solo gente de la UNAB',
-    texto: 'Para crear una cuenta necesitas un correo @unab.edu.co y confirmar el código que te llega a ese correo.',
+    titulo: 'Solo gente de tu universidad',
+    texto: 'Para crear una cuenta necesitas tu correo institucional y confirmar el código que te llega a ese correo.',
   },
   {
     icono: KeyRound,
@@ -16,7 +17,7 @@ const GARANTIAS = [
     icono: Siren,
     titulo: 'Botón SOS durante el viaje',
     texto:
-      'Con un toque llamas a la línea 123, a emergencias médicas o a la seguridad de la UNAB, o compartes tu ubicación por WhatsApp. Cada alerta queda registrada para Bienestar Universitario.',
+      'Con un toque llamas a la línea 123, a emergencias médicas o a la seguridad del campus, o compartes tu ubicación por WhatsApp. Cada alerta queda registrada para Bienestar Universitario.',
   },
   {
     icono: FileCheck2,
@@ -29,23 +30,36 @@ export const Security = ({ onOpenPrivacy }) => (
   <section id="seguridad" className="bg-[var(--color-niebla)]">
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-28 grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
       <div className="lg:sticky lg:top-28 lg:self-start">
-        <h2 className="text-4xl sm:text-5xl font-bold tracking-[-0.025em] leading-[1.05]">
+        <Reveal as="h2" className="text-4xl sm:text-5xl font-bold tracking-[-0.025em] leading-[1.05]">
           Sabes con quién viajas
-        </h2>
+        </Reveal>
         <p className="mt-5 max-w-md text-lg leading-relaxed">
           Todos en UniWheels son de la universidad, y cada viaje tiene controles antes, durante y después.
         </p>
+
+        <div className="mt-10 flex items-center gap-6" aria-hidden="true">
+          <div className="relative h-24 w-24 shrink-0">
+            <span className="sos-onda absolute inset-0 rounded-full bg-rose-500" />
+            <span className="sos-onda absolute inset-0 rounded-full bg-rose-500 [animation-delay:1.2s]" />
+            <span className="absolute inset-0 flex items-center justify-center rounded-full bg-rose-600 font-[family-name:var(--font-display)] text-2xl font-extrabold text-white shadow-[0_14px_30px_-10px_rgba(225,29,72,0.6)]">
+              SOS
+            </span>
+          </div>
+          <p className="max-w-[15rem] text-sm leading-relaxed">
+            Durante el viaje, el botón SOS queda visible arriba en la app, a un toque.
+          </p>
+        </div>
       </div>
 
       <ul className="divide-y divide-[var(--color-linea)] border-y border-[var(--color-linea)]">
-        {GARANTIAS.map(({ icono: Icono, titulo, texto }) => (
-          <li key={titulo} className="flex gap-5 py-7">
+        {GARANTIAS.map(({ icono: Icono, titulo, texto }, i) => (
+          <Reveal as="li" key={titulo} delay={i * 0.08} y={16} className="flex gap-5 py-7">
             <Icono className="mt-1 h-6 w-6 shrink-0 text-lochmara-600" strokeWidth={1.75} aria-hidden="true" />
             <div>
               <h3 className="text-xl font-bold tracking-[-0.015em]">{titulo}</h3>
               <p className="mt-1.5 leading-relaxed">{texto}</p>
             </div>
-          </li>
+          </Reveal>
         ))}
         <li className="flex gap-5 py-7">
           <Lock className="mt-1 h-6 w-6 shrink-0 text-lochmara-600" strokeWidth={1.75} aria-hidden="true" />

@@ -58,41 +58,56 @@ p {
   }
 }
 
-/* Único momento animado de la página: la ruta de la portada se dibuja,
-   el carro la recorre y aparece el PIN. */
-.ruta-dibujo {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: ruta-dibujar 1.4s cubic-bezier(0.45, 0, 0.25, 1) 0.2s forwards;
+/* Mapa de la portada: puntos que avanzan sobre la ruta y pulso de la recogida. */
+.ruta-flujo {
+  animation: ruta-avanzar 1.1s linear infinite;
 }
 
-@keyframes ruta-dibujar {
+@keyframes ruta-avanzar {
   to {
-    stroke-dashoffset: 0;
+    stroke-dashoffset: -20;
   }
 }
 
-.pin-aparece {
-  opacity: 0;
-  transform: translateY(8px);
-  animation: pin-aparecer 0.5s ease-out 2.4s forwards;
+.pin-pulso {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pin-latir 2.2s ease-out infinite;
 }
 
-@keyframes pin-aparecer {
-  to {
-    opacity: 1;
-    transform: translateY(0);
+@keyframes pin-latir {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.45;
   }
-}
-
-/* Respuesta al cambio de rol en "Así funciona": muestra qué cambió. */
-.pasos-cambio {
-  animation: pasos-entrar 0.35s ease-out;
-}
-
-@keyframes pasos-entrar {
-  from {
+  100% {
+    transform: scale(1.8);
     opacity: 0;
-    transform: translateY(6px);
+  }
+}
+
+/* Textura muy tenue de cuadras para los fondos de sección. */
+.fondo-calles {
+  background-image:
+    linear-gradient(to right, rgba(8, 47, 73, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(8, 47, 73, 0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse at 70% 40%, black 0%, transparent 70%);
+}
+
+/* Ondas del botón SOS en la sección de seguridad. */
+.sos-onda {
+  opacity: 0;
+  animation: sos-onda 2.4s ease-out infinite;
+}
+
+@keyframes sos-onda {
+  0% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
   }
 }

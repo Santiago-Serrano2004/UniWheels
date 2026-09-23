@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Plus, Minus } from 'lucide-react';
+import { Reveal } from './Reveal';
 
 const PREGUNTAS = [
   {
     pregunta: '¿Quién puede usar UniWheels?',
     respuesta:
-      'Estudiantes de pregrado y posgrado, profesores, directivos y personal administrativo de la Universidad Autónoma de Bucaramanga, con correo institucional @unab.edu.co. No está abierta al público general.',
+      'Estudiantes de pregrado y posgrado, profesores, directivos y personal administrativo de tu universidad, con su correo institucional. No está abierta al público general.',
   },
   {
     pregunta: '¿Cómo se paga el viaje?',
@@ -41,7 +42,7 @@ export const FAQ = ({ onOpenPrivacy }) => {
     <section id="faq" className="bg-[var(--color-niebla)]">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-28 grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
         <div>
-          <h2 className="text-4xl sm:text-5xl font-bold tracking-[-0.025em] leading-[1.05]">Preguntas frecuentes</h2>
+          <Reveal as="h2" className="text-4xl sm:text-5xl font-bold tracking-[-0.025em] leading-[1.05]">Preguntas frecuentes</Reveal>
           <p className="mt-5 max-w-sm text-lg leading-relaxed">
             ¿No encuentras tu respuesta? Escríbenos a{' '}
             <a

@@ -1,8 +1,9 @@
 import React from 'react';
 import { Check } from 'lucide-react';
+import { Reveal } from './Reveal';
 
 const REQUISITOS = [
-  'Ser estudiante, profesor o parte del personal de la UNAB, con correo institucional.',
+  'Ser estudiante, profesor o parte del personal de tu universidad, con correo institucional.',
   'Carro o moto en buen estado.',
   'Licencia de conducción vigente y de la categoría de tu vehículo.',
   'SOAT vigente y tecnomecánica si tu vehículo ya la necesita: carros desde los 5 años y motos desde los 2.',
@@ -16,9 +17,9 @@ const APROBACION = [
 
 export const ForDrivers = () => (
   <section id="conductores" className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-28">
-    <h2 className="max-w-2xl text-4xl sm:text-5xl font-bold tracking-[-0.025em] leading-[1.05]">
+    <Reveal as="h2" className="max-w-2xl text-4xl sm:text-5xl font-bold tracking-[-0.025em] leading-[1.05]">
       ¿Vas a la U en carro o en moto? Llena los puestos vacíos
-    </h2>
+    </Reveal>
     <p className="mt-5 max-w-xl text-lg leading-relaxed">
       Compartes los gastos del trayecto que ya haces y conoces gente de tu sede.
     </p>
@@ -27,11 +28,13 @@ export const ForDrivers = () => (
       <div>
         <h3 className="text-2xl font-bold tracking-[-0.015em]">Qué necesitas</h3>
         <ul className="mt-6 space-y-0 divide-y divide-[var(--color-linea)] border-y border-[var(--color-linea)]">
-          {REQUISITOS.map((r) => (
-            <li key={r} className="flex gap-4 py-4 leading-relaxed">
-              <Check className="mt-1 h-5 w-5 shrink-0 text-lochmara-600" strokeWidth={2.25} aria-hidden="true" />
+          {REQUISITOS.map((r, i) => (
+            <Reveal as="li" key={r} delay={0.15 + i * 0.15} y={0} className="flex gap-4 py-4 leading-relaxed">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lochmara-600 text-white">
+                <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden="true" />
+              </span>
               <span>{r}</span>
-            </li>
+            </Reveal>
           ))}
         </ul>
       </div>
@@ -40,13 +43,13 @@ export const ForDrivers = () => (
         <h3 className="text-2xl font-bold tracking-[-0.015em]">Cómo te aprueban</h3>
         <ol className="mt-6 rounded-3xl bg-[var(--color-tinta)] px-6 text-white divide-y divide-white/15">
           {APROBACION.map((paso, i) => (
-            <li key={paso.titulo} className="flex gap-5 py-6">
+            <Reveal as="li" key={paso.titulo} delay={0.2 + i * 0.2} y={12} className="flex gap-5 py-6">
               <span className="w-7 shrink-0 font-[family-name:var(--font-display)] text-3xl font-extrabold leading-none text-lochmara-300">{i + 1}</span>
               <div>
                 <p className="font-[family-name:var(--font-display)] text-lg font-bold">{paso.titulo}</p>
                 <p className="mt-1 text-sm leading-relaxed text-lochmara-100">{paso.texto}</p>
               </div>
-            </li>
+            </Reveal>
           ))}
         </ol>
       </div>
