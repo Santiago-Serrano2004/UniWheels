@@ -8,7 +8,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { ArrowLeft, ArrowRight } from 'lucide-react-native';
 import {
   authService,
@@ -376,7 +376,7 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
   };
 
   return (
-    <SafeAreaView edges={['top', 'bottom']} className="flex-1 bg-slate-50 dark:bg-slate-950">
+    <View className="flex-1 bg-slate-50 dark:bg-slate-950">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
@@ -582,6 +582,6 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
           onPhotoSelected={handleFotoSeleccionada}
         />
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

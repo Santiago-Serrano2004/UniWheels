@@ -60,15 +60,17 @@ export function DriverOnboardingView({ onBack, onRegistered }: DriverOnboardingV
 
   if (mostrarAsistente) {
     return (
-      <DriverRegistrationWizard
-        onBack={() => setMostrarAsistente(false)}
-        onComplete={() => {
-          setMostrarAsistente(false);
-          if (onRegistered) {
-            onRegistered();
-          }
-        }}
-      />
+      <View className="flex-1 bg-slate-50 dark:bg-slate-950">
+        <DriverRegistrationWizard
+          onBack={() => setMostrarAsistente(false)}
+          onComplete={() => {
+            setMostrarAsistente(false);
+            if (onRegistered) {
+              onRegistered();
+            }
+          }}
+        />
+      </View>
     );
   }
 
