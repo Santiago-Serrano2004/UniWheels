@@ -9,14 +9,28 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "co.edu.unab.uniwheels",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "UniWheels requiere tu ubicación para conectarte con conductores y mostrarte rutas seguras en tiempo real hacia tu campus.",
+        "NSCameraUsageDescription": "UniWheels necesita tu cámara para fotografiar tus documentos vehiculares y foto de perfil.",
+        "NSPhotoLibraryUsageDescription": "UniWheels requiere acceso a tu galería para adjuntar los certificados de SOAT y tarjeta de propiedad.",
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
+      },
       "entitlements": {
         "aps-environment": "production"
       }
     },
     "android": {
       "package": "co.edu.unab.uniwheels",
+      "versionCode": 1,
       "permissions": [
-        "android.permission.POST_NOTIFICATIONS"
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "POST_NOTIFICATIONS",
+        "CAMERA",
+        "READ_MEDIA_IMAGES"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#020617",
@@ -27,7 +41,7 @@
       "predictiveBackGestureEnabled": false,
       "config": {
         "googleMaps": {
-          "apiKey": ""
+          "apiKey": "${EXPO_PUBLIC_GOOGLE_MAPS_KEY}"
         }
       }
     },
