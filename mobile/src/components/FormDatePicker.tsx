@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, Platform } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import {
+  Modal,
+  Platform,
+  Pressable,
+  Text,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Calendar } from 'lucide-react-native';
 
 export interface FormDatePickerProps {
@@ -23,16 +30,35 @@ export function FormDatePicker({
   disabled = false,
 }: FormDatePickerProps) {
   const [showPicker, setShowPicker] = useState(false);
+  const insets = useSafeAreaInsets();
 
-  const parsedDate = value ? (() => {
-    const [y, m, d] = value.split('-').map(Number);
-    return new Date(y, m - 1, d);
-  })() : new Date();
-
-  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowPicker(false);
+  const parseValueToDate = (val?: string): Date => {
+    if (!val) return new Date();
+    const parts = val.split('-').map(Number);
+    if (parts.length === 3 && !parts.some(isNaN)) {
+      return new Date(parts[0], parts[1] - 1, parts[2]);
     }
+    return new Date();
+  };
+
+  const [tempDate, setTempDate] = useState<Date>(() => parseValueToDate(value));
+
+  const handleOpen = () => {
+    if (disabled) return;
+    setTempDate(parseValueToDate(value));
+    setShowPicker(true);
+  };
+
+  const handleConfirmIos = () => {
+    const year = tempDate.getFullYear();
+    const month = String(tempDate.getMonth() + 1).padStart(2, '0');
+    const day = String(tempDate.getDate()).padStart(2, '0');
+    onChange(`${year}-${month}-${day}`);
+    setShowPicker(false);
+  };
+
+  const handleAndroidDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    setShowPicker(false);
     if (event.type === 'set' && selectedDate) {
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
@@ -52,7 +78,7 @@ export function FormDatePicker({
 
       <Pressable
         disabled={disabled}
-        onPress={() => setShowPicker(true)}
+        onPress={handleOpen}
         className={`flex-row items-center justify-between py-3 px-3.5 rounded-2xl border bg-slate-50 dark:bg-slate-950 ${
           value
             ? 'border-slate-300 dark:border-slate-700'
@@ -69,14 +95,82 @@ export function FormDatePicker({
         <Calendar size={15} color="#64748b" />
       </Pressable>
 
-      {showPicker && (
+      {/* Selector para iOS: Hoja modal inferior con botones Cancelar y Listo */}
+      {Platform.OS === 'ios' && (
+        <Modal
+          visible={showPicker}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowPicker(false)}
+        >
+          <Pressable
+            className="flex-1 bg-black/60 justify-end"
+            onPress={() => setShowPicker(false)}
+          >
+            <Pressable
+              className="w-full bg-white dark:bg-slate-900 rounded-t-3xl border-t border-slate-200 dark:border-slate-800 pt-3 px-4"
+              style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View className="items-center mb-2">
+                <View className="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+              </View>
+
+              <View className="flex-row items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <Pressable
+                  onPress={() => setShowPicker(false)}
+                  hitSlop={8}
+                  className="py-1 px-2 rounded-lg"
+                >
+                  <Text className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                    Cancelar
+                  </Text>
+                </Pressable>
+
+                <View className="flex-row items-center gap-1.5">
+                  <Calendar size={14} color="#0284c7" />
+                  <Text className="text-sm font-bold text-slate-900 dark:text-white">
+                    {label || 'Seleccionar fecha'}
+                  </Text>
+                </View>
+
+                <Pressable
+                  onPress={handleConfirmIos}
+                  hitSlop={8}
+                  className="py-1 px-3 rounded-xl bg-lochmara-600 active:bg-lochmara-700"
+                >
+                  <Text className="text-xs font-bold text-white">
+                    Listo
+                  </Text>
+                </Pressable>
+              </View>
+
+              <View className="py-2 items-center justify-center">
+                <DateTimePicker
+                  value={tempDate}
+                  mode="date"
+                  display="spinner"
+                  minimumDate={minDate}
+                  maximumDate={maxDate}
+                  onChange={(_, d) => {
+                    if (d) setTempDate(d);
+                  }}
+                />
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
+
+      {/* Selector para Android: Diálogo nativo */}
+      {Platform.OS === 'android' && showPicker && (
         <DateTimePicker
-          value={parsedDate}
+          value={parseValueToDate(value)}
           mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          display="default"
           minimumDate={minDate}
           maximumDate={maxDate}
-          onChange={handleDateChange}
+          onChange={handleAndroidDateChange}
         />
       )}
     </View>
