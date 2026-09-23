@@ -6,7 +6,7 @@ Aplicación móvil nativa de **UniWheels — Plataforma de Movilidad Universitar
 
 ## 🏗️ Arquitectura y Tecnologías
 
-- **Framework:** [Expo SDK 54](https://docs.expo.dev/versions/v54.0.0/) / [React Native 0.81](https://reactnative.dev/)
+- **Framework:** [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/) / [React Native 0.86](https://reactnative.dev/)
 - **Enrutamiento:** [Expo Router v6](https://docs.expo.dev/router/introduction/) (enrutamiento declarativo basado en sistema de archivos)
 - **Estilos:** [NativeWind v4](https://www.nativewind.dev/) (Tailwind CSS adaptado para React Native con soporte dark mode)
 - **Estado Global:** [Zustand v5](https://github.com/pmndrs/zustand) con sincronización de estado y dominio compartido vía `@uniwheels/shared`
@@ -24,7 +24,7 @@ Aplicación móvil nativa de **UniWheels — Plataforma de Movilidad Universitar
 - **Node.js:** `>= 20.0.0`
 - **Gestor de Paquetes:** `npm` `>= 10.0.0`
 - **Herramientas de Ejecución:**
-  - [Expo Go](https://expo.dev/go) (versión compatible con SDK 54) para pruebas rápidas en dispositivo físico.
+  - [Expo Go](https://expo.dev/go) (versión compatible con SDK 57) para pruebas rápidas en dispositivo físico.
   - Opcional: **Android Studio** (SDK de Android 14/15, Emulador con Google Play Services) o **Xcode** (iOS Simulator en macOS).
   - [EAS CLI](https://docs.expo.dev/eas-cli/): `npm install -g eas-cli` para compilación remota y local.
 
