@@ -36,6 +36,13 @@ import { InAppGpsNavigator } from '@/components/driver/InAppGpsNavigator';
 import { TripSettlementModal } from '@/components/driver/TripSettlementModal';
 import { CancelTripPenaltyModal } from '@/components/driver/CancelTripPenaltyModal';
 
+const CAMPUS_COORDINATES: Record<string, [number, number]> = {
+  'Campus El Jardín': [7.1166, -73.1054],
+  'Campus El Bosque': [7.066491, -73.103789],
+  'CSU — Centro de Servicios Universitarios': [7.113821, -73.106842],
+  'Campus La Casona': [7.118210, -73.116520],
+};
+
 const DEFAULT_CAMPUSES: Campus[] = [
   { id: 1, name: 'Campus El Jardín' },
   { id: 2, name: 'Campus El Bosque' },
@@ -99,6 +106,9 @@ export default function HomeScreen() {
   const [direction, setDirection] = useState<'towards' | 'from' | 'inter_campus'>('towards');
   const [campuses, setCampuses] = useState<Campus[]>(DEFAULT_CAMPUSES);
   const [selectedCampus, setSelectedCampus] = useState('Campus El Jardín');
+  const [selectedOriginCampus, setSelectedOriginCampus] = useState(user?.campus?.name || 'Campus El Jardín');
+  const [selectedDestinationCampus, setSelectedDestinationCampus] = useState('Campus El Bosque');
+  const [campusModalTarget, setCampusModalTarget] = useState<'origin' | 'destination'>('destination');
   const [isCampusModalOpen, setIsCampusModalOpen] = useState(false);
   const [isHomeModalOpen, setIsHomeModalOpen] = useState(false);
   const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
@@ -131,23 +141,39 @@ export default function HomeScreen() {
     return map;
   }, [campuses]);
 
-  // Búsqueda real contra route-matching-service (PostGIS + IA + TomTom) — solo
-  // "Hacia Campus" tiene soporte geoespacial completo hoy, mismo alcance que
-  // frontend/src/components/home/HomeView.jsx.
+  // Búsqueda real contra route-matching-service (PostGIS + IA + TomTom) para todas las modalidades
   useEffect(() => {
-    if (direction !== 'towards') {
-      setRawMatches([]);
-      return;
+    let pickup: [number, number];
+    let destCampusId: number;
+
+    if (direction === 'towards') {
+      pickup = editableCoords || [7.0678, -73.1066]; // Cañaveral (AMB) por defecto
+      destCampusId = campusIdByName[selectedCampus] || 1;
+    } else if (direction === 'from') {
+      const originCampus = campuses.find((c) => c.name === selectedOriginCampus);
+      pickup = originCampus?.latitude && originCampus?.longitude
+        ? [Number(originCampus.latitude), Number(originCampus.longitude)]
+        : CAMPUS_COORDINATES[selectedOriginCampus] || [7.1166, -73.1054];
+      destCampusId = campusIdByName[selectedOriginCampus] || 1;
+    } else {
+      // inter_campus
+      const originCampus = campuses.find((c) => c.name === selectedOriginCampus);
+      pickup = originCampus?.latitude && originCampus?.longitude
+        ? [Number(originCampus.latitude), Number(originCampus.longitude)]
+        : CAMPUS_COORDINATES[selectedOriginCampus] || [7.1166, -73.1054];
+      destCampusId = campusIdByName[selectedDestinationCampus] || 2;
     }
-    const destinationCampusId = campusIdByName[selectedCampus];
-    if (!destinationCampusId) return;
-    const pickup = editableCoords || [7.0678, -73.1066]; // Cañaveral (AMB) por defecto
 
     const timer = setTimeout(async () => {
       setIsLoadingMatches(true);
       setSearchErrorMsg('');
       try {
-        const results = await routesService.searchMatches(pickup[0], pickup[1], destinationCampusId, passengerTimeFilter || null);
+        const results = await routesService.searchMatches(
+          pickup[0],
+          pickup[1],
+          destCampusId,
+          passengerTimeFilter || null
+        );
         setRawMatches(results);
       } catch {
         setSearchErrorMsg('No se pudo conectar con el buscador de rutas. Intenta nuevamente.');
@@ -155,8 +181,18 @@ export default function HomeScreen() {
         setIsLoadingMatches(false);
       }
     }, 400);
+
     return () => clearTimeout(timer);
-  }, [direction, selectedCampus, editableCoords, campusIdByName, passengerTimeFilter]);
+  }, [
+    direction,
+    selectedCampus,
+    selectedOriginCampus,
+    selectedDestinationCampus,
+    editableCoords,
+    campusIdByName,
+    passengerTimeFilter,
+    campuses,
+  ]);
 
   // Adaptar el contrato del backend al shape que consume la tarjeta de resultado.
   const rides = useMemo(() => {
@@ -581,93 +617,204 @@ export default function HomeScreen() {
 
           {/* Corredor origen/destino */}
           <View className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+            {/* ORIGEN */}
             <View className="flex-row items-center gap-2.5">
               <View className="w-2.5 h-2.5 rounded-full bg-lochmara-500" />
               <View className="flex-1">
                 <Text className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Origen</Text>
-                <View className="flex-row items-center gap-1.5 mt-0.5">
-                  <View className="relative flex-1">
-                    <View className="flex-row items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5">
-                      <Search size={13} color="#94a3b8" />
-                      <TextInput
-                        value={searchQuery || editablePointName}
-                        onChangeText={setSearchQuery}
-                        placeholder="¿Dónde te recogemos?"
-                        placeholderTextColor="#94a3b8"
-                        className="flex-1 text-xs font-bold text-slate-900 dark:text-white ml-1.5 py-0"
-                      />
-                      {isSearchingPlaces ? (
-                        <ActivityIndicator size="small" color="#0284c7" />
-                      ) : (searchQuery || editablePointName) ? (
-                        <Pressable onPress={() => { setSearchQuery(''); setEditablePointName(''); setEditableCoords(null); }} hitSlop={6}>
-                          <X size={13} color="#94a3b8" />
-                        </Pressable>
-                      ) : null}
+                {direction === 'from' || direction === 'inter_campus' ? (
+                  <Pressable
+                    onPress={() => {
+                      setCampusModalTarget('origin');
+                      setIsCampusModalOpen(true);
+                    }}
+                    className="flex-row items-center justify-between mt-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5"
+                  >
+                    <View className="flex-row items-center gap-2 flex-1 mr-2">
+                      <Building2 size={14} color="#0284c7" />
+                      <Text className="text-xs font-black text-slate-900 dark:text-white" numberOfLines={1}>
+                        {selectedOriginCampus}
+                      </Text>
                     </View>
-                    {suggestions.length > 0 && (
-                      <View className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden z-10">
-                        {suggestions.map((item, idx) => (
-                          <Pressable
-                            key={idx}
-                            onPress={() => handleSelectSuggestion(item)}
-                            className="p-2.5 border-b border-slate-100 dark:border-slate-800 last:border-b-0"
-                          >
-                            <Text className="text-xs font-bold text-slate-900 dark:text-white" numberOfLines={1}>
-                              {item.nombre || item.name}
-                            </Text>
-                            <Text className="text-[10px] text-slate-400" numberOfLines={1}>
-                              {item.direccion || item.address}
-                            </Text>
+                    <View className="flex-row items-center gap-0.5">
+                      <Text className="text-[10px] font-bold text-lochmara-500">Cambiar</Text>
+                      <ChevronRight size={12} color="#0284c7" />
+                    </View>
+                  </Pressable>
+                ) : (
+                  <View className="flex-row items-center gap-1.5 mt-0.5">
+                    <View className="relative flex-1">
+                      <View className="flex-row items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5">
+                        <Search size={13} color="#94a3b8" />
+                        <TextInput
+                          value={searchQuery || editablePointName}
+                          onChangeText={setSearchQuery}
+                          placeholder="¿Dónde te recogemos?"
+                          placeholderTextColor="#94a3b8"
+                          className="flex-1 text-xs font-bold text-slate-900 dark:text-white ml-1.5 py-0"
+                        />
+                        {isSearchingPlaces ? (
+                          <ActivityIndicator size="small" color="#0284c7" />
+                        ) : (searchQuery || editablePointName) ? (
+                          <Pressable onPress={() => { setSearchQuery(''); setEditablePointName(''); setEditableCoords(null); }} hitSlop={6}>
+                            <X size={13} color="#94a3b8" />
                           </Pressable>
-                        ))}
+                        ) : null}
                       </View>
-                    )}
+                      {suggestions.length > 0 && (
+                        <View className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden z-10">
+                          {suggestions.map((item, idx) => (
+                            <Pressable
+                              key={idx}
+                              onPress={() => handleSelectSuggestion(item)}
+                              className="p-2.5 border-b border-slate-100 dark:border-slate-800 last:border-b-0"
+                            >
+                              <Text className="text-xs font-bold text-slate-900 dark:text-white" numberOfLines={1}>
+                                {item.nombre || item.name}
+                              </Text>
+                              <Text className="text-[10px] text-slate-400" numberOfLines={1}>
+                                {item.direccion || item.address}
+                              </Text>
+                            </Pressable>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+
+                    <Pressable
+                      onPress={usarCasa}
+                      className={`px-2 py-1 rounded-xl flex-row items-center gap-1 border shrink-0 ${
+                        savedHomeLocation
+                          ? 'bg-amber-500/10 border-amber-500/20'
+                          : 'bg-slate-500/10 border-slate-500/20'
+                      }`}
+                    >
+                      <Home size={11} color={savedHomeLocation ? '#f59e0b' : '#94a3b8'} />
+                      <Text className={`text-[10px] font-extrabold ${savedHomeLocation ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                        Casa
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => setIsMapPickerOpen(true)}
+                      className="px-2 py-1 rounded-xl bg-lochmara-500/10 flex-row items-center gap-1 shrink-0"
+                    >
+                      <MapPin size={11} color="#0284c7" />
+                      <Text className="text-[10px] font-extrabold text-lochmara-600 dark:text-lochmara-400">Mapa</Text>
+                    </Pressable>
                   </View>
-
-                  <Pressable
-                    onPress={usarCasa}
-                    className={`px-2 py-1 rounded-xl flex-row items-center gap-1 border shrink-0 ${
-                      savedHomeLocation
-                        ? 'bg-amber-500/10 border-amber-500/20'
-                        : 'bg-slate-500/10 border-slate-500/20'
-                    }`}
-                  >
-                    <Home size={11} color={savedHomeLocation ? '#f59e0b' : '#94a3b8'} />
-                    <Text className={`text-[10px] font-extrabold ${savedHomeLocation ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}>
-                      Casa
-                    </Text>
-                  </Pressable>
-
-                  <Pressable
-                    onPress={() => setIsMapPickerOpen(true)}
-                    className="px-2 py-1 rounded-xl bg-lochmara-500/10 flex-row items-center gap-1 shrink-0"
-                  >
-                    <MapPin size={11} color="#0284c7" />
-                    <Text className="text-[10px] font-extrabold text-lochmara-600 dark:text-lochmara-400">Mapa</Text>
-                  </Pressable>
-                </View>
+                )}
               </View>
             </View>
 
             <View className="border-l-2 border-dashed border-slate-300 dark:border-slate-700 h-2.5 ml-1 my-1" />
 
+            {/* DESTINO */}
             <View className="flex-row items-center gap-2.5">
               <View className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
               <View className="flex-1">
                 <Text className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Destino</Text>
-                <Pressable
-                  onPress={() => setIsCampusModalOpen(true)}
-                  className="flex-row items-center justify-between mt-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5"
-                >
-                  <View className="flex-row items-center gap-2">
-                    <Building2 size={14} color="#0284c7" />
-                    <Text className="text-xs font-black text-slate-900 dark:text-white">{selectedCampus}</Text>
+                {direction === 'towards' ? (
+                  <Pressable
+                    onPress={() => {
+                      setCampusModalTarget('destination');
+                      setIsCampusModalOpen(true);
+                    }}
+                    className="flex-row items-center justify-between mt-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5"
+                  >
+                    <View className="flex-row items-center gap-2 flex-1 mr-2">
+                      <Building2 size={14} color="#0284c7" />
+                      <Text className="text-xs font-black text-slate-900 dark:text-white" numberOfLines={1}>
+                        {selectedCampus}
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center gap-0.5">
+                      <Text className="text-[10px] font-bold text-lochmara-500">Cambiar</Text>
+                      <ChevronRight size={12} color="#0284c7" />
+                    </View>
+                  </Pressable>
+                ) : direction === 'inter_campus' ? (
+                  <Pressable
+                    onPress={() => {
+                      setCampusModalTarget('destination');
+                      setIsCampusModalOpen(true);
+                    }}
+                    className="flex-row items-center justify-between mt-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5"
+                  >
+                    <View className="flex-row items-center gap-2 flex-1 mr-2">
+                      <Building2 size={14} color="#10b981" />
+                      <Text className="text-xs font-black text-slate-900 dark:text-white" numberOfLines={1}>
+                        {selectedDestinationCampus}
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center gap-0.5">
+                      <Text className="text-[10px] font-bold text-lochmara-500">Cambiar</Text>
+                      <ChevronRight size={12} color="#0284c7" />
+                    </View>
+                  </Pressable>
+                ) : (
+                  <View className="flex-row items-center gap-1.5 mt-0.5">
+                    <View className="relative flex-1">
+                      <View className="flex-row items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5">
+                        <Search size={13} color="#94a3b8" />
+                        <TextInput
+                          value={searchQuery || editablePointName}
+                          onChangeText={setSearchQuery}
+                          placeholder="¿A dónde te diriges?"
+                          placeholderTextColor="#94a3b8"
+                          className="flex-1 text-xs font-bold text-slate-900 dark:text-white ml-1.5 py-0"
+                        />
+                        {isSearchingPlaces ? (
+                          <ActivityIndicator size="small" color="#0284c7" />
+                        ) : (searchQuery || editablePointName) ? (
+                          <Pressable onPress={() => { setSearchQuery(''); setEditablePointName(''); setEditableCoords(null); }} hitSlop={6}>
+                            <X size={13} color="#94a3b8" />
+                          </Pressable>
+                        ) : null}
+                      </View>
+                      {suggestions.length > 0 && (
+                        <View className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden z-10">
+                          {suggestions.map((item, idx) => (
+                            <Pressable
+                              key={idx}
+                              onPress={() => handleSelectSuggestion(item)}
+                              className="p-2.5 border-b border-slate-100 dark:border-slate-800 last:border-b-0"
+                            >
+                              <Text className="text-xs font-bold text-slate-900 dark:text-white" numberOfLines={1}>
+                                {item.nombre || item.name}
+                              </Text>
+                              <Text className="text-[10px] text-slate-400" numberOfLines={1}>
+                                {item.direccion || item.address}
+                              </Text>
+                            </Pressable>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+
+                    <Pressable
+                      onPress={usarCasa}
+                      className={`px-2 py-1 rounded-xl flex-row items-center gap-1 border shrink-0 ${
+                        savedHomeLocation
+                          ? 'bg-amber-500/10 border-amber-500/20'
+                          : 'bg-slate-500/10 border-slate-500/20'
+                      }`}
+                    >
+                      <Home size={11} color={savedHomeLocation ? '#f59e0b' : '#94a3b8'} />
+                      <Text className={`text-[10px] font-extrabold ${savedHomeLocation ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                        Casa
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => setIsMapPickerOpen(true)}
+                      className="px-2 py-1 rounded-xl bg-lochmara-500/10 flex-row items-center gap-1 shrink-0"
+                    >
+                      <MapPin size={11} color="#0284c7" />
+                      <Text className="text-[10px] font-extrabold text-lochmara-600 dark:text-lochmara-400">Mapa</Text>
+                    </Pressable>
                   </View>
-                  <View className="flex-row items-center gap-0.5">
-                    <Text className="text-[10px] font-bold text-lochmara-500">Cambiar</Text>
-                    <ChevronRight size={12} color="#0284c7" />
-                  </View>
-                </Pressable>
+                )}
               </View>
             </View>
           </View>
@@ -758,17 +905,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {direction !== 'towards' ? (
-          <View className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 items-center gap-2">
-            <Sparkles size={20} color="#f59e0b" />
-            <Text className="text-xs font-black text-slate-900 dark:text-white text-center">
-              Esta modalidad estará disponible próximamente
-            </Text>
-            <Text className="text-[11px] text-slate-400 text-center">
-              Por ahora la búsqueda en tiempo real solo cubre trayectos hacia un campus.
-            </Text>
-          </View>
-        ) : isLoadingMatches ? (
+        {isLoadingMatches ? (
           <View className="items-center py-10 gap-2">
             <ActivityIndicator color="#0284c7" />
             <Text className="text-[11px] text-slate-400 font-semibold">Buscando rutas cercanas con PostGIS...</Text>
@@ -880,8 +1017,21 @@ export default function HomeScreen() {
         isOpen={isCampusModalOpen}
         onClose={() => setIsCampusModalOpen(false)}
         campuses={campuses}
-        selectedCampus={selectedCampus}
-        onSelectCampus={(c) => setSelectedCampus(c.name)}
+        selectedCampus={
+          campusModalTarget === 'origin'
+            ? selectedOriginCampus
+            : direction === 'inter_campus'
+            ? selectedDestinationCampus
+            : selectedCampus
+        }
+        onSelectCampus={(c) => {
+          if (campusModalTarget === 'origin') {
+            setSelectedOriginCampus(c.name);
+          } else {
+            setSelectedCampus(c.name);
+            setSelectedDestinationCampus(c.name);
+          }
+        }}
       />
 
       <SetHomeLocationModal isOpen={isHomeModalOpen} onClose={() => setIsHomeModalOpen(false)} onLocationSaved={handleSelectSuggestion} />
@@ -891,8 +1041,8 @@ export default function HomeScreen() {
         onClose={() => setIsMapPickerOpen(false)}
         initialCoords={editableCoords}
         initialPlaceName={editablePointName}
-        title="Ajustar Punto de Recogida"
-        confirmButtonText="Confirmar punto de recogida"
+        title={direction === 'from' ? 'Ajustar Punto de Destino' : 'Ajustar Punto de Recogida'}
+        confirmButtonText={direction === 'from' ? 'Confirmar punto de destino' : 'Confirmar punto de recogida'}
         onConfirm={(loc) => handleSelectSuggestion({ nombre: loc.address, direccion: loc.address, coords: loc.coords })}
       />
     </SafeAreaView>

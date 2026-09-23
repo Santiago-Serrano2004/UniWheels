@@ -9,6 +9,8 @@ export type Campus = {
   code?: string;
   image_url?: string;
   is_main_campus?: boolean;
+  latitude?: number;
+  longitude?: number;
 };
 
 const jardinImg = require('../../assets/campuses/el-jardin.webp');
