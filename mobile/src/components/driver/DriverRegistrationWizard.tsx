@@ -19,7 +19,7 @@ import {
   requiereTecnomecanica,
   haExpiradoFecha,
 } from '@uniwheels/shared';
-import { PhotoPickerModal } from '@/components/PhotoPickerModal';
+import { PhotoPickerModal, type PhotoPickerAsset } from '@/components/PhotoPickerModal';
 import { AlertBanner } from '@/components/AlertBanner';
 import { VehicleSpecsStep } from './wizard-steps/VehicleSpecsStep';
 import { LegalDocumentsStep } from './wizard-steps/LegalDocumentsStep';
@@ -60,15 +60,26 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
   const [numeroSoat, setNumeroSoat] = useState('');
   const [vencimientoSoat, setVencimientoSoat] = useState('');
   const [fotoSoat, setFotoSoat] = useState<string | null>(null);
+  const [assetSoat, setAssetSoat] = useState<PhotoPickerAsset | null>(null);
   const [numeroTecno, setNumeroTecno] = useState('');
   const [vencimientoTecno, setVencimientoTecno] = useState('');
   const [fotoTecno, setFotoTecno] = useState<string | null>(null);
+  const [assetTecno, setAssetTecno] = useState<PhotoPickerAsset | null>(null);
 
   // Paso 3: Licencia
   const [numeroLicencia, setNumeroLicencia] = useState('');
   const [categoriaLicencia, setCategoriaLicencia] = useState('B1');
   const [vencimientoLicencia, setVencimientoLicencia] = useState('');
   const [fotoLicencia, setFotoLicencia] = useState<string | null>(null);
+  const [assetLicencia, setAssetLicencia] = useState<PhotoPickerAsset | null>(null);
+
+  // Estado de persistencia de vehículo creado para reintentos
+  const [vehiculoIdCreado, setVehiculoIdCreado] = useState<number | string | null>(null);
+  const [documentosSubidos, setDocumentosSubidos] = useState<{
+    soat?: boolean;
+    rtm?: boolean;
+    licencia?: boolean;
+  }>({});
 
   // Paso 4: Firma y Aceptación
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
@@ -159,6 +170,11 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
     setCupos(tipoVehiculo === 'motorcycle' ? 1 : 3);
   }, [tipoVehiculo]);
 
+  useEffect(() => {
+    setVehiculoIdCreado(null);
+    setDocumentosSubidos({});
+  }, [placa]);
+
   const abrirSelectorFoto = (tipo: 'soat' | 'tecno' | 'licencia') => {
     if (tipo === 'soat') {
       setConfigFotoActual({
@@ -182,10 +198,23 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
     setModalFotoAbierto(true);
   };
 
-  const handleFotoSeleccionada = (dataUrl: string) => {
-    if (configFotoActual.tipo === 'soat') setFotoSoat(dataUrl);
-    if (configFotoActual.tipo === 'tecno') setFotoTecno(dataUrl);
-    if (configFotoActual.tipo === 'licencia') setFotoLicencia(dataUrl);
+  const handleFotoSeleccionada = (dataUrl: string, asset?: PhotoPickerAsset) => {
+    const selectedAsset = asset || { uri: dataUrl, mimeType: 'image/jpeg' };
+    if (configFotoActual.tipo === 'soat') {
+      setFotoSoat(dataUrl);
+      setAssetSoat(selectedAsset);
+      setDocumentosSubidos((prev) => ({ ...prev, soat: false }));
+    }
+    if (configFotoActual.tipo === 'tecno') {
+      setFotoTecno(dataUrl);
+      setAssetTecno(selectedAsset);
+      setDocumentosSubidos((prev) => ({ ...prev, rtm: false }));
+    }
+    if (configFotoActual.tipo === 'licencia') {
+      setFotoLicencia(dataUrl);
+      setAssetLicencia(selectedAsset);
+      setDocumentosSubidos((prev) => ({ ...prev, licencia: false }));
+    }
     setModalFotoAbierto(false);
   };
 
@@ -390,66 +419,84 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
     };
 
     try {
-      try {
-        await authService.registerDriver(datosPayload);
-      } catch (authErr) {
-        console.warn('Notice from authService registerDriver:', authErr);
+      let vehiculoId = vehiculoIdCreado;
+
+      if (!vehiculoId) {
+        try {
+          await authService.registerDriver(datosPayload);
+        } catch (authErr) {
+          console.warn('Notice from authService registerDriver:', authErr);
+        }
+
+        const respuestaVehiculo = await vehicleService.registerVehicle({
+          vehicle_type: tipoVehiculo === 'motorcycle' ? 'moto' : 'carro',
+          plate_number: placa.toUpperCase(),
+          brand: marcaFinal,
+          model_line: modeloFinal,
+          year: parseInt(ano, 10),
+          color,
+          propulsion_type: tipoPropulsion,
+          available_seats: cupos,
+        });
+
+        vehiculoId = respuestaVehiculo?.data?.id || respuestaVehiculo?.id;
+        if (vehiculoId) {
+          setVehiculoIdCreado(vehiculoId);
+        }
       }
 
-      const respuestaVehiculo = await vehicleService.registerVehicle({
-        vehicle_type: tipoVehiculo === 'motorcycle' ? 'moto' : 'carro',
-        plate_number: placa.toUpperCase(),
-        brand: marcaFinal,
-        model_line: modeloFinal,
-        year: parseInt(ano, 10),
-        color,
-        propulsion_type: tipoPropulsion,
-        available_seats: cupos,
-      });
+      if (!vehiculoId) {
+        throw { message: 'No se pudo obtener el identificador del vehículo registrado.' };
+      }
 
-      const vehiculoId = respuestaVehiculo?.data?.id || respuestaVehiculo?.id;
-
-      if (vehiculoId) {
-        if (fotoSoat) {
-          try {
-            await vehicleService.uploadVehicleDocument(vehiculoId, 'soat', fotoSoat, 'soat.jpg', 'image/jpeg');
-          } catch (docErr) {
-            console.warn('Error subiendo foto SOAT:', docErr);
+      if (fotoSoat && !documentosSubidos.soat) {
+        await vehicleService.uploadVehicleDocument(
+          vehiculoId,
+          'soat',
+          assetSoat || fotoSoat,
+          {
+            documentNumber: numeroSoat.trim() || undefined,
+            expiresAt: vencimientoSoat || undefined,
+            fileName: assetSoat?.fileName || 'soat.jpg',
+            mimeType: assetSoat?.mimeType || 'image/jpeg',
           }
-        }
+        );
+        setDocumentosSubidos((prev) => ({ ...prev, soat: true }));
+      }
 
-        if (requiereTecno && fotoTecno) {
-          try {
-            await vehicleService.uploadVehicleDocument(
-              vehiculoId,
-              'revision_tecnico_mecanica',
-              fotoTecno,
-              'rtm.jpg',
-              'image/jpeg'
-            );
-          } catch (docErr) {
-            console.warn('Error subiendo foto RTM:', docErr);
+      if (requiereTecno && fotoTecno && !documentosSubidos.rtm) {
+        await vehicleService.uploadVehicleDocument(
+          vehiculoId,
+          'revision_tecnico_mecanica',
+          assetTecno || fotoTecno,
+          {
+            documentNumber: numeroTecno.trim() || undefined,
+            expiresAt: vencimientoTecno || undefined,
+            fileName: assetTecno?.fileName || 'rtm.jpg',
+            mimeType: assetTecno?.mimeType || 'image/jpeg',
           }
-        }
+        );
+        setDocumentosSubidos((prev) => ({ ...prev, rtm: true }));
+      }
 
-        if (fotoLicencia) {
-          try {
-            await vehicleService.uploadVehicleDocument(
-              vehiculoId,
-              'licencia_conduccion',
-              fotoLicencia,
-              'licencia.jpg',
-              'image/jpeg'
-            );
-          } catch (docErr) {
-            console.warn('Error subiendo foto Licencia:', docErr);
+      if (fotoLicencia && !documentosSubidos.licencia) {
+        await vehicleService.uploadVehicleDocument(
+          vehiculoId,
+          'licencia_conduccion',
+          assetLicencia || fotoLicencia,
+          {
+            documentNumber: numeroLicencia.trim() || undefined,
+            expiresAt: vencimientoLicencia || undefined,
+            fileName: assetLicencia?.fileName || 'licencia.jpg',
+            mimeType: assetLicencia?.mimeType || 'image/jpeg',
           }
-        }
+        );
+        setDocumentosSubidos((prev) => ({ ...prev, licencia: true }));
       }
 
       updateDriverStatus('pending', datosPayload);
       setPasoActual(5);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setMensajeError(parseBackendError(err));
     } finally {
       setEstaEnviando(false);
