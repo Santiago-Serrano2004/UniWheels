@@ -90,50 +90,69 @@ export function DriverRegistrationWizard({ onBack, onComplete }: DriverRegistrat
   useEffect(() => {
     let activo = true;
     setCargandoMarcas(true);
-    vehicleService.getCatalogBrands().then((marcas) => {
+    vehicleService.getCatalogBrands(tipoVehiculo).then((marcas: any) => {
       if (!activo) return;
       setCargandoMarcas(false);
       if (Array.isArray(marcas) && marcas.length > 0) {
         const nombresMarcas = marcas.map((m: any) => (typeof m === 'string' ? m : m.name || m.brand));
         setMarcasDisponibles(nombresMarcas);
         const marcaDefault = tipoVehiculo === 'motorcycle' ? 'Yamaha' : 'Chevrolet';
-        if (!nombresMarcas.includes(marca)) {
-          setMarca(marcaDefault);
+        const marcaEncontrada = nombresMarcas.find(
+          (m: string) => m.toLowerCase() === marcaDefault.toLowerCase()
+        );
+        if (marcaEncontrada) {
+          setMarca(marcaEncontrada);
+        } else {
+          setMarca(nombresMarcas[0]);
         }
+      } else {
+        setMarcasDisponibles([]);
       }
     }).catch(() => {
-      if (activo) setCargandoMarcas(false);
+      if (activo) {
+        setCargandoMarcas(false);
+        setMarcasDisponibles([]);
+      }
     });
     return () => {
       activo = false;
     };
-  }, [tipoVehiculo, marca]);
+  }, [tipoVehiculo]);
 
   // Cargar modelos según la marca seleccionada
   useEffect(() => {
     let activo = true;
-    setCargandoModelos(true);
-    const marcaConsulta = (marca === 'Otra Marca / Personalizada' || marca === 'Otra Marca')
-      ? marcaPersonalizada
-      : marca;
+    const esPersonalizada = marca === 'Otra Marca / Personalizada' || marca === 'Otra Marca';
+    if (esPersonalizada || !marca) {
+      setModelosDisponibles([]);
+      setModelo('');
+      setCargandoModelos(false);
+      return;
+    }
 
-    vehicleService.getCatalogModels(marcaConsulta).then((modelos) => {
+    setCargandoModelos(true);
+    vehicleService.getCatalogModels(marca).then((modelos: any) => {
       if (!activo) return;
       setCargandoModelos(false);
       if (Array.isArray(modelos) && modelos.length > 0) {
         const nombresModelos = modelos.map((mod: any) => (typeof mod === 'string' ? mod : mod.name || mod.model));
         setModelosDisponibles(nombresModelos);
-        if (nombresModelos.length > 0) {
-          setModelo(nombresModelos[0]);
-        }
+        setModelo(nombresModelos[0] || '');
+      } else {
+        setModelosDisponibles([]);
+        setModelo('');
       }
     }).catch(() => {
-      if (activo) setCargandoModelos(false);
+      if (activo) {
+        setCargandoModelos(false);
+        setModelosDisponibles([]);
+        setModelo('');
+      }
     });
     return () => {
       activo = false;
     };
-  }, [marca, marcaPersonalizada, tipoVehiculo]);
+  }, [marca]);
 
   useEffect(() => {
     setCategoriaLicencia(tipoVehiculo === 'motorcycle' ? 'A2' : 'B1');

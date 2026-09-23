@@ -94,12 +94,12 @@ export function VehicleSpecsStep({
     : (tipoVehiculo === 'car' ? MARCAS_FALLBACK_CARRO : MARCAS_FALLBACK_MOTO);
 
   const fallbackModelosMap = tipoVehiculo === 'car' ? MODELOS_FALLBACK_CARRO : MODELOS_FALLBACK_MOTO;
-  const modelos = modelosDisponibles.length > 0
+  const modelos = marcasDisponibles.length > 0
     ? modelosDisponibles
-    : (fallbackModelosMap[marca] || fallbackModelosMap.default);
+    : (modelosDisponibles.length > 0 ? modelosDisponibles : (fallbackModelosMap[marca] || fallbackModelosMap.default));
 
   const esMarcaPersonalizada = marca === 'Otra Marca / Personalizada' || marca === 'Otra Marca';
-  const esModeloPersonalizado = typeof modelo === 'string' && (modelo.startsWith('Otro') || modelo === 'Otro Modelo');
+  const esModeloPersonalizado = (typeof modelo === 'string' && (modelo.startsWith('Otro') || modelo === 'Otro Modelo')) || (modelos.length === 0 && !cargandoModelos && !esMarcaPersonalizada);
 
   return (
     <View className="space-y-4">
@@ -165,6 +165,7 @@ export function VehicleSpecsStep({
             {cargandoMarcas && <ActivityIndicator size="small" color="#0284c7" />}
           </View>
           <FormSelect
+            searchable
             value={marca}
             onChange={(val) => setMarca(String(val))}
             options={marcas.map((m) => ({ value: m, label: m }))}
@@ -177,7 +178,8 @@ export function VehicleSpecsStep({
             {cargandoModelos && <ActivityIndicator size="small" color="#0284c7" />}
           </View>
           <FormSelect
-            value={modelo || (modelos[0] || '')}
+            searchable
+            value={modelo}
             onChange={(val) => setModelo(String(val))}
             options={modelos.map((mod) => ({ value: mod, label: mod }))}
           />
