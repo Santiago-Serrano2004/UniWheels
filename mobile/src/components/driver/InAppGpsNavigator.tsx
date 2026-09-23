@@ -1,18 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
   Pressable,
-  useColorScheme,
   Platform,
   Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Marker, Polyline, UrlTile } from 'react-native-maps';
 import * as Location from 'expo-location';
 import {
-  Navigation,
-  MapPin,
   X,
   Compass,
   ArrowUpRight,
@@ -23,8 +19,8 @@ import {
   tripLifecycleService,
   getPlaceCoordinates,
   openExternalNavigation,
-  getMapTileProvider,
 } from '@uniwheels/shared';
+import { LeafletMap, type LeafletMapRef, type LeafletMarker, type LeafletPolyline } from '@/components/map/LeafletMap';
 import { useTurnByTurnNavigation } from '@/hooks/useTurnByTurnNavigation';
 
 export interface InAppGpsNavigatorProps {
@@ -42,9 +38,7 @@ export function InAppGpsNavigator({
   onExit,
   onComplete,
 }: InAppGpsNavigatorProps) {
-  const colorScheme = useColorScheme();
-  const tileProvider = getMapTileProvider(colorScheme === 'dark' ? 'dark' : 'light');
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<LeafletMapRef>(null);
 
   const initialOrigin: [number, number] = route?.origin_coords
     ? [route.origin_coords[0], route.origin_coords[1]]
@@ -110,17 +104,7 @@ export function InAppGpsNavigator({
             setPermissionError('');
 
             // Centrar cámara en el vehículo suavemente
-            if (mapRef.current) {
-              mapRef.current.animateCamera(
-                {
-                  center: { latitude: lat, longitude: lng },
-                  heading: currentHeading,
-                  pitch: 45,
-                  zoom: 17,
-                },
-                { duration: 800 }
-              );
-            }
+            mapRef.current?.animateTo([lat, lng], 17, 800);
 
             // Reportar telemetría al backend cada 5s
             const now = Date.now();
@@ -188,72 +172,71 @@ export function InAppGpsNavigator({
     }
   };
 
-  const routePolyline = turnByTurn.routeCoordinates.length >= 2
-    ? turnByTurn.routeCoordinates.map(([lat, lng]) => ({ latitude: lat, longitude: lng }))
-    : targetCoords
-    ? [
-        { latitude: driverCoords[0], longitude: driverCoords[1] },
-        { latitude: targetCoords[0], longitude: targetCoords[1] },
-      ]
-    : [];
+  const isMoto =
+    route?.vehicle?.toLowerCase().includes('moto') ||
+    trip?.vehicle_model?.toLowerCase().includes('moto') ||
+    (trip?.vehicle_plate && trip.vehicle_plate.length === 6 && /[a-zA-Z]$/.test(trip.vehicle_plate)) ||
+    (route?.plate && route.plate.length === 6 && /[a-zA-Z]$/.test(route.plate));
+
+  const markers: LeafletMarker[] = useMemo(() => {
+    const list: LeafletMarker[] = [
+      {
+        id: 'driver-vehicle',
+        coordinate: driverCoords,
+        kind: isMoto ? 'vehicle-moto' : 'vehicle-car',
+        rotation: heading,
+        isMoving: speedKmh > 0,
+        color: '#0284c7',
+      },
+    ];
+
+    if (targetCoords) {
+      const isDestCampus = trip?.is_pin_verified || !pickupCoords;
+      list.push({
+        id: 'target-dest',
+        coordinate: targetCoords,
+        kind: isDestCampus ? 'campus' : 'pickup',
+        label: isDestCampus ? 'Campus de destino' : 'Punto de encuentro',
+        color: isDestCampus ? '#10b981' : '#f59e0b',
+        forceBirrete: isDestCampus,
+      });
+    }
+
+    return list;
+  }, [driverCoords, heading, speedKmh, isMoto, targetCoords, trip?.is_pin_verified, pickupCoords]);
+
+  const polylines: LeafletPolyline[] = useMemo(() => {
+    const routeCoords = turnByTurn.routeCoordinates.length >= 2
+      ? turnByTurn.routeCoordinates
+      : targetCoords
+      ? [driverCoords, targetCoords]
+      : [];
+
+    if (routeCoords.length >= 2) {
+      return [
+        {
+          id: 'nav-route',
+          coordinates: routeCoords,
+          color: '#0284c7',
+          weight: 6,
+          opacity: 0.95,
+        },
+      ];
+    }
+    return [];
+  }, [turnByTurn.routeCoordinates, targetCoords, driverCoords]);
 
   return (
     <View className="flex-1 bg-slate-950">
       {/* 1. MAPA NAVEGADOR COMPLETO */}
-      <MapView
+      <LeafletMap
         ref={mapRef}
+        initialCenter={driverCoords}
+        initialZoom={17}
+        markers={markers}
+        polylines={polylines}
         style={{ width: '100%', height: '100%' }}
-        initialRegion={{
-          latitude: driverCoords[0],
-          longitude: driverCoords[1],
-          latitudeDelta: 0.008,
-          longitudeDelta: 0.008,
-        }}
-        showsCompass={false}
-        showsScale={false}
-        showsUserLocation={false}
-      >
-        <UrlTile
-          urlTemplate={tileProvider.url}
-          maximumZ={19}
-          flipY={false}
-          zIndex={1}
-        />
-
-        {/* Polilínea de la ruta */}
-        {routePolyline.length >= 2 && (
-          <Polyline
-            coordinates={routePolyline}
-            strokeColor="#0284c7"
-            strokeWidth={6}
-            zIndex={2}
-          />
-        )}
-
-        {/* Marcador del Vehículo */}
-        <Marker
-          coordinate={{ latitude: driverCoords[0], longitude: driverCoords[1] }}
-          anchor={{ x: 0.5, y: 0.5 }}
-          rotation={heading}
-          zIndex={10}
-        >
-          <View className="w-12 h-12 rounded-full bg-lochmara-600 border-2 border-white items-center justify-center shadow-lg">
-            <Navigation size={22} color="#ffffff" />
-          </View>
-        </Marker>
-
-        {/* Marcador de Destino */}
-        {targetCoords && (
-          <Marker
-            coordinate={{ latitude: targetCoords[0], longitude: targetCoords[1] }}
-            zIndex={5}
-          >
-            <View className="p-2 rounded-2xl bg-emerald-600 border border-white items-center justify-center shadow-md">
-              <MapPin size={18} color="#ffffff" />
-            </View>
-          </Marker>
-        )}
-      </MapView>
+      />
 
       {/* 2. HUD SUPERIOR: PRÓXIMA MANIOBRA & SALIR */}
       <SafeAreaView edges={['top']} className="absolute top-0 left-0 right-0 p-4 pointer-events-box-none">
