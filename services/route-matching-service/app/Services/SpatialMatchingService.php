@@ -19,8 +19,6 @@ class SpatialMatchingService
 
     const BOARDING_WAIT_MINUTES = 2.0; // Tiempo estimado de abordaje
 
-    const COP_PER_DETOUR_MINUTE = 300.0; // Recargo por minuto de desvío
-
     const MAX_TOTAL_DETOUR_MINUTES = 15.0; // Restricción dura máxima por trayecto
 
     public function __construct(
@@ -110,7 +108,7 @@ class SpatialMatchingService
                         'detour_minutes' => $evaluacion['detour_minutes'],
                         'detour_label' => '+'.round($evaluacion['detour_minutes']).' min',
                         'distance_to_pickup_meters' => round($distanciaMetros, 0),
-                        'suggested_fare_cop' => $evaluacion['total_suggested_fare_cop'],
+                        'suggested_fare_cop' => (float) $ruta->base_contribution_cop,
                         'is_viable' => true,
                         'traffic_status' => $evaluacion['traffic_info']['description'] ?? 'Tráfico normal',
                         'traffic_source' => $evaluacion['traffic_info']['source'] ?? 'hourly_model',
@@ -310,10 +308,8 @@ class SpatialMatchingService
             ];
         }
 
-        // 3. Tarifa colaborativa sugerida
+        // 3. El desvío no tiene recargo: el aporte es siempre el de la ruta.
         $tarifaBase = (float) $route->base_contribution_cop;
-        $recargoDesvio = round($detourTravelMinutes * self::COP_PER_DETOUR_MINUTE, 0);
-        $tarifaTotalSugerida = $tarifaBase + $recargoDesvio;
 
         return [
             'is_viable' => true,
@@ -322,8 +318,6 @@ class SpatialMatchingService
             'boarding_wait_minutes' => self::BOARDING_WAIT_MINUTES,
             'new_accumulated_detour' => $nuevoDesvioAcumulado,
             'base_fare_cop' => $tarifaBase,
-            'detour_extra_fee_cop' => $recargoDesvio,
-            'total_suggested_fare_cop' => $tarifaTotalSugerida,
             'estimated_arrival_time' => $horaLlegadaEstimada->toISOString(),
         ];
     }

@@ -112,6 +112,12 @@ services:
     container_name: uniwheels_route_matching_service
     restart: unless-stopped
     env_file: ../services/route-matching-service/.env.production
+    environment:
+      # Aporte sugerido por cupo (base + km × valor por km). Se pueden ajustar desde docker/.env.
+      CONTRIBUTION_CAR_BASE: ${CONTRIBUTION_CAR_BASE:-2000}
+      CONTRIBUTION_CAR_PER_KM: ${CONTRIBUTION_CAR_PER_KM:-400}
+      CONTRIBUTION_MOTO_BASE: ${CONTRIBUTION_MOTO_BASE:-1000}
+      CONTRIBUTION_MOTO_PER_KM: ${CONTRIBUTION_MOTO_PER_KM:-250}
     depends_on:
       postgres_gis: { condition: service_healthy }
     networks: [uniwheels_net]
@@ -131,6 +137,12 @@ services:
     container_name: uniwheels_trip_service
     restart: unless-stopped
     env_file: ../services/trip-service/.env.production
+    environment:
+      # Suspensión automática por cancelaciones tardías (la pide a auth-service).
+      AUTH_SERVICE_URL: http://auth-service:8001
+      LATE_CANCEL_THRESHOLD: ${LATE_CANCEL_THRESHOLD:-3}
+      LATE_CANCEL_WINDOW_DAYS: ${LATE_CANCEL_WINDOW_DAYS:-30}
+      LATE_CANCEL_SUSPENSION_DAYS: ${LATE_CANCEL_SUSPENSION_DAYS:-30}
     depends_on:
       postgres_gis: { condition: service_healthy }
       redis: { condition: service_healthy }
