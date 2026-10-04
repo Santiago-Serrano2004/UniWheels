@@ -30,7 +30,7 @@ class ContributionTest extends TestCase
         ]);
     }
 
-    private function query(string $vehicleId): string
+    private function parametrosSugerencia(string $vehicleId): string
     {
         return http_build_query([
             'vehicle_id' => $vehicleId,
@@ -64,7 +64,7 @@ class ContributionTest extends TestCase
         $this->fakeServicios('carro');
 
         $this->withToken($this->jwtDePrueba((string) Str::uuid()))
-            ->getJson('/api/v1/routes/contribution-suggestion?'.$this->query((string) Str::uuid()))
+            ->getJson('/api/v1/routes/contribution-suggestion?'.$this->parametrosSugerencia((string) Str::uuid()))
             ->assertStatus(200)
             ->assertJson(['success' => true, 'data' => [
                 'distance_km' => 8.4,
@@ -79,7 +79,7 @@ class ContributionTest extends TestCase
         $this->fakeServicios(vehicleServiceCaido: true);
 
         $this->withToken($this->jwtDePrueba((string) Str::uuid()))
-            ->getJson('/api/v1/routes/contribution-suggestion?'.$this->query((string) Str::uuid()))
+            ->getJson('/api/v1/routes/contribution-suggestion?'.$this->parametrosSugerencia((string) Str::uuid()))
             ->assertStatus(503)
             ->assertJsonPath('message', 'No fue posible validar el vehículo. Intenta nuevamente.');
     }
