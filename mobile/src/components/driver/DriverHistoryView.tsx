@@ -57,7 +57,6 @@ export function DriverHistoryView() {
   const [nuevoOrigen, setNuevoOrigen] = useState('Cañaveral - C.C. Parque Caracolí');
   const [nuevoDestino, setNuevoDestino] = useState('Campus El Jardín');
   const [nuevosCupos, setNuevosCupos] = useState(3);
-  const [nuevaTarifa, setNuevaTarifa] = useState('4500');
 
   // Historial de viajes completados
   const [viajesHistorial, setViajesHistorial] = useState<any[]>([]);
@@ -173,7 +172,6 @@ export function DriverHistoryView() {
       origin: nuevoOrigen,
       destination: nuevoDestino,
       seats: Number(nuevosCupos),
-      fare_cop: Number(nuevaTarifa),
     });
     setModalNuevaRutina(false);
   };
@@ -557,7 +555,7 @@ export function DriverHistoryView() {
                   <View className="flex-row items-center justify-between">
                     <Text className="text-[10px] font-bold text-slate-400">Ruta:</Text>
                     <Text className="text-xs font-black text-emerald-600 dark:text-emerald-400">
-                      ${Number(plantilla.fare_cop || 0).toLocaleString('es-CO')} • {plantilla.seats} cupos
+                      {plantilla.seats} cupos
                     </Text>
                   </View>
                   <View className="flex-row items-center gap-1.5">
@@ -805,30 +803,9 @@ export function DriverHistoryView() {
               </View>
             </View>
 
-            <View className="gap-1">
-              <Text className="text-[10px] font-bold text-slate-400 uppercase">Tarifa por Cupo:</Text>
-              <View className="flex-row gap-1">
-                {['3500', '4000', '4500', '5000'].map((tarifa) => (
-                  <Pressable
-                    key={tarifa}
-                    onPress={() => setNuevaTarifa(tarifa)}
-                    className={`flex-1 py-2 rounded-xl items-center justify-center ${
-                      nuevaTarifa === tarifa
-                        ? 'bg-emerald-600'
-                        : 'bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800'
-                    }`}
-                  >
-                    <Text
-                      className={`text-[10px] font-bold ${
-                        nuevaTarifa === tarifa ? 'text-white font-black' : 'text-slate-500'
-                      }`}
-                    >
-                      ${Number(tarifa).toLocaleString('es-CO')}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
+            <Text className="text-[10px] text-slate-400">
+              El aporte se calcula al publicar, con el tope sugerido para la ruta.
+            </Text>
 
             <Pressable
               onPress={handleCrearRutina}
