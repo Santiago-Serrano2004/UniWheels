@@ -15,7 +15,6 @@ class UserResource extends JsonResource
     public function toArray(Request $request): array
     {
         $reputacion = $this->reputationStats;
-        $billetera = $this->wallet;
 
         return [
             'id' => $this->id,
@@ -24,7 +23,7 @@ class UserResource extends JsonResource
             'id_document_number' => $this->id_document_number,
             'id_document_type' => $this->id_document_type,
             'phone_number' => $this->phone_number,
-            'profile_photo_url' => $this->profile_photo_path ? asset('storage/' . $this->profile_photo_path) : null,
+            'profile_photo_url' => $this->profile_photo_path ? asset('storage/'.$this->profile_photo_path) : null,
             'institution' => new InstitutionResource($this->whenLoaded('institution')),
             'campus' => $this->campus ? [
                 'id' => $this->campus->id,
@@ -43,10 +42,6 @@ class UserResource extends JsonResource
                 'average_rating_as_driver' => $reputacion?->average_rating_as_driver, // null si < 3 viajes
                 'average_rating_as_passenger' => $reputacion?->average_rating_as_passenger, // null si < 3 viajes
                 'has_public_rating' => ($reputacion?->rating_count_as_driver >= 3 || $reputacion?->rating_count_as_passenger >= 3),
-            ],
-            'wallet' => [
-                'balance_cop' => (float) ($billetera?->balance_cop ?? 0.00),
-                'is_locked' => (bool) ($billetera?->is_locked ?? false),
             ],
             'is_driver' => (bool) $this->is_driver,
             'is_active' => (bool) $this->is_active,

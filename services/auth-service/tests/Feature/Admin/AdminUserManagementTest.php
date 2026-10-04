@@ -4,7 +4,6 @@ use App\Models\Institution;
 use App\Models\User;
 use App\Models\UserReputationStats;
 use App\Models\UserSuspensionLog;
-use App\Models\UserWallet;
 use App\Services\JwtService;
 use Database\Seeders\InstitutionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -97,7 +96,7 @@ test('un administrador puede listar usuarios con filtros de busqueda rol y estad
         ->assertJsonPath('data.0.is_active', false);
 });
 
-test('un administrador puede consultar el detalle de un usuario con reputacion billetera y suspensiones', function () {
+test('un administrador puede consultar el detalle de un usuario con reputacion y suspensiones', function () {
     $admin = createAdminMgmtUser('administrador');
     $tokenAdmin = app(JwtService::class)->issue($admin);
 
@@ -114,12 +113,6 @@ test('un administrador puede consultar el detalle de un usuario con reputacion b
         'rating_count_as_passenger' => 3,
         'rating_sum_as_driver' => 48.0,
         'rating_sum_as_passenger' => 15.0,
-    ]);
-
-    UserWallet::create([
-        'user_id' => $targetUser->id,
-        'balance_cop' => 25000.00,
-        'is_locked' => false,
     ]);
 
     UserSuspensionLog::create([
@@ -142,10 +135,6 @@ test('un administrador puede consultar el detalle de un usuario con reputacion b
                 'reputation' => [
                     'total_trips_as_driver' => 15,
                     'average_rating_as_driver' => 4.8,
-                ],
-                'wallet' => [
-                    'balance_cop' => 25000.0,
-                    'is_locked' => false,
                 ],
             ],
         ])

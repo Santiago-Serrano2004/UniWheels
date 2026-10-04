@@ -71,11 +71,6 @@ class User extends Authenticatable
         return $this->hasOne(UserReputationStats::class);
     }
 
-    public function wallet(): HasOne
-    {
-        return $this->hasOne(UserWallet::class);
-    }
-
     public function suspensionLogs(): HasMany
     {
         return $this->hasMany(UserSuspensionLog::class)->orderByDesc('created_at');

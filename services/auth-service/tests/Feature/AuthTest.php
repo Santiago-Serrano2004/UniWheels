@@ -68,17 +68,12 @@ test('un estudiante puede registrarse exitosamente con prefijo y codigo estudian
         ])
         ->assertJsonPath('data.user.email', 'crodriguez@unab.edu.co')
         ->assertJsonPath('data.user.academic_profile.student_code', 'U00099887')
-        ->assertJsonPath('data.user.wallet.balance_cop', 0)
         ->assertJsonPath('data.token_type', 'Bearer');
 
     $this->assertDatabaseHas('users', [
         'email' => 'crodriguez@unab.edu.co',
         'name' => 'Carlos Rodriguez',
         'student_code' => 'U00099887',
-    ]);
-
-    $this->assertDatabaseHas('user_wallets', [
-        'balance_cop' => 0.00,
     ]);
 
     $this->assertDatabaseHas('user_reputation_stats', [

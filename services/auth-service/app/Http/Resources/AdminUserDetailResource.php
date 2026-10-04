@@ -13,7 +13,6 @@ class AdminUserDetailResource extends JsonResource
     public function toArray(Request $request): array
     {
         $reputacion = $this->reputationStats;
-        $billetera = $this->wallet;
 
         return [
             'id' => $this->id,
@@ -43,11 +42,6 @@ class AdminUserDetailResource extends JsonResource
                 'average_rating_as_driver' => $reputacion?->average_rating_as_driver,
                 'average_rating_as_passenger' => $reputacion?->average_rating_as_passenger,
                 'has_public_rating' => ($reputacion?->rating_count_as_driver >= 3 || $reputacion?->rating_count_as_passenger >= 3),
-            ],
-            'wallet' => [
-                'id' => $billetera?->id,
-                'balance_cop' => (float) ($billetera?->balance_cop ?? 0.00),
-                'is_locked' => (bool) ($billetera?->is_locked ?? false),
             ],
             'is_driver' => (bool) $this->is_driver,
             'is_active' => (bool) $this->is_active,
