@@ -235,7 +235,7 @@ class TripLifecycleTest extends TestCase
             ->assertJson(['success' => true])
             ->assertJsonPath('data.status', 'cancelado_por_conductor')
             ->assertJsonPath('data.late_cancellation', true)
-            ->assertJsonPath('data.warning', 'Se registró una cancelación tardía. Al acumular 3 en 30 días tu cuenta se suspende por 30 días.');
+            ->assertJsonPath('data.warning', 'Se registró una cancelación tardía (1 de 3 en 30 días). Al llegar a 3 tu cuenta se suspende por 30 días.');
 
         $this->assertDatabaseHas('trip_cancellations', [
             'trip_id' => $trip->id,

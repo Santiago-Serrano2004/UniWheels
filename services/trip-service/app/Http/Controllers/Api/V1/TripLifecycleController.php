@@ -8,7 +8,9 @@ use App\Http\Requests\CreateTripRequest;
 use App\Http\Requests\VerifyPinRequest;
 use App\Models\Trip;
 use App\Models\TripCompletedSummary;
+use App\Services\LateCancellationPolicy;
 use App\Services\RouteMatchingClient;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -16,7 +18,8 @@ use Illuminate\Support\Facades\Log;
 class TripLifecycleController extends Controller
 {
     public function __construct(
-        private RouteMatchingClient $routeMatchingClient
+        private RouteMatchingClient $routeMatchingClient,
+        private LateCancellationPolicy $lateCancellationPolicy
     ) {}
 
     /**
@@ -308,10 +311,7 @@ class TripLifecycleController extends Controller
                     'trip_id' => $trip->id,
                     'status' => $trip->status,
                     'late_cancellation' => $resultado['penalized'],
-                    'warning' => $resultado['penalized']
-                        ? 'Se registró una cancelación tardía. Al acumular 3 en 30 días tu cuenta se suspende por 30 días.'
-                        : null,
-                ],
+                ] + $this->lateCancellationOutcome($resultado['penalized'], $userId),
             ]);
         }
 
@@ -324,11 +324,39 @@ class TripLifecycleController extends Controller
                 'trip_id' => $trip->id,
                 'status' => $trip->status,
                 'late_cancellation' => $resultado['penalized'],
-                'warning' => $resultado['penalized']
-                    ? 'Cancelaste con menos de 2 minutos de anticipación: se registró una infracción en tu historial de confiabilidad.'
-                    : null,
-            ],
+            ] + $this->lateCancellationOutcome($resultado['penalized'], $userId),
         ]);
+    }
+
+    /**
+     * Si la cancelación fue tardía, evalúa el umbral de suspensión automática y arma
+     * los campos de la respuesta. Un fallo de auth-service nunca hace fallar la cancelación.
+     *
+     * @return array<string, mixed>
+     */
+    private function lateCancellationOutcome(bool $esTardia, string $userId): array
+    {
+        if (! $esTardia) {
+            return ['warning' => null];
+        }
+
+        $umbral = config('uniwheels.late_cancellations.threshold');
+        $ventana = config('uniwheels.late_cancellations.window_days');
+        $dias = config('uniwheels.late_cancellations.suspension_days');
+
+        $estado = $this->lateCancellationPolicy->evaluate($userId);
+
+        if ($estado['suspended']) {
+            $hasta = $estado['suspended_until']
+                ? Carbon::parse($estado['suspended_until'])->setTimezone('America/Bogota')->format('d/m/Y')
+                : null;
+            $warning = "Acumulaste {$umbral} cancelaciones tardías en {$ventana} días. Tu cuenta quedó suspendida"
+                .($hasta ? " hasta el {$hasta}." : '.');
+        } else {
+            $warning = "Se registró una cancelación tardía ({$estado['late_cancellations_30d']} de {$umbral} en {$ventana} días). Al llegar a {$umbral} tu cuenta se suspende por {$dias} días.";
+        }
+
+        return $estado + ['warning' => $warning];
     }
 
     /**
