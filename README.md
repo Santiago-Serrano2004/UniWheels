@@ -1,6 +1,6 @@
 # UniWheels
 
-**Verified carpooling for university communities.** Drivers publish the route they already drive to campus; passengers heading the same way get matched along it, pay in-app, and ride with people from their own university.
+**Verified carpooling for university communities.** Drivers publish the route they already drive to campus; passengers heading the same way get matched along it, and ride with people from their own university.
 
 🌐 **Live:** [uniwheels.org](https://uniwheels.org) · 🛠️ **Admin panel:** [admin.uniwheels.org](https://admin.uniwheels.org) · 📱 **Mobile app:** React Native (Expo)
 
@@ -13,7 +13,6 @@
 - **5 Laravel 13 microservices + 1 FastAPI ML service**, each with its own PostgreSQL database, behind an **nginx API gateway**.
 - **Geospatial matching** with **PostGIS**: routes stored as `LineString` geometries, GiST indexes, and `ST_DWithin` to find drivers passing near a passenger.
 - **ETA prediction** with **scikit-learn / XGBoost**, plus a route optimizer (ALNS for a multi-passenger dial-a-ride problem) served through FastAPI.
-- **Payments** with Wompi, verifying webhook signatures with **SHA-256**.
 - **Shared JWT auth** across services; account suspension propagated to every service through **Redis**.
 - **Driver verification workflow**: document uploads (license, insurance, vehicle inspection), reviewed in a **React + Vite admin panel**, served via short-lived signed URLs.
 - **Transactional email** with Resend (SPF, DKIM and DMARC configured).
@@ -40,18 +39,21 @@ flowchart LR
     RM --- DB3[(route_gis_db<br/>PostGIS)]
     TR --- DB4[(trip_db)]
     NO --- DB5[(notification_db)]
-    TR -. webhooks .- W[Wompi]
     AU -. email .- E[Resend]
 ```
 
 | Service | Stack | Responsibility |
 | :--- | :--- | :--- |
-| `auth-service` | Laravel 13 · PHP 8.3 | Sign-up with institutional email + PIN verification, JWT issuing, roles, wallet, account deletion (Colombian data-protection law) |
+| `auth-service` | Laravel 13 · PHP 8.3 | Sign-up with institutional email + PIN verification, JWT issuing, roles, account deletion (Colombian data-protection law) |
 | `vehicle-service` | Laravel 13 · PHP 8.3 | Cars and motorcycles, NHTSA vPIC catalog, legal documents, admin review flow |
 | `route-matching-service` | Laravel 13 · PHP 8.3 · PostGIS | Route geometries, spatial indexing, detour evaluation, suggested fares |
-| `trip-service` | Laravel 13 · PHP 8.3 | Trip state machine (requested → assigned → in progress with PIN check → completed), payments, cancellations |
+| `trip-service` | Laravel 13 · PHP 8.3 | Trip state machine (requested → assigned → in progress with PIN check → completed), cancellations, late-cancellation tracking with automatic 30-day suspension |
 | `notification-service` | Laravel 13 · PHP 8.3 | Two-way ratings, safety reports, in-app and push notifications |
 | `ai-route-service` | Python · FastAPI | ETA prediction (XGBoost), ALNS route optimization, traffic data |
+
+## Business model
+
+B2B for universities: the institution pays for a license, and the platform is free for its community. The platform never processes payments. Drivers set a per-seat contribution capped by a suggested value (car COP 2,000 + 400/km, motorcycle COP 1,000 + 250/km), which passengers pay directly to the driver outside the app. See [ADR 0001](docs/adr/0001-pivote-b2b-sin-pagos.md).
 
 ## Key design decisions
 
@@ -66,7 +68,7 @@ flowchart LR
 **Data:** PostgreSQL 16, PostGIS, Redis
 **Frontend & mobile:** TypeScript, React 19, React Native 0.86 / Expo SDK 57, Vite, Tailwind CSS, Leaflet
 **Infrastructure:** Docker Compose, nginx, Azure VM, Cloudflare, GitHub Actions
-**Integrations:** Wompi (payments), Resend (email), NHTSA vPIC, OSRM
+**Integrations:** Resend (email), NHTSA vPIC, OSRM
 
 ## Repository layout
 
