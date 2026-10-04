@@ -28,11 +28,7 @@ class AdminSosEventTest extends TestCase
             'boarding_pin' => '1234',
             'is_pin_verified' => false,
             'total_fare_cop' => 8000,
-            'driver_amount_cop' => 7040,
-            'platform_commission_cop' => 960,
-            'commission_status' => 'pendiente_debito',
             'status' => Trip::STATUS_EN_CAMINO,
-            'payment_method' => Trip::PAYMENT_METHOD_EFECTIVO,
             'scheduled_pickup_time' => Carbon::tomorrow()->setHour(7)->setMinute(0),
         ], $attributes));
     }

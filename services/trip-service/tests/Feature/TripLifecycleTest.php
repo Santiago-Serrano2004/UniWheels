@@ -47,7 +47,6 @@ class TripLifecycleTest extends TestCase
             'dropoff_address' => 'Campus El Jardín',
             'total_fare_cop' => 5800,
             'scheduled_pickup_time' => Carbon::tomorrow()->setHour(7)->setMinute(5)->toISOString(),
-            'payment_method' => 'efectivo',
         ];
 
         $response = $this->withToken($this->jwtDePrueba($passengerId))->postJson('/api/v1/trips', $payload);
@@ -81,7 +80,6 @@ class TripLifecycleTest extends TestCase
             'dropoff_address' => 'Campus El Jardín',
             'total_fare_cop' => 50000, // muy por encima del máximo tolerable (base + 4500)
             'scheduled_pickup_time' => Carbon::tomorrow()->setHour(7)->setMinute(5)->toISOString(),
-            'payment_method' => 'efectivo',
         ];
 
         $this->withToken($this->jwtDePrueba($passengerId))
@@ -172,12 +170,8 @@ class TripLifecycleTest extends TestCase
             ]);
     }
 
-    public function test_completa_un_viaje_pagado_p2p_y_debita_la_comision_de_la_billetera_del_conductor(): void
+    public function test_completa_un_viaje_y_registra_la_hora_de_llegada(): void
     {
-        Http::fake([
-            '*/api/v1/wallet/debit-commission' => Http::response(['success' => true], 200),
-        ]);
-
         $trip = $this->crearViajeBase('4829', 5000.0);
         $trip->verifyBoardingPin('4829');
 
@@ -187,77 +181,13 @@ class TripLifecycleTest extends TestCase
         $response->assertStatus(200)
             ->assertJson(['success' => true])
             ->assertJsonPath('data.status', 'completado')
-            ->assertJsonPath('data.total_fare_cop', 5000)
-            ->assertJsonPath('data.platform_commission_cop', 600)
-            ->assertJsonPath('data.driver_net_earnings_cop', 4400)
-            ->assertJsonPath('data.commission_status', 'debitada_exitosamente');
+            ->assertJsonPath('data.total_fare_cop', 5000);
 
         $this->assertDatabaseHas('trips', [
             'id' => $trip->id,
             'status' => 'completado',
-            'platform_commission_cop' => 600.00,
-            'driver_amount_cop' => 4400.00,
-            'commission_status' => 'debitada_exitosamente',
         ]);
-
-        Http::assertSent(function ($request) use ($trip) {
-            return str_contains($request->url(), 'wallet/debit-commission')
-                && $request['user_id'] === $trip->driver_id
-                && $request['amount_cop'] === 600.0;
-        });
-    }
-
-    public function test_si_auth_service_no_responde_el_viaje_igual_se_completa_pero_la_comision_queda_pendiente(): void
-    {
-        Http::fake([
-            '*/api/v1/wallet/debit-commission' => Http::response([], 500),
-        ]);
-
-        $trip = $this->crearViajeBase('4829', 5000.0);
-        $trip->verifyBoardingPin('4829');
-
-        $response = $this->withToken($this->jwtDePrueba($trip->driver_id))
-            ->postJson("/api/v1/trips/{$trip->id}/complete");
-
-        $response->assertStatus(200)
-            ->assertJsonPath('data.status', 'completado')
-            ->assertJsonPath('data.commission_status', 'pendiente_debito');
-    }
-
-    public function test_un_viaje_con_tarjeta_no_se_puede_completar_sin_pago_confirmado(): void
-    {
-        $trip = $this->crearViajeBase('4829', 5000.0);
-        $trip->update(['payment_method' => Trip::PAYMENT_METHOD_TARJETA]);
-        $trip->verifyBoardingPin('4829');
-
-        $response = $this->withToken($this->jwtDePrueba($trip->driver_id))
-            ->postJson("/api/v1/trips/{$trip->id}/complete");
-
-        $response->assertStatus(422);
-        $this->assertDatabaseHas('trips', ['id' => $trip->id, 'status' => 'recogido']);
-    }
-
-    public function test_un_viaje_con_tarjeta_confirmado_acredita_la_ganancia_al_conductor(): void
-    {
-        Http::fake([
-            '*/api/v1/wallet/credit' => Http::response(['success' => true], 200),
-        ]);
-
-        $trip = $this->crearViajeBase('4829', 5000.0);
-        $trip->update(['payment_method' => Trip::PAYMENT_METHOD_TARJETA, 'payment_confirmed_at' => now()]);
-        $trip->verifyBoardingPin('4829');
-
-        $response = $this->withToken($this->jwtDePrueba($trip->driver_id))
-            ->postJson("/api/v1/trips/{$trip->id}/complete");
-
-        $response->assertStatus(200)
-            ->assertJsonPath('data.commission_status', 'debitada_exitosamente');
-
-        Http::assertSent(function ($request) use ($trip) {
-            return str_contains($request->url(), 'wallet/credit')
-                && $request['user_id'] === $trip->driver_id
-                && $request['amount_cop'] === 4400.0;
-        });
+        $this->assertNotNull($trip->fresh()->actual_dropoff_time);
     }
 
     public function test_cancelacion_por_conductor_con_menos_de_15_min_aplica_penalizacion(): void
@@ -273,8 +203,8 @@ class TripLifecycleTest extends TestCase
         $response->assertStatus(200)
             ->assertJson(['success' => true])
             ->assertJsonPath('data.status', 'cancelado_por_conductor')
-            ->assertJsonPath('data.penalized', true)
-            ->assertJsonPath('data.penalty_fee_cop', 3000);
+            ->assertJsonPath('data.late_cancellation', true)
+            ->assertJsonPath('data.warning', 'Se registró una cancelación tardía. Al acumular 3 en 30 días tu cuenta se suspende por 30 días.');
 
         $this->assertDatabaseHas('trip_cancellations', [
             'trip_id' => $trip->id,
@@ -294,7 +224,7 @@ class TripLifecycleTest extends TestCase
             ]);
 
         $response->assertStatus(200)
-            ->assertJsonPath('data.penalized', false);
+            ->assertJsonPath('data.late_cancellation', false);
     }
 
     public function test_cancelacion_por_pasajero_con_mas_de_2_min_no_aplica_penalizacion(): void
@@ -310,7 +240,7 @@ class TripLifecycleTest extends TestCase
         $response->assertStatus(200)
             ->assertJson(['success' => true])
             ->assertJsonPath('data.status', 'cancelado_por_pasajero')
-            ->assertJsonPath('data.penalized', false);
+            ->assertJsonPath('data.late_cancellation', false);
     }
 
     public function test_cancelacion_por_pasajero_con_menos_de_2_min_aplica_penalizacion(): void
@@ -324,7 +254,7 @@ class TripLifecycleTest extends TestCase
             ]);
 
         $response->assertStatus(200)
-            ->assertJsonPath('data.penalized', true);
+            ->assertJsonPath('data.late_cancellation', true);
     }
 
     public function test_consulta_el_viaje_activo_del_pasajero(): void
@@ -384,9 +314,6 @@ class TripLifecycleTest extends TestCase
             'boarding_pin' => $pin,
             'is_pin_verified' => false,
             'total_fare_cop' => $fare,
-            'driver_amount_cop' => round($fare * 0.88, 2),
-            'platform_commission_cop' => round($fare * 0.12, 2),
-            'commission_status' => 'pendiente_debito',
             'status' => Trip::STATUS_CONFIRMADO,
             'scheduled_pickup_time' => $scheduledPickupTime ?? Carbon::tomorrow()->setHour(7)->setMinute(0),
         ]);
