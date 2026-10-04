@@ -382,28 +382,4 @@ export const adminTripService = {
     const response = await apiClient.get(`/admin/trips?${params.toString()}`);
     return response.data;
   },
-
-  async getTripPayments({ status = '', from = '', to = '', page = 1, per_page = 15 } = {}) {
-    const params = new URLSearchParams();
-    if (status && status !== 'todos') params.append('status', status);
-    if (from) params.append('from', from);
-    if (to) params.append('to', to);
-    if (page) params.append('page', page);
-    if (per_page) params.append('per_page', per_page);
-
-    const response = await apiClient.get(`/admin/payments/trips?${params.toString()}`);
-    return response.data;
-  },
-
-  async getTopupPayments({ status = '', from = '', to = '', page = 1, per_page = 15 } = {}) {
-    const params = new URLSearchParams();
-    if (status && status !== 'todos') params.append('status', status);
-    if (from) params.append('from', from);
-    if (to) params.append('to', to);
-    if (page) params.append('page', page);
-    if (per_page) params.append('per_page', per_page);
-
-    const response = await apiClient.get(`/admin/payments/topups?${params.toString()}`);
-    return response.data;
-  },
 };
