@@ -45,6 +45,7 @@ class AdminUserDetailResource extends JsonResource
             ],
             'is_driver' => (bool) $this->is_driver,
             'is_active' => (bool) $this->is_active,
+            'suspended_until' => $this->suspended_until?->toISOString(),
             'roles' => $this->getRoleNames(),
             'suspension_logs' => $this->suspensionLogs->map(fn ($log) => [
                 'id' => $log->id,

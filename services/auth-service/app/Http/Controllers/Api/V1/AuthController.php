@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\UserReputationStats;
 use App\Services\JwtService;
 use App\Services\SmsService;
+use App\Services\UserSuspensionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -122,6 +123,16 @@ class AuthController extends Controller
             throw ValidationException::withMessages([
                 'email' => ['Las credenciales ingresadas son incorrectas o no corresponden a un usuario activo.'],
             ]);
+        }
+
+        app(UserSuspensionService::class)->liftIfExpired($usuario);
+
+        if (! $usuario->is_active && $usuario->suspended_until) {
+            return response()->json([
+                'success' => false,
+                'message' => app(UserSuspensionService::class)->suspensionMessage($usuario),
+                'suspended_until' => $usuario->suspended_until->toISOString(),
+            ], 403);
         }
 
         if (! $usuario->is_active) {
