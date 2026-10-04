@@ -140,6 +140,27 @@ class SpatialMatchingTest extends TestCase
     }
 
     /**
+     * 3b. Modalidad 2: aunque haya desvío, el aporte sugerido es el de la ruta (sin recargo)
+     */
+    public function test_modalidad_2_sugiere_el_aporte_de_la_ruta_aunque_haya_desvio(): void
+    {
+        $ruta = $this->crearRutaBase('Cañaveral', 6, 45, 7, 30, 20.0, 4500);
+
+        $response = $this->withToken($this->jwtDePrueba((string) Str::uuid()))->postJson('/api/v1/routes/search-match', [
+            'pickup_lat' => 7.1208,
+            'pickup_lng' => -73.1100,
+            'destination_campus_id' => 1,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.0.modality', 'modalidad_2_desvio')
+            ->assertJsonPath('data.0.suggested_fare_cop', 4500);
+
+        $this->assertGreaterThan(0, $response->json('data.0.detour_minutes'));
+        $this->assertEquals((float) $ruta->base_contribution_cop, $response->json('data.0.suggested_fare_cop'));
+    }
+
+    /**
      * 4. Poda de sentido de circulación: Rechaza si el pasajero está detrás del inicio
      */
     public function test_rechaza_emparejamiento_si_el_pasajero_esta_en_sentido_contrario(): void
@@ -334,21 +355,20 @@ class SpatialMatchingTest extends TestCase
     }
 
     /**
-     * 11. Desglose Tarifario Matemático Exacto ($ Base + $300 COP / min de desvío)
+     * 11. El desvío no tiene recargo: la evaluación solo expone la tarifa base de la ruta
      */
-    public function test_calculo_exacto_del_desglose_tarifario_con_recargo_por_minuto(): void
+    public function test_la_evaluacion_de_desvio_no_agrega_recargo_a_la_tarifa_base(): void
     {
-        $ruta = $this->crearRutaBase('Cañaveral', 6, 45, 7, 30, 20.0, 4000); // Tarifa base: $ 4.000 COP
+        $ruta = $this->crearRutaBase('Cañaveral', 6, 45, 7, 30, 20.0, 4000); // Aporte de la ruta: $ 4.000 COP
 
         // Desvío de viaje de 4.0 minutos (+ 2.0 min abordaje = 6.0 min total)
-        // Recargo económico = 4.0 min viaje * $300 COP = $ 1.200 COP
-        // Tarifa total = $ 4.000 + $ 1.200 = $ 5.200 COP
         $evaluacion = $this->matchingService->evaluateDetour($ruta, 7.1186, -73.1102, 4.0);
 
         $this->assertTrue($evaluacion['is_viable']);
+        $this->assertGreaterThan(0, $evaluacion['detour_minutes']);
         $this->assertEquals(4000.0, $evaluacion['base_fare_cop']);
-        $this->assertEquals(1200.0, $evaluacion['detour_extra_fee_cop']);
-        $this->assertEquals(5200.0, $evaluacion['total_suggested_fare_cop']);
+        $this->assertArrayNotHasKey('detour_extra_fee_cop', $evaluacion);
+        $this->assertArrayNotHasKey('total_suggested_fare_cop', $evaluacion);
     }
 
     /**
@@ -372,7 +392,7 @@ class SpatialMatchingTest extends TestCase
                 'data' => [
                     'is_viable',
                     'detour_minutes',
-                    'total_suggested_fare_cop',
+                    'base_fare_cop',
                     'estimated_arrival_time',
                 ],
             ]);
