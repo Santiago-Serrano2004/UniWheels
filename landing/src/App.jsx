@@ -5,6 +5,7 @@ import { HowItWorks } from './components/HowItWorks';
 import { Modalities } from './components/Modalities';
 import { Security } from './components/Security';
 import { ForDrivers } from './components/ForDrivers';
+import { ForUniversities } from './components/ForUniversities';
 import { FAQ } from './components/FAQ';
 import { Footer } from './components/Footer';
 import { PrivacyModal } from './components/PrivacyModal';
@@ -22,6 +23,7 @@ export default function App() {
         <Modalities />
         <Security onOpenPrivacy={abrirPrivacidad} />
         <ForDrivers />
+        <ForUniversities />
         <FAQ onOpenPrivacy={abrirPrivacidad} />
       </main>
       <Footer onOpenPrivacy={abrirPrivacidad} />

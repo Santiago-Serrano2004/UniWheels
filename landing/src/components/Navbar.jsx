@@ -6,6 +6,7 @@ const ENLACES = [
   { href: '#modalidades', label: 'Modalidades' },
   { href: '#seguridad', label: 'Seguridad' },
   { href: '#conductores', label: 'Para conductores' },
+  { href: '#universidades', label: 'Para universidades' },
   { href: '#faq', label: 'Preguntas' },
 ];
 

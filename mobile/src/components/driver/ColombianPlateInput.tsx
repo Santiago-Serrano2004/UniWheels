@@ -49,7 +49,7 @@ export function ColombianPlateInput({
             <>
               <CheckCircle2 size={12} color="#10b981" />
               <Text className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                Formato Válido RUNT
+                Formato de placa válido
               </Text>
             </>
           ) : (
