@@ -92,11 +92,10 @@ class TripLifecycleController extends Controller
 
         $driverId = $ruta['driver_id'];
         $tarifaBase = (float) $ruta['base_contribution_cop'];
-        // Tolerancia: recargo máximo por desvío según reglas de negocio (300 COP/min, tope 15 min).
-        $tarifaMaxima = $tarifaBase + (15 * 300);
         $tarifa = (float) $datos['total_fare_cop'];
 
-        if ($tarifa < $tarifaBase || $tarifa > $tarifaMaxima) {
+        // La reserva usa exactamente el aporte publicado en la ruta (puede ser 0).
+        if (round($tarifa, 2) !== round($tarifaBase, 2)) {
             return response()->json([
                 'success' => false,
                 'message' => 'La tarifa indicada no corresponde a un valor válido para esta ruta.',

@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ContributionSuggestionRequest;
 use App\Http\Requests\PublishRouteRequest;
 use App\Http\Requests\SearchMatchRequest;
 use App\Models\Route;
 use App\Services\AiRouteServiceClient;
+use App\Services\ContributionCalculator;
+use App\Services\DriverProfileClient;
 use App\Services\OsrmRoutingService;
 use App\Services\PostGisSpatialRepository;
 use App\Services\SpatialMatchingService;
@@ -20,7 +23,8 @@ class RouteController extends Controller
         protected SpatialMatchingService $matchingService,
         protected PostGisSpatialRepository $spatialRepo,
         protected OsrmRoutingService $routingService,
-        protected AiRouteServiceClient $aiClient
+        protected AiRouteServiceClient $aiClient,
+        protected DriverProfileClient $driverProfileClient
     ) {}
 
     /**
@@ -59,6 +63,8 @@ class RouteController extends Controller
                 'available_seats' => $route->available_seats,
                 'fare' => '$ '.number_format($route->base_contribution_cop, 0, ',', '.'),
                 'base_contribution_cop' => (float) $route->base_contribution_cop,
+                'distance_km' => $route->distance_km,
+                'suggested_contribution_cop' => $route->suggested_contribution_cop,
                 'status' => $route->status,
                 'detour_minutes' => '0 min',
             ];
@@ -95,6 +101,45 @@ class RouteController extends Controller
     }
 
     /**
+     * Aporte sugerido y tope para el conductor, según la distancia vial y el tipo de vehículo.
+     */
+    public function contributionSuggestion(ContributionSuggestionRequest $request): JsonResponse
+    {
+        $datos = $request->validated();
+
+        $tipoVehiculo = $this->driverProfileClient->getVehicleType($datos['vehicle_id']);
+
+        if ($tipoVehiculo === null) {
+            return $this->vehicleValidationFailed();
+        }
+
+        $calculoRuta = $this->routingService->calculateRoute(
+            [(float) $datos['origin_lat'], (float) $datos['origin_lng']],
+            [(float) $datos['destination_lat'], (float) $datos['destination_lng']]
+        );
+        $distanciaKm = $calculoRuta['distance_meters'] / 1000;
+        $sugerido = ContributionCalculator::suggest($distanciaKm, $tipoVehiculo);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'distance_km' => round($distanciaKm, 1),
+                'vehicle_type' => $tipoVehiculo,
+                'suggested_contribution_cop' => $sugerido,
+                'max_contribution_cop' => $sugerido,
+            ],
+        ]);
+    }
+
+    private function vehicleValidationFailed(): JsonResponse
+    {
+        return response()->json([
+            'success' => false,
+            'message' => 'No fue posible validar el vehículo. Intenta nuevamente.',
+        ], 503);
+    }
+
+    /**
      * Publicar una nueva ruta con cálculo topológico de tiempo y persistencia PostGIS.
      */
     public function store(PublishRouteRequest $request): JsonResponse
@@ -120,6 +165,29 @@ class RouteController extends Controller
             $duracionMinutos = $calculoRuta['duration_minutes'];
         }
 
+        // El aporte indicado por el conductor no puede superar el sugerido (reglas §1.2).
+        $distanciaKm = $calculoRuta['distance_meters'] / 1000;
+        $tipoVehiculo = $this->driverProfileClient->getVehicleType($datos['vehicle_id']);
+
+        if ($tipoVehiculo === null) {
+            return $this->vehicleValidationFailed();
+        }
+
+        $sugerido = ContributionCalculator::suggest($distanciaKm, $tipoVehiculo);
+
+        if ($datos['base_contribution_cop'] > $sugerido) {
+            $maximo = '$ '.number_format($sugerido, 0, ',', '.');
+
+            return response()->json([
+                'success' => false,
+                'message' => 'El aporte indicado supera el máximo permitido para esta ruta.',
+                'errors' => [
+                    'base_contribution_cop' => ["El aporte máximo para esta ruta es de {$maximo} COP."],
+                ],
+                'data' => ['max_contribution_cop' => $sugerido],
+            ], 422);
+        }
+
         // 2. Crear la entidad en la base de datos
         $ruta = Route::create([
             'driver_id' => $datos['driver_id'],
@@ -134,6 +202,8 @@ class RouteController extends Controller
             'accumulated_detour_minutes' => 0.0,
             'available_seats' => $datos['available_seats'],
             'base_contribution_cop' => $datos['base_contribution_cop'],
+            'distance_km' => round($distanciaKm, 2),
+            'suggested_contribution_cop' => $sugerido,
             'status' => 'publicada',
         ]);
 
@@ -157,6 +227,8 @@ class RouteController extends Controller
                 'estimated_duration_minutes' => $ruta->estimated_duration_minutes,
                 'available_seats' => $ruta->available_seats,
                 'base_contribution_cop' => (float) $ruta->base_contribution_cop,
+                'distance_km' => $ruta->distance_km,
+                'suggested_contribution_cop' => $ruta->suggested_contribution_cop,
                 'coordinates_count' => count($coordenadas),
             ],
         ], 201);
@@ -226,6 +298,8 @@ class RouteController extends Controller
                 'estimated_duration_minutes' => $ruta->estimated_duration_minutes,
                 'available_seats' => $ruta->available_seats,
                 'base_contribution_cop' => (float) $ruta->base_contribution_cop,
+                'distance_km' => $ruta->distance_km,
+                'suggested_contribution_cop' => $ruta->suggested_contribution_cop,
                 'status' => $ruta->status,
                 'coordinates' => $coordenadas,
             ],

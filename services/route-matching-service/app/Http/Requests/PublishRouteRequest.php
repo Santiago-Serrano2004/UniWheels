@@ -26,7 +26,7 @@ class PublishRouteRequest extends FormRequest
             'scheduled_departure_time' => ['required', 'date'],
             'target_arrival_time' => ['required', 'date', 'after:scheduled_departure_time'],
             'available_seats' => ['required', 'integer', 'min:1', 'max:6'],
-            'base_contribution_cop' => ['required', 'numeric', 'min:2000', 'max:25000'],
+            'base_contribution_cop' => ['required', 'integer', 'min:0'],
             'max_detour_minutes' => ['nullable', 'integer', 'min:5', 'max:30'],
             'coordinates' => ['nullable', 'array', 'min:2'],
             'coordinates.*' => ['array', 'size:2'],
@@ -39,7 +39,6 @@ class PublishRouteRequest extends FormRequest
     {
         return [
             'target_arrival_time.after' => 'La hora límite de llegada a clase debe ser posterior a la hora de salida programada.',
-            'base_contribution_cop.min' => 'El aporte colaborativo mínimo por cupo es de $ 2.000 COP.',
             'available_seats.min' => 'Debes ofertar al menos 1 cupo disponible.',
         ];
     }

@@ -18,6 +18,9 @@ Route::prefix('v1')->middleware('jwt.auth')->group(function () {
     Route::post('/routes/{id}/evaluate-detour', [RouteController::class, 'evaluateDetour'])
         ->middleware('throttle:30,1');
 
+    // Aporte sugerido y tope para el conductor — declarada antes de /routes/{id}.
+    Route::get('/routes/contribution-suggestion', [RouteController::class, 'contributionSuggestion']);
+
     // Rutas de Carpooling (Conductor y Pasajero)
     Route::get('/routes', [RouteController::class, 'index']);
     Route::post('/routes', [RouteController::class, 'store']);

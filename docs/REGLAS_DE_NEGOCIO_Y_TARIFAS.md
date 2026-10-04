@@ -58,11 +58,11 @@ $$\text{Aporte por cupo} = \text{APORTE\_BASE} + \text{distancia\_km} \times \te
 
 | Trayecto | Aporte | App de moto (estimada) | % de la app | Costo de operar la moto ($200/km) |
 |---|---|---|---|---|
-| 3 km | $1.750 | ~$4.150 | 42 % | $600 |
-| 5 km | $2.250 | ~$5.250 | 43 % | $1.000 |
+| 3 km | $1.800 | ~$4.150 | 43 % | $600 |
+| 5 km | $2.300 | ~$5.250 | 44 % | $1.000 |
 | 8 km | $3.000 | ~$6.900 | 43 % | $1.600 |
 | 10 km | $3.500 | ~$8.000 | 44 % | $2.000 |
-| 15 km | $4.750 | ~$10.750 | 44 % | $3.000 |
+| 15 km | $4.800 | ~$10.750 | 45 % | $3.000 |
 | 20 km | $6.000 | ~$13.500 | 44 % | $4.000 |
 
 - ⚠️ **Riesgo legal ALTO:** con este esquema el conductor recibe **entre 2,7 y 5,8 veces el costo de operar el trayecto** con el carro lleno, y con un solo pasajero también recibe más que el costo. En moto recibe entre 1,5 y 2,9 veces el costo. Ya no es "compartir gastos", es una **tarifa**. Eso se acerca a la infracción D12 (Ley 769, art. 131: multa y hasta 40 días de inmovilización para el conductor) y debilita el argumento del ADR 0001. **Hay que conseguir un concepto de un abogado antes del lanzamiento.** Si es negativo, se vuelve al esquema de costo compartido: `max($2.000, ⌈km × $550 / cupos⌉₁₀₀)`.

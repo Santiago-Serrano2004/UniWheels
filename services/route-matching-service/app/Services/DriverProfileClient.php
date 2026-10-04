@@ -97,4 +97,32 @@ class DriverProfileClient
 
         return $fallback;
     }
+
+    /**
+     * Tipo de vehículo ('carro' o 'moto') según vehicle-service. Devuelve null si
+     * falla: sin fallback a 'carro', porque el tope del aporte no se puede
+     * calcular a ciegas.
+     */
+    public function getVehicleType(string $vehicleId): ?string
+    {
+        try {
+            $baseUrl = config('services.vehicle_service.url');
+            $respuesta = Http::withToken($this->serviceToken())
+                ->timeout(3)
+                ->get("{$baseUrl}/api/v1/vehicles/{$vehicleId}/public-summary");
+
+            if ($respuesta->successful() && $respuesta->json('success')) {
+                $tipo = $respuesta->json('data.vehicle_type');
+
+                return in_array($tipo, ['carro', 'moto'], true) ? $tipo : null;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('vehicle-service no disponible para validar el tipo de vehículo.', [
+                'vehicle_id' => $vehicleId,
+                'exception_class' => get_class($e),
+            ]);
+        }
+
+        return null;
+    }
 }

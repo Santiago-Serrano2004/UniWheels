@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -21,6 +22,10 @@ class RouteSecurityTest extends TestCase
     public function test_no_se_puede_publicar_una_ruta_suplantando_a_otro_conductor(): void
     {
         $conductorReal = (string) Str::uuid();
+        Http::fake([
+            '*/api/v1/vehicles/*/public-summary' => Http::response(['success' => true, 'data' => ['vehicle_type' => 'carro']], 200),
+            '*/route/v1/driving/*' => Http::response([], 500), // OSRM caído: respaldo geodésico (~7,3 km → sugerido $ 5.000)
+        ]);
         $conductorSuplantado = (string) Str::uuid();
 
         $payload = [
