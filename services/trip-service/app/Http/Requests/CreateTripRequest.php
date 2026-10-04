@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Trip;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class CreateTripRequest extends FormRequest
 {
@@ -30,7 +28,6 @@ class CreateTripRequest extends FormRequest
             'dropoff_address' => ['required', 'string', 'max:150'],
             'total_fare_cop' => ['required', 'numeric', 'min:2000', 'max:100000'],
             'scheduled_pickup_time' => ['required', 'date'],
-            'payment_method' => ['required', 'string', Rule::in(Trip::PAYMENT_METHODS)],
         ];
     }
 }

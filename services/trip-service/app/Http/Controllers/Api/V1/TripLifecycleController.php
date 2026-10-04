@@ -9,7 +9,6 @@ use App\Http\Requests\VerifyPinRequest;
 use App\Models\Trip;
 use App\Models\TripCompletedSummary;
 use App\Services\RouteMatchingClient;
-use App\Services\WalletServiceClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -17,8 +16,7 @@ use Illuminate\Support\Facades\Log;
 class TripLifecycleController extends Controller
 {
     public function __construct(
-        private RouteMatchingClient $routeMatchingClient,
-        private WalletServiceClient $walletServiceClient
+        private RouteMatchingClient $routeMatchingClient
     ) {}
 
     /**
@@ -105,8 +103,6 @@ class TripLifecycleController extends Controller
             ], 422);
         }
 
-        $comision = round($tarifa * Trip::COMMISSION_RATE, 2);
-        $gananciaConductor = round($tarifa - $comision, 2);
         $pin = str_pad((string) random_int(1000, 9999), 4, '0', STR_PAD_LEFT);
 
         $trip = Trip::create([
@@ -123,10 +119,6 @@ class TripLifecycleController extends Controller
             'boarding_pin' => $pin,
             'is_pin_verified' => false,
             'total_fare_cop' => $tarifa,
-            'driver_amount_cop' => $gananciaConductor,
-            'platform_commission_cop' => $comision,
-            'commission_status' => 'pendiente_debito',
-            'payment_method' => $datos['payment_method'],
             'status' => Trip::STATUS_CONFIRMADO,
             'scheduled_pickup_time' => $datos['scheduled_pickup_time'],
         ]);
@@ -143,7 +135,6 @@ class TripLifecycleController extends Controller
                 'pickup_address' => $trip->pickup_address,
                 'dropoff_address' => $trip->dropoff_address,
                 'total_fare_cop' => (float) $trip->total_fare_cop,
-                'payment_method' => $trip->payment_method,
                 'scheduled_pickup_time' => $trip->scheduled_pickup_time->toISOString(),
             ],
         ], 201);
@@ -228,7 +219,7 @@ class TripLifecycleController extends Controller
     }
 
     /**
-     * Completar el viaje en el campus universitario y liquidar comisiones (Conductor).
+     * Completar el viaje en el campus universitario (Conductor).
      */
     public function complete(Request $request, string $id): JsonResponse
     {
@@ -245,18 +236,7 @@ class TripLifecycleController extends Controller
             ], 422);
         }
 
-        // Un viaje con tarjeta no puede liquidarse sin que Wompi haya confirmado
-        // el cobro real — de lo contrario el conductor recibiría su ganancia por
-        // un pago que nunca llegó a la plataforma.
-        if ($trip->isPaymentByCard() && ! $trip->payment_confirmed_at) {
-            return response()->json([
-                'success' => false,
-                'message' => 'El pago con tarjeta de este viaje aún no ha sido confirmado. Espera la confirmación o pide al pasajero que complete el pago.',
-            ], 422);
-        }
-
         $trip->complete();
-        $this->liquidarViaje($trip);
         $this->registrarResumenParaEntrenamiento($trip);
 
         return response()->json([
@@ -266,41 +246,9 @@ class TripLifecycleController extends Controller
                 'trip_id' => $trip->id,
                 'status' => $trip->status,
                 'total_fare_cop' => (float) $trip->total_fare_cop,
-                'driver_net_earnings_cop' => (float) $trip->driver_amount_cop,
-                'platform_commission_cop' => (float) $trip->platform_commission_cop,
-                'commission_status' => $trip->commission_status,
                 'actual_dropoff_time' => $trip->actual_dropoff_time->toISOString(),
             ],
         ]);
-    }
-
-    /**
-     * Resolver la parte financiera real del viaje contra auth-service, según
-     * el método de pago: tarjeta ya retuvo la comisión en la pasarela, así que
-     * solo se acredita la ganancia del conductor; P2P nunca pasó por la
-     * plataforma, así que se debita la comisión de la billetera del conductor.
-     */
-    private function liquidarViaje(Trip $trip): void
-    {
-        if ($trip->isPaymentByCard()) {
-            $exito = $this->walletServiceClient->creditDriverPayout(
-                $trip->driver_id,
-                (float) $trip->driver_amount_cop,
-                $trip->id
-            );
-        } else {
-            $exito = $this->walletServiceClient->debitPlatformCommission(
-                $trip->driver_id,
-                (float) $trip->platform_commission_cop,
-                $trip->id
-            );
-        }
-
-        // Si auth-service no respondió, no se bloquea la finalización del viaje
-        // (el pasajero ya bajó, no tiene sentido dejarlo "en curso" por un
-        // problema de otro servicio) — queda marcado como pendiente para
-        // conciliación manual en vez de darse por exitoso a ciegas.
-        $trip->update(['commission_status' => $exito ? 'debitada_exitosamente' : 'pendiente_debito']);
     }
 
     /**
@@ -360,10 +308,9 @@ class TripLifecycleController extends Controller
                 'data' => [
                     'trip_id' => $trip->id,
                     'status' => $trip->status,
-                    'penalized' => $resultado['penalized'],
-                    'penalty_fee_cop' => $resultado['penalty_cop'],
+                    'late_cancellation' => $resultado['penalized'],
                     'warning' => $resultado['penalized']
-                        ? 'Se ha aplicado una penalización institucional de $ 3.000 COP a tu billetera por cancelar con menos de 15 minutos de anticipación teniendo pasajeros confirmados.'
+                        ? 'Se registró una cancelación tardía. Al acumular 3 en 30 días tu cuenta se suspende por 30 días.'
                         : null,
                 ],
             ]);
@@ -377,7 +324,7 @@ class TripLifecycleController extends Controller
             'data' => [
                 'trip_id' => $trip->id,
                 'status' => $trip->status,
-                'penalized' => $resultado['penalized'],
+                'late_cancellation' => $resultado['penalized'],
                 'warning' => $resultado['penalized']
                     ? 'Cancelaste con menos de 2 minutos de anticipación: se registró una infracción en tu historial de confiabilidad.'
                     : null,
@@ -485,12 +432,8 @@ class TripLifecycleController extends Controller
                     'destination' => $trip->dropoff_address,
                     'dropoff_address' => $trip->dropoff_address,
                     'fare_cop' => (float) $trip->total_fare_cop,
-                    'earnings_cop' => (float) $trip->driver_amount_cop,
-                    'platform_commission_cop' => (float) $trip->platform_commission_cop,
                     'is_pin_verified' => (bool) $trip->is_pin_verified,
                     'status' => $trip->status,
-                    'payment_method' => $trip->payment_method,
-                    'payment_confirmed_at' => $trip->payment_confirmed_at?->toISOString(),
                     'scheduled_pickup_time' => $trip->scheduled_pickup_time?->toISOString(),
                     'date' => $trip->created_at?->clone()->setTimezone('America/Bogota')->format('d/m/Y') ?? 'Hoy',
                     'time' => $trip->created_at?->clone()->setTimezone('America/Bogota')->format('h:i A') ?? '07:00 AM',
