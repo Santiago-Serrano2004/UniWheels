@@ -22,7 +22,7 @@ import {
   Power,
   Plus,
 } from 'lucide-react-native';
-import { authService, placesApiService, routesService, tripLifecycleService, useAppStore } from '@uniwheels/shared';
+import { authService, fechaColombiaStr, fechaLocalStr, placesApiService, routesService, tripLifecycleService, useAppStore } from '@uniwheels/shared';
 import { CampusSelectorModal, type Campus } from '@/components/CampusSelectorModal';
 import { SetHomeLocationModal } from '@/components/SetHomeLocationModal';
 import { LocationPickerModal } from '@/components/LocationPickerModal';
@@ -49,12 +49,9 @@ const DEFAULT_CAMPUSES: Campus[] = [
   { id: 4, name: 'Campus La Casona' },
 ];
 
-const todayStr = () => new Date().toISOString().split('T')[0];
-const tomorrowStr = () => {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().split('T')[0];
-};
+const todayStr = () => fechaColombiaStr();
+// Colombia no tiene horario de verano: sumar 24 h equivale a un dia calendario.
+const tomorrowStr = () => fechaColombiaStr(new Date(Date.now() + 24 * 60 * 60 * 1000));
 const formatCustomDateLabel = (dateStr: string) => {
   const [y, m, d] = dateStr.split('-').map(Number);
   return new Date(y, m - 1, d).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
@@ -857,7 +854,7 @@ export default function HomeScreen() {
               minimumDate={new Date()}
               onChange={(_e, date) => {
                 setShowDatePicker(false);
-                if (date) setSelectedDate(date.toISOString().split('T')[0]);
+                if (date) setSelectedDate(fechaLocalStr(date));
               }}
             />
           )}

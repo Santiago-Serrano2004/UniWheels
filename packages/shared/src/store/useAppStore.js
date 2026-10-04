@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { fechaColombiaStr } from '../utils/fechas.js';
 import { getStorageAdapter } from '../platform.js';
 import { readStoredSession, writeStoredSession, removeStoredSession } from '../session.js';
 import { notificationsService } from '../api.js';
@@ -262,7 +263,7 @@ export const useAppStore = create((set, get) => ({
     const nuevoViaje = {
       id: 'trip_' + Date.now(),
       createdAt: new Date().toISOString(),
-      date: datosTrayecto.departure_date || new Date().toISOString().split('T')[0],
+      date: datosTrayecto.departure_date || fechaColombiaStr(),
       departure_time: datosTrayecto.departure_time || '06:45 AM',
       direction: datosTrayecto.direction || 'hacia_campus',
       available_seats: datosTrayecto.available_seats || 3,

@@ -52,4 +52,6 @@ export {
   haExpiradoFecha,
 } from './utils/colombianVehicleRules.js';
 
+export { fechaColombiaStr, fechaLocalStr } from './utils/fechas.js';
+
 export { placesApiService, LUGARES_POPULARES_AMB } from './placesApiService.js';

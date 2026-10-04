@@ -30,6 +30,7 @@ import {
   vehicleService,
   parseBackendError,
   INSTITUCIONES_PREDETERMINADAS,
+  fechaColombiaStr,
 } from '@uniwheels/shared';
 import { CampusSelectorModal, type Campus } from '@/components/CampusSelectorModal';
 import { LocationPickerModal } from '@/components/LocationPickerModal';
@@ -38,12 +39,9 @@ import { AlertBanner } from '@/components/AlertBanner';
 
 const DEFAULT_CAMPUSES: Campus[] = INSTITUCIONES_PREDETERMINADAS[0].campuses;
 
-const todayStr = () => new Date().toISOString().split('T')[0];
-const tomorrowStr = () => {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().split('T')[0];
-};
+const todayStr = () => fechaColombiaStr();
+// Colombia no tiene horario de verano: sumar 24 h equivale a un dia calendario.
+const tomorrowStr = () => fechaColombiaStr(new Date(Date.now() + 24 * 60 * 60 * 1000));
 
 // Zona horaria fija de la operación (Colombia, sin horario de verano).
 const ZONA_COLOMBIA = '-05:00';

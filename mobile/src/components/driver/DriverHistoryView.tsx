@@ -25,7 +25,7 @@ import {
   Users,
   X,
 } from 'lucide-react-native';
-import { routesService, tripsService, useAppStore } from '@uniwheels/shared';
+import { fechaColombiaStr, routesService, tripsService, useAppStore } from '@uniwheels/shared';
 import { RatingFeedbackModal } from '@/components/RatingFeedbackModal';
 
 type PeriodFilter = 'todos' | 'semana' | 'mes';
@@ -68,7 +68,7 @@ export function DriverHistoryView() {
       const completados = (data || []).filter((d: any) => d.status === 'completado');
       const formateados = completados.map((d: any) => ({
         id: d.id,
-        date: d.date || new Date().toISOString().split('T')[0],
+        date: d.date || fechaColombiaStr(),
         origin: d.origin,
         destination: d.destination,
         aporte: Number(d.fare_cop) || 0,
