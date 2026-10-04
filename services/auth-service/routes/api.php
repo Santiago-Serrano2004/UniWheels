@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\InstitutionController;
+use App\Http\Controllers\Api\V1\Internal\UserSuspensionController;
 use App\Http\Controllers\Api\V1\PublicProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -41,6 +42,7 @@ Route::prefix('v1')->group(function () {
     // otros microservicios del backend (nunca directamente por el navegador).
     Route::middleware('jwt.service')->group(function () {
         Route::get('/users/{id}/public-profile', [PublicProfileController::class, 'show']);
+        Route::post('/internal/users/{id}/late-cancellation-suspension', [UserSuspensionController::class, 'lateCancellation']);
     });
 
     // Rutas de administración

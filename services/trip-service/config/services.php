@@ -39,4 +39,8 @@ return [
         'url' => env('ROUTE_MATCHING_SERVICE_URL', 'http://127.0.0.1:8003'),
     ],
 
+    'auth_service' => [
+        'url' => env('AUTH_SERVICE_URL', 'http://127.0.0.1:8001'),
+    ],
+
 ];
