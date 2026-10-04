@@ -16,7 +16,6 @@ export {
   vehicleService,
   tripsService,
   routesService,
-  walletService,
   tripLifecycleService,
   notificationsService,
 } from './api.js';

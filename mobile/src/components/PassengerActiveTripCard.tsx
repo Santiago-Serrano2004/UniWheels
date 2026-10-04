@@ -16,6 +16,7 @@ import {
   Star,
 } from 'lucide-react-native';
 import { tripLifecycleService, useAppStore } from '@uniwheels/shared';
+import { procesarRespuestaCancelacion } from '@/utils/cancelTripFeedback';
 
 export interface PassengerActiveTripCardProps {
   trip?: any;
@@ -25,6 +26,7 @@ export interface PassengerActiveTripCardProps {
 export function PassengerActiveTripCard({ trip: propTrip, onCancel }: PassengerActiveTripCardProps) {
   const storeTrip = useAppStore((state) => state.activePassengerBooking);
   const cancelPassengerBooking = useAppStore((state) => state.cancelPassengerBooking);
+  const logout = useAppStore((state) => state.logout);
   const [isCancelling, setIsCancelling] = useState(false);
 
   const opacity = useSharedValue(0);
@@ -126,7 +128,8 @@ export function PassengerActiveTripCard({ trip: propTrip, onCancel }: PassengerA
             setIsCancelling(true);
             try {
               if (trip.id) {
-                await tripLifecycleService.cancelTrip(trip.id, 'passenger', 'Cancelado por el pasajero');
+                const respuesta = await tripLifecycleService.cancelTrip(trip.id, 'passenger', 'Cancelado por el pasajero');
+                procesarRespuestaCancelacion(respuesta, logout);
               }
             } catch {
               // Ignore network errors on local cancel fallback

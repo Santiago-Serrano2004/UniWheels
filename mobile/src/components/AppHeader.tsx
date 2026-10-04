@@ -37,14 +37,6 @@ const MOCK_NOTIFICATIONS = [
     is_read: false,
     created_at: new Date(Date.now() - 10 * 60000).toISOString(),
   },
-  {
-    id: 'notif-3',
-    title: 'Recarga de Billetera Exitosa',
-    body: 'Se acreditaron $ 25.000 COP a tu billetera UniWheels vía Nequi.',
-    type: 'billetera',
-    is_read: true,
-    created_at: new Date(Date.now() - 120 * 60000).toISOString(),
-  },
 ];
 
 export function AppHeader() {

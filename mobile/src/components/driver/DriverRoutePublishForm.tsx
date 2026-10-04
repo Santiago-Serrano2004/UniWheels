@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -26,6 +26,8 @@ import {
   useAppStore,
   routesService,
   placesApiService,
+  authService,
+  vehicleService,
   parseBackendError,
   INSTITUCIONES_PREDETERMINADAS,
 } from '@uniwheels/shared';
@@ -41,6 +43,53 @@ const tomorrowStr = () => {
   const d = new Date();
   d.setDate(d.getDate() + 1);
   return d.toISOString().split('T')[0];
+};
+
+// Zona horaria fija de la operación (Colombia, sin horario de verano).
+const ZONA_COLOMBIA = '-05:00';
+const DURACION_VENTANA_MIN = 60;
+
+// Convierte fecha 'YYYY-MM-DD' + hora local de Colombia a ISO con zona -05:00.
+const aIsoColombia = (fecha: string, horas: number, minutos: number, sumarMinutos = 0) => {
+  const [y, m, d] = fecha.split('-').map(Number);
+  const ms = Date.UTC(y, m - 1, d, horas, minutos + sumarMinutos);
+  return new Date(ms).toISOString().slice(0, 19) + ZONA_COLOMBIA;
+};
+
+// Interpreta 'hh:mm AM/PM' en horas y minutos de 24 h.
+const parsearHora = (texto: string) => {
+  const limpio = texto.trim().toUpperCase();
+  const partes = limpio.replace(/(AM|PM)/, '').trim().split(':');
+  let horas = parseInt(partes[0], 10);
+  const minutos = parseInt(partes[1] || '0', 10);
+  if (limpio.includes('PM') && horas < 12) horas += 12;
+  if (limpio.includes('AM') && horas === 12) horas = 0;
+  return { horas, minutos };
+};
+
+const coordenadasDeSede = (campus?: Campus): [number, number] | null => {
+  if (campus?.latitude == null || campus?.longitude == null) return null;
+  const lat = Number(campus.latitude);
+  const lng = Number(campus.longitude);
+  return Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : null;
+};
+
+const redondearCentena = (valor: number) => Math.round(valor / 100) * 100;
+const formatearCop = (valor: number) => valor.toLocaleString('es-CO');
+
+type PuntosRuta = {
+  originName: string;
+  originLat: number;
+  originLng: number;
+  destCampus: Campus;
+  destLat: number;
+  destLng: number;
+};
+
+type SugerenciaAporte = {
+  key: string;
+  data?: { distance_km: number; suggested_contribution_cop: number; max_contribution_cop: number };
+  error?: string;
 };
 
 export interface DriverRoutePublishFormProps {
@@ -81,12 +130,158 @@ export function DriverRoutePublishForm({ onBack, onPublished }: DriverRoutePubli
   const vehicleMaxSeats = user?.driverApplication?.available_seats || user?.vehicle?.available_seats || 3;
   const isMoto = (user?.driverApplication?.vehicle_type || user?.vehicle?.vehicle_type) === 'moto';
   const [availableSeats, setAvailableSeats] = useState(isMoto ? 1 : Math.min(3, vehicleMaxSeats));
-  const [fareCop, setFareCop] = useState(4500);
+
+  // Sedes reales (con coordenadas) del catálogo de auth-service
+  const [campuses, setCampuses] = useState<Campus[]>(DEFAULT_CAMPUSES);
+
+  // Vehículo aprobado del conductor (null = verificando)
+  const [vehiculo, setVehiculo] = useState<{ id: string | null } | null>(null);
+
+  // Aporte sugerido por el backend y valor editable por el conductor
+  const [sugerencia, setSugerencia] = useState<SugerenciaAporte | null>(null);
+  const [reintentos, setReintentos] = useState(0);
+  const [aporteTexto, setAporteTexto] = useState('');
+  const [avisoMaximo, setAvisoMaximo] = useState(false);
 
   // Estados de carga y error
   const [isPublishing, setIsPublishing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  useEffect(() => {
+    authService.getInstitutions().then((res: any) => {
+      const lista: Campus[] | undefined = Array.isArray(res) ? res[0]?.campuses : res?.data?.[0]?.campuses;
+      if (!lista?.length) return;
+      setCampuses(lista);
+      setSelectedCampus((prev) => lista.find((c) => c.id === prev.id) ?? lista[0]);
+      setDestinationCampus((prev) => lista.find((c) => c.id === prev.id) ?? lista[1] ?? lista[0]);
+    });
+  }, []);
+
+  useEffect(() => {
+    let cancelado = false;
+    const plate = user?.driverApplication?.plate_number || user?.driverInfo?.plate_number;
+    vehicleService
+      .checkApprovedVehicle(user?.id, plate)
+      .then((res: any) => {
+        if (!cancelado) setVehiculo({ id: res?.has_approved_vehicle && res?.vehicle?.id ? String(res.vehicle.id) : null });
+      })
+      .catch(() => {
+        if (!cancelado) setVehiculo({ id: null });
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [user?.id, user?.driverApplication?.plate_number, user?.driverInfo?.plate_number]);
+
+  // Puntos de la ruta con coordenadas reales. null si falta alguna coordenada de sede.
+  // Dirección 'desde_campus': el backend modela el destino como sede
+  // (destination_campus_*), así que se envía la sede de salida como
+  // destination_campus_* y el punto real del conductor en destination_lat/lng.
+  const puntos = useMemo<PuntosRuta | null>(() => {
+    const coordsSedeSalida = coordenadasDeSede(selectedCampus);
+    const coordsSedeDestino = coordenadasDeSede(destinationCampus);
+    if (direction === 'hacia_campus') {
+      if (!coordsSedeSalida) return null;
+      return {
+        originName: customPointName,
+        originLat: customCoords[0],
+        originLng: customCoords[1],
+        destCampus: selectedCampus,
+        destLat: coordsSedeSalida[0],
+        destLng: coordsSedeSalida[1],
+      };
+    }
+    if (direction === 'desde_campus') {
+      if (!coordsSedeSalida) return null;
+      return {
+        originName: selectedCampus.name,
+        originLat: coordsSedeSalida[0],
+        originLng: coordsSedeSalida[1],
+        destCampus: selectedCampus,
+        destLat: customCoords[0],
+        destLng: customCoords[1],
+      };
+    }
+    if (!coordsSedeSalida || !coordsSedeDestino) return null;
+    return {
+      originName: selectedCampus.name,
+      originLat: coordsSedeSalida[0],
+      originLng: coordsSedeSalida[1],
+      destCampus: destinationCampus,
+      destLat: coordsSedeDestino[0],
+      destLng: coordsSedeDestino[1],
+    };
+  }, [direction, selectedCampus, destinationCampus, customPointName, customCoords]);
+
+  const vehicleId = vehiculo?.id ?? null;
+  const sugerenciaKey =
+    puntos && vehicleId
+      ? `${vehicleId}|${puntos.originLat},${puntos.originLng}|${puntos.destLat},${puntos.destLng}|${reintentos}`
+      : null;
+
+  // Aporte sugerido con debounce de 400 ms al cambiar los puntos
+  useEffect(() => {
+    if (!sugerenciaKey || !puntos || !vehicleId) return;
+    let cancelado = false;
+    const timer = setTimeout(async () => {
+      try {
+        const data = await routesService.getContributionSuggestion({
+          vehicleId,
+          originLat: puntos.originLat,
+          originLng: puntos.originLng,
+          destinationLat: puntos.destLat,
+          destinationLng: puntos.destLng,
+        });
+        if (cancelado) return;
+        setSugerencia({ key: sugerenciaKey, data });
+        setAporteTexto(String(Math.max(0, Math.round(Number(data.suggested_contribution_cop)))));
+        setAvisoMaximo(false);
+      } catch (e: any) {
+        if (cancelado) return;
+        setSugerencia({
+          key: sugerenciaKey,
+          error:
+            e?.status === 503
+              ? 'No se pudo validar tu vehículo para calcular el aporte sugerido.'
+              : e?.message || 'No se pudo calcular el aporte sugerido.',
+        });
+      }
+    }, 400);
+    return () => {
+      cancelado = true;
+      clearTimeout(timer);
+    };
+  }, [sugerenciaKey, puntos, vehicleId]);
+
+  const sugerenciaActual = sugerencia && sugerencia.key === sugerenciaKey ? sugerencia : null;
+  const cargandoSugerencia = Boolean(sugerenciaKey) && !sugerenciaActual;
+  const maxAporte = sugerenciaActual?.data ? Number(sugerenciaActual.data.suggested_contribution_cop) : null;
+  const aporteCop = parseInt(aporteTexto || '0', 10) || 0;
+
+  const handleCambioAporte = (texto: string) => {
+    if (maxAporte == null) return;
+    const digitos = texto.replace(/[^0-9]/g, '');
+    const valor = parseInt(digitos || '0', 10);
+    if (valor > maxAporte) {
+      setAporteTexto(String(maxAporte));
+      setAvisoMaximo(true);
+    } else {
+      setAporteTexto(digitos);
+      setAvisoMaximo(false);
+    }
+  };
+
+  const aplicarAporte = (valor: number) => {
+    if (maxAporte == null) return;
+    setAporteTexto(String(Math.min(maxAporte, Math.max(0, valor))));
+    setAvisoMaximo(false);
+  };
+
+  const sinVehiculo = vehiculo !== null && !vehicleId;
+  const sedesSinCoordenadas = puntos === null;
+  const puedePublicar =
+    !isPublishing && Boolean(vehicleId) && !sedesSinCoordenadas && maxAporte != null && aporteTexto !== '';
 
   // Búsqueda de lugares con debounce
   useEffect(() => {
@@ -185,57 +380,52 @@ export function DriverRoutePublishForm({ onBack, onPublished }: DriverRoutePubli
       }
     }
 
-    setIsPublishing(true);
-
-    let originName = '';
-    let originCoords: [number, number] = [0, 0];
-    let destName = '';
-    let destCoords: [number, number] = [0, 0];
-
-    if (direction === 'hacia_campus') {
-      originName = customPointName;
-      originCoords = customCoords;
-      destName = selectedCampus.name;
-      destCoords = [7.1193, -73.1042];
-    } else if (direction === 'desde_campus') {
-      originName = selectedCampus.name;
-      originCoords = [7.1193, -73.1042];
-      destName = customPointName;
-      destCoords = customCoords;
-    } else {
-      originName = selectedCampus.name;
-      originCoords = [7.1193, -73.1042];
-      destName = destinationCampus.name;
-      destCoords = [7.0682, -73.1065];
+    if (!vehicleId || !puntos || maxAporte == null) {
+      setErrorMessage(
+        sinVehiculo ? 'Necesitas un vehículo aprobado para publicar rutas.' : 'Completa los datos de la ruta para publicar.'
+      );
+      return;
     }
 
+    setIsPublishing(true);
+
+    const { horas, minutos } = parsearHora(departureTime);
+
     const payload = {
-      direction,
-      origin: originName,
-      origin_coords: originCoords,
-      destination: destName,
-      destination_coords: destCoords,
-      meeting_point: direction !== 'hacia_campus' ? meetingPoint : undefined,
-      departure_date: departureDate,
-      departure_time: departureTime,
+      vehicle_id: vehicleId,
+      origin_name: puntos.originName,
+      origin_lat: puntos.originLat,
+      origin_lng: puntos.originLng,
+      destination_campus_id: puntos.destCampus.id,
+      destination_campus_name: puntos.destCampus.name,
+      destination_lat: puntos.destLat,
+      destination_lng: puntos.destLng,
+      scheduled_departure_time: aIsoColombia(departureDate, horas, minutos),
+      target_arrival_time: aIsoColombia(departureDate, horas, minutos, DURACION_VENTANA_MIN),
       available_seats: availableSeats,
-      total_seats: availableSeats,
-      fare_cop: fareCop,
-      campus_id: selectedCampus.id,
+      base_contribution_cop: Math.min(aporteCop, maxAporte),
     };
 
     try {
-      let routeBackend: any = null;
-      try {
-        routeBackend = await routesService.publishRoute(payload);
-      } catch (errBackend) {
-        console.warn('Notice from routesService.publishRoute:', errBackend);
+      const respuesta = await routesService.publishRoute(payload);
+      const ruta = respuesta?.data;
+      if (!ruta?.id) {
+        throw { message: 'El servidor no confirmó la ruta publicada. Intenta nuevamente.' };
       }
 
       const tripData = {
-        ...payload,
-        id: routeBackend?.data?.id || routeBackend?.id || 'trip_' + Date.now(),
-        route_id: routeBackend?.data?.id || routeBackend?.id,
+        ...ruta,
+        direction,
+        origin: puntos.originName,
+        destination: direction === 'desde_campus' ? customPointName : puntos.destCampus.name,
+        meeting_point: direction !== 'hacia_campus' ? meetingPoint : undefined,
+        departure_date: departureDate,
+        departure_time: departureTime,
+        available_seats: availableSeats,
+        total_seats: availableSeats,
+        fare_cop: payload.base_contribution_cop,
+        id: ruta.id,
+        route_id: ruta.id,
       };
 
       publishDriverTrip(tripData);
@@ -247,7 +437,14 @@ export function DriverRoutePublishForm({ onBack, onPublished }: DriverRoutePubli
         }
       }, 700);
     } catch (err: any) {
-      setErrorMessage(parseBackendError(err));
+      // 422: errors.base_contribution_cop[0], o el primer error, o message.
+      const primerError = err?.errors ? (Object.values(err.errors)[0] as any) : null;
+      setErrorMessage(
+        err?.errors?.base_contribution_cop?.[0] ||
+          (Array.isArray(primerError) ? primerError[0] : primerError) ||
+          err?.message ||
+          parseBackendError(err)
+      );
     } finally {
       setIsPublishing(false);
     }
@@ -569,41 +766,112 @@ export function DriverRoutePublishForm({ onBack, onPublished }: DriverRoutePubli
             </View>
           </View>
 
-          {/* Tarifa sugerida */}
-          <View className="gap-1.5">
+          {/* Aporte sugerido */}
+          <View className="gap-2">
             <Text className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-              Aporte Solidario por Pasajero:
+              Aporte por Pasajero:
             </Text>
-            <View className="flex-row gap-1.5">
-              {[3500, 4000, 4500, 5000].map((monto) => (
-                <Pressable
-                  key={monto}
-                  onPress={() => setFareCop(monto)}
-                  className={`flex-1 py-2 rounded-xl border items-center justify-center ${
-                    fareCop === monto
-                      ? 'bg-emerald-600 border-emerald-600'
-                      : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800'
-                  }`}
-                >
-                  <Text
-                    className={`text-[11px] font-black ${
-                      fareCop === monto ? 'text-white' : 'text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    ${monto / 1000}k
-                  </Text>
+
+            {sinVehiculo ? (
+              <Text className="text-[11px] text-slate-500 dark:text-slate-400">
+                El aporte se calcula cuando tienes un vehículo aprobado.
+              </Text>
+            ) : sedesSinCoordenadas ? (
+              <Text className="text-[11px] text-slate-500 dark:text-slate-400">
+                El aporte se calcula cuando la sede elegida tiene coordenadas.
+              </Text>
+            ) : cargandoSugerencia || vehiculo === null ? (
+              <View className="flex-row items-center gap-2">
+                <ActivityIndicator size="small" color="#0284c7" />
+                <Text className="text-[11px] text-slate-500 dark:text-slate-400">Calculando aporte sugerido...</Text>
+              </View>
+            ) : sugerenciaActual?.error ? (
+              <View className="gap-1.5 p-3 rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40">
+                <Text className="text-[11px] text-amber-800 dark:text-amber-300">{sugerenciaActual.error}</Text>
+                <Pressable onPress={() => setReintentos((n) => n + 1)} className="self-start">
+                  <Text className="text-[11px] font-bold text-lochmara-600 dark:text-lochmara-400">Reintentar</Text>
                 </Pressable>
-              ))}
-            </View>
+              </View>
+            ) : maxAporte != null && sugerenciaActual?.data ? (
+              <>
+                <View className="gap-0.5">
+                  <Text className="text-xs font-black text-slate-900 dark:text-white">
+                    Aporte sugerido: $ {formatearCop(maxAporte)} por cupo (máximo)
+                  </Text>
+                  <Text className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Distancia: {sugerenciaActual.data.distance_km} km
+                  </Text>
+                </View>
+
+                <TextInput
+                  value={aporteTexto}
+                  onChangeText={handleCambioAporte}
+                  keyboardType="number-pad"
+                  placeholder="0"
+                  placeholderTextColor="#94a3b8"
+                  className="py-2.5 px-3.5 rounded-2xl text-xs font-black border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
+                />
+                {avisoMaximo ? (
+                  <Text className="text-[11px] text-amber-700 dark:text-amber-300">
+                    El máximo para esta ruta es $ {formatearCop(maxAporte)}
+                  </Text>
+                ) : null}
+
+                <View className="flex-row gap-1.5">
+                  {[
+                    { etiqueta: 'Sugerido', valor: maxAporte },
+                    { etiqueta: '75 %', valor: redondearCentena(maxAporte * 0.75) },
+                    { etiqueta: '50 %', valor: redondearCentena(maxAporte * 0.5) },
+                    { etiqueta: 'Gratis', valor: 0 },
+                  ].map((opcion) => {
+                    const activo = aporteTexto !== '' && aporteCop === Math.min(maxAporte, opcion.valor);
+                    return (
+                      <Pressable
+                        key={opcion.etiqueta}
+                        onPress={() => aplicarAporte(opcion.valor)}
+                        className={`flex-1 py-2 rounded-xl border items-center justify-center ${
+                          activo
+                            ? 'bg-emerald-600 border-emerald-600'
+                            : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800'
+                        }`}
+                      >
+                        <Text
+                          className={`text-[11px] font-black ${
+                            activo ? 'text-white' : 'text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          {opcion.etiqueta}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                <Text className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Tus pasajeros te pagan este aporte directamente, en efectivo o Nequi. UniWheels no cobra comisión.
+                </Text>
+              </>
+            ) : null}
           </View>
         </View>
 
+        {sinVehiculo ? (
+          <Text className="text-[11px] font-bold text-rose-600 dark:text-rose-400">
+            Necesitas un vehículo aprobado para publicar rutas.
+          </Text>
+        ) : null}
+        {sedesSinCoordenadas ? (
+          <Text className="text-[11px] font-bold text-rose-600 dark:text-rose-400">
+            La sede elegida no tiene coordenadas registradas, por ahora no se puede publicar con ella.
+          </Text>
+        ) : null}
+
         {/* Botón de Publicar */}
         <Pressable
-          disabled={isPublishing}
+          disabled={!puedePublicar}
           onPress={handlePublish}
           className={`w-full py-4 rounded-2xl flex-row items-center justify-center gap-2 shadow-lg ${
-            isPublishing
+            !puedePublicar
               ? 'bg-emerald-600/50'
               : 'bg-emerald-600 active:bg-emerald-700 shadow-emerald-600/30'
           }`}
@@ -627,7 +895,7 @@ export function DriverRoutePublishForm({ onBack, onPublished }: DriverRoutePubli
       <CampusSelectorModal
         isOpen={isCampusModalOpen}
         onClose={() => setIsCampusModalOpen(false)}
-        campuses={DEFAULT_CAMPUSES}
+        campuses={campuses}
         selectedCampus={selectingTarget === 'origin' ? selectedCampus.name : destinationCampus.name}
         onSelectCampus={(campus: Campus) => {
           if (selectingTarget === 'origin') {

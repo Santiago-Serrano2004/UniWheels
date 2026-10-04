@@ -39,13 +39,13 @@ import { AlertBanner } from '@/components/AlertBanner';
 
 export interface DriverCockpitCardProps {
   onOpenNavigator?: () => void;
-  onOpenSettlement?: () => void;
+  onCompleteTrip?: () => void;
   onOpenCancelModal?: () => void;
 }
 
 export function DriverCockpitCard({
   onOpenNavigator,
-  onOpenSettlement,
+  onCompleteTrip,
   onOpenCancelModal,
 }: DriverCockpitCardProps) {
   const {
@@ -313,9 +313,11 @@ export function DriverCockpitCard({
             </View>
 
             <View className="flex-1 p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-              <Text className="text-[10px] font-medium text-slate-400">Tarifa por Cupo</Text>
+              <Text className="text-[10px] font-medium text-slate-400">Aporte por Cupo</Text>
               <Text className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
-                ${Number(activeDriverTrip.fare_cop || activeDriverTrip.price || 4500).toLocaleString('es-CO')}
+                {Number(activeDriverTrip.fare_cop ?? activeDriverTrip.price ?? 0) > 0
+                  ? `$${Number(activeDriverTrip.fare_cop ?? activeDriverTrip.price).toLocaleString('es-CO')}`
+                  : 'Gratis'}
               </Text>
             </View>
           </View>
@@ -504,15 +506,15 @@ export function DriverCockpitCard({
             </Pressable>
           )}
 
-          {/* Botón de Finalización y Liquidación */}
+          {/* Botón de Finalización */}
           {(tripStatus === 'en_curso' || allPassengersBoarded) && (
             <Pressable
-              onPress={onOpenSettlement}
+              onPress={onCompleteTrip}
               className="w-full py-3.5 rounded-2xl border border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 flex-row items-center justify-center gap-2"
             >
               <CheckCircle2 size={16} color="#10b981" />
               <Text className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                Finalizar y Liquidar Viaje
+                Finalizar Viaje
               </Text>
             </Pressable>
           )}

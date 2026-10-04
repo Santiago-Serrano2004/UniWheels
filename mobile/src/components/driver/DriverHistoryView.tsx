@@ -72,8 +72,7 @@ export function DriverHistoryView() {
         date: d.date || new Date().toISOString().split('T')[0],
         origin: d.origin,
         destination: d.destination,
-        totalEarned: Number(d.fare_cop) || 0,
-        driverEarnings: Number(d.earnings_cop) || Math.round((Number(d.fare_cop) || 0) * 0.88),
+        aporte: Number(d.fare_cop) || 0,
         passenger: {
           id: d.passenger_id,
           name: d.passenger_name || 'Pasajero',
@@ -122,8 +121,8 @@ export function DriverHistoryView() {
   }, [setPublishedDriverTrips]);
 
   // Cálculos de métricas consolidadas
-  const totalNetEarnings = useMemo(() => {
-    return viajesHistorial.reduce((acc, v) => acc + (v.driverEarnings || 0), 0);
+  const totalAportes = useMemo(() => {
+    return viajesHistorial.reduce((acc, v) => acc + (v.aporte || 0), 0);
   }, [viajesHistorial]);
 
   const totalPassengers = useMemo(() => {
@@ -231,13 +230,13 @@ export function DriverHistoryView() {
         <View className="flex-row gap-2">
           <View className="flex-1 bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 gap-1">
             <View className="flex-row items-center justify-between">
-              <Text className="text-[10px] font-bold uppercase text-slate-400">Ganancias Netas</Text>
+              <Text className="text-[10px] font-bold uppercase text-slate-400">Aportes Recibidos</Text>
               <DollarSign size={13} color="#10b981" />
             </View>
             <Text className="text-base font-black text-emerald-600 dark:text-emerald-400">
-              ${totalNetEarnings.toLocaleString('es-CO')}
+              ${totalAportes.toLocaleString('es-CO')}
             </Text>
-            <Text className="text-[9px] text-slate-400">Tras deducir 12%</Text>
+            <Text className="text-[9px] text-slate-400">Se pagan por fuera de la app</Text>
           </View>
 
           <View className="flex-1 bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 gap-1">
@@ -611,13 +610,12 @@ export function DriverHistoryView() {
                 Sin viajes completados en este período
               </Text>
               <Text className="text-[11px] text-slate-400 text-center">
-                Tus trayectos finalizados y ganancias se listarán en esta sección.
+                Tus trayectos finalizados y los aportes recibidos se listarán en esta sección.
               </Text>
             </View>
           ) : (
             filteredHistorial.map((viaje) => {
               const isExpanded = viajeExpandido === viaje.id;
-              const comisionCop = Math.round(viaje.totalEarned * 0.12);
 
               return (
                 <View
@@ -648,7 +646,7 @@ export function DriverHistoryView() {
 
                     <View className="items-end">
                       <Text className="text-sm font-black text-emerald-600 dark:text-emerald-400">
-                        +${viaje.driverEarnings.toLocaleString('es-CO')}
+                        ${viaje.aporte.toLocaleString('es-CO')}
                       </Text>
                       <Text className="text-[10px] text-slate-400">{viaje.passenger?.name || 'Pasajero'}</Text>
                     </View>
@@ -657,25 +655,14 @@ export function DriverHistoryView() {
                   {/* Detalle Desplegable */}
                   {isExpanded && (
                     <View className="px-4 pb-4 pt-2 border-t border-slate-100 dark:border-slate-800 gap-3">
-                      <View className="flex-row p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                        <View className="flex-1 items-center">
-                          <Text className="text-[9px] font-bold text-slate-400">Total Cobrado</Text>
-                          <Text className="text-xs font-extrabold text-slate-900 dark:text-white">
-                            ${viaje.totalEarned.toLocaleString('es-CO')}
-                          </Text>
-                        </View>
-                        <View className="flex-1 items-center">
-                          <Text className="text-[9px] font-bold text-slate-400">Comisión (12%)</Text>
-                          <Text className="text-xs font-extrabold text-rose-500">
-                            -${comisionCop.toLocaleString('es-CO')}
-                          </Text>
-                        </View>
-                        <View className="flex-1 items-center">
-                          <Text className="text-[9px] font-bold text-slate-400">Ganancia Neta</Text>
-                          <Text className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">
-                            +${viaje.driverEarnings.toLocaleString('es-CO')}
-                          </Text>
-                        </View>
+                      <View className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 items-center gap-0.5">
+                        <Text className="text-[9px] font-bold text-slate-400">Aporte Recibido</Text>
+                        <Text className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">
+                          ${viaje.aporte.toLocaleString('es-CO')}
+                        </Text>
+                        <Text className="text-[9px] text-slate-400">
+                          Se paga directamente al conductor, fuera de la app.
+                        </Text>
                       </View>
 
                       {/* Pasajero Transportado */}
