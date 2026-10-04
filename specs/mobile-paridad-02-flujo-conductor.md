@@ -1,3 +1,5 @@
+> **Nota (2026-10-05):** los pagos, la billetera y Wompi fueron eliminados del producto. Ver `docs/adr/0001-pivote-b2b-sin-pagos.md` y `specs/pivote-b2b-sin-pagos.md`.
+
 # Spec: Paridad móvil 02 — Flujo completo del conductor (registro vehicular, publicación, cabina GPS, liquidación e historial)
 
 ## Contexto mínimo (ya investigado, no repetir)
