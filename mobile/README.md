@@ -38,14 +38,14 @@ Crea un archivo `.env` o `.env.local` en el directorio `mobile/` basado en la si
 # URL base del API Gateway / Backend UniWheels
 EXPO_PUBLIC_API_URL=https://uniwheels.org/api/v1
 
-# Entorno de la aplicación (development | staging | production)
-EXPO_PUBLIC_APP_ENV=development
+# URLs de cada microservicio (valores por defecto en src/lib/env.ts: localhost:8002 a 8005)
+EXPO_PUBLIC_VEHICLE_API_URL=https://uniwheels.org/api/v1
+EXPO_PUBLIC_ROUTE_API_URL=https://uniwheels.org/api/v1
+EXPO_PUBLIC_TRIP_API_URL=https://uniwheels.org/api/v1
+EXPO_PUBLIC_NOTIFICATION_API_URL=https://uniwheels.org/api/v1
 
-# Claves de Servicios de Tráfico y Geocodificación
-EXPO_PUBLIC_TOMTOM_KEY=tu_tomtom_api_key
-
-# Pasarela de Pagos Wompi
-EXPO_PUBLIC_WOMPI_PUBLIC_KEY=pub_prod_...
+# Clave de TomTom (tráfico y geocodificación)
+EXPO_PUBLIC_TOMTOM_API_KEY=tu_tomtom_api_key
 ```
 
 > **Nota:** Las variables con prefijo `EXPO_PUBLIC_` se incrustan en tiempo de empaquetado por Expo CLI / EAS Build.
