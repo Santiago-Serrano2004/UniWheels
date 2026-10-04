@@ -17,7 +17,6 @@ cómo desplegar) — apunta a él y agrega lo que falta: dónde están las cosas
 
 | Servicio | Para qué | Dónde están las credenciales |
 |---|---|---|
-| Wompi | Procesar recargas de comisión | `docker/.env` (no versionado) |
 | Cloudflare | DNS, proxy, TLS, R2 (backups y documentos) | Cuenta personal de Santiago — pendiente de definir un plan de sucesión de acceso |
 | TomTom | Tráfico en tiempo real para el motor de ruteo | `services/ai-route-service/.env` |
 | Hosting (VM) | Servidor de producción | Ver estado actual en memoria del proyecto — al momento de escribir este runbook, el despliegue está pausado por restricciones de cuenta en los proveedores de hosting gratuito probados (Oracle, Azure for Students) |
@@ -31,7 +30,7 @@ Ver `docker/DEPLOY.md` para el procedimiento completo de despliegue a producció
 
 - Sin backups externos configurados (ver Gate 3 del plan de cobertura de riesgos,
   `tesis/auditoria/2026-09-21-viabilidad-negocio/`), perder la VM de producción pierde también
-  todos los datos: usuarios, viajes, saldo de billeteras, documentos vehiculares.
+  todos los datos: usuarios, viajes, documentos vehiculares.
 - El dominio y las cuentas de servicios externos están a nombre personal de Santiago — si se
   pierde el acceso a esas cuentas, no hay forma de recuperar el servicio sin recrear todo desde
   cero.

@@ -125,8 +125,19 @@ Para cada uno de los 5 servicios Laravel, copia su `.env.example` a
 - `JWT_SECRET`: **el mismo valor exacto en los 5 servicios** (y en
   `ai-route-service`) — es un secreto compartido entre microservicios, no por
   servicio.
-- Credenciales reales de Wompi (`WOMPI_*`), Sentry (`SENTRY_LARAVEL_DSN`) y,
-  en `vehicle-service`, las `R2_*` del paso 4a.
+- Credenciales reales de Sentry (`SENTRY_LARAVEL_DSN`) y, en `vehicle-service`,
+  las `R2_*` del paso 4a. UniWheels no procesa pagos: no hay credenciales de
+  pasarela de pago (ADR 0001).
+- **`trip-service`** necesita `AUTH_SERVICE_URL` (le pide a auth-service la
+  suspensión automática por cancelaciones tardías) y acepta
+  `LATE_CANCEL_THRESHOLD` (3), `LATE_CANCEL_WINDOW_DAYS` (30) y
+  `LATE_CANCEL_SUSPENSION_DAYS` (30). `docker-compose.prod.yml` ya los define
+  con esos valores por defecto; para cambiarlos, ponlos en `docker/.env`.
+- **`route-matching-service`** acepta `CONTRIBUTION_CAR_BASE` (2000),
+  `CONTRIBUTION_CAR_PER_KM` (400), `CONTRIBUTION_MOTO_BASE` (1000) y
+  `CONTRIBUTION_MOTO_PER_KM` (250): fórmula del aporte sugerido
+  (`base + km × valor_por_km`, redondeado hacia arriba a la centena). También
+  tienen esos valores por defecto en `docker-compose.prod.yml`.
 
 Para `ai-route-service`, copia igual su `.env.example` a `.env.production` y
 ajusta `TRIP_SERVICE_URL=http://trip-service:8004`.
