@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\DB;
 
 class Route extends Model
 {
@@ -26,6 +25,8 @@ class Route extends Model
         'accumulated_detour_minutes',
         'available_seats',
         'base_contribution_cop',
+        'distance_km',
+        'suggested_contribution_cop',
         'status',
     ];
 
@@ -39,6 +40,8 @@ class Route extends Model
             'accumulated_detour_minutes' => 'float',
             'available_seats' => 'integer',
             'base_contribution_cop' => 'float',
+            'distance_km' => 'float',
+            'suggested_contribution_cop' => 'float',
         ];
     }
 
