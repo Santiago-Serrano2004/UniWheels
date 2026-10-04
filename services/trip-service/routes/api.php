@@ -2,10 +2,8 @@
 
 use App\Http\Controllers\Api\V1\Admin\AdminSosEventController;
 use App\Http\Controllers\Api\V1\Admin\AdminTripController;
-use App\Http\Controllers\Api\V1\Admin\AdminTripPaymentController;
 use App\Http\Controllers\Api\V1\TrainingDataController;
 use App\Http\Controllers\Api\V1\TripLifecycleController;
-use App\Http\Controllers\Api\V1\TripPaymentController;
 use App\Http\Controllers\Api\V1\TripTrackingController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,10 +18,6 @@ Route::prefix('v1')->group(function () {
     // modelo XGBoost de ETA en ai-route-service — solo servicio-a-servicio.
     Route::get('/trips/training-data/completed', [TrainingDataController::class, 'completedTrips'])
         ->middleware('jwt.service');
-
-    // Webhook público de Wompi para pagos con tarjeta de un viaje — verificado
-    // por firma propia (Wompi no puede firmar nuestros JWT).
-    Route::post('/webhooks/wompi', [TripPaymentController::class, 'wompiWebhook']);
 });
 
 Route::prefix('v1')->middleware('jwt.auth')->group(function () {
@@ -35,7 +29,6 @@ Route::prefix('v1')->middleware('jwt.auth')->group(function () {
         ->middleware('throttle:5,1');
     Route::post('/trips/{id}/complete', [TripLifecycleController::class, 'complete']);
     Route::post('/trips/{id}/cancel', [TripLifecycleController::class, 'cancel']);
-    Route::post('/trips/{id}/payment/card/init', [TripPaymentController::class, 'initCardPayment']);
 
     // Telemetría GPS en vivo del conductor durante el viaje
     Route::post('/trips/{id}/tracking', [TripTrackingController::class, 'report'])
@@ -56,6 +49,5 @@ Route::prefix('v1')->middleware('jwt.auth')->group(function () {
         Route::get('/sos-events', [AdminSosEventController::class, 'index']);
         Route::patch('/sos-events/{id}/attend', [AdminSosEventController::class, 'attend']);
         Route::get('/trips', [AdminTripController::class, 'index']);
-        Route::get('/payments/trips', [AdminTripPaymentController::class, 'index']);
     });
 });

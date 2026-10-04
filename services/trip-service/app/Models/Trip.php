@@ -28,37 +28,6 @@ class Trip extends Model
 
     const STATUS_CANCELADO_PASAJERO = 'cancelado_por_pasajero';
 
-    const COMMISSION_RATE = 0.12; // 12% comisión operativa
-
-    const DRIVER_CANCEL_PENALTY_COP = 3000.00; // $3.000 COP penalización por cancelar con pasajeros
-
-    // efectivo/nequi_directo/daviplata_directo: el pasajero paga P2P directo al
-    // conductor — UniWheels nunca custodia ese dinero, pero igual cobra su
-    // comisión débitandola de la billetera interna del conductor al completar
-    // el viaje. tarjeta: el pasajero paga a través de la plataforma (Wompi); la
-    // comisión ya queda retenida ahí mismo y la ganancia del conductor se
-    // acredita a su billetera interna (no hay pasarela de desembolso bancario).
-    const PAYMENT_METHOD_EFECTIVO = 'efectivo';
-
-    const PAYMENT_METHOD_NEQUI_DIRECTO = 'nequi_directo';
-
-    const PAYMENT_METHOD_DAVIPLATA_DIRECTO = 'daviplata_directo';
-
-    const PAYMENT_METHOD_TARJETA = 'tarjeta';
-
-    const PAYMENT_METHODS = [
-        self::PAYMENT_METHOD_EFECTIVO,
-        self::PAYMENT_METHOD_NEQUI_DIRECTO,
-        self::PAYMENT_METHOD_DAVIPLATA_DIRECTO,
-        self::PAYMENT_METHOD_TARJETA,
-    ];
-
-    const P2P_PAYMENT_METHODS = [
-        self::PAYMENT_METHOD_EFECTIVO,
-        self::PAYMENT_METHOD_NEQUI_DIRECTO,
-        self::PAYMENT_METHOD_DAVIPLATA_DIRECTO,
-    ];
-
     protected $fillable = [
         'route_id',
         'driver_id',
@@ -75,17 +44,11 @@ class Trip extends Model
         'boarding_pin',
         'is_pin_verified',
         'pin_verified_at',
-        'payment_method',
         'total_fare_cop',
-        'driver_amount_cop',
-        'platform_commission_cop',
-        'commission_status',
         'status',
         'scheduled_pickup_time',
         'actual_pickup_time',
         'actual_dropoff_time',
-        'payment_confirmed_at',
-        'payment_reference',
     ];
 
     protected function casts(): array
@@ -94,12 +57,9 @@ class Trip extends Model
             'is_pin_verified' => 'boolean',
             'pin_verified_at' => 'datetime',
             'total_fare_cop' => 'float',
-            'driver_amount_cop' => 'float',
-            'platform_commission_cop' => 'float',
             'scheduled_pickup_time' => 'datetime',
             'actual_pickup_time' => 'datetime',
             'actual_dropoff_time' => 'datetime',
-            'payment_confirmed_at' => 'datetime',
         ];
     }
 
@@ -111,11 +71,6 @@ class Trip extends Model
     public function sosEvents(): HasMany
     {
         return $this->hasMany(TripSosEvent::class);
-    }
-
-    public function isPaymentByCard(): bool
-    {
-        return $this->payment_method === self::PAYMENT_METHOD_TARJETA;
     }
 
     /**
@@ -170,22 +125,13 @@ class Trip extends Model
     }
 
     /**
-     * Marcar el viaje como completado y fijar el reparto de tarifa. La
-     * liquidación real (débito de comisión P2P o acreditación de ganancia por
-     * tarjeta) la resuelve el controlador contra auth-service — este método ya
-     * NO marca 'commission_status' como exitoso a ciegas, solo dice qué se debe
-     * cobrar; el estado real se fija según lo que efectivamente ocurra.
+     * Marcar el viaje como completado y registrar la hora de llegada.
      */
     public function complete(): void
     {
-        $comision = round($this->total_fare_cop * self::COMMISSION_RATE, 2);
-        $gananciaConductor = round($this->total_fare_cop - $comision, 2);
-
         $this->update([
             'status' => self::STATUS_COMPLETADO,
             'actual_dropoff_time' => now(),
-            'platform_commission_cop' => $comision,
-            'driver_amount_cop' => $gananciaConductor,
         ]);
     }
 
@@ -204,7 +150,7 @@ class Trip extends Model
     }
 
     /**
-     * Cancelar el viaje por parte del conductor. Aplica penalización si ya tenía
+     * Cancelar el viaje por parte del conductor. Se registra como cancelación tardía si ya tenía
      * pasajero confirmado y cancela con menos de 15 min de anticipación.
      */
     public function cancelByDriver(string $reason, ?string $cancelledByUserId = null): array
@@ -232,7 +178,6 @@ class Trip extends Model
 
         return [
             'penalized' => $aplicaPenalizacion,
-            'penalty_cop' => $aplicaPenalizacion ? self::DRIVER_CANCEL_PENALTY_COP : 0.0,
             'reason' => $reason,
         ];
     }
