@@ -56,7 +56,6 @@ async def evaluate_single_passenger_match(
             detour_minutes=0.0,
             original_duration_minutes=0.0,
             new_total_duration_minutes=0.0,
-            suggested_fare_cop=0,
             traffic_status="N/A",
             traffic_multiplier_kappa=1.0,
             recommended_pickup=passenger.pickup_location,
@@ -134,7 +133,6 @@ async def evaluate_single_passenger_match(
     if detour_min <= 1.5 or smart_walk_res["is_smart_pickup_applicable"]:
         modality = ModalityEnum.DIRECT
         is_viable = True
-        suggested_fare = 4500
         msg = (
             f"Modalidad 1 Directa: Punto de encuentro optimizado sobre la vía principal. "
             f"Desvío mínimo conductor de {detour_min} min (Caminata pasajero: {int(smart_walk_res['walking_distance_meters'])}m)."
@@ -142,14 +140,10 @@ async def evaluate_single_passenger_match(
     elif detour_min <= max_allowed:
         modality = ModalityEnum.DETOUR
         is_viable = True
-        # Recargo por desvío: $300 COP por minuto adicional
-        suggested_fare = int(4500 + (detour_min * 300))
-        suggested_fare = min(8500, max(4500, (suggested_fare // 100) * 100))
         msg = f"Modalidad 2 con Desvío: Desvío vehicular de +{detour_min} min (Límite conductor: {max_allowed} min)."
     else:
         modality = ModalityEnum.REJECTED
         is_viable = False
-        suggested_fare = 0
         msg = f"Inviable: Desvío vehicular de +{detour_min} min supera el umbral máximo de {max_allowed} min."
 
     # 9. Cálculo de Huella de Carbono ISO 14064 (Punto 6)
@@ -164,7 +158,6 @@ async def evaluate_single_passenger_match(
         detour_minutes=detour_min,
         original_duration_minutes=round(base_duration_min, 1),
         new_total_duration_minutes=total_new_duration_min,
-        suggested_fare_cop=suggested_fare,
         traffic_status=traffic_status,
         traffic_multiplier_kappa=traffic_kappa,
         recommended_pickup=effective_pickup,

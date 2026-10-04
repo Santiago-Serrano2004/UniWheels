@@ -72,7 +72,6 @@ class RouteEvaluationResponse(BaseModel):
     detour_minutes: float
     original_duration_minutes: float
     new_total_duration_minutes: float
-    suggested_fare_cop: int
     traffic_status: str
     traffic_multiplier_kappa: float
     recommended_pickup: LatLng
@@ -127,7 +126,6 @@ class MultiPassengerALNSResponse(BaseModel):
     carbon_report: Optional[CarbonLedgerReport] = None
     alns_cost_score: float
     route_polyline: List[List[float]]
-    fare_breakdown: Dict[str, int]
 
 
 class DynamicReoptimizationRequest(BaseModel):
