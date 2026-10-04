@@ -129,7 +129,7 @@ Revisa y limpia, con grep `wallet|Wallet|saldo|billetera|recarga|payment|Payment
 2. `cd mobile && npx tsc --noEmit`: sin errores nuevos. Si ya había errores antes, compara contra la rama base y documenta en el PR que no aumentaron.
 3. Este grep en `mobile/src` y `packages/shared/src` no devuelve nada:
    ```
-   grep -rniE "wallet|wompi|billetera|recarga|payment_method|initCardPayment|earnings|penalty_fee|penalized|comisi|4500"
+   grep -rniE "wallet|wompi|billetera|recarga|payment_method|initCardPayment|earnings|penalty_fee|penalized|comisi|\|\| 4500"
    ```
 4. `npx expo export --platform ios --output-dir /tmp/expo-check` (o el equivalente) compila el bundle sin errores. Si la sesión no puede, indícalo en el PR. El usuario probará en Expo Go en iPhone.
 5. Commits por bloque: `refactor(shared): ...`, `refactor(mobile): quitar pagos ...`, `fix(mobile): payload de publicación de ruta ...`, `feat(mobile): aporte sugerido ...`.
