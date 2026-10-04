@@ -13,7 +13,6 @@ use App\Mail\RecuperacionClaveMail;
 use App\Mail\VerificacionCorreoMail;
 use App\Models\User;
 use App\Models\UserReputationStats;
-use App\Models\UserWallet;
 use App\Services\JwtService;
 use App\Services\SmsService;
 use Illuminate\Http\JsonResponse;
@@ -79,9 +78,8 @@ class AuthController extends Controller
             // (registerDriver), tras validar vehículo/documentos — nunca autodeclarado aquí.
             $nuevoUsuario->assignRole('estudiante');
 
-            // Inicializacion de estadisticas de reputacion y billetera virtual
+            // Inicializacion de estadisticas de reputacion
             UserReputationStats::create(['user_id' => $nuevoUsuario->id]);
-            UserWallet::create(['user_id' => $nuevoUsuario->id, 'balance_cop' => 0.00]);
 
             return $nuevoUsuario;
         });
@@ -96,7 +94,7 @@ class AuthController extends Controller
             Log::error('Error al enviar correo de bienvenida: '.$e->getMessage());
         }
 
-        $usuario->load(['institution', 'campus', 'reputationStats', 'wallet', 'roles']);
+        $usuario->load(['institution', 'campus', 'reputationStats', 'roles']);
         $tokenAcceso = $this->jwtService->issue($usuario);
 
         return response()->json([
@@ -133,7 +131,7 @@ class AuthController extends Controller
             ], 403);
         }
 
-        $usuario->load(['institution', 'campus', 'reputationStats', 'wallet', 'roles']);
+        $usuario->load(['institution', 'campus', 'reputationStats', 'roles']);
         $tokenAcceso = $this->jwtService->issue($usuario);
 
         return response()->json([
@@ -307,7 +305,7 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         $usuario = $request->user();
-        $usuario->load(['institution', 'campus', 'reputationStats', 'wallet', 'roles']);
+        $usuario->load(['institution', 'campus', 'reputationStats', 'roles']);
 
         return response()->json([
             'success' => true,
@@ -334,7 +332,7 @@ class AuthController extends Controller
             $usuario->assignRole('conductor');
         }
 
-        $usuario->load(['institution', 'campus', 'reputationStats', 'wallet', 'roles']);
+        $usuario->load(['institution', 'campus', 'reputationStats', 'roles']);
 
         return response()->json([
             'success' => true,
@@ -470,30 +468,6 @@ class AuthController extends Controller
                 'total_trips_as_driver' => $stats->total_trips_as_driver,
                 'total_trips_as_passenger' => $stats->total_trips_as_passenger,
                 'reviews_count' => $stats->rating_count_as_driver + $stats->rating_count_as_passenger,
-            ],
-        ]);
-    }
-
-    /**
-     * Obtener historial de transacciones de la billetera del usuario autenticado.
-     */
-    public function walletTransactions(Request $request): JsonResponse
-    {
-        $wallet = $request->user()->wallet;
-
-        if (! $wallet) {
-            return response()->json(['success' => true, 'data' => []]);
-        }
-
-        $transacciones = $wallet->transactions()->paginate(20);
-
-        return response()->json([
-            'success' => true,
-            'data' => $transacciones->items(),
-            'meta' => [
-                'current_page' => $transacciones->currentPage(),
-                'last_page' => $transacciones->lastPage(),
-                'total' => $transacciones->total(),
             ],
         ]);
     }
