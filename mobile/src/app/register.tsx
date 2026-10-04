@@ -248,7 +248,6 @@ export default function RegisterScreen() {
           institutionWelcomeImage: institucionSeleccionada?.welcome_image_url,
           rating: 5.0,
           tripsCount: 0,
-          walletBalance: 0,
           token: res.data?.access_token,
         });
       }, 1200);

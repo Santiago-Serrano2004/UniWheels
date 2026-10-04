@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ShieldCheck, Car, ArrowRight, CheckCircle2, X, Navigation, Wallet } from 'lucide-react-native';
+import { ShieldCheck, Car, ArrowRight, CheckCircle2, X, Navigation, Banknote } from 'lucide-react-native';
 import { useAppStore } from '@uniwheels/shared';
 
 export interface DriverApprovedCelebrationModalProps {
@@ -125,10 +125,10 @@ export function DriverApprovedCelebrationModal({
 
             <View className="flex-row items-start gap-2.5">
               <View className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 items-center justify-center shrink-0 mt-0.5">
-                <Wallet size={14} color="#10b981" />
+                <Banknote size={14} color="#10b981" />
               </View>
               <Text className="text-[11px] text-slate-600 dark:text-slate-300 flex-1 leading-snug">
-                Recibe los aportes de tus pasajeros de forma automática en tu saldo digital.
+                Tus pasajeros te dan su aporte directamente, en efectivo o Nequi.
               </Text>
             </View>
           </View>

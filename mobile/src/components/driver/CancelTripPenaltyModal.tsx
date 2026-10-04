@@ -10,18 +10,16 @@ import {
   AlertTriangle,
   X,
   ShieldAlert,
-  DollarSign,
 } from 'lucide-react-native';
 import { useAppStore, tripLifecycleService } from '@uniwheels/shared';
 import { FormSelect } from '@/components/FormSelect';
+import { procesarRespuestaCancelacion } from '@/utils/cancelTripFeedback';
 
 export interface CancelTripPenaltyModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirmCancel?: (hasPenalty: boolean) => void;
+  onConfirmCancel?: (hasPassengers: boolean) => void;
   passengersCount?: number;
-  currentBalance?: number;
-  penaltyAmount?: number;
 }
 
 const REASONS = [
@@ -36,14 +34,12 @@ export function CancelTripPenaltyModal({
   onClose,
   onConfirmCancel,
   passengersCount = 0,
-  currentBalance,
-  penaltyAmount = 3000,
 }: CancelTripPenaltyModalProps) {
   const {
     activeDriverTrip,
     currentRoutePassengerTrips,
-    driverWalletBalance,
     cancelDriverTrip,
+    logout,
   } = useAppStore();
 
   const [selectedReason, setSelectedReason] = useState('falla_mecanica');
@@ -53,30 +49,29 @@ export function CancelTripPenaltyModal({
 
   const count = passengersCount || currentRoutePassengerTrips.length || activeDriverTrip?.passengers?.length || 0;
   const hasPassengers = count > 0;
-  const balance = currentBalance != null ? currentBalance : driverWalletBalance;
-  const newBalance = Math.max(0, balance - penaltyAmount);
 
   const handleConfirm = async () => {
     setIsCancelling(true);
     try {
       const tripId = activeDriverTrip?.id || activeDriverTrip?.route_id;
+      let respuesta = null;
       if (tripId) {
         try {
-          await tripLifecycleService.cancelTrip(tripId, 'driver', selectedReason);
+          respuesta = await tripLifecycleService.cancelTrip(tripId, 'driver', selectedReason);
         } catch (err) {
           console.warn('Notice from cancelTrip:', err);
         }
       }
 
-      // Aplicar cancelación y penalización al store
-      cancelDriverTrip(hasPassengers, penaltyAmount);
+      cancelDriverTrip();
+      procesarRespuestaCancelacion(respuesta, logout);
 
       if (onConfirmCancel) {
         onConfirmCancel(hasPassengers);
       }
       onClose();
     } catch {
-      cancelDriverTrip(hasPassengers, penaltyAmount);
+      cancelDriverTrip();
       onClose();
     } finally {
       setIsCancelling(false);
@@ -107,7 +102,7 @@ export function CancelTripPenaltyModal({
                 )}
               </View>
               <Text className="text-xs font-black text-slate-900 dark:text-white">
-                {hasPassengers ? 'Penalización por Cancelación' : 'Cancelar Publicación'}
+                {hasPassengers ? 'Cancelar con Pasajeros' : 'Cancelar Publicación'}
               </Text>
             </View>
 
@@ -128,14 +123,8 @@ export function CancelTripPenaltyModal({
               </Text>
 
               <View className="p-3 rounded-2xl border bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/60 gap-1.5">
-                <View className="flex-row items-center gap-1.5">
-                  <DollarSign size={14} color="#e11d48" />
-                  <Text className="text-xs font-bold text-rose-700 dark:text-rose-300">
-                    Cobro de Penalización: ${penaltyAmount.toLocaleString('es-CO')} COP
-                  </Text>
-                </View>
                 <Text className="text-[11px] text-rose-800 dark:text-rose-300/80 leading-snug">
-                  La cancelación dejará a los estudiantes sin cupo. Esta tarifa se descontará automáticamente de tu saldo prepago.
+                  Si cancelas con pasajeros confirmados a menos de 15 minutos de la salida, se registra una cancelación tardía. Con 3 en 30 días tu cuenta se suspende por 30 días.
                 </Text>
               </View>
 
@@ -146,22 +135,12 @@ export function CancelTripPenaltyModal({
                 onChange={(v) => setSelectedReason(String(v))}
                 options={REASONS}
               />
-
-              {/* Comparativa de Saldo */}
-              <View className="flex-row items-center justify-between text-[11px] p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                <Text className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Saldo: ${balance.toLocaleString('es-CO')}
-                </Text>
-                <Text className="text-[11px] font-bold text-rose-600 dark:text-rose-400">
-                  Nuevo: ${newBalance.toLocaleString('es-CO')}
-                </Text>
-              </View>
             </View>
           ) : (
             <Text className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               ¿Estás seguro de cancelar este viaje? Aún no tienes pasajeros asignados, por lo que{' '}
-              <Text className="font-bold text-slate-900 dark:text-white">no se aplicará penalización</Text>{' '}
-              a tu cuenta.
+              <Text className="font-bold text-slate-900 dark:text-white">no se registrará una cancelación tardía</Text>{' '}
+              en tu cuenta.
             </Text>
           )}
 
@@ -189,7 +168,7 @@ export function CancelTripPenaltyModal({
                 <ActivityIndicator size="small" color="#ffffff" />
               ) : (
                 <Text className="text-xs font-bold text-white">
-                  {hasPassengers ? 'Pagar y Cancelar' : 'Sí, Cancelar'}
+                  {hasPassengers ? 'Cancelar Viaje' : 'Sí, Cancelar'}
                 </Text>
               )}
             </Pressable>

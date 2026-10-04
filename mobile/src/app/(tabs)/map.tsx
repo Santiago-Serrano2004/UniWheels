@@ -18,7 +18,6 @@ import {
   Route as RouteIcon,
   Search,
   ShieldCheck,
-  Smartphone,
   Car,
   Bike,
   MapPin,
@@ -33,22 +32,9 @@ import {
   useAppStore,
 } from '@uniwheels/shared';
 import { TripRouteMap } from '@/components/TripRouteMap';
-import { PaymentMethodSelectorModal, type PaymentMethodId } from '@/components/PaymentMethodSelectorModal';
-import { WompiWidgetModal, type WompiWidgetParams } from '@/components/WompiWidgetModal';
 import { ActiveRoleConflictBlocker } from '@/components/ActiveRoleConflictBlocker';
 import { usePassengerLiveTracking } from '@/hooks/usePassengerLiveTracking';
 import { SosEmergencyModal } from '@/components/SosEmergencyModal';
-
-const PAYMENT_METHOD_BACKEND_MAP: Record<PaymentMethodId, string> = {
-  nequi_direct: 'nequi_directo',
-  cash_direct: 'efectivo',
-  card_instant: 'tarjeta',
-};
-const PAYMENT_METHOD_LABEL: Record<PaymentMethodId, string> = {
-  nequi_direct: 'Nequi Directo',
-  cash_direct: 'Efectivo al abordar',
-  card_instant: 'Tarjeta Débito/Crédito',
-};
 
 const initialsOf = (name?: string) =>
   name
@@ -474,21 +460,17 @@ function RouteBookingView({
   const [originCoord] = useState<[number, number]>(() => getPlaceCoordinates(route.origin, false));
   const [destinationCoord] = useState<[number, number]>(() => getPlaceCoordinates(route.destination, true));
   const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodId>('nequi_direct');
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
-  const [wompiParams, setWompiParams] = useState<WompiWidgetParams | null>(null);
 
   useEffect(() => {
     fetchRoadGeometry([originCoord, destinationCoord]).then(setRouteCoords);
   }, [originCoord, destinationCoord]);
 
-  const fareCop = route.fare_cop || 4500;
+  const fareCop = Number(route.fare_cop ?? 0);
 
   const confirmarReserva = async () => {
     setIsBooking(true);
     try {
-      const metodoPagoBackend = PAYMENT_METHOD_BACKEND_MAP[paymentMethod];
       const respuesta = await tripLifecycleService.bookTrip({
         route_id: route.id,
         driver_name: route.driverName,
@@ -498,7 +480,6 @@ function RouteBookingView({
         dropoff_address: route.destination,
         total_fare_cop: fareCop,
         scheduled_pickup_time: route.scheduled_date ? `${route.scheduled_date}T00:00:00` : new Date().toISOString(),
-        payment_method: metodoPagoBackend,
       });
 
       const tripIdReal = respuesta?.data?.trip_id || route.id;
@@ -513,21 +494,11 @@ function RouteBookingView({
         destination: route.destination,
         fare: fareCop,
         boardingPin: respuesta?.data?.boarding_pin,
-        paymentMethod,
         pickup_lat: originCoord[0],
         pickup_lng: originCoord[1],
         destination_lat: destinationCoord[0],
         destination_lng: destinationCoord[1],
       });
-
-      if (metodoPagoBackend === 'tarjeta' && respuesta?.data?.trip_id) {
-        try {
-          const params = await tripLifecycleService.initCardPayment(respuesta.data.trip_id);
-          if (params?.public_key) setWompiParams(params);
-        } catch {
-          // El conductor verá el viaje como pago pendiente — no bloquea la reserva.
-        }
-      }
 
       onClear();
       router.push('/(tabs)/history');
@@ -617,29 +588,18 @@ function RouteBookingView({
         {expanded ? (
           <>
             <Pressable
-              onPress={() => setIsPaymentModalOpen(true)}
-              className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex-row items-center justify-between"
-            >
-              <View className="flex-row items-center gap-2">
-                <Smartphone size={16} color="#a855f7" />
-                <View>
-                  <Text className="text-xs font-bold text-slate-900 dark:text-white">{PAYMENT_METHOD_LABEL[paymentMethod]}</Text>
-                  <Text className="text-[10px] text-slate-400">Método de pago seleccionado</Text>
-                </View>
-              </View>
-              <Text className="text-[10px] font-bold text-lochmara-500">Cambiar</Text>
-            </Pressable>
-
-            <Pressable
               onPress={confirmarReserva}
               disabled={isBooking}
               className="py-3.5 rounded-2xl bg-emerald-600 flex-row items-center justify-center gap-2 disabled:opacity-60"
             >
               {isBooking ? <ActivityIndicator color="#ffffff" /> : <CheckCircle2 size={16} color="#ffffff" />}
-              <Text className="text-white text-xs font-black">
-                Confirmar Reserva (${fareCop.toLocaleString('es-CO')} COP)
-              </Text>
+              <Text className="text-white text-xs font-black">Reservar cupo</Text>
             </Pressable>
+            <Text className="text-[11px] text-center text-slate-500 dark:text-slate-400">
+              {fareCop > 0
+                ? `Aporte al conductor: $${fareCop.toLocaleString('es-CO')}, en efectivo o Nequi, directo.`
+                : 'Viaje gratis'}
+            </Text>
           </>
         ) : (
           <Pressable
@@ -651,21 +611,6 @@ function RouteBookingView({
           </Pressable>
         )}
       </View>
-
-      <PaymentMethodSelectorModal
-        isOpen={isPaymentModalOpen}
-        onClose={() => setIsPaymentModalOpen(false)}
-        selectedMethod={paymentMethod}
-        onSelectMethod={setPaymentMethod}
-        fareAmount={fareCop}
-      />
-
-      <WompiWidgetModal
-        isOpen={Boolean(wompiParams)}
-        params={wompiParams}
-        onClose={() => setWompiParams(null)}
-        onResult={() => setWompiParams(null)}
-      />
     </View>
   );
 }

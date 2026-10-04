@@ -71,11 +71,11 @@ export default function LoginScreen() {
         institutionWelcomeImage: u.institution?.welcome_image_url,
         rating: u.reputation?.average_rating_as_passenger || 5.0,
         tripsCount: u.reputation?.total_trips_as_passenger || 0,
-        walletBalance: u.wallet?.balance_cop || 0,
         token: response.data.access_token,
       });
-    } catch (error) {
-      setErrorMessage(parseBackendError(error));
+    } catch (error: any) {
+      // Cuenta suspendida: el backend responde 403 con su propio mensaje.
+      setErrorMessage(error?.suspended_until && error?.message ? error.message : parseBackendError(error));
     } finally {
       setIsLoading(false);
     }

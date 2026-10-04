@@ -109,7 +109,7 @@ export function LiveTripIslandWidget() {
     Alert.alert(
       isDriver ? 'Cancelar viaje' : 'Cancelar reserva',
       isDriver
-        ? '¿Deseas cancelar el viaje en curso? Podría aplicar penalización si hay pasajeros asignados.'
+        ? '¿Deseas cancelar el viaje en curso? Si hay pasajeros confirmados y faltan menos de 15 minutos para la salida, se registra una cancelación tardía.'
         : '¿Estás seguro de que deseas cancelar tu reserva?',
       [
         { text: 'Volver', style: 'cancel' },
@@ -119,7 +119,7 @@ export function LiveTripIslandWidget() {
           onPress: () => {
             setIsExpanded(false);
             if (isDriver) {
-              cancelDriverTrip(false);
+              cancelDriverTrip();
             } else {
               cancelPassengerBooking();
             }

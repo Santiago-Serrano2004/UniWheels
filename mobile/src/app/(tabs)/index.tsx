@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -21,9 +21,8 @@ import {
   MapPin,
   Power,
   Plus,
-  Wallet,
 } from 'lucide-react-native';
-import { authService, placesApiService, routesService, useAppStore } from '@uniwheels/shared';
+import { authService, placesApiService, routesService, tripLifecycleService, useAppStore } from '@uniwheels/shared';
 import { CampusSelectorModal, type Campus } from '@/components/CampusSelectorModal';
 import { SetHomeLocationModal } from '@/components/SetHomeLocationModal';
 import { LocationPickerModal } from '@/components/LocationPickerModal';
@@ -33,7 +32,6 @@ import { DriverOnboardingView } from '@/components/driver/DriverOnboardingView';
 import { DriverCockpitCard } from '@/components/driver/DriverCockpitCard';
 import { DriverRoutePublishForm } from '@/components/driver/DriverRoutePublishForm';
 import { InAppGpsNavigator } from '@/components/driver/InAppGpsNavigator';
-import { TripSettlementModal } from '@/components/driver/TripSettlementModal';
 import { CancelTripPenaltyModal } from '@/components/driver/CancelTripPenaltyModal';
 import { PassengerActiveTripCard } from '@/components/PassengerActiveTripCard';
 
@@ -94,14 +92,13 @@ export default function HomeScreen() {
   const savedHomeLocation = useAppStore((state) => state.savedHomeLocation);
   const publishedDriverTrips = useAppStore((state) => state.publishedDriverTrips);
   const recurringDriverTrips = useAppStore((state) => state.recurringDriverTrips);
-  const driverWalletBalance = useAppStore((state) => state.driverWalletBalance);
+  const finishActiveDriverTrip = useAppStore((state) => state.finishActiveDriverTrip);
   const startPublishedTrip = useAppStore((state) => state.startPublishedTrip);
   const cancelPublishedTrip = useAppStore((state) => state.cancelPublishedTrip);
   const toggleRecurringDriverTrip = useAppStore((state) => state.toggleRecurringDriverTrip);
 
   const [showPublishForm, setShowPublishForm] = useState(false);
   const [showNavigator, setShowNavigator] = useState(false);
-  const [showSettlement, setShowSettlement] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
   const [direction, setDirection] = useState<'towards' | 'from' | 'inter_campus'>('towards');
@@ -252,6 +249,19 @@ export default function HomeScreen() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  const completarViaje = async () => {
+    const tripId = activeDriverTrip?.id || activeDriverTrip?.route_id;
+    if (tripId) {
+      try {
+        await tripLifecycleService.completeTrip(tripId);
+      } catch (err) {
+        console.warn('Notice from completeTrip:', err);
+      }
+    }
+    finishActiveDriverTrip();
+    Alert.alert('Viaje completado', 'Viaje completado.');
+  };
+
   const handleSelectSuggestion = (item: any) => {
     const name = item.nombre || item.name || 'Ubicación seleccionada';
     const coords = item.coords || [item.latitude, item.longitude];
@@ -344,7 +354,7 @@ export default function HomeScreen() {
               onExit={() => setShowNavigator(false)}
               onComplete={() => {
                 setShowNavigator(false);
-                setShowSettlement(true);
+                completarViaje();
               }}
             />
           </SafeAreaView>
@@ -355,19 +365,13 @@ export default function HomeScreen() {
         <SafeAreaView edges={[]} className="flex-1 bg-slate-100 dark:bg-slate-950">
           <DriverCockpitCard
             onOpenNavigator={() => setShowNavigator(true)}
-            onOpenSettlement={() => setShowSettlement(true)}
+            onCompleteTrip={completarViaje}
             onOpenCancelModal={() => setShowCancelModal(true)}
-          />
-          <TripSettlementModal
-            isOpen={showSettlement}
-            onClose={() => setShowSettlement(false)}
-            trip={activeDriverTrip}
           />
           <CancelTripPenaltyModal
             isOpen={showCancelModal}
             onClose={() => setShowCancelModal(false)}
             passengersCount={activeDriverTrip.passengers?.length || 0}
-            currentBalance={driverWalletBalance}
           />
         </SafeAreaView>
       );
@@ -410,23 +414,6 @@ export default function HomeScreen() {
               </View>
               <View className="w-10 h-10 rounded-2xl bg-emerald-600 items-center justify-center">
                 <Text className="text-white font-black text-xs">{initials}</Text>
-              </View>
-            </View>
-
-            <View className="flex-row items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-              <View className="flex-row items-center gap-2">
-                <View className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 items-center justify-center">
-                  <Wallet size={15} color="#10b981" />
-                </View>
-                <View>
-                  <Text className="text-[10px] font-bold uppercase text-slate-400">Saldo en Billetera</Text>
-                  <Text className="text-sm font-black text-emerald-600 dark:text-emerald-400">
-                    ${driverWalletBalance.toLocaleString('es-CO')} COP
-                  </Text>
-                </View>
-              </View>
-              <View className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
-                <Text className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Activo</Text>
               </View>
             </View>
           </View>
