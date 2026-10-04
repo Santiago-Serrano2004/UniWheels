@@ -1,11 +1,9 @@
 <?php
 
-use App\Http\Controllers\Api\V1\Admin\AdminPaymentController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\InstitutionController;
 use App\Http\Controllers\Api\V1\PublicProfileController;
-use App\Http\Controllers\Api\V1\WalletController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -35,18 +33,14 @@ Route::prefix('v1')->group(function () {
         Route::delete('/auth/account', [AuthController::class, 'deleteAccount']);
         Route::post('/auth/delete-account', [AuthController::class, 'deleteAccount']);
 
-        // Reputación y transacciones del usuario autenticado (antes públicas y por query param)
+        // Reputación del usuario autenticado (antes pública y por query param)
         Route::get('/user/reputation-stats', [AuthController::class, 'reputationStats']);
-        Route::get('/wallet/transactions', [AuthController::class, 'walletTransactions']);
-        Route::post('/wallet/recharge/init', [WalletController::class, 'initRecharge']);
     });
 
     // Enriquecimiento cross-service: perfil público mínimo, solo invocable por
     // otros microservicios del backend (nunca directamente por el navegador).
     Route::middleware('jwt.service')->group(function () {
         Route::get('/users/{id}/public-profile', [PublicProfileController::class, 'show']);
-        Route::post('/wallet/credit', [WalletController::class, 'credit']);
-        Route::post('/wallet/debit-commission', [WalletController::class, 'debitCommission']);
     });
 
     // Rutas de administración
@@ -55,10 +49,5 @@ Route::prefix('v1')->group(function () {
         Route::get('/users/{id}', [AdminUserController::class, 'show']);
         Route::post('/users/lookup', [AdminUserController::class, 'lookup']);
         Route::patch('/users/{id}/suspension', [AdminUserController::class, 'updateSuspension']);
-        Route::get('/payments/topups', [AdminPaymentController::class, 'topups']);
     });
-
-    // Webhook público de Wompi — verificado por firma propia (Wompi no puede
-    // firmar nuestros JWT), nunca por jwt.auth ni jwt.service.
-    Route::post('/webhooks/wompi', [WalletController::class, 'wompiWebhook']);
 });

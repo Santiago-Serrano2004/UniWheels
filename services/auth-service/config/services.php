@@ -43,15 +43,4 @@ return [
         'twilio_from' => env('TWILIO_FROM'),
     ],
 
-    'wompi' => [
-        // Sandbox: dashboard.wompi.co (modo "Pruebas"). Producción: mismo
-        // dashboard, modo "Producción" — cambiar estas 4 variables es lo único
-        // que hace falta para pasar de pruebas a cobros reales.
-        'public_key' => env('WOMPI_PUBLIC_KEY'),
-        'private_key' => env('WOMPI_PRIVATE_KEY'),
-        'integrity_secret' => env('WOMPI_INTEGRITY_SECRET'),
-        'events_secret' => env('WOMPI_EVENTS_SECRET'),
-        'redirect_url' => env('WOMPI_REDIRECT_URL'),
-    ],
-
 ];
