@@ -521,15 +521,6 @@ export const tripsService = {
     return historial.filter((t) => t.route_id === routeId && estadosActivos.includes(t.status));
   },
 
-  async getWalletTransactions() {
-    try {
-      const response = await apiClient.get('/wallet/transactions');
-      return response.data?.data || [];
-    } catch {
-      return [];
-    }
-  },
-
   async submitRating(ratingPayload) {
     try {
       const response = await notificationApiClient.post('/ratings', ratingPayload);
@@ -568,6 +559,24 @@ export const routesService = {
     } catch (error) {
       if (error.response?.data) throw error.response.data;
       throw { message: 'Error al publicar la ruta.' };
+    }
+  },
+
+  async getContributionSuggestion({ vehicleId, originLat, originLng, destinationLat, destinationLng }) {
+    try {
+      const response = await routeApiClient.get('/routes/contribution-suggestion', {
+        params: {
+          vehicle_id: vehicleId,
+          origin_lat: originLat,
+          origin_lng: originLng,
+          destination_lat: destinationLat,
+          destination_lng: destinationLng,
+        },
+      });
+      return response.data?.data;
+    } catch (error) {
+      if (error.response?.data) throw { ...error.response.data, status: error.response.status };
+      throw { message: 'No se pudo calcular el aporte sugerido.' };
     }
   },
 
@@ -641,18 +650,6 @@ export const routesService = {
         reason: detourMin <= 15 ? 'Desvío estimado dentro del rango viable' : 'Excede el límite estimado de desvío',
       },
     };
-  },
-};
-
-export const walletService = {
-  async initRecharge(amountCop) {
-    try {
-      const response = await apiClient.post('/wallet/recharge/init', { amount_cop: amountCop });
-      return response.data?.data || null;
-    } catch (error) {
-      if (error.response?.data) throw error.response.data;
-      throw { message: 'No se pudo iniciar la recarga de billetera.' };
-    }
   },
 };
 
@@ -752,16 +749,6 @@ export const tripLifecycleService = {
       return response.data?.data || null;
     } catch {
       return null;
-    }
-  },
-
-  async initCardPayment(tripId) {
-    try {
-      const response = await tripLifecycleClient.post(`/trips/${tripId}/payment/card/init`);
-      return response.data?.data || null;
-    } catch (error) {
-      if (error.response?.data) throw error.response.data;
-      throw { message: 'No se pudo iniciar el pago con tarjeta.' };
     }
   },
 };
