@@ -12,8 +12,10 @@ Monorepo. Plataforma de movilidad compartida. Ver `README.md` y `./uniwheels hel
 | `services/trip-service` (8004) | Viajes | Laravel 13 |
 | `services/notification-service` | Notificaciones | Laravel 13 |
 | `services/ai-route-service` | ETA / optimización de ruta | Python FastAPI, scikit-learn, xgboost |
-| `frontend/` | SPA web | React 19, Vite 8, Tailwind 4, react-leaflet, zustand |
-| `mobile/` | App | Expo SDK 54, React Native, TypeScript, NativeWind |
+| `frontend/` | SPA web, **congelado** (no se agregan funciones; la app móvil es el producto) | React 19, Vite 8, Tailwind 4, react-leaflet, zustand |
+| `mobile/` | App | Expo SDK 57, React Native, TypeScript, NativeWind |
+| `admin/` | Panel de Bienestar | React, Vite |
+| `landing/` | Sitio público | React, Vite |
 | `gateway/` | Reverse proxy | solo nginx.conf |
 | `docker/` | Orquestación local | docker-compose, OSRM |
 | `./uniwheels` | CLI maestro (levanta/para servicios, logs, tests) | bash |
@@ -23,7 +25,7 @@ Monorepo. Plataforma de movilidad compartida. Ver `README.md` y `./uniwheels hel
 - **Servicio Laravel**: `cd services/<svc>` → `composer test` (corre `php artisan test`), `./vendor/bin/pest`, `./vendor/bin/pint` (formato), `php artisan ...`.
 - **ai-route-service**: `cd services/ai-route-service` → `source .venv/bin/activate` → `pytest`. Reentrenar: `python scripts/retrain_eta_model.py`.
 - **frontend**: `cd frontend` → `npm test` (vitest), `npm run lint` (oxlint), `npm run test:e2e` (playwright), `npm run dev`.
-- **mobile**: `cd mobile` → `npm run lint`, `npm start`. **Lee `mobile/AGENTS.md` antes de tocar nada**: Expo SDK 54 está fijado a propósito, no subir de versión.
+- **mobile**: `cd mobile` → `npm run lint`, `npm start`. **Lee `mobile/AGENTS.md` antes de tocar nada**: Expo SDK 57 está fijado a propósito, no subir de versión.
 - **Todo junto**: `./uniwheels` (ver subcomandos con `./uniwheels help`).
 
 ## Convenciones
@@ -48,4 +50,4 @@ Monorepo. Plataforma de movilidad compartida. Ver `README.md` y `./uniwheels hel
 
 ## Trabajo actual
 
-Rama `feature/fase-02-frontend-spa`: SPA del frontend (auth, navegación, widget de viaje en vivo).
+Rama `pivote/b2b-sin-pagos`: pivote a B2B sin pagos (ver `specs/pivote-b2b-sin-pagos.md`).
