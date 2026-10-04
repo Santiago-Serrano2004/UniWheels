@@ -26,7 +26,7 @@ class CreateTripRequest extends FormRequest
             'vehicle_model' => ['nullable', 'string', 'max:80'],
             'pickup_address' => ['required', 'string', 'max:150'],
             'dropoff_address' => ['required', 'string', 'max:150'],
-            'total_fare_cop' => ['required', 'numeric', 'min:2000', 'max:100000'],
+            'total_fare_cop' => ['required', 'numeric', 'min:0', 'max:100000'],
             'scheduled_pickup_time' => ['required', 'date'],
         ];
     }

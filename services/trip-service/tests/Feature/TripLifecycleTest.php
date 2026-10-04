@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class TripLifecycleTest extends TestCase
@@ -45,7 +46,7 @@ class TripLifecycleTest extends TestCase
             'vehicle_model' => 'Mazda 3 (Rojo)',
             'pickup_address' => 'Parque San Pío',
             'dropoff_address' => 'Campus El Jardín',
-            'total_fare_cop' => 5800,
+            'total_fare_cop' => 4500,
             'scheduled_pickup_time' => Carbon::tomorrow()->setHour(7)->setMinute(5)->toISOString(),
         ];
 
@@ -57,34 +58,64 @@ class TripLifecycleTest extends TestCase
                 'message' => 'Viaje reservado exitosamente. Se ha generado tu PIN de abordaje seguro.',
             ])
             ->assertJsonPath('data.status', 'confirmado')
-            ->assertJsonPath('data.total_fare_cop', 5800);
+            ->assertJsonPath('data.total_fare_cop', 4500);
 
         $this->assertDatabaseHas('trips', [
             'pickup_address' => 'Parque San Pío',
-            'total_fare_cop' => 5800.00,
+            'total_fare_cop' => 4500.00,
             'status' => 'confirmado',
             'passenger_id' => $passengerId,
             'driver_id' => $driverId,
         ]);
     }
 
-    public function test_rechaza_una_tarifa_fuera_del_rango_valido_de_la_ruta(): void
+    public static function tarifasDistintasDelAporteDeLaRuta(): array
+    {
+        return [
+            'mayor al aporte' => [4600],
+            'mucho mayor' => [50000],
+            'menor al aporte' => [4000],
+        ];
+    }
+
+    #[DataProvider('tarifasDistintasDelAporteDeLaRuta')]
+    public function test_rechaza_una_tarifa_distinta_al_aporte_de_la_ruta(int $tarifa): void
     {
         $passengerId = (string) Str::uuid();
         $driverId = (string) Str::uuid();
         $routeId = $this->fakeRouteMatching($driverId, 4500.0);
 
-        $payload = [
+        $this->withToken($this->jwtDePrueba($passengerId))
+            ->postJson('/api/v1/trips', $this->payloadReserva($routeId, $tarifa))
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'La tarifa indicada no corresponde a un valor válido para esta ruta.');
+
+        $this->assertDatabaseCount('trips', 0);
+    }
+
+    public function test_reserva_una_ruta_gratuita_con_total_fare_cop_cero(): void
+    {
+        $passengerId = (string) Str::uuid();
+        $driverId = (string) Str::uuid();
+        $routeId = $this->fakeRouteMatching($driverId, 0.0);
+
+        $this->withToken($this->jwtDePrueba($passengerId))
+            ->postJson('/api/v1/trips', $this->payloadReserva($routeId, 0))
+            ->assertStatus(201)
+            ->assertJsonPath('data.total_fare_cop', 0);
+
+        $this->assertDatabaseHas('trips', ['passenger_id' => $passengerId, 'total_fare_cop' => 0.00]);
+    }
+
+    private function payloadReserva(string $routeId, int $tarifa): array
+    {
+        return [
             'route_id' => $routeId,
             'pickup_address' => 'Parque San Pío',
             'dropoff_address' => 'Campus El Jardín',
-            'total_fare_cop' => 50000, // muy por encima del máximo tolerable (base + 4500)
+            'total_fare_cop' => $tarifa,
             'scheduled_pickup_time' => Carbon::tomorrow()->setHour(7)->setMinute(5)->toISOString(),
         ];
-
-        $this->withToken($this->jwtDePrueba($passengerId))
-            ->postJson('/api/v1/trips', $payload)
-            ->assertStatus(422);
     }
 
     public function test_el_conductor_puede_iniciar_el_recorrido_y_llegar_al_punto_de_encuentro(): void
