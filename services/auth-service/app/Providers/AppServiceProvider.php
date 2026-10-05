@@ -36,6 +36,15 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        // A4: reset-password: 5/min por correo y 30/min por IP (el código de 6 dígitos
+        // además se invalida al 5.º fallo, ver AuthController::resetPassword).
+        RateLimiter::for('password-reset', function ($request) {
+            return [
+                Limit::perMinute(5)->by('reset-email:'.strtolower((string) $request->input('email'))),
+                Limit::perMinute(30)->by('reset-ip:'.$request->ip()),
+            ];
+        });
+
         // Lista de espera pública: 5/min por IP y 3/día por correo.
         RateLimiter::for('waitlist', function ($request) {
             return [

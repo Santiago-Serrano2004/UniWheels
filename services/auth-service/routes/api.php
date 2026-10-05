@@ -28,7 +28,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/register', [AuthController::class, 'register'])->middleware(['throttle:10,1', 'throttle:pin-attempt']);
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
     Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:verification-code');
-    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
+    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:password-reset');
     Route::post('/auth/send-verification-code', [AuthController::class, 'sendVerificationCode'])->middleware('throttle:verification-code');
     // Renovar sesión: acepta tokens vencidos hace menos de 7 días, por eso no pasa por jwt.auth.
     Route::post('/auth/refresh', [AuthController::class, 'refresh'])->middleware('throttle:30,1');

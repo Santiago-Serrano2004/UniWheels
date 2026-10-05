@@ -213,7 +213,23 @@ class AuthController extends Controller
 
         $codigoAlmacenado = Cache::get('password_reset_'.$correo);
 
-        if (! $codigoAlmacenado || $codigoAlmacenado !== $codigoIngresado) {
+        $claveIntentos = 'password_reset_attempts_'.$correo;
+
+        if (! $codigoAlmacenado || ! hash_equals((string) $codigoAlmacenado, $codigoIngresado)) {
+            // Al 5.º fallo el código se invalida: 6 dígitos no resisten fuerza bruta.
+            if ($codigoAlmacenado) {
+                Cache::add($claveIntentos, 0, now()->addMinutes(15));
+                if (Cache::increment($claveIntentos) >= 5) {
+                    Cache::forget('password_reset_'.$correo);
+                    Cache::forget($claveIntentos);
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Demasiados intentos. Solicita un código nuevo.',
+                    ], 422);
+                }
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'El código de verificación es inválido o ha expirado.',
@@ -233,6 +249,7 @@ class AuthController extends Controller
         ]);
 
         Cache::forget('password_reset_'.$correo);
+        Cache::forget($claveIntentos);
 
         return response()->json([
             'success' => true,
