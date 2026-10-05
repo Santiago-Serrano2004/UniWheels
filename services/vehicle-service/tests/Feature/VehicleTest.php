@@ -175,7 +175,7 @@ test('descargar un documento privado genera un registro inmutable de auditoria H
     // Generar URL firmada
     $urlFirmada = app(HabeasDataAuditService::class)->generateSignedDownloadUrl($documento, [
         'auditor_id' => $auditorId,
-        'purpose' => 'verificacion_inicial',
+        'purpose' => 'verificacion',
     ]);
 
     // Ejecutar descarga (como administrador/auditor de Bienestar Universitario)
@@ -188,7 +188,7 @@ test('descargar un documento privado genera un registro inmutable de auditoria H
         'auditor_user_id' => $auditorId,
         'target_user_id' => $userId,
         'document_id' => $documento->id,
-        'access_purpose' => 'verificacion_inicial',
+        'access_purpose' => 'verificacion',
     ]);
 });
 
