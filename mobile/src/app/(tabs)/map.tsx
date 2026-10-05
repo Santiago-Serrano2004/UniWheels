@@ -142,18 +142,25 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const [cameraMode, setCameraMode] = useState<'driver' | 'pickup' | 'overview'>('overview');
 
-  // Coordenadas de recogida y destino
-  const pickupCoord: [number, number] = useMemo(() => [
-    booking.pickup_lat != null ? booking.pickup_lat : getPlaceCoordinates(booking.origin, false)[0],
-    booking.pickup_lng != null ? booking.pickup_lng : getPlaceCoordinates(booking.origin, false)[1],
-  ], [booking.pickup_lat, booking.pickup_lng, booking.origin]);
-
-  const destinationCoord: [number, number] = useMemo(() => [
-    booking.destination_lat != null ? booking.destination_lat : getPlaceCoordinates(booking.destination, true)[0],
-    booking.destination_lng != null ? booking.destination_lng : getPlaceCoordinates(booking.destination, true)[1],
-  ], [booking.destination_lat, booking.destination_lng, booking.destination]);
-
   const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
+  // Puntos de la ruta real publicada (inicio y fin), si ya se cargó.
+  const [rutaReal, setRutaReal] = useState<[number, number][]>([]);
+  const inicioRuta = rutaReal.length > 1 ? rutaReal[0] : null;
+  const finRuta = rutaReal.length > 1 ? rutaReal[rutaReal.length - 1] : null;
+
+  // Recogida y destino: coordenadas reales si existen; si no, los extremos de la ruta publicada;
+  // la adivinanza por nombre queda solo como último recurso.
+  const pickupCoord: [number, number] = useMemo(() => {
+    if (booking.pickup_lat != null && booking.pickup_lng != null) return [Number(booking.pickup_lat), Number(booking.pickup_lng)];
+    if (inicioRuta) return inicioRuta;
+    return getPlaceCoordinates(booking.origin, false) as [number, number];
+  }, [booking.pickup_lat, booking.pickup_lng, booking.origin, inicioRuta]);
+
+  const destinationCoord: [number, number] = useMemo(() => {
+    if (booking.destination_lat != null && booking.destination_lng != null) return [Number(booking.destination_lat), Number(booking.destination_lng)];
+    if (finRuta) return finRuta;
+    return getPlaceCoordinates(booking.destination, true) as [number, number];
+  }, [booking.destination_lat, booking.destination_lng, booking.destination, finRuta]);
 
   // Hook de telemetría reactiva cada 5 segundos
   const {
@@ -169,26 +176,37 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
 
   // Trazar la ruta real publicada por el conductor; si no se conoce, la calculada entre los puntos.
   const routeId = booking.route_id;
+  const [rutaFallida, setRutaFallida] = useState(false);
   useEffect(() => {
+    if (!routeId) return undefined;
     let activo = true;
-    const respaldo = () => fetchRoadGeometry([pickupCoord, destinationCoord]).then((c: [number, number][]) => activo && setRouteCoords(c));
-    if (!routeId) {
-      respaldo();
-    } else {
-      routesService
-        .getRoute(routeId)
-        .then((detalle: any) => {
-          const coords: [number, number][] = (detalle?.coordinates || []).map((c: any) => [Number(c[0]), Number(c[1])]);
-          if (!activo) return;
-          if (coords.length > 1) setRouteCoords(coords);
-          else respaldo();
-        })
-        .catch(respaldo);
-    }
+    routesService
+      .getRoute(routeId)
+      .then((detalle: any) => {
+        const coords: [number, number][] = (detalle?.coordinates || []).map((c: any) => [Number(c[0]), Number(c[1])]);
+        if (!activo) return;
+        if (coords.length > 1) {
+          setRouteCoords(coords);
+          setRutaReal(coords);
+        } else {
+          setRutaFallida(true);
+        }
+      })
+      .catch(() => activo && setRutaFallida(true));
     return () => {
       activo = false;
     };
-  }, [routeId, pickupCoord, destinationCoord]);
+  }, [routeId]);
+
+  // Sin ruta publicada conocida: geometría calculada entre recogida y destino.
+  useEffect(() => {
+    if (routeId && !rutaFallida) return undefined;
+    let activo = true;
+    fetchRoadGeometry([pickupCoord, destinationCoord]).then((c: [number, number][]) => activo && setRouteCoords(c));
+    return () => {
+      activo = false;
+    };
+  }, [routeId, rutaFallida, pickupCoord, destinationCoord]);
 
   // Tipo de vehículo
   const isMoto =
