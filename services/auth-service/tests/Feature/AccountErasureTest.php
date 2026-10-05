@@ -8,6 +8,7 @@ use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
@@ -32,7 +33,7 @@ function crearUsuarioParaBorrado(): User
         'student_code' => 'U00012345',
         'academic_program_or_department' => 'Ingeniería de Sistemas',
         'semester' => 6,
-        'password' => 'ClaveSegura123!',
+        'password' => Str::password(16),
         'is_active' => true,
         'email_verified_at' => now(),
         'verification_expires_at' => now()->addMonths(6),
@@ -82,7 +83,7 @@ test('el usuario eliminado ya no puede iniciar sesion y su token queda revocado'
 
     $this->postJson('/api/v1/auth/login', [
         'email' => $correoOriginal,
-        'password' => 'ClaveSegura123!',
+        'password' => Str::password(16),
     ])->assertStatus(422);
 
     $this->withToken($token)->getJson('/api/v1/auth/me')->assertStatus(401);
