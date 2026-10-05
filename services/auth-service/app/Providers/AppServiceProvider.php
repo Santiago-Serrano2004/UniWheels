@@ -45,6 +45,24 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        // A6: login 5/min por correo y 30/min por IP (una sede sale por una sola IP/NAT).
+        RateLimiter::for('login', function ($request) {
+            // El login acepta email completo o email_prefix + institution_id.
+            $correo = $request->input('email');
+            if (! is_string($correo)) {
+                $prefijo = $request->input('email_prefix');
+                $institucion = $request->input('institution_id');
+                $correo = is_string($prefijo) ? $prefijo.'|'.(is_scalar($institucion) ? $institucion : '') : '';
+            }
+            $correo = strtolower($correo);
+            $mensaje = ['success' => false, 'message' => 'Demasiados intentos. Espera un minuto.'];
+
+            return [
+                Limit::perMinute(5)->by('login-email:'.$correo)->response(fn () => response()->json($mensaje, 429)),
+                Limit::perMinute(30)->by('login-ip:'.$request->ip())->response(fn () => response()->json($mensaje, 429)),
+            ];
+        });
+
         // Lista de espera pública: 5/min por IP y 3/día por correo.
         RateLimiter::for('waitlist', function ($request) {
             return [
