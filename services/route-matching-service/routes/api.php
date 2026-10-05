@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\RouteController;
+use App\Http\Controllers\Api\V1\RouteSeatController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -8,6 +9,13 @@ use Illuminate\Support\Facades\Route;
 | API Routes — UniWheels Geo & AI Route Matching Service
 |--------------------------------------------------------------------------
 */
+
+// Control atómico de cupos — solo servicio-a-servicio (trip-service). route-matching
+// es la dueña de routes.available_seats.
+Route::prefix('v1/internal')->middleware('jwt.service')->group(function () {
+    Route::post('/routes/{id}/reserve-seat', [RouteSeatController::class, 'reserve'])->whereUuid('id');
+    Route::post('/routes/{id}/release-seat', [RouteSeatController::class, 'release'])->whereUuid('id');
+});
 
 Route::prefix('v1')->middleware('jwt.auth')->group(function () {
     // Búsqueda y Emparejamiento Geoespacial (Pasajero) — cálculo espacial costoso, limitado.

@@ -12,13 +12,21 @@ class ContributionTest extends TestCase
 {
     use RefreshDatabase;
 
+    private string $conductorId;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->conductorId = (string) Str::uuid();
+    }
+
     // OSRM simulado a 8.400 m → carro: 2000 + 8,4 × 400 = 5360 → $ 5.400.
     private function fakeServicios(?string $tipoVehiculo = 'carro', bool $vehicleServiceCaido = false): void
     {
         Http::fake([
             '*/api/v1/vehicles/*/public-summary' => $vehicleServiceCaido
                 ? Http::response([], 500)
-                : Http::response(['success' => true, 'data' => ['vehicle_type' => $tipoVehiculo]], 200),
+                : Http::response(['success' => true, 'data' => ['vehicle_type' => $tipoVehiculo, 'status' => 'aprobado', 'owner_id' => $this->conductorId, 'available_seats' => 4]], 200),
             '*/route/v1/driving/*' => Http::response([
                 'code' => 'Ok',
                 'routes' => [[
@@ -63,7 +71,7 @@ class ContributionTest extends TestCase
     {
         $this->fakeServicios('carro');
 
-        $this->withToken($this->jwtDePrueba((string) Str::uuid()))
+        $this->withToken($this->jwtDePrueba($this->conductorId))
             ->getJson('/api/v1/routes/contribution-suggestion?'.$this->parametrosSugerencia((string) Str::uuid()))
             ->assertStatus(200)
             ->assertJson(['success' => true, 'data' => [
@@ -78,7 +86,7 @@ class ContributionTest extends TestCase
     {
         $this->fakeServicios(vehicleServiceCaido: true);
 
-        $this->withToken($this->jwtDePrueba((string) Str::uuid()))
+        $this->withToken($this->jwtDePrueba($this->conductorId))
             ->getJson('/api/v1/routes/contribution-suggestion?'.$this->parametrosSugerencia((string) Str::uuid()))
             ->assertStatus(503)
             ->assertJsonPath('message', 'No fue posible validar el vehículo. Intenta nuevamente.');
@@ -88,7 +96,7 @@ class ContributionTest extends TestCase
     {
         $this->fakeServicios('carro');
 
-        $this->withToken($this->jwtDePrueba((string) Str::uuid()))
+        $this->withToken($this->jwtDePrueba($this->conductorId))
             ->postJson('/api/v1/routes', $this->payload(5500))
             ->assertStatus(422)
             ->assertJsonPath('errors.base_contribution_cop.0', 'El aporte máximo para esta ruta es de $ 5.400 COP.')
@@ -101,7 +109,7 @@ class ContributionTest extends TestCase
     {
         $this->fakeServicios('carro');
 
-        $this->withToken($this->jwtDePrueba((string) Str::uuid()))
+        $this->withToken($this->jwtDePrueba($this->conductorId))
             ->postJson('/api/v1/routes', $this->payload(0))
             ->assertStatus(201)
             ->assertJsonPath('data.base_contribution_cop', 0);
@@ -111,7 +119,7 @@ class ContributionTest extends TestCase
     {
         $this->fakeServicios('carro');
 
-        $this->withToken($this->jwtDePrueba((string) Str::uuid()))
+        $this->withToken($this->jwtDePrueba($this->conductorId))
             ->postJson('/api/v1/routes', $this->payload(5400))
             ->assertStatus(201)
             ->assertJsonPath('data.suggested_contribution_cop', 5400)
@@ -128,7 +136,7 @@ class ContributionTest extends TestCase
     {
         $this->fakeServicios(vehicleServiceCaido: true);
 
-        $this->withToken($this->jwtDePrueba((string) Str::uuid()))
+        $this->withToken($this->jwtDePrueba($this->conductorId))
             ->postJson('/api/v1/routes', $this->payload(1000))
             ->assertStatus(503);
 

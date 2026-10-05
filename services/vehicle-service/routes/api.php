@@ -20,19 +20,19 @@ Route::prefix('v1')->group(function () {
         Route::get('/vehicles/check-approved', [VehicleController::class, 'checkApprovedVehicle']);
         Route::get('/vehicles', [VehicleController::class, 'index']);
         Route::post('/vehicles', [VehicleController::class, 'store']);
-        Route::get('/vehicles/{id}', [VehicleController::class, 'show']);
-        Route::get('/vehicles/{id}/public-summary', [VehicleController::class, 'publicSummary']);
+        Route::get('/vehicles/{id}', [VehicleController::class, 'show'])->whereUuid('id');
+        Route::get('/vehicles/{id}/public-summary', [VehicleController::class, 'publicSummary'])->whereUuid('id');
 
         // Documentación y Verificación Legal
-        Route::post('/vehicles/{id}/documents', [VehicleController::class, 'uploadDocument']);
-        Route::get('/vehicles/{vehicleId}/documents/{documentId}/download', [VehicleController::class, 'downloadDocument'])
+        Route::post('/vehicles/{id}/documents', [VehicleController::class, 'uploadDocument'])->whereUuid('id');
+        Route::get('/vehicles/{vehicleId}/documents/{documentId}/download', [VehicleController::class, 'downloadDocument'])->whereUuid(['vehicleId', 'documentId'])
             ->name('vehicles.documents.download');
-        Route::patch('/vehicles/{vehicleId}/documents/{documentId}/verify', [VehicleController::class, 'verifyDocument']);
+        Route::patch('/vehicles/{vehicleId}/documents/{documentId}/verify', [VehicleController::class, 'verifyDocument'])->whereUuid(['vehicleId', 'documentId']);
     });
 
     // Rutas de administración
     Route::prefix('admin')->middleware(['jwt.auth', 'admin'])->group(function () {
         Route::get('/vehicles', [AdminVehicleController::class, 'index']);
-        Route::get('/vehicles/{id}', [AdminVehicleController::class, 'show']);
+        Route::get('/vehicles/{id}', [AdminVehicleController::class, 'show'])->whereUuid('id');
     });
 });

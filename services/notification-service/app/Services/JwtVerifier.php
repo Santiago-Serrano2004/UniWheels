@@ -2,13 +2,10 @@
 
 namespace App\Services;
 
-use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Firebase\JWT\SignatureInvalidException;
 use Illuminate\Support\Facades\Redis;
 use stdClass;
-use UnexpectedValueException;
 
 class JwtVerifier
 {
@@ -16,7 +13,8 @@ class JwtVerifier
     {
         try {
             $claims = JWT::decode($token, new Key(config('jwt.secret'), config('jwt.algo')));
-        } catch (ExpiredException|SignatureInvalidException|UnexpectedValueException) {
+        } catch (\Throwable) {
+            // Cualquier fallo al decodificar (firma, expiración, JSON/estructura mal formados) = 401.
             return null;
         }
 

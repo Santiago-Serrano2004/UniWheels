@@ -37,6 +37,73 @@ class RouteMatchingClient
         return null;
     }
 
+    public const SEAT_RESERVED = 'reserved';
+
+    public const SEAT_FULL = 'full';
+
+    public const SEAT_UNAVAILABLE = 'unavailable';
+
+    /**
+     * Descuenta un cupo de la ruta de forma atómica (SIM-001). route-matching es la
+     * dueña de routes.available_seats. Devuelve SEAT_RESERVED, SEAT_FULL (409) o
+     * SEAT_UNAVAILABLE si no se pudo contactar o respondió algo inesperado.
+     */
+    public function reserveSeat(string $routeId): string
+    {
+        try {
+            $respuesta = Http::withToken($this->jwtVerifier->issueServiceToken('trip-service'))
+                ->timeout(3)
+                ->post(config('services.route_matching.url')."/api/v1/internal/routes/{$routeId}/reserve-seat");
+
+            if ($respuesta->successful()) {
+                return self::SEAT_RESERVED;
+            }
+
+            if ($respuesta->status() === 409) {
+                return self::SEAT_FULL;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo reservar el cupo en route-matching-service.', [
+                'route_id' => $routeId,
+                'exception_class' => get_class($e),
+            ]);
+        }
+
+        return self::SEAT_UNAVAILABLE;
+    }
+
+    /**
+     * Devuelve un cupo a la ruta. Nunca lanza: si falla, deja un warning y quien llama
+     * no debe bloquearse por ello.
+     *
+     * TODO: conciliación futura — un job que compare viajes activos vs. cupos tomados
+     * por ruta y repare los release-seat perdidos.
+     */
+    public function releaseSeat(string $routeId): bool
+    {
+        try {
+            $respuesta = Http::withToken($this->jwtVerifier->issueServiceToken('trip-service'))
+                ->timeout(3)
+                ->post(config('services.route_matching.url')."/api/v1/internal/routes/{$routeId}/release-seat");
+
+            if ($respuesta->successful()) {
+                return true;
+            }
+
+            Log::warning('route-matching-service rechazó la liberación del cupo.', [
+                'route_id' => $routeId,
+                'status' => $respuesta->status(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo liberar el cupo en route-matching-service.', [
+                'route_id' => $routeId,
+                'exception_class' => get_class($e),
+            ]);
+        }
+
+        return false;
+    }
+
     /**
      * Distancia real recorrida (km) sumando la geometría de la ruta publicada
      * (route-matching-service es el único servicio que conoce la geometría real

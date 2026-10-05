@@ -99,11 +99,13 @@ class DriverProfileClient
     }
 
     /**
-     * Tipo de vehículo ('carro' o 'moto') según vehicle-service. Devuelve null si
-     * falla: sin fallback a 'carro', porque el tope del aporte no se puede
-     * calcular a ciegas.
+     * Datos del vehículo para validar una publicación (tipo, estado, dueño y cupos),
+     * según vehicle-service. Devuelve null si falla: sin fallback, porque ni el tope
+     * del aporte ni la propiedad del vehículo se pueden validar a ciegas.
+     *
+     * @return array{type: string, status: ?string, owner_id: ?string, available_seats: int}|null
      */
-    public function getVehicleType(string $vehicleId): ?string
+    public function getVehicleForValidation(string $vehicleId): ?array
     {
         try {
             $baseUrl = config('services.vehicle_service.url');
@@ -114,10 +116,19 @@ class DriverProfileClient
             if ($respuesta->successful() && $respuesta->json('success')) {
                 $tipo = $respuesta->json('data.vehicle_type');
 
-                return in_array($tipo, ['carro', 'moto'], true) ? $tipo : null;
+                if (! in_array($tipo, ['carro', 'moto'], true)) {
+                    return null;
+                }
+
+                return [
+                    'type' => $tipo,
+                    'status' => $respuesta->json('data.status'),
+                    'owner_id' => $respuesta->json('data.owner_id'),
+                    'available_seats' => (int) $respuesta->json('data.available_seats'),
+                ];
             }
         } catch (\Throwable $e) {
-            Log::warning('vehicle-service no disponible para validar el tipo de vehículo.', [
+            Log::warning('vehicle-service no disponible para validar el vehículo.', [
                 'vehicle_id' => $vehicleId,
                 'exception_class' => get_class($e),
             ]);

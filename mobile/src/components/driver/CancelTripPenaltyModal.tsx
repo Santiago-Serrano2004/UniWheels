@@ -57,7 +57,7 @@ export function CancelTripPenaltyModal({
       let respuesta = null;
       if (tripId) {
         try {
-          respuesta = await tripLifecycleService.cancelTrip(tripId, 'driver', selectedReason);
+          respuesta = await tripLifecycleService.cancelTrip(tripId, 'conductor', selectedReason);
         } catch (err) {
           console.warn('Notice from cancelTrip:', err);
         }

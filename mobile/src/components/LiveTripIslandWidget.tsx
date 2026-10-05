@@ -124,7 +124,7 @@ export function LiveTripIslandWidget() {
               if (tripId) {
                 const respuesta = await tripLifecycleService.cancelTrip(
                   tripId,
-                  isDriver ? 'driver' : 'passenger',
+                  isDriver ? 'conductor' : 'pasajero',
                   isDriver ? 'Cancelado por el conductor' : 'Cancelado por el pasajero'
                 );
                 setIsExpanded(false);

@@ -107,7 +107,7 @@ class LateCancellationSuspensionTest extends TestCase
             ->assertJsonPath('data.suspended_until', null)
             ->assertJsonPath('data.warning', 'Se registró una cancelación tardía (2 de 3 en 30 días). Al llegar a 3 tu cuenta se suspende por 30 días.');
 
-        Http::assertNothingSent();
+        Http::assertNotSent(fn (Request $request) => str_contains($request->url(), 'late-cancellation-suspension'));
     }
 
     public function test_las_cancelaciones_de_hace_mas_de_30_dias_no_cuentan(): void
@@ -121,7 +121,7 @@ class LateCancellationSuspensionTest extends TestCase
             ->assertJsonPath('data.late_cancellations_30d', 1)
             ->assertJsonPath('data.suspended', false);
 
-        Http::assertNothingSent();
+        Http::assertNotSent(fn (Request $request) => str_contains($request->url(), 'late-cancellation-suspension'));
     }
 
     public function test_una_cancelacion_no_tardia_no_evalua_la_politica(): void
@@ -141,7 +141,7 @@ class LateCancellationSuspensionTest extends TestCase
             ->assertJsonPath('data.warning', null)
             ->assertJsonMissingPath('data.suspended');
 
-        Http::assertNothingSent();
+        Http::assertNotSent(fn (Request $request) => str_contains($request->url(), 'late-cancellation-suspension'));
     }
 
     public function test_si_auth_falla_la_cancelacion_igual_responde_200_sin_suspender(): void

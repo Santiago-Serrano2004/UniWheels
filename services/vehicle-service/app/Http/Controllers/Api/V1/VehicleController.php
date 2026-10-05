@@ -180,6 +180,7 @@ class VehicleController extends Controller
             'success' => true,
             'data' => [
                 'id' => $vehiculo->id,
+                'owner_id' => $vehiculo->user_id,
                 'vehicle_type' => $vehiculo->vehicle_type,
                 'plate_number' => $vehiculo->plate_number,
                 'brand' => $vehiculo->brand,

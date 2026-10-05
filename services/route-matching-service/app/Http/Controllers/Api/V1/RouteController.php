@@ -107,11 +107,17 @@ class RouteController extends Controller
     {
         $datos = $request->validated();
 
-        $tipoVehiculo = $this->driverProfileClient->getVehicleType($datos['vehicle_id']);
+        $vehiculo = $this->driverProfileClient->getVehicleForValidation($datos['vehicle_id']);
 
-        if ($tipoVehiculo === null) {
+        if ($vehiculo === null) {
             return $this->vehicleValidationFailed();
         }
+
+        if ($error = $this->vehicleOwnershipError($vehiculo, (string) $request->attributes->get('user_id'))) {
+            return $error;
+        }
+
+        $tipoVehiculo = $vehiculo['type'];
 
         $calculoRuta = $this->routingService->calculateRoute(
             [(float) $datos['origin_lat'], (float) $datos['origin_lng']],
@@ -129,6 +135,21 @@ class RouteController extends Controller
                 'max_contribution_cop' => $sugerido,
             ],
         ]);
+    }
+
+    /**
+     * @param  array{type: string, status: ?string, owner_id: ?string, available_seats: int}  $vehiculo
+     */
+    private function vehicleOwnershipError(array $vehiculo, string $driverId): ?JsonResponse
+    {
+        if ((string) $vehiculo['owner_id'] !== $driverId || $vehiculo['status'] !== 'aprobado') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Necesitas un vehículo propio aprobado para publicar rutas.',
+            ], 422);
+        }
+
+        return null;
     }
 
     private function vehicleValidationFailed(): JsonResponse
@@ -149,6 +170,11 @@ class RouteController extends Controller
         // evita que un usuario publique una ruta suplantando a otro conductor.
         $datos['driver_id'] = $request->attributes->get('user_id');
 
+        // SIM-005: las horas con offset (-05:00) se normalizan a UTC antes de guardar;
+        // sin esto el cast guarda el wall-time del offset en una columna sin zona.
+        $datos['scheduled_departure_time'] = Carbon::parse($datos['scheduled_departure_time'])->utc();
+        $datos['target_arrival_time'] = Carbon::parse($datos['target_arrival_time'])->utc();
+
         $origen = [(float) $datos['origin_lat'], (float) $datos['origin_lng']];
         $destino = [(float) $datos['destination_lat'], (float) $datos['destination_lng']];
 
@@ -167,11 +193,32 @@ class RouteController extends Controller
 
         // El aporte indicado por el conductor no puede superar el sugerido (reglas §1.2).
         $distanciaKm = $calculoRuta['distance_meters'] / 1000;
-        $tipoVehiculo = $this->driverProfileClient->getVehicleType($datos['vehicle_id']);
+        $vehiculo = $this->driverProfileClient->getVehicleForValidation($datos['vehicle_id']);
 
-        if ($tipoVehiculo === null) {
+        if ($vehiculo === null) {
             return $this->vehicleValidationFailed();
         }
+
+        // SIM-002: solo un vehículo propio y aprobado.
+        if ($error = $this->vehicleOwnershipError($vehiculo, (string) $datos['driver_id'])) {
+            return $error;
+        }
+
+        // SIM-018: los cupos no pueden superar los del vehículo (las motos, siempre 1).
+        $maxCupos = $vehiculo['type'] === 'moto' ? 1 : min(6, max(1, $vehiculo['available_seats']));
+
+        if ((int) $datos['available_seats'] > $maxCupos) {
+            return response()->json([
+                'success' => false,
+                'message' => "Este vehículo admite máximo {$maxCupos} cupo(s) para pasajeros.",
+                'errors' => [
+                    'available_seats' => ["El máximo de cupos para este vehículo es {$maxCupos}."],
+                ],
+                'data' => ['max_available_seats' => $maxCupos],
+            ], 422);
+        }
+
+        $tipoVehiculo = $vehiculo['type'];
 
         $sugerido = ContributionCalculator::suggest($distanciaKm, $tipoVehiculo);
 
@@ -201,6 +248,7 @@ class RouteController extends Controller
             'max_detour_minutes' => $datos['max_detour_minutes'] ?? 15,
             'accumulated_detour_minutes' => 0.0,
             'available_seats' => $datos['available_seats'],
+            'total_seats' => $datos['available_seats'],
             'base_contribution_cop' => $datos['base_contribution_cop'],
             'distance_km' => round($distanciaKm, 2),
             'suggested_contribution_cop' => $sugerido,
