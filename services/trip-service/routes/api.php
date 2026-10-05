@@ -23,20 +23,20 @@ Route::prefix('v1')->group(function () {
 Route::prefix('v1')->middleware('jwt.auth')->group(function () {
     // Ciclo de vida del viaje
     Route::post('/trips', [TripLifecycleController::class, 'store']);
-    Route::post('/trips/{id}/start', [TripLifecycleController::class, 'start']);
-    Route::post('/trips/{id}/arrive', [TripLifecycleController::class, 'arrive']);
-    Route::post('/trips/{id}/verify-pin', [TripLifecycleController::class, 'verifyPin'])
+    Route::post('/trips/{id}/start', [TripLifecycleController::class, 'start'])->whereUuid('id');
+    Route::post('/trips/{id}/arrive', [TripLifecycleController::class, 'arrive'])->whereUuid('id');
+    Route::post('/trips/{id}/verify-pin', [TripLifecycleController::class, 'verifyPin'])->whereUuid('id')
         ->middleware('throttle:5,1');
-    Route::post('/trips/{id}/complete', [TripLifecycleController::class, 'complete']);
-    Route::post('/trips/{id}/cancel', [TripLifecycleController::class, 'cancel']);
+    Route::post('/trips/{id}/complete', [TripLifecycleController::class, 'complete'])->whereUuid('id');
+    Route::post('/trips/{id}/cancel', [TripLifecycleController::class, 'cancel'])->whereUuid('id');
 
     // Telemetría GPS en vivo del conductor durante el viaje
-    Route::post('/trips/{id}/tracking', [TripTrackingController::class, 'report'])
+    Route::post('/trips/{id}/tracking', [TripTrackingController::class, 'report'])->whereUuid('id')
         ->middleware('throttle:30,1');
-    Route::get('/trips/{id}/tracking/latest', [TripTrackingController::class, 'latest']);
+    Route::get('/trips/{id}/tracking/latest', [TripTrackingController::class, 'latest'])->whereUuid('id');
 
     // Botón de pánico SOS — auditoría server-side de cada activación
-    Route::post('/trips/{id}/sos', [TripTrackingController::class, 'sos'])
+    Route::post('/trips/{id}/sos', [TripTrackingController::class, 'sos'])->whereUuid('id')
         ->middleware('throttle:10,1');
 
     // Consultas de estado activo e historial — el usuario siempre se toma del JWT, no de la URL.
@@ -47,7 +47,7 @@ Route::prefix('v1')->middleware('jwt.auth')->group(function () {
     // Rutas de administración
     Route::prefix('admin')->middleware('admin')->group(function () {
         Route::get('/sos-events', [AdminSosEventController::class, 'index']);
-        Route::patch('/sos-events/{id}/attend', [AdminSosEventController::class, 'attend']);
+        Route::patch('/sos-events/{id}/attend', [AdminSosEventController::class, 'attend'])->whereUuid('id');
         Route::get('/trips', [AdminTripController::class, 'index']);
     });
 });
