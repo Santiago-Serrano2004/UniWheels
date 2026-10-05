@@ -119,3 +119,22 @@ test('la ruta duplicada POST /auth/delete-account ya no existe', function () {
 
     $this->withToken($token)->postJson('/api/v1/auth/delete-account')->assertStatus(404);
 });
+
+test('eliminar la cuenta no borra archivos fuera de profile-photos/', function (string $ruta) {
+    fakeServiciosDeBorrado();
+    Storage::fake('public');
+    Storage::disk('public')->put('vehicle-docs/x.pdf', 'x');
+    Storage::disk('public')->put('otros/ajena.jpg', 'x');
+    $user = crearUsuarioParaBorrado();
+    $user->forceFill(['profile_photo_path' => $ruta])->save();
+    $token = app(JwtService::class)->issue($user);
+
+    $this->withToken($token)->deleteJson('/api/v1/auth/account')->assertOk();
+
+    Storage::disk('public')->assertExists('vehicle-docs/x.pdf');
+    Storage::disk('public')->assertExists('otros/ajena.jpg');
+})->with([
+    'traversal' => 'profile-photos/../vehicle-docs/x.pdf',
+    'otra carpeta' => 'otros/ajena.jpg',
+]);
+

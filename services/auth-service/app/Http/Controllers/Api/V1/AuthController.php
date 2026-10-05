@@ -61,7 +61,6 @@ class AuthController extends Controller
                 'id_document_number' => $datosValidados['id_document_number'] ?? '00000000',
                 'id_document_type' => $datosValidados['id_document_type'] ?? 'CC',
                 'phone_number' => $datosValidados['phone_number'] ?? '3000000000',
-                'profile_photo_path' => $datosValidados['profile_photo_path'] ?? null,
                 'institution_id' => $datosValidados['institution_id'],
                 'campus_id' => $datosValidados['campus_id'] ?? null,
                 'member_type' => $datosValidados['member_type'] ?? 'estudiante',

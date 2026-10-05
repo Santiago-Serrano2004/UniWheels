@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -49,9 +50,24 @@ class AccountErasureService
         });
 
         if ($foto) {
-            Storage::disk('public')->delete($foto);
+            $this->borrarFotoDePerfil($foto);
         }
 
         $this->eraser->eraseEverywhere($userId);
+    }
+
+    /**
+     * Solo se borran archivos dentro de profile-photos/: la ruta vive en la base
+     * de datos y no se puede confiar en que apunte a otra cosa.
+     */
+    private function borrarFotoDePerfil(string $ruta): void
+    {
+        if (! str_starts_with($ruta, 'profile-photos/') || str_contains($ruta, '..')) {
+            Log::warning('Ruta de foto de perfil fuera de profile-photos/: no se borra', ['ruta' => $ruta]);
+
+            return;
+        }
+
+        Storage::disk('public')->delete($ruta);
     }
 }

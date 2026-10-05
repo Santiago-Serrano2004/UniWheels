@@ -302,7 +302,6 @@ export const RegisterForm = ({ onBack }) => {
         phone_number: telefonoLimpio,
         member_type: 'estudiante',
         academic_program_or_department: 'Comunidad Universitaria',
-        profile_photo_path: fotoPerfilPreview || null,
         is_driver: false,
         verification_code: pinLimpio,
         phone_verification_code: smsLimpio,

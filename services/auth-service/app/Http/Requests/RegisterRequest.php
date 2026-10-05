@@ -65,8 +65,6 @@ class RegisterRequest extends FormRequest
             'academic_program_or_department' => ['nullable', 'string', 'max:150'],
             'semester' => ['nullable', 'integer', 'min:1', 'max:12'],
             'password' => ['required', 'string', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
-            'profile_photo' => ['nullable'],
-            'profile_photo_path' => ['nullable', 'string'],
             'verification_code' => ['required', 'string', 'size:6'],
             'phone_verification_code' => ['nullable', 'string', 'size:6'],
         ];
