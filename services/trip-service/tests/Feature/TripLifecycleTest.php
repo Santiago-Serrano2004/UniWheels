@@ -14,9 +14,10 @@ class TripLifecycleTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function fakeRouteMatching(string $driverId, float $baseFareCop = 4500.0, ?string $routeId = null): string
+    protected function fakeRouteMatching(string $driverId, float $baseFareCop = 4500.0, ?string $routeId = null, ?Carbon $salida = null): string
     {
         $routeId = $routeId ?? (string) Str::uuid();
+        $salida = $salida ?? Carbon::now()->addDay();
 
         Http::fake([
             '*/api/v1/routes/*' => Http::response([
@@ -25,6 +26,7 @@ class TripLifecycleTest extends TestCase
                     'id' => $routeId,
                     'driver_id' => $driverId,
                     'base_contribution_cop' => $baseFareCop,
+                    'scheduled_departure_time' => $salida->copy()->utc()->toISOString(),
                 ],
             ], 200),
         ]);
@@ -288,6 +290,28 @@ class TripLifecycleTest extends TestCase
         $this->withToken($this->jwtDePrueba((string) Str::uuid()))
             ->postJson("/api/v1/trips/{$trip->id}/cancel", ['reason' => 'Soy un tercero cualquiera.'])
             ->assertStatus(403);
+    }
+
+    public function test_la_hora_de_recogida_sale_de_la_ruta_y_no_del_cliente(): void
+    {
+        $passengerId = (string) Str::uuid();
+        $salida = Carbon::now()->addHours(3)->startOfMinute();
+        $routeId = $this->fakeRouteMatching((string) Str::uuid(), 4500.0, null, $salida);
+
+        // La app manda medianoche del día: con el bug eso marcaba la cancelación como tardía.
+        $payload = $this->payloadReserva($routeId, 4500);
+        $payload['scheduled_pickup_time'] = Carbon::today()->toDateTimeString();
+
+        $tripId = $this->withToken($this->jwtDePrueba($passengerId))
+            ->postJson('/api/v1/trips', $payload)
+            ->assertStatus(201)
+            ->assertJsonPath('data.scheduled_pickup_time', $salida->copy()->utc()->toISOString())
+            ->json('data.trip_id');
+
+        $this->withToken($this->jwtDePrueba($passengerId))
+            ->postJson("/api/v1/trips/{$tripId}/cancel", ['reason' => 'Ya no puedo ir.'])
+            ->assertStatus(200)
+            ->assertJsonPath('data.late_cancellation', false);
     }
 
     public function test_cancelacion_por_conductor_con_mas_de_15_min_no_aplica_penalizacion(): void

@@ -105,6 +105,19 @@ class TripLifecycleController extends Controller
             ], 422);
         }
 
+        // SIM-009: la hora de recogida es la salida de la ruta (fuente: route-matching),
+        // nunca la que envía el cliente.
+        $salidaProgramada = isset($ruta['scheduled_departure_time'])
+            ? Carbon::parse($ruta['scheduled_departure_time'])->utc()
+            : null;
+
+        if (! $salidaProgramada) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No fue posible validar la ruta seleccionada. Intenta nuevamente.',
+            ], 422);
+        }
+
         $pin = str_pad((string) random_int(1000, 9999), 4, '0', STR_PAD_LEFT);
 
         $trip = Trip::create([
@@ -122,7 +135,7 @@ class TripLifecycleController extends Controller
             'is_pin_verified' => false,
             'total_fare_cop' => $tarifa,
             'status' => Trip::STATUS_CONFIRMADO,
-            'scheduled_pickup_time' => $datos['scheduled_pickup_time'],
+            'scheduled_pickup_time' => $salidaProgramada,
         ]);
 
         return response()->json([

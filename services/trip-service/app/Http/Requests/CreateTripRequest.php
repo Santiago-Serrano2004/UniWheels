@@ -27,7 +27,8 @@ class CreateTripRequest extends FormRequest
             'pickup_address' => ['required', 'string', 'max:150'],
             'dropoff_address' => ['required', 'string', 'max:150'],
             'total_fare_cop' => ['required', 'numeric', 'min:0', 'max:100000'],
-            'scheduled_pickup_time' => ['required', 'date'],
+            // Opcional e ignorado: la hora de recogida sale de la ruta (SIM-009).
+            'scheduled_pickup_time' => ['nullable', 'date'],
         ];
     }
 }
