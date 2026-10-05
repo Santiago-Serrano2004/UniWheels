@@ -13,6 +13,7 @@ use App\Services\DriverProfileClient;
 use App\Services\OsrmRoutingService;
 use App\Services\PostGisSpatialRepository;
 use App\Services\SpatialMatchingService;
+use App\Services\VehicleNotFoundException;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -112,10 +113,10 @@ class RouteController extends Controller
     {
         $datos = $request->validated();
 
-        $vehiculo = $this->driverProfileClient->getVehicleForValidation($datos['vehicle_id']);
+        $vehiculo = $this->vehicleForValidation($datos['vehicle_id']);
 
-        if ($vehiculo === null) {
-            return $this->vehicleValidationFailed();
+        if ($vehiculo instanceof JsonResponse) {
+            return $vehiculo;
         }
 
         if ($error = $this->vehicleOwnershipError($vehiculo, (string) $request->attributes->get('user_id'))) {
@@ -155,6 +156,26 @@ class RouteController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * SIM-019: 404 de vehicle-service -> 422 (el vehículo no existe); red caída o 5xx -> 503.
+     *
+     * @return array{type: string, status: ?string, owner_id: ?string, available_seats: int}|JsonResponse
+     */
+    private function vehicleForValidation(string $vehicleId): array|JsonResponse
+    {
+        try {
+            $vehiculo = $this->driverProfileClient->getVehicleForValidation($vehicleId);
+        } catch (VehicleNotFoundException) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El vehículo no existe.',
+                'errors' => ['vehicle_id' => ['El vehículo no existe.']],
+            ], 422);
+        }
+
+        return $vehiculo ?? $this->vehicleValidationFailed();
     }
 
     private function vehicleValidationFailed(): JsonResponse
@@ -198,10 +219,10 @@ class RouteController extends Controller
 
         // El aporte indicado por el conductor no puede superar el sugerido (reglas §1.2).
         $distanciaKm = $calculoRuta['distance_meters'] / 1000;
-        $vehiculo = $this->driverProfileClient->getVehicleForValidation($datos['vehicle_id']);
+        $vehiculo = $this->vehicleForValidation($datos['vehicle_id']);
 
-        if ($vehiculo === null) {
-            return $this->vehicleValidationFailed();
+        if ($vehiculo instanceof JsonResponse) {
+            return $vehiculo;
         }
 
         // SIM-002: solo un vehículo propio y aprobado.

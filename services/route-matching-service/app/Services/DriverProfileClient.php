@@ -120,6 +120,8 @@ class DriverProfileClient
      * del aporte ni la propiedad del vehículo se pueden validar a ciegas.
      *
      * @return array{type: string, status: ?string, owner_id: ?string, available_seats: int}|null
+     *
+     * @throws VehicleNotFoundException si vehicle-service responde 404 (el vehículo no existe)
      */
     public function getVehicleForValidation(string $vehicleId): ?array
     {
@@ -143,6 +145,12 @@ class DriverProfileClient
                     'available_seats' => (int) $respuesta->json('data.available_seats'),
                 ];
             }
+
+            if ($respuesta->status() === 404) {
+                throw new VehicleNotFoundException;
+            }
+        } catch (VehicleNotFoundException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             Log::warning('vehicle-service no disponible para validar el vehículo.', [
                 'vehicle_id' => $vehicleId,

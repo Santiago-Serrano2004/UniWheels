@@ -138,4 +138,27 @@ class VehicleOwnershipTest extends TestCase
             ->getJson('/api/v1/routes/contribution-suggestion?'.$this->queryDeSugerencia())
             ->assertStatus(200);
     }
+
+    public function test_un_vehiculo_inexistente_devuelve_422_y_un_fallo_de_vehicle_service_devuelve_503(): void
+    {
+        $conductor = (string) Str::uuid();
+
+        Http::fake([
+            '*/api/v1/vehicles/*/public-summary' => Http::sequence()
+                ->push(['success' => false], 404)
+                ->push([], 500),
+            '*/route/v1/driving/*' => Http::response([], 500),
+        ]);
+
+        $this->withToken($this->jwtDePrueba($conductor))
+            ->postJson('/api/v1/routes', $this->payload())
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'El vehículo no existe.');
+
+        $this->withToken($this->jwtDePrueba($conductor))
+            ->postJson('/api/v1/routes', $this->payload())
+            ->assertStatus(503);
+
+        $this->assertDatabaseCount('routes', 0);
+    }
 }
