@@ -163,7 +163,7 @@ class AuthController extends Controller
     public function forgotPassword(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'string', 'email'],
         ]);
 
         $correo = $request->input('email');
@@ -203,7 +203,7 @@ class AuthController extends Controller
     public function resetPassword(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'string', 'email'],
             'code' => ['required', 'string', 'size:6'],
             'password' => ['required', 'string', 'min:8'],
         ]);
@@ -265,7 +265,7 @@ class AuthController extends Controller
     public function sendVerificationCode(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'string', 'email'],
         ]);
 
         $correo = $request->input('email');
