@@ -28,7 +28,7 @@ export default function App() {
         <Waitlist onOpenPrivacy={abrirPrivacidad} />
         <FAQ onOpenPrivacy={abrirPrivacidad} />
       </main>
-      <Footer onOpenPrivacy={abrirPrivacidad} />
+      <Footer />
       <PrivacyModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />
     </div>
   );
