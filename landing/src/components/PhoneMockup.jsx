@@ -1,6 +1,5 @@
 import React from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Check, Clock, MapPin, Users, FileText, Plus, Minus, Navigation, Home, Map, History, User } from 'lucide-react';
 
 // Pantallas ilustrativas de la app para cada paso de "Así funciona".
 const Encabezado = ({ titulo, subtitulo }) => (
@@ -34,7 +33,7 @@ const PantallaCodigo = () => {
         transition={{ delay: 1.5 }}
         className="mx-4 mt-6 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2.5 text-[12px] font-semibold text-emerald-700"
       >
-        <Check className="h-4 w-4" /> Cuenta verificada
+        Cuenta verificada
       </motion.div>
     </div>
   );
@@ -63,15 +62,15 @@ const PantallaRutas = () => {
             <div className="flex items-center justify-between">
               <p className="text-[12px] font-bold text-[var(--color-tinta)]">{r.nombre}</p>
               <p className="flex items-center gap-1 text-[11px] text-[var(--color-cuerpo)]">
-                <Clock className="h-3 w-3" /> {r.hora}
+                {r.hora}
               </p>
             </div>
             <div className="mt-1 flex items-center justify-between text-[11px] text-[var(--color-cuerpo)]">
               <span className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" /> Desde {r.desde}
+                Desde {r.desde}
               </span>
               <span className="flex items-center gap-1">
-                <Users className="h-3 w-3" /> {r.cupos} {r.cupos === 1 ? 'cupo' : 'cupos'}
+                {r.cupos} {r.cupos === 1 ? 'cupo' : 'cupos'}
               </span>
             </div>
           </motion.div>
@@ -117,7 +116,7 @@ const PantallaPin = ({ conductor }) => {
         transition={{ delay: conductor ? 1.9 : 1 }}
         className="mx-4 mt-7 flex items-center justify-center gap-2 rounded-xl bg-emerald-50 py-2.5 text-[12px] font-semibold text-emerald-700"
       >
-        <Navigation className="h-4 w-4" /> {conductor ? 'Viaje iniciado' : 'Tu conductor llega en 3 min'}
+        {conductor ? 'Viaje iniciado' : 'Tu conductor llega en 3 min'}
       </motion.div>
     </div>
   );
@@ -134,15 +133,15 @@ const PantallaDocumentos = () => {
         {DOCUMENTOS.map((doc, i) => (
           <div key={doc} className="flex items-center justify-between rounded-xl border border-[var(--color-linea)] bg-white px-3 py-2.5">
             <span className="flex items-center gap-2 text-[12px] font-semibold text-[var(--color-tinta)]">
-              <FileText className="h-4 w-4 text-lochmara-600" /> {doc}
+              {doc}
             </span>
             <motion.span
               initial={reducir ? false : { scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.4 + i * 0.4, type: 'spring', stiffness: 450, damping: 15 }}
-              className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white"
+              className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700"
             >
-              <Check className="h-3 w-3" strokeWidth={3} />
+              Listo
             </motion.span>
           </div>
         ))}
@@ -184,7 +183,7 @@ const PantallaPublicar = () => {
         <div className="flex items-center justify-between rounded-xl border border-[var(--color-linea)] bg-white px-3 py-2">
           <span className="font-semibold text-[var(--color-tinta)]">Cupos</span>
           <span className="flex items-center gap-2.5">
-            <Minus className="h-4 w-4 text-[var(--color-cuerpo)]" />
+            <span className="text-base font-bold text-[var(--color-cuerpo)]">−</span>
             <motion.span
               key="cupos"
               initial={reducir ? false : { scale: 1.4 }}
@@ -194,7 +193,7 @@ const PantallaPublicar = () => {
             >
               3
             </motion.span>
-            <Plus className="h-4 w-4 text-lochmara-600" />
+            <span className="text-base font-bold text-lochmara-600">+</span>
           </span>
         </div>
       </div>
@@ -239,13 +238,12 @@ export const PhoneMockup = ({ rol, paso }) => {
           </AnimatePresence>
           <div className="absolute inset-x-0 bottom-0 flex items-center justify-around border-t border-[var(--color-linea)] bg-white px-2 pb-4 pt-2.5">
             {[
-              [Home, 'Inicio', true],
-              [Map, 'Mapa', false],
-              [History, 'Viajes', false],
-              [User, 'Perfil', false],
-            ].map(([Icono, etiqueta, activo]) => (
+              ['Inicio', true],
+              ['Mapa', false],
+              ['Viajes', false],
+              ['Perfil', false],
+            ].map(([etiqueta, activo]) => (
               <span key={etiqueta} className={`flex flex-col items-center gap-0.5 text-[9px] font-semibold ${activo ? 'text-lochmara-600' : 'text-slate-400'}`}>
-                <Icono className="h-4 w-4" strokeWidth={2} />
                 {etiqueta}
               </span>
             ))}

@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, X } from 'lucide-react';
 import { PrivacyContent } from './PrivacyContent';
 
 export const PrivacyModal = ({ isOpen, onClose }) => {
@@ -19,9 +18,6 @@ export const PrivacyModal = ({ isOpen, onClose }) => {
           {/* Cabecera del Modal */}
           <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-lochmara-50 dark:bg-lochmara-950 text-lochmara-600 dark:text-lochmara-400 border border-lochmara-200 dark:border-lochmara-800">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
               <div>
                 <h3 className="text-base font-bold leading-tight text-slate-900 dark:text-white">
                   Tratamiento de datos personales
@@ -34,10 +30,10 @@ export const PrivacyModal = ({ isOpen, onClose }) => {
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="px-3 py-2 rounded-xl text-sm font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               aria-label="Cerrar modal de privacidad"
             >
-              <X className="w-5 h-5" />
+              Cerrar
             </button>
           </div>
 

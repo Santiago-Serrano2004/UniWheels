@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Menu, X } from 'lucide-react';
 
 const ENLACES = [
   { href: '#como-funciona', label: 'Cómo funciona' },
   { href: '#modalidades', label: 'Modalidades' },
   { href: '#seguridad', label: 'Seguridad' },
-  { href: '#conductores', label: 'Para conductores' },
-  { href: '#universidades', label: 'Para universidades' },
+  { href: '#conductores', label: 'Conductores' },
+  { href: '#universidades', label: 'Universidades' },
+  { href: '#beta', label: 'Beta' },
   { href: '#lista-espera', label: 'Avísame' },
   { href: '#faq', label: 'Preguntas' },
 ];
@@ -36,7 +36,7 @@ export const Navbar = () => {
           </span>
         </a>
 
-        <ul className="hidden md:flex items-center gap-7 text-[15px] text-[var(--color-cuerpo)]">
+        <ul className="hidden lg:flex flex-1 items-center justify-center gap-5 whitespace-nowrap text-center text-[15px] text-[var(--color-cuerpo)]">
           {ENLACES.map((e) => (
             <li key={e.href}>
               <a href={e.href} className="hover:text-[var(--color-tinta)] transition-colors">
@@ -48,31 +48,31 @@ export const Navbar = () => {
 
         <a
           href="#descargar"
-          className="hidden md:inline-flex items-center rounded-full bg-[var(--color-tinta)] px-4 py-2 text-sm font-semibold text-white hover:bg-lochmara-700 transition-colors"
+          className="hidden lg:inline-flex shrink-0 whitespace-nowrap items-center rounded-full bg-[var(--color-tinta)] px-4 py-2 text-sm font-semibold text-white hover:bg-lochmara-700 transition-colors"
         >
           Descargar la app
         </a>
 
         <button
           type="button"
-          className="md:hidden p-2 -mr-2 text-[var(--color-tinta)]"
+          className="lg:hidden px-3 py-2 -mr-2 text-sm font-semibold text-[var(--color-tinta)]"
           onClick={() => setAbierto((v) => !v)}
           aria-expanded={abierto}
           aria-label={abierto ? 'Cerrar menú' : 'Abrir menú'}
         >
-          {abierto ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {abierto ? 'Cerrar' : 'Menú'}
         </button>
       </nav>
 
       {abierto && (
-        <div className="md:hidden border-t border-[var(--color-linea)] bg-white">
+        <div className="lg:hidden border-t border-[var(--color-linea)] bg-white">
           <ul className="mx-auto max-w-6xl px-4 py-3 flex flex-col">
             {ENLACES.map((e) => (
               <li key={e.href}>
                 <a
                   href={e.href}
                   onClick={() => setAbierto(false)}
-                  className="block py-3 text-base text-[var(--color-tinta)] border-b border-[var(--color-linea)] last:border-0"
+                  className="block py-3 text-center text-base text-[var(--color-tinta)] border-b border-[var(--color-linea)] last:border-0"
                 >
                   {e.label}
                 </a>

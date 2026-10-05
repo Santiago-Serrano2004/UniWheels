@@ -3,10 +3,12 @@
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\Admin\AdminWaitlistController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BetaSignupController;
 use App\Http\Controllers\Api\V1\InstitutionController;
 use App\Http\Controllers\Api\V1\Internal\ReputationStatsController;
 use App\Http\Controllers\Api\V1\Internal\UserSuspensionController;
 use App\Http\Controllers\Api\V1\PublicProfileController;
+use App\Http\Controllers\Api\V1\UniversityContactController;
 use App\Http\Controllers\Api\V1\WaitlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +25,8 @@ Route::prefix('v1')->group(function () {
     // Lista de espera previa al lanzamiento (pública, con throttle propio)
     Route::post('/waitlist', [WaitlistController::class, 'store'])->middleware('throttle:waitlist');
     Route::delete('/waitlist', [WaitlistController::class, 'destroy'])->middleware('throttle:waitlist');
+    Route::post('/beta', [BetaSignupController::class, 'store'])->middleware('throttle:landing-form');
+    Route::post('/university-contact', [UniversityContactController::class, 'store'])->middleware('throttle:landing-form');
 
     // Rutas públicas de autenticación con Rate Limiting (Anti Brute-Force y Anti-Spam SMTP)
     Route::post('/auth/register', [AuthController::class, 'register'])->middleware(['throttle:10,1', 'throttle:pin-attempt']);

@@ -4,7 +4,6 @@ namespace App\Http\Requests;
 
 use App\Models\InstitutionCampus;
 use App\Models\WaitlistEntry;
-use App\Rules\InstitutionalEmailRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -25,8 +24,9 @@ class StoreWaitlistRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Sin institution_id: la institución se deduce del dominio del correo.
-            'email' => ['required', 'string', 'max:255', new InstitutionalEmailRule],
+            // Se acepta cualquier correo; la universidad se elige de la lista.
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'university' => ['required', Rule::in(config('landing.universidades'))],
             'role' => ['required', Rule::in(WaitlistEntry::ROLES)],
             'neighborhood' => ['required', 'string', 'max:80'],
             'campus_id' => ['nullable', 'integer', 'exists:institution_campuses,id'],
@@ -41,16 +41,17 @@ class StoreWaitlistRequest extends FormRequest
         return [
             function ($validator) {
                 $campusId = $this->input('campus_id');
-                $email = $this->input('email');
-                if (! $campusId || ! is_string($email) || ! str_contains($email, '@') || $validator->errors()->has('email')) {
+                $universidad = $this->input('university');
+                if (! $campusId || ! is_string($universidad) || $validator->errors()->has('university')) {
                     return;
                 }
-                $domain = substr(strrchr($email, '@'), 1);
+                // La lista muestra "Nombre (SIGLA)"; la institución se guarda solo con el nombre.
+                $nombre = trim(preg_replace('/\s*\([^)]*\)$/', '', $universidad));
                 $belongs = InstitutionCampus::where('id', $campusId)
-                    ->whereHas('institution', fn ($q) => $q->where('domain', $domain))
+                    ->whereHas('institution', fn ($q) => $q->where('name', $nombre))
                     ->exists();
                 if (! $belongs) {
-                    $validator->errors()->add('campus_id', 'La sede no corresponde a la institución de tu correo.');
+                    $validator->errors()->add('campus_id', 'La sede no corresponde a la universidad elegida.');
                 }
             },
         ];
@@ -59,7 +60,10 @@ class StoreWaitlistRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.required' => 'El correo institucional es obligatorio.',
+            'email.required' => 'El correo es obligatorio.',
+            'email.email' => 'Escribe un correo válido.',
+            'university.required' => 'Elige tu universidad.',
+            'university.in' => 'Elige una universidad de la lista.',
             'role.required' => 'Indica cómo quieres usar UniWheels.',
             'role.in' => 'La opción seleccionada no es válida.',
             'neighborhood.required' => 'El barrio es obligatorio.',

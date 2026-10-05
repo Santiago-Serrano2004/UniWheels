@@ -1,5 +1,7 @@
 <?php
 
+use App\Mail\AvisoFormularioMail;
+use App\Mail\ConfirmacionFormularioMail;
 use App\Models\Institution;
 use App\Models\InstitutionCampus;
 use App\Models\User;
@@ -8,6 +10,7 @@ use App\Services\JwtService;
 use Database\Seeders\InstitutionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 
 uses(RefreshDatabase::class);
@@ -22,6 +25,7 @@ function waitlistPayload(array $overrides = []): array
 {
     return array_merge([
         'email' => 'lista.'.uniqid().'@unab.edu.co',
+        'university' => 'Universidad Autónoma de Bucaramanga (UNAB)',
         'role' => 'conductor',
         'neighborhood' => 'Cabecera',
         'usual_time' => '06-08',
@@ -67,10 +71,23 @@ test('una inscripcion valida se guarda y responde con el mensaje de exito', func
         ->and($entry->consent_at)->not->toBeNull();
 });
 
-test('un correo de dominio no institucional devuelve 422', function () {
-    $this->postJson('/api/v1/waitlist', waitlistPayload(['email' => 'alguien@gmail.com']))
+test('acepta correos personales pero exige una universidad de la lista', function () {
+    $this->postJson('/api/v1/waitlist', waitlistPayload(['email' => 'alguien@gmail.com']))->assertOk();
+
+    $this->postJson('/api/v1/waitlist', waitlistPayload(['university' => 'Universidad Inventada']))
         ->assertStatus(422)
-        ->assertJsonValidationErrors('email');
+        ->assertJsonValidationErrors('university');
+});
+
+test('la primera inscripcion envia confirmacion y aviso interno; repetirla no reenvia', function () {
+    Mail::fake();
+    $payload = waitlistPayload();
+
+    $this->postJson('/api/v1/waitlist', $payload)->assertOk();
+    $this->postJson('/api/v1/waitlist', $payload)->assertOk();
+
+    Mail::assertSent(ConfirmacionFormularioMail::class, 1);
+    Mail::assertSent(AvisoFormularioMail::class, fn ($m) => $m->hasTo(config('landing.inbox')));
 });
 
 test('sin consentimiento devuelve 422', function () {

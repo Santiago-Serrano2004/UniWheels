@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Plus, Minus } from 'lucide-react';
 import { Reveal } from './Reveal';
 
 const PREGUNTAS = [
@@ -75,11 +74,9 @@ export const FAQ = ({ onOpenPrivacy }) => {
                     className="flex w-full items-center justify-between gap-6 py-5 text-left text-[var(--color-tinta)]"
                   >
                     {item.pregunta}
-                    {expandida ? (
-                      <Minus className="h-5 w-5 shrink-0 text-lochmara-600" aria-hidden="true" />
-                    ) : (
-                      <Plus className="h-5 w-5 shrink-0 text-lochmara-600" aria-hidden="true" />
-                    )}
+                    <span className="shrink-0 text-sm font-semibold text-lochmara-700">
+                      {expandida ? 'Cerrar' : 'Ver'}
+                    </span>
                   </button>
                 </h3>
                 <div id={idPanel} hidden={!expandida} className="pb-6 pr-10">

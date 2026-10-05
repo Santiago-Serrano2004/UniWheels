@@ -1,5 +1,4 @@
 import React from 'react';
-import { FileText, Lock, UserCheck } from 'lucide-react';
 
 /** Texto de la política de tratamiento de datos, compartido por el modal y la página /privacidad. */
 export const PrivacyContent = () => (
@@ -10,7 +9,6 @@ export const PrivacyContent = () => (
 
       <div>
         <h4 className="font-bold mb-1.5 flex items-center gap-2 text-slate-900">
-          <FileText className="w-4 h-4 text-lochmara-500" />
           1. Qué datos tratamos
         </h4>
         <ul className="list-disc pl-5 mt-1.5 space-y-1 text-slate-600">
@@ -23,7 +21,6 @@ export const PrivacyContent = () => (
 
       <div>
         <h4 className="font-bold mb-1.5 flex items-center gap-2 text-slate-900">
-          <FileText className="w-4 h-4 text-lochmara-500" />
           2. Para qué los usamos
         </h4>
         <ul className="list-disc pl-5 mt-1.5 space-y-1 text-slate-600">
@@ -37,7 +34,6 @@ export const PrivacyContent = () => (
 
       <div>
         <h4 className="font-bold mb-1.5 flex items-center gap-2 text-slate-900">
-          <Lock className="w-4 h-4 text-lochmara-500" />
           3. Lo que no hacemos
         </h4>
         <ul className="list-disc pl-5 mt-1.5 space-y-1 text-slate-600">
@@ -48,7 +44,6 @@ export const PrivacyContent = () => (
 
       <div>
         <h4 className="font-bold mb-1.5 flex items-center gap-2 text-slate-900">
-          <Lock className="w-4 h-4 text-lochmara-500" />
           4. Seguridad y conservación
         </h4>
         <ul className="list-disc pl-5 mt-1.5 space-y-1 text-slate-600">
@@ -60,7 +55,6 @@ export const PrivacyContent = () => (
 
       <div>
         <h4 className="font-bold mb-1.5 flex items-center gap-2 text-slate-900">
-          <UserCheck className="w-4 h-4 text-lochmara-500" />
           5. Tus derechos
         </h4>
         <p>

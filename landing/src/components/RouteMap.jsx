@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Navigation } from 'lucide-react';
 
 // Mapa ilustrado de un trayecto compartido. No es un mapa real: es la pieza
 // de la portada que muestra en una imagen qué hace la app.
@@ -160,7 +159,6 @@ export const RouteMap = () => {
         className="absolute flex items-center gap-2 rounded-xl sm:rounded-2xl bg-[var(--color-tinta)] px-2.5 py-1.5 sm:px-3.5 sm:py-2.5 text-white"
         style={{ right: pct(W - 496, W), top: pct(58, H) }}
       >
-        <Navigation className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-lochmara-300" aria-hidden="true" />
         <span className="font-[family-name:var(--font-display)] text-xs sm:text-base font-bold">Tu campus</span>
       </motion.div>
 

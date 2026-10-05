@@ -70,5 +70,13 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perDay(3)->by('waitlist-email:'.strtolower((string) $request->input('email'))),
             ];
         });
+
+        // Beta y contacto de universidades: 5/min por IP y 3/día por correo (cada uno envía correos).
+        RateLimiter::for('landing-form', function ($request) {
+            return [
+                Limit::perMinute(5)->by('landing-ip:'.$request->ip()),
+                Limit::perDay(3)->by('landing-email:'.$request->path().':'.strtolower((string) $request->input('email'))),
+            ];
+        });
     }
 }

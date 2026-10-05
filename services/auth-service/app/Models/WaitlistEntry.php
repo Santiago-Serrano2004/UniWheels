@@ -20,6 +20,7 @@ class WaitlistEntry extends Model
 
     protected $fillable = [
         'email',
+        'university',
         'role',
         'neighborhood',
         'campus_id',
