@@ -591,11 +591,10 @@ export function DriverCockpitCard({
               <Pressable
                 disabled={isVerifyingPin || pinInput.length !== 4}
                 onPress={handleVerifyPin}
-                className={`w-full py-3 rounded-2xl flex-row items-center justify-center gap-2 ${
-                  isVerifyingPin || pinInput.length !== 4
-                    ? 'bg-lochmara-600/50'
-                    : 'bg-lochmara-600 active:bg-lochmara-700 shadow-md shadow-lochmara-600/30'
-                }`}
+                // Clases fijas: si `active:` aparece o desaparece en caliente, NativeWind cambia el
+                // componente por uno interactivo y dentro del Modal falla sin contexto de navegación.
+                className="w-full py-3 rounded-2xl flex-row items-center justify-center gap-2 bg-lochmara-600 active:bg-lochmara-700"
+                style={{ opacity: isVerifyingPin || pinInput.length !== 4 ? 0.5 : 1 }}
               >
                 {isVerifyingPin ? (
                   <ActivityIndicator size="small" color="#ffffff" />
