@@ -1,0 +1,13 @@
+/api/v1/driver/history                        -> SPA_LANDING_O_ADMIN (ninguna ruta de API coincide)
+/api/v1/ratings                               -> SPA_LANDING_O_ADMIN (ninguna ruta de API coincide)
+/api/v1/ratings/received                      -> SPA_LANDING_O_ADMIN (ninguna ruta de API coincide)
+/api/v1/passenger/history                     -> trip_service
+/api/v1/user/reputation-stats                 -> auth_service
+/api/v1/admin/users                           -> auth_service
+/api/v1/admin/vehicles                        -> vehicle_service
+/api/v1/trips/abc/sos                         -> trip_service
+/api/v1/routes/contribution-suggestion        -> route_matching_service
+/api/v1/vehicles/check-approved               -> vehicle_service
+/api/v1/notifications                         -> notification_service
+/api/v1/push/device-tokens                    -> notification_service
+/api/v1/auth/delete-account                   -> auth_service
