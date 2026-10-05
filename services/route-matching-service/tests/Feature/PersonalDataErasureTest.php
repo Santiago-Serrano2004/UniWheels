@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Route;
+use App\Models\SearchLog;
 use Carbon\Carbon;
 use Firebase\JWT\JWT;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -54,6 +55,22 @@ class PersonalDataErasureTest extends TestCase
         $this->withToken($this->jwtDePrueba($userId))
             ->deleteJson("/api/v1/internal/users/{$userId}/personal-data")
             ->assertStatus(403);
+    }
+
+    public function test_borra_las_busquedas_registradas_del_usuario(): void
+    {
+        $usuario = (string) Str::uuid();
+        $otro = (string) Str::uuid();
+        foreach ([$usuario, $otro] as $id) {
+            SearchLog::create(['passenger_id' => $id, 'results_count' => 1, 'modality_1_count' => 1, 'modality_2_count' => 0]);
+        }
+
+        $this->withToken($this->tokenDeServicio())
+            ->deleteJson("/api/v1/internal/users/{$usuario}/personal-data")
+            ->assertSuccessful();
+
+        $this->assertSame(0, SearchLog::where('passenger_id', $usuario)->count());
+        $this->assertSame(1, SearchLog::where('passenger_id', $otro)->count());
     }
 
     public function test_cancela_las_rutas_futuras_del_usuario_y_no_toca_las_demas(): void
