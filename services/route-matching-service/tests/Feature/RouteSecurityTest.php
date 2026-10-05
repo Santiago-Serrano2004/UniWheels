@@ -57,4 +57,13 @@ class RouteSecurityTest extends TestCase
             'driver_id' => $conductorSuplantado,
         ]);
     }
+
+    public function test_rutas_con_id_que_no_es_uuid_responden_404(): void
+    {
+        $token = $this->jwtDePrueba((string) Str::uuid());
+
+        $this->withToken($token)->getJson('/api/v1/routes/no-es-uuid')->assertStatus(404);
+        $this->withToken($token)->postJson('/api/v1/routes/no-es-uuid/evaluate-detour', [])->assertStatus(404);
+        $this->withToken($token)->postJson('/api/v1/routes/no-es-uuid/optimize-passengers', [])->assertStatus(404);
+    }
 }

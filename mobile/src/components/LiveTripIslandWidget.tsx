@@ -24,7 +24,8 @@ import {
   Navigation,
   Star,
 } from 'lucide-react-native';
-import { useAppStore } from '@uniwheels/shared';
+import { tripLifecycleService, useAppStore } from '@uniwheels/shared';
+import { procesarRespuestaCancelacion } from '@/utils/cancelTripFeedback';
 
 export function LiveTripIslandWidget() {
   const insets = useSafeAreaInsets();
@@ -35,6 +36,7 @@ export function LiveTripIslandWidget() {
   const activeRole = useAppStore((state) => state.activeRole);
   const cancelPassengerBooking = useAppStore((state) => state.cancelPassengerBooking);
   const cancelDriverTrip = useAppStore((state) => state.cancelDriverTrip);
+  const logout = useAppStore((state: any) => state.logout);
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [etaMinutes, setEtaMinutes] = useState(6);
@@ -116,12 +118,32 @@ export function LiveTripIslandWidget() {
         {
           text: 'Sí, cancelar',
           style: 'destructive',
-          onPress: () => {
-            setIsExpanded(false);
-            if (isDriver) {
-              cancelDriverTrip();
-            } else {
-              cancelPassengerBooking();
+          onPress: async () => {
+            const tripId = isDriver ? trip.id || trip.route_id : trip.id;
+            try {
+              if (tripId) {
+                const respuesta = await tripLifecycleService.cancelTrip(
+                  tripId,
+                  isDriver ? 'driver' : 'passenger',
+                  isDriver ? 'Cancelado por el conductor' : 'Cancelado por el pasajero'
+                );
+                setIsExpanded(false);
+                if (isDriver) {
+                  cancelDriverTrip();
+                } else {
+                  cancelPassengerBooking();
+                }
+                procesarRespuestaCancelacion(respuesta, logout);
+                return;
+              }
+              setIsExpanded(false);
+              if (isDriver) {
+                cancelDriverTrip();
+              } else {
+                cancelPassengerBooking();
+              }
+            } catch (err: any) {
+              Alert.alert('No se pudo cancelar', err?.message || 'Intenta nuevamente.');
             }
           },
         },

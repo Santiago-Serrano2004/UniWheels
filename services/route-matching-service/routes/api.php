@@ -16,6 +16,7 @@ Route::prefix('v1')->middleware('jwt.auth')->group(function () {
 
     // Evaluación de Desvío Asistido por IA (Modalidad 2)
     Route::post('/routes/{id}/evaluate-detour', [RouteController::class, 'evaluateDetour'])
+        ->whereUuid('id')
         ->middleware('throttle:30,1');
 
     // Aporte sugerido y tope para el conductor — declarada antes de /routes/{id}.
@@ -24,9 +25,10 @@ Route::prefix('v1')->middleware('jwt.auth')->group(function () {
     // Rutas de Carpooling (Conductor y Pasajero)
     Route::get('/routes', [RouteController::class, 'index']);
     Route::post('/routes', [RouteController::class, 'store']);
-    Route::get('/routes/{id}', [RouteController::class, 'show']);
+    Route::get('/routes/{id}', [RouteController::class, 'show'])->whereUuid('id');
 
     // Optimización multi-pasajero (ALNS) del orden de paradas de una ruta activa.
     Route::post('/routes/{id}/optimize-passengers', [RouteController::class, 'optimizePassengers'])
+        ->whereUuid('id')
         ->middleware('throttle:20,1');
 });

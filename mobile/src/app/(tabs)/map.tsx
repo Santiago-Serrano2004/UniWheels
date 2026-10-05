@@ -19,7 +19,6 @@ import {
   Search,
   ShieldCheck,
   Car,
-  Bike,
   MapPin,
   Locate,
   Radio,
