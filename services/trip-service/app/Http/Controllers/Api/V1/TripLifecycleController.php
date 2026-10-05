@@ -297,9 +297,12 @@ class TripLifecycleController extends Controller
             return $authError;
         }
 
-        $rol = $request->input('cancelled_by');
         $motivo = $request->input('reason');
         $userId = $request->attributes->get('user_id');
+
+        // El rol sale del JWT, nunca del cuerpo (`cancelled_by` se ignora): el
+        // conductor del viaje cancela como conductor, el pasajero como pasajero.
+        $rol = $userId === (string) $trip->driver_id ? 'conductor' : 'pasajero';
 
         if ($rol === 'conductor') {
             $resultado = $trip->cancelByDriver($motivo, $userId);

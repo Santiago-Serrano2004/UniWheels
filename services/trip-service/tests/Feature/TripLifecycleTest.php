@@ -244,6 +244,52 @@ class TripLifecycleTest extends TestCase
         ]);
     }
 
+    public function test_el_rol_de_quien_cancela_sale_del_jwt_y_no_del_cuerpo(): void
+    {
+        $trip = $this->crearViajeBase('4829', 4500.0, null, null, Carbon::now()->addMinutes(10));
+
+        // El conductor miente diciendo que es pasajero: igual cancela como conductor
+        // (10 min < 15 min => penalizado).
+        $this->withToken($this->jwtDePrueba($trip->driver_id))
+            ->postJson("/api/v1/trips/{$trip->id}/cancel", [
+                'cancelled_by' => 'pasajero',
+                'reason' => 'Intento de evadir la penalización.',
+            ])
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', 'cancelado_por_conductor')
+            ->assertJsonPath('data.late_cancellation', true);
+
+        $this->assertDatabaseHas('trip_cancellations', ['trip_id' => $trip->id, 'canceller_role' => 'conductor']);
+    }
+
+    public function test_un_pasajero_no_puede_cancelar_como_conductor_y_cancelled_by_es_opcional(): void
+    {
+        $trip = $this->crearViajeBase('4829', 4500.0, null, null, Carbon::now()->addMinutes(45));
+
+        $this->withToken($this->jwtDePrueba($trip->passenger_id))
+            ->postJson("/api/v1/trips/{$trip->id}/cancel", [
+                'cancelled_by' => 'conductor',
+                'reason' => 'Intento de marcar cancelado por conductor.',
+            ])
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', 'cancelado_por_pasajero');
+
+        $otro = $this->crearViajeBase('4829', 4500.0, null, null, Carbon::now()->addMinutes(45));
+        $this->withToken($this->jwtDePrueba($otro->passenger_id))
+            ->postJson("/api/v1/trips/{$otro->id}/cancel", ['reason' => 'Sin enviar cancelled_by.'])
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', 'cancelado_por_pasajero');
+    }
+
+    public function test_un_tercero_no_puede_cancelar_el_viaje(): void
+    {
+        $trip = $this->crearViajeBase();
+
+        $this->withToken($this->jwtDePrueba((string) Str::uuid()))
+            ->postJson("/api/v1/trips/{$trip->id}/cancel", ['reason' => 'Soy un tercero cualquiera.'])
+            ->assertStatus(403);
+    }
+
     public function test_cancelacion_por_conductor_con_mas_de_15_min_no_aplica_penalizacion(): void
     {
         $trip = $this->crearViajeBase('4829', 4500.0, null, null, Carbon::now()->addMinutes(45));
