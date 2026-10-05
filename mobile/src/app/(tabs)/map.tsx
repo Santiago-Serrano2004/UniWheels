@@ -498,6 +498,7 @@ function RouteBookingView({
     try {
       const respuesta = await tripLifecycleService.bookTrip({
         route_id: route.id,
+        passenger_name: useAppStore.getState().user?.name,
         driver_name: route.driverName,
         vehicle_plate: route.plate,
         vehicle_model: route.vehicle,

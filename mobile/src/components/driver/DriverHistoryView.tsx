@@ -27,11 +27,13 @@ import {
 } from 'lucide-react-native';
 import { fechaColombiaStr, routesService, tripsService, useAppStore } from '@uniwheels/shared';
 import { RatingFeedbackModal } from '@/components/RatingFeedbackModal';
+import { useDriverRoutesSync } from '@/hooks/useDriverRoutesSync';
 
 type PeriodFilter = 'todos' | 'semana' | 'mes';
 
 export function DriverHistoryView() {
   const publishedDriverTrips = useAppStore((state) => state.publishedDriverTrips);
+  useDriverRoutesSync(true);
   const setPublishedDriverTrips = useAppStore((state) => state.setPublishedDriverTrips);
   const cancelPublishedTrip = useAppStore((state) => state.cancelPublishedTrip);
   const startPublishedTrip = useAppStore((state) => state.startPublishedTrip);

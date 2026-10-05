@@ -34,6 +34,7 @@ import { DriverRoutePublishForm } from '@/components/driver/DriverRoutePublishFo
 import { InAppGpsNavigator } from '@/components/driver/InAppGpsNavigator';
 import { CancelTripPenaltyModal } from '@/components/driver/CancelTripPenaltyModal';
 import { PassengerActiveTripCard } from '@/components/PassengerActiveTripCard';
+import { useDriverRoutesSync } from '@/hooks/useDriverRoutesSync';
 
 const CAMPUS_COORDINATES: Record<string, [number, number]> = {
   'Campus El Jardín': [7.1166, -73.1054],
@@ -90,6 +91,8 @@ export default function HomeScreen() {
   const publishedDriverTrips = useAppStore((state) => state.publishedDriverTrips);
   const recurringDriverTrips = useAppStore((state) => state.recurringDriverTrips);
   const finishActiveDriverTrip = useAppStore((state) => state.finishActiveDriverTrip);
+  // Rutas y pasajeros reales del conductor desde el servidor (no solo memoria local).
+  const { sincronizar: sincronizarRutasConductor } = useDriverRoutesSync(activeRole === 'driver' && Boolean(user?.isDriver));
   const startPublishedTrip = useAppStore((state) => state.startPublishedTrip);
   const cancelPublishedTrip = useAppStore((state) => state.cancelPublishedTrip);
   const toggleRecurringDriverTrip = useAppStore((state) => state.toggleRecurringDriverTrip);
@@ -384,7 +387,10 @@ export default function HomeScreen() {
         <SafeAreaView edges={[]} className="flex-1 bg-slate-100 dark:bg-slate-950">
           <DriverRoutePublishForm
             onBack={() => setShowPublishForm(false)}
-            onPublished={() => setShowPublishForm(false)}
+            onPublished={() => {
+              setShowPublishForm(false);
+              sincronizarRutasConductor();
+            }}
           />
         </SafeAreaView>
       );
