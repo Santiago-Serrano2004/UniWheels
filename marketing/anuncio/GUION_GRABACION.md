@@ -2,6 +2,19 @@
 
 Necesitas **dos cuentas de prueba**: un **conductor** con vehículo aprobado y un **pasajero**. Lo ideal son dos teléfonos; si solo tienes uno, graba primero todo lo del conductor y después lo del pasajero.
 
+## Cuentas listas (ya creadas en producción)
+| Rol | Nombre visible | Qué tiene |
+|---|---|---|
+| Conductor | Andrés R. | Rol de conductor, carro **Mazda 2 gris, placa UNW123, 4 cupos, aprobado** |
+| Pasajera | Laura M. | Cuenta de estudiante verificada |
+
+- Los correos y las contraseñas están en **`marketing/anuncio/.cuentas-demo.txt`**, solo en tu PC. **No se sube al repo.**
+- **Orden recomendado:**
+  1. Con el conductor, publica una ruta para **mañana temprano**, desde un barrio (por ejemplo Cabecera) hacia el campus.
+  2. Con la pasajera, búscala desde un punto cercano y resérvala.
+  3. Sigue con el resto del flujo.
+- **Al terminar:** elimina las dos cuentas desde la app (Perfil > Eliminar cuenta). Si las vas a reutilizar, por lo menos cancela los viajes que hayan quedado activos.
+
 ## Antes de grabar
 - Activa **No molestar**, para que no aparezcan notificaciones personales.
 - Batería cargada, Wi-Fi visible y hora limpia (por ejemplo, la mañana).
