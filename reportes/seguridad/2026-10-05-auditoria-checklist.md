@@ -14,15 +14,15 @@
 ## Hallazgos
 | ID | Severidad | Punto | Hallazgo | Estado |
 |---|---|---|---|---|
-| A1 | **Crítica** | 3 | En producción, auth-service y notification-service **no tenían** `*_SERVICE_URL` y usaban `127.0.0.1` (sí mismos). "Eliminar cuenta" no borraba los datos en los otros 4 servicios (Ley 1581), y calificar o calcular la reputación fallaba | **Corregido en producción** (2026-10-05). Falta llevarlo a `docker-compose.prod.yml` (S1) |
-| A2 | **Alta** | 16 | `RegisterRequest` acepta `profile_photo_path` del cliente sin validar, y `AccountErasureService` **borra ese archivo** del disco público. Un usuario podía apuntar a la foto de otro y borrarla al eliminar su cuenta, o mostrar una imagen ajena como suya | S1 |
-| A3 | **Alta** | 14/infra | Los 5 servicios se conectan a PostgreSQL con `uniwheels_user`, que es **superusuario**. Ya existen roles por servicio (`*_service_role`), pero no se usan. Si un servicio queda comprometido, quedan expuestas las 5 bases | S2 (operación, con confirmación) |
+| A1 | **Crítica** | 3 | En producción, auth-service y notification-service **no tenían** `*_SERVICE_URL` y usaban `127.0.0.1` (sí mismos). "Eliminar cuenta" no borraba los datos en los otros 4 servicios (Ley 1581), y calificar o calcular la reputación fallaba | ✅ Corregido (producción + compose, PR #19) |
+| A2 | **Alta** | 16 | `RegisterRequest` acepta `profile_photo_path` del cliente sin validar, y `AccountErasureService` **borra ese archivo** del disco público. Un usuario podía apuntar a la foto de otro y borrarla al eliminar su cuenta, o mostrar una imagen ajena como suya | ✅ Corregido (PR #19) |
+| A3 | **Alta** | 14/infra | Los 5 servicios se conectan a PostgreSQL con `uniwheels_user`, que es **superusuario**. Ya existen roles por servicio (`*_service_role`), pero no se usan. Si un servicio queda comprometido, quedan expuestas las 5 bases | ✅ Corregido 2026-10-05: cada servicio usa su rol propio (no superusuario), dueño solo de su base; `CONNECT` revocado a PUBLIC. Verificado: trip_service_role no puede conectarse a auth_db |
 | A4 | Media | 8 | El código de recuperación de contraseña (6 dígitos, 15 min, un solo uso) **no tiene límite de intentos fallidos**; solo hay throttle de 5/min por IP. Con muchas IP se puede probar por fuerza bruta | S1 |
-| A5 | Media | 6/8 | Cambiar la contraseña **no revoca los JWT ya emitidos**: una sesión robada sigue válida hasta 4 h (más la renovación de 7 días) | S1 |
-| A6 | Media | 18 | El login solo tiene throttle por IP (10/min). Una sede universitaria sale por una sola IP (NAT), y no hay límite por cuenta | S1 |
-| A7 | Baja | 25 | Un login con tipos inválidos (`email` como array) responde **500** en vez de 422. El cuerpo es genérico ("Server Error") y no filtra detalles | S1 |
+| A5 | Media | 6/8 | Cambiar la contraseña **no revoca los JWT ya emitidos**: una sesión robada sigue válida hasta 4 h (más la renovación de 7 días) | ✅ Corregido (PR #19) |
+| A6 | Media | 18 | El login solo tiene throttle por IP (10/min). Una sede universitaria sale por una sola IP (NAT), y no hay límite por cuenta | ✅ Corregido (PR #19): 429 al 6.º intento por correo, verificado en producción |
+| A7 | Baja | 25 | Un login con tipos inválidos (`email` como array) responde **500** en vez de 422. El cuerpo es genérico ("Server Error") y no filtra detalles | ✅ Corregido (PR #19): 422, verificado en producción |
 | A8 | Baja | 2 | La llave de TomTom va en la app (`EXPO_PUBLIC_TOMTOM_API_KEY`, `placesApiService`). Es una llave pensada para clientes, pero sin restricciones cualquiera puede agotar la cuota gratuita | Usuario: restringirla en el panel de TomTom. Más adelante, usar un proxy en el backend |
-| A9 | Baja | 3 | Varios `.env.production` tienen variables duplicadas y contradictorias (`127.0.0.1` y nombre de contenedor). Hoy gana la última, que es la correcta, pero es frágil. Ya se limpiaron `APP_ENV`/`APP_DEBUG` | S2 |
+| A9 | Baja | 3 | Varios `.env.production` tienen variables duplicadas y contradictorias (`127.0.0.1` y nombre de contenedor). Hoy gana la última, que es la correcta, pero es frágil. Ya se limpiaron `APP_ENV`/`APP_DEBUG` | ✅ Corregido 2026-10-05: se dejó un solo valor por variable (el vigente) |
 
 ## Verificado como correcto
 - **(1, 4) Secretos:** no hay secretos en el código ni en el historial de git. Ningún `.env` está versionado (están en `.gitignore`). La configuración no tiene valores por defecto inseguros (`env('JWT_SECRET')` sin default).
