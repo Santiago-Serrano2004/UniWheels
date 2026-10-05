@@ -10,6 +10,7 @@ import { VehicleDetailPage } from './pages/VehicleDetailPage';
 import { SosEventsPage } from './pages/SosEventsPage';
 import { UsersPage } from './pages/UsersPage';
 import { TripsPage } from './pages/TripsPage';
+import { PilotPage } from './pages/PilotPage';
 
 export function App() {
   return (
@@ -33,6 +34,7 @@ export function App() {
               <Route path="alertas-sos" element={<SosEventsPage />} />
               <Route path="usuarios" element={<UsersPage />} />
               <Route path="viajes" element={<TripsPage />} />
+              <Route path="piloto" element={<PilotPage />} />
               <Route path="viajes-pagos" element={<Navigate to="/viajes" replace />} />
             </Route>
 

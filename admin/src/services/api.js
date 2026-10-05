@@ -383,3 +383,21 @@ export const adminTripService = {
     return response.data;
   },
 };
+
+// ==========================================
+// Servicios de Métricas del Piloto
+// ==========================================
+export const pilotService = {
+  // trip-service: viajes, cancelaciones, repetición y usuarios activos únicos (unión).
+  async getTripMetrics(weeks = 12) {
+    const response = await apiClient.get(`/admin/metrics/weekly?weeks=${weeks}`);
+    return response.data;
+  },
+
+  // route-matching-service: búsquedas y conductores que publican. El gateway reescribe
+  // este alias a /admin/metrics/weekly de route-matching (las dos rutas comparten path).
+  async getMatchingMetrics(weeks = 12) {
+    const response = await apiClient.get(`/admin/metrics/matching?weeks=${weeks}`);
+    return response.data;
+  },
+};
