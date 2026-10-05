@@ -34,6 +34,7 @@ import { DriverRoutePublishForm } from '@/components/driver/DriverRoutePublishFo
 import { InAppGpsNavigator } from '@/components/driver/InAppGpsNavigator';
 import { CancelTripPenaltyModal } from '@/components/driver/CancelTripPenaltyModal';
 import { PassengerActiveTripCard } from '@/components/PassengerActiveTripCard';
+import { usePassengerBookingSync } from '@/hooks/usePassengerBookingSync';
 import { useDriverRoutesSync } from '@/hooks/useDriverRoutesSync';
 
 const CAMPUS_COORDINATES: Record<string, [number, number]> = {
@@ -92,6 +93,7 @@ export default function HomeScreen() {
   const recurringDriverTrips = useAppStore((state) => state.recurringDriverTrips);
   const finishActiveDriverTrip = useAppStore((state) => state.finishActiveDriverTrip);
   // Rutas y pasajeros reales del conductor desde el servidor (no solo memoria local).
+  usePassengerBookingSync(activeRole === 'passenger');
   const { sincronizar: sincronizarRutasConductor } = useDriverRoutesSync(activeRole === 'driver' && Boolean(user?.isDriver));
   const startPublishedTrip = useAppStore((state) => state.startPublishedTrip);
   const cancelPublishedTrip = useAppStore((state) => state.cancelPublishedTrip);

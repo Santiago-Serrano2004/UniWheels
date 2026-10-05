@@ -6,6 +6,7 @@ import { tripsService, useAppStore } from '@uniwheels/shared';
 import { RatingFeedbackModal } from '@/components/RatingFeedbackModal';
 import { ActiveRoleConflictBlocker } from '@/components/ActiveRoleConflictBlocker';
 import { DriverHistoryView } from '@/components/driver/DriverHistoryView';
+import { usePassengerBookingSync } from '@/hooks/usePassengerBookingSync';
 import { PassengerActiveTripCard } from '@/components/PassengerActiveTripCard';
 import { SmartMatchAlertsModal } from '@/components/SmartMatchAlertsModal';
 
@@ -18,6 +19,7 @@ import { SmartMatchAlertsModal } from '@/components/SmartMatchAlertsModal';
  */
 export default function HistoryScreen() {
   const activeRole = useAppStore((state) => state.activeRole);
+  usePassengerBookingSync(activeRole === 'passenger');
   const activeDriverTrip = useAppStore((state) => state.activeDriverTrip);
   const activePassengerBooking = useAppStore((state) => state.activePassengerBooking);
   const recurringPassengerAlerts = useAppStore((state) => state.recurringPassengerAlerts);
