@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Admin\AdminSosEventController;
 use App\Http\Controllers\Api\V1\Admin\AdminTripController;
+use App\Http\Controllers\Api\V1\Admin\PilotMetricsController;
 use App\Http\Controllers\Api\V1\Internal\PersonalDataController;
 use App\Http\Controllers\Api\V1\Internal\TripParticipationController;
 use App\Http\Controllers\Api\V1\TrainingDataController;
@@ -61,5 +62,6 @@ Route::prefix('v1')->middleware('jwt.auth')->group(function () {
         Route::get('/sos-events', [AdminSosEventController::class, 'index']);
         Route::patch('/sos-events/{id}/attend', [AdminSosEventController::class, 'attend'])->whereUuid('id');
         Route::get('/trips', [AdminTripController::class, 'index']);
+        Route::get('/metrics/weekly', [PilotMetricsController::class, 'weekly']);
     });
 });
