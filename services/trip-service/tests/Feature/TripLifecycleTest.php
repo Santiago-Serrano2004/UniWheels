@@ -314,6 +314,39 @@ class TripLifecycleTest extends TestCase
             ->assertJsonPath('data.late_cancellation', false);
     }
 
+    public function test_no_se_puede_reservar_la_ruta_propia(): void
+    {
+        $conductorId = (string) Str::uuid();
+        $routeId = $this->fakeRouteMatching($conductorId);
+
+        $this->withToken($this->jwtDePrueba($conductorId))
+            ->postJson('/api/v1/trips', $this->payloadReserva($routeId, 4500))
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'No puedes reservar tu propia ruta.');
+
+        $this->assertDatabaseCount('trips', 0);
+    }
+
+    public function test_no_se_puede_reservar_dos_veces_la_misma_ruta_pero_si_tras_cancelar(): void
+    {
+        $passengerId = (string) Str::uuid();
+        $routeId = $this->fakeRouteMatching((string) Str::uuid());
+        $token = $this->jwtDePrueba($passengerId);
+
+        $tripId = $this->withToken($token)->postJson('/api/v1/trips', $this->payloadReserva($routeId, 4500))
+            ->assertStatus(201)->json('data.trip_id');
+
+        $this->withToken($token)->postJson('/api/v1/trips', $this->payloadReserva($routeId, 4500))
+            ->assertStatus(409)
+            ->assertJsonPath('message', 'Ya tienes una reserva en esta ruta.');
+
+        $this->withToken($token)->postJson("/api/v1/trips/{$tripId}/cancel", ['reason' => 'Cambio de planes.'])
+            ->assertStatus(200);
+
+        $this->withToken($token)->postJson('/api/v1/trips', $this->payloadReserva($routeId, 4500))
+            ->assertStatus(201);
+    }
+
     public function test_cancelacion_por_conductor_con_mas_de_15_min_no_aplica_penalizacion(): void
     {
         $trip = $this->crearViajeBase('4829', 4500.0, null, null, Carbon::now()->addMinutes(45));

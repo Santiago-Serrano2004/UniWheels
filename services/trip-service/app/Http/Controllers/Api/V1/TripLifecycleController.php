@@ -105,6 +105,30 @@ class TripLifecycleController extends Controller
             ], 422);
         }
 
+        // SIM-008: no se reserva la ruta propia ni se duplica una reserva activa.
+        if ((string) $driverId === (string) $passengerId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No puedes reservar tu propia ruta.',
+            ], 422);
+        }
+
+        $yaReservada = Trip::where('passenger_id', $passengerId)
+            ->where('route_id', $routeId)
+            ->whereNotIn('status', [
+                Trip::STATUS_CANCELADO_CONDUCTOR,
+                Trip::STATUS_CANCELADO_PASAJERO,
+                Trip::STATUS_COMPLETADO,
+            ])
+            ->exists();
+
+        if ($yaReservada) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ya tienes una reserva en esta ruta.',
+            ], 409);
+        }
+
         // SIM-009: la hora de recogida es la salida de la ruta (fuente: route-matching),
         // nunca la que envía el cliente.
         $salidaProgramada = isset($ruta['scheduled_departure_time'])
