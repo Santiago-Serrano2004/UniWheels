@@ -131,3 +131,12 @@ npm run build:all
 - [x] `infoPlist` solo declara `UIBackgroundModes` con `remote-notification`.
 - [x] Flujo de eliminación de cuenta (Habeas Data / Ley 1581 / Directriz Apple 5.1.1(v)) disponible desde el perfil del usuario.
 - [ ] Credenciales de usuario demo (`reviewer@unab.edu.co`) configuradas para los revisores de Apple.
+
+---
+
+## Configuración de EAS para publicar (T3a)
+
+- **Variables públicas**: `eas.json` define en los tres perfiles las URLs de los servicios (`EXPO_PUBLIC_*_API_URL` apuntando a `https://uniwheels.org/api/v1`).
+- **TomTom**: `EXPO_PUBLIC_TOMTOM_API_KEY` NO está en el repo. Configúrala como variable de entorno de EAS, por ejemplo: `eas env:create --name EXPO_PUBLIC_TOMTOM_API_KEY --value <tu-clave> --environment production --visibility sensitive` (repite para `preview` y `development`).
+- **`submit` en `eas.json`** (no admite comentarios, por eso la guía va aquí): `appleId` y `ascAppId` son placeholders (`REEMPLAZAR_APPLE_ID_EMAIL`, `REEMPLAZAR_ASC_APP_ID`). Reemplázalos con el correo de tu cuenta de Apple Developer y el ID numérico de la app en App Store Connect antes de `eas submit`. `serviceAccountKeyPath` apunta a `./google-service-account.json` (no se commitea): descárgalo de Google Cloud / Play Console.
+- `appVersionSource` es `remote` y el perfil `production` usa `autoIncrement`.
