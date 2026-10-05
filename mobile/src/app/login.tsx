@@ -65,6 +65,8 @@ export default function LoginScreen() {
         studentCode: u.academic_profile?.student_code || u.student_code || 'U000000',
         profilePhoto: u.profile_photo_url,
         role: u.roles?.includes('conductor') ? 'driver' : 'passenger',
+        // Sin esto el store trata a todo conductor aprobado como pasajero (no ve su panel).
+        isDriver: Boolean(u.is_driver),
         isAdmin: u.roles?.includes('administrador') || false,
         institution: u.institution?.name || 'Universidad Autónoma de Bucaramanga',
         campus: u.campus?.name || 'Campus El Jardín',
@@ -129,8 +131,10 @@ export default function LoginScreen() {
     setSuccessMessage('');
     if (recoveryMode) {
       setRecoveryMode(false);
-    } else {
+    } else if (router.canGoBack()) {
       router.back();
+    } else {
+      router.replace('/welcome');
     }
   };
 

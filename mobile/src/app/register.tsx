@@ -264,7 +264,8 @@ export default function RegisterScreen() {
     setMensajeError('');
     if (step === 3) setStep(2);
     else if (step === 2) setStep(1);
-    else router.back();
+    else if (router.canGoBack()) router.back();
+    else router.replace('/welcome');
   };
 
   return (

@@ -59,9 +59,14 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
       Constants?.expoConfig?.extra?.eas?.projectId ??
       Constants?.easConfig?.projectId;
 
-    const tokenResponse = await Notifications.getExpoPushTokenAsync(
-      projectId ? { projectId } : undefined
-    );
+    // Sin proyecto EAS (por ejemplo en Expo Go antes de `eas build:configure`) no hay projectId
+    // y Expo no puede emitir el token: se omite el registro sin tratarlo como error.
+    if (!projectId) {
+      console.warn('[PushNotificationService] Sin projectId de EAS: se omite el registro de notificaciones push.');
+      return null;
+    }
+
+    const tokenResponse = await Notifications.getExpoPushTokenAsync({ projectId });
     const pushToken = tokenResponse.data;
     cachedPushToken = pushToken;
 
