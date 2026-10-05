@@ -158,9 +158,8 @@ export function DriverRoutePublishForm({ onBack, onPublished }: DriverRoutePubli
 
   useEffect(() => {
     let cancelado = false;
-    const plate = user?.driverApplication?.plate_number || user?.driverInfo?.plate_number;
     vehicleService
-      .checkApprovedVehicle(user?.id, plate)
+      .checkApprovedVehicle()
       .then((res: any) => {
         if (!cancelado) setVehiculo({ id: res?.has_approved_vehicle && res?.vehicle?.id ? String(res.vehicle.id) : null });
       })

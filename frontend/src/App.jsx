@@ -58,8 +58,7 @@ export default function App() {
     if (user?.id && !user?.isDriver && (user?.driverStatus === 'pending' || user?.driverApplication)) {
       const verificarConductor = async () => {
         try {
-          const plate = user?.driverApplication?.plate_number || user?.driverInfo?.plate_number;
-          const res = await vehicleService.checkApprovedVehicle(user?.id, plate);
+          const res = await vehicleService.checkApprovedVehicle();
           if (res?.has_approved_vehicle || res?.status === 'aprobado') {
             updateDriverStatus('approved', res.data || user?.driverApplication);
           }

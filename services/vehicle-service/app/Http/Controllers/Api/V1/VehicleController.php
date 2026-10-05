@@ -22,6 +22,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class VehicleController extends Controller
 {
+    /** Propósitos válidos de la bitácora de descargas de documentos (Habeas Data). */
+    private const DOWNLOAD_PURPOSES = ['verificacion', 'auditoria'];
+
     public function __construct(
         private readonly VehicleDocumentVerificationService $verificationService
     ) {}
@@ -260,6 +263,16 @@ class VehicleController extends Controller
             ], 403);
         }
 
+        // SIM-024: `purpose` es lo único que viene del query y se valida contra una lista fija.
+        $proposito = $request->query('purpose', 'verificacion');
+        if (! is_string($proposito) || ! in_array($proposito, self::DOWNLOAD_PURPOSES, true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El propósito de la descarga no es válido. Usa: '.implode(', ', self::DOWNLOAD_PURPOSES).'.',
+                'errors' => ['purpose' => ['El propósito debe ser verificacion o auditoria.']],
+            ], 422);
+        }
+
         $documento = VehicleDocument::where('vehicle_id', $vehicleId)->findOrFail($documentId);
 
         $esAdmin = in_array('administrador', $request->attributes->get('user_roles', []), true);
@@ -278,12 +291,13 @@ class VehicleController extends Controller
         }
 
         // Registro de auditoría obligatorio (Ley 1581 de 2012)
-        $auditorId = $request->query('auditor_id', $documento->user_id);
+        // Quien accede sale del JWT (nunca del query string): el auditor no se puede falsificar.
+        $auditorId = (string) $request->attributes->get('user_id');
         $auditService->logAccess(
             $auditorId,
             $documento->user_id,
             $documento,
-            $request->query('purpose', 'consulta_seguridad'),
+            $proposito,
             $request->ip(),
             $request->userAgent() ?? 'N/A'
         );

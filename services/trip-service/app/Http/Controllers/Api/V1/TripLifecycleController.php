@@ -8,6 +8,7 @@ use App\Http\Requests\CreateTripRequest;
 use App\Http\Requests\VerifyPinRequest;
 use App\Models\Trip;
 use App\Models\TripCompletedSummary;
+use App\Services\AuthReputationClient;
 use App\Services\LateCancellationPolicy;
 use App\Services\RouteMatchingClient;
 use Carbon\Carbon;
@@ -19,7 +20,8 @@ class TripLifecycleController extends Controller
 {
     public function __construct(
         private RouteMatchingClient $routeMatchingClient,
-        private LateCancellationPolicy $lateCancellationPolicy
+        private LateCancellationPolicy $lateCancellationPolicy,
+        private AuthReputationClient $authReputationClient
     ) {}
 
     /**
@@ -166,11 +168,13 @@ class TripLifecycleController extends Controller
                 'route_id' => $routeId,
                 'driver_id' => $driverId,
                 'passenger_id' => $passengerId,
-                'vehicle_id' => $datos['vehicle_id'] ?? null,
-                'driver_name' => $datos['driver_name'] ?? 'Conductor UniWheels',
+                // SIM-016: conductor y vehículo salen del servidor (route-matching), nunca del cliente
+                // ni de valores por defecto; si no están disponibles se guarda null.
+                'vehicle_id' => $ruta['vehicle_id'] ?? $datos['vehicle_id'] ?? null,
+                'driver_name' => $ruta['driver_name'] ?? null,
                 'passenger_name' => $datos['passenger_name'] ?? 'Pasajero UniWheels',
-                'vehicle_plate' => $datos['vehicle_plate'] ?? 'KLU-492',
-                'vehicle_model' => $datos['vehicle_model'] ?? 'Mazda 3',
+                'vehicle_plate' => $ruta['vehicle_plate'] ?? null,
+                'vehicle_model' => $ruta['vehicle_model'] ?? null,
                 'pickup_address' => $datos['pickup_address'],
                 'dropoff_address' => $datos['dropoff_address'],
                 'boarding_pin' => $pin,
@@ -301,6 +305,10 @@ class TripLifecycleController extends Controller
         $trip->complete();
         $this->registrarResumenParaEntrenamiento($trip);
 
+        // SIM-020: el viaje completado suma a la reputación de ambos participantes.
+        $this->authReputationClient->recordCompletedTrip((string) $trip->driver_id, 'conductor');
+        $this->authReputationClient->recordCompletedTrip((string) $trip->passenger_id, 'pasajero');
+
         return response()->json([
             'success' => true,
             'message' => 'Viaje completado exitosamente en el campus universitario.',
@@ -357,13 +365,16 @@ class TripLifecycleController extends Controller
             return $authError;
         }
 
+        // SIM-015: un viaje terminado no se cancela otra vez (ni otra fila de cancelación ni cupo liberado).
+        if (! $trip->isCancellable()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este viaje ya no se puede cancelar.',
+            ], 409);
+        }
+
         $motivo = $request->input('reason');
         $userId = $request->attributes->get('user_id');
-        $estabaActivo = ! in_array($trip->status, [
-            Trip::STATUS_COMPLETADO,
-            Trip::STATUS_CANCELADO_CONDUCTOR,
-            Trip::STATUS_CANCELADO_PASAJERO,
-        ], true);
 
         // El rol sale del JWT, nunca del cuerpo (`cancelled_by` se ignora): el
         // conductor del viaje cancela como conductor, el pasajero como pasajero.
@@ -371,7 +382,7 @@ class TripLifecycleController extends Controller
 
         if ($rol === 'conductor') {
             $resultado = $trip->cancelByDriver($motivo, $userId);
-            $this->liberarCupoSiEstabaActivo($trip, $estabaActivo);
+            $this->liberarCupo($trip);
 
             return response()->json([
                 'success' => true,
@@ -385,7 +396,7 @@ class TripLifecycleController extends Controller
         }
 
         $resultado = $trip->cancelByPassenger($motivo, $userId);
-        $this->liberarCupoSiEstabaActivo($trip, $estabaActivo);
+        $this->liberarCupo($trip);
 
         return response()->json([
             'success' => true,
@@ -399,14 +410,12 @@ class TripLifecycleController extends Controller
     }
 
     /**
-     * SIM-001: al cancelar un viaje activo (cualquier rol) el cupo vuelve a la ruta.
+     * SIM-001: al cancelar un viaje (cualquier rol) el cupo vuelve a la ruta.
      * Si route-matching falla, releaseSeat() registra un warning y la cancelación sigue.
      */
-    private function liberarCupoSiEstabaActivo(Trip $trip, bool $estabaActivo): void
+    private function liberarCupo(Trip $trip): void
     {
-        if ($estabaActivo) {
-            $this->routeMatchingClient->releaseSeat((string) $trip->route_id);
-        }
+        $this->routeMatchingClient->releaseSeat((string) $trip->route_id);
     }
 
     /**

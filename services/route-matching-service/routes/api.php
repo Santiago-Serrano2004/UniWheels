@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Internal\PersonalDataController;
 use App\Http\Controllers\Api\V1\RouteController;
 use App\Http\Controllers\Api\V1\RouteSeatController;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1/internal')->middleware('jwt.service')->group(function () {
     Route::post('/routes/{id}/reserve-seat', [RouteSeatController::class, 'reserve'])->whereUuid('id');
     Route::post('/routes/{id}/release-seat', [RouteSeatController::class, 'release'])->whereUuid('id');
+    Route::delete('/users/{id}/personal-data', [PersonalDataController::class, 'destroy'])->whereUuid('id');
 });
 
 Route::prefix('v1')->middleware('jwt.auth')->group(function () {

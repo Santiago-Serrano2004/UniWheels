@@ -36,8 +36,7 @@ export function DriverOnboardingView({ onBack, onRegistered }: DriverOnboardingV
     setComprobando(true);
     setMensajeEstado(null);
     try {
-      const plate = user?.driverApplication?.plate_number || user?.driverInfo?.plate_number;
-      const res = await vehicleService.checkApprovedVehicle(user?.id, plate);
+      const res = await vehicleService.checkApprovedVehicle();
       if (res?.has_approved_vehicle || res?.status === 'approved' || res?.is_approved) {
         updateDriverStatus('approved', res?.vehicle || user?.driverApplication);
         setModalCelebracionAbierto(true);

@@ -106,7 +106,7 @@ class AiRouteServiceClient
         return [
             'driver_route' => [
                 'driver_id' => (string) $route->driver_id,
-                'driver_name' => 'Conductor UniWheels',
+                'driver_name' => 'Conductor',
                 'origin' => ['lat' => $puntos['origin'][0], 'lng' => $puntos['origin'][1]],
                 'destination' => ['lat' => $puntos['destination'][0], 'lng' => $puntos['destination'][1]],
                 'vehicle_capacity' => max(1, (int) $route->available_seats),
@@ -141,7 +141,7 @@ class AiRouteServiceClient
             $respuesta = $this->client()->post('/optimize/multi-passenger-alns', [
                 'driver_route' => [
                     'driver_id' => (string) $route->driver_id,
-                    'driver_name' => 'Conductor UniWheels',
+                    'driver_name' => 'Conductor',
                     'origin' => ['lat' => $puntos['origin'][0], 'lng' => $puntos['origin'][1]],
                     'destination' => ['lat' => $puntos['destination'][0], 'lng' => $puntos['destination'][1]],
                     'vehicle_capacity' => max(1, (int) $route->available_seats),

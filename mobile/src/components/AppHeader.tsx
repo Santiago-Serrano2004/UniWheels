@@ -286,9 +286,9 @@ export function AppHeader() {
           driverName:
             activePassengerBooking?.driverName ||
             activeDriverTrip?.driverName ||
-            (activeRole === 'driver' ? user?.name : 'Carlos Mendoza') ||
+            (activeRole === 'driver' ? user?.name : undefined) ||
             'Conductor Asignado',
-          plate: activePassengerBooking?.plate || activeDriverTrip?.plate || 'KLU-492',
+          plate: activePassengerBooking?.plate || activeDriverTrip?.plate || '—',
           vehicle: activePassengerBooking?.vehicle || activeDriverTrip?.vehicle || 'Vehículo en servicio',
         }}
       />

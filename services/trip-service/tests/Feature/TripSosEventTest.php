@@ -91,19 +91,41 @@ class TripSosEventTest extends TestCase
         $this->assertDatabaseMissing('trip_sos_events', ['trip_id' => $trip->id]);
     }
 
-    public function test_sos_funciona_incluso_en_un_viaje_ya_completado(): void
+    public function test_sos_responde_con_el_id_del_evento(): void
+    {
+        $driverId = (string) Str::uuid();
+        $trip = $this->crearViajeEnCamino($driverId, (string) Str::uuid());
+
+        $response = $this->withToken($this->jwtDePrueba($driverId))
+            ->postJson("/api/v1/trips/{$trip->id}/sos", ['latitude' => 7.1193, 'longitude' => -73.1042]);
+
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('trip_sos_events', ['id' => $response->json('data.id'), 'trip_id' => $trip->id]);
+    }
+
+    public function test_sos_solo_se_acepta_en_un_viaje_en_curso(): void
     {
         $driverId = (string) Str::uuid();
         $passengerId = (string) Str::uuid();
-        $trip = $this->crearViajeEnCamino($driverId, $passengerId);
-        $trip->update(['status' => Trip::STATUS_COMPLETADO]);
 
-        $response = $this->withToken($this->jwtDePrueba($passengerId))
-            ->postJson("/api/v1/trips/{$trip->id}/sos", [
-                'latitude' => 7.1193,
-                'longitude' => -73.1042,
-            ]);
+        foreach ([Trip::STATUS_CONFIRMADO, Trip::STATUS_COMPLETADO, Trip::STATUS_CANCELADO_PASAJERO] as $estado) {
+            $trip = $this->crearViajeEnCamino($driverId, $passengerId);
+            $trip->update(['status' => $estado]);
 
-        $response->assertStatus(201)->assertJson(['success' => true]);
+            $this->withToken($this->jwtDePrueba($passengerId))
+                ->postJson("/api/v1/trips/{$trip->id}/sos", ['latitude' => 7.1193, 'longitude' => -73.1042])
+                ->assertStatus(422);
+
+            $this->assertDatabaseMissing('trip_sos_events', ['trip_id' => $trip->id]);
+        }
+
+        foreach ([Trip::STATUS_EN_PUNTO_ENCUENTRO, Trip::STATUS_RECOGIDO] as $estado) {
+            $trip = $this->crearViajeEnCamino($driverId, $passengerId);
+            $trip->update(['status' => $estado]);
+
+            $this->withToken($this->jwtDePrueba($passengerId))
+                ->postJson("/api/v1/trips/{$trip->id}/sos", ['latitude' => 7.1193, 'longitude' => -73.1042])
+                ->assertStatus(201);
+        }
     }
 }

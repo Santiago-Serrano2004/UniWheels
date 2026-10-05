@@ -13,6 +13,7 @@ use App\Mail\RecuperacionClaveMail;
 use App\Mail\VerificacionCorreoMail;
 use App\Models\User;
 use App\Models\UserReputationStats;
+use App\Services\AccountErasureService;
 use App\Services\JwtService;
 use App\Services\SmsService;
 use App\Services\UserSuspensionService;
@@ -365,23 +366,25 @@ class AuthController extends Controller
     }
 
     /**
-     * Revocar el token de acceso actual (cerrar sesión).
-     */
-    /**
-     * Renovar el token del usuario autenticado antes de que expire (sesión deslizante).
-     * Rota el token: emite uno nuevo con TTL completo y revoca el anterior de inmediato,
-     * reutilizando la misma blocklist de Redis que ya usa logout/deleteAccount.
+     * Renovar la sesión (sesión deslizante, SIM-021). Acepta un token vigente o vencido hace
+     * menos de 7 días con firma válida y fuera de la blocklist: emite uno nuevo con TTL completo
+     * y revoca el anterior. Firma inválida o vencido hace más de 7 días -> 401.
      */
     public function refresh(Request $request): JsonResponse
     {
-        $usuario = $request->user();
-        $claimsAnteriores = $request->attributes->get('jwt_claims');
+        $token = $request->bearerToken();
+        $claimsAnteriores = $token ? $this->jwtService->verifyForRefresh($token) : null;
+        $usuario = $claimsAnteriores ? User::find($claimsAnteriores->sub) : null;
+
+        if (! $usuario || ! $usuario->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token inválido, expirado o revocado.',
+            ], 401);
+        }
 
         $nuevoToken = $this->jwtService->issue($usuario);
-
-        if ($claimsAnteriores) {
-            $this->jwtService->revoke($claimsAnteriores);
-        }
+        $this->jwtService->revoke($claimsAnteriores);
 
         return response()->json([
             'success' => true,
@@ -392,6 +395,9 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Revocar el token de acceso actual (cerrar sesión).
+     */
     public function logout(Request $request): JsonResponse
     {
         $claims = $request->attributes->get('jwt_claims');
@@ -409,7 +415,7 @@ class AuthController extends Controller
     /**
      * Eliminar la cuenta del usuario autenticado (Habeas Data Ley 1581) y enviar correo de despedida.
      */
-    public function deleteAccount(Request $request): JsonResponse
+    public function deleteAccount(Request $request, AccountErasureService $erasure): JsonResponse
     {
         $usuario = $request->user();
 
@@ -441,9 +447,8 @@ class AuthController extends Controller
             $this->jwtService->revoke($claims);
         }
 
-        // Desactivar y soft-delete de la cuenta
-        $usuario->update(['is_active' => false]);
-        $usuario->delete();
+        // Anonimizar los datos personales (aquí y en los demás servicios) y soft-delete.
+        $erasure->erase($usuario);
 
         return response()->json([
             'success' => true,

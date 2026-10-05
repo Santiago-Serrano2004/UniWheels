@@ -8,10 +8,9 @@ use Illuminate\Support\Facades\Log;
 /**
  * Cliente HTTP hacia auth-service y vehicle-service para enriquecer los
  * resultados de búsqueda del pasajero con el nombre/calificación real del
- * conductor y los datos reales del vehículo — antes esto era un placeholder
- * hardcodeado ('Carlos Mendoza', 'KLU-492') en el propio route-matching-service.
- * Igual que AiRouteServiceClient: si el servicio remoto no responde, se
- * degrada con valores neutros en vez de romper la búsqueda completa.
+ * conductor y los datos reales del vehículo. Igual que AiRouteServiceClient: si el
+ * servicio remoto no responde, se degrada con null (nunca con datos inventados)
+ * en vez de romper la búsqueda completa.
  */
 class DriverProfileClient
 {
@@ -27,9 +26,10 @@ class DriverProfileClient
      */
     public function getDriverProfile(string $driverId): array
     {
+        // Sin datos reales no se inventa nada: nombre e iniciales quedan en null.
         $fallback = [
-            'name' => 'Conductor UniWheels',
-            'avatar_initials' => 'CU',
+            'name' => null,
+            'avatar_initials' => null,
             'rating' => null,
         ];
 
@@ -56,6 +56,22 @@ class DriverProfileClient
         }
 
         return $fallback;
+    }
+
+    /**
+     * Descripción corta del vehículo para mostrar ("Marca Modelo (Color)"), o null si no hay datos.
+     *
+     * @param  array{brand: ?string, model_line: ?string, color: ?string}  $vehiculo
+     */
+    public static function describeVehicle(array $vehiculo): ?string
+    {
+        $descripcion = trim(($vehiculo['brand'] ?? '').' '.($vehiculo['model_line'] ?? ''));
+
+        if ($descripcion === '') {
+            return null;
+        }
+
+        return ! empty($vehiculo['color']) ? "{$descripcion} ({$vehiculo['color']})" : $descripcion;
     }
 
     /**
@@ -104,6 +120,8 @@ class DriverProfileClient
      * del aporte ni la propiedad del vehículo se pueden validar a ciegas.
      *
      * @return array{type: string, status: ?string, owner_id: ?string, available_seats: int}|null
+     *
+     * @throws VehicleNotFoundException si vehicle-service responde 404 (el vehículo no existe)
      */
     public function getVehicleForValidation(string $vehicleId): ?array
     {
@@ -127,6 +145,12 @@ class DriverProfileClient
                     'available_seats' => (int) $respuesta->json('data.available_seats'),
                 ];
             }
+
+            if ($respuesta->status() === 404) {
+                throw new VehicleNotFoundException;
+            }
+        } catch (VehicleNotFoundException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             Log::warning('vehicle-service no disponible para validar el vehículo.', [
                 'vehicle_id' => $vehicleId,

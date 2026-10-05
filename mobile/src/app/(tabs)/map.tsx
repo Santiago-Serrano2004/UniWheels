@@ -481,7 +481,10 @@ function RouteBookingView({
         scheduled_pickup_time: route.scheduled_date ? `${route.scheduled_date}T00:00:00` : new Date().toISOString(),
       });
 
-      const tripIdReal = respuesta?.data?.trip_id || route.id;
+      const tripIdReal = respuesta?.data?.trip_id;
+      if (!tripIdReal) {
+        throw new Error('El servidor no devolvió el id del viaje.');
+      }
 
       onBooked({
         id: tripIdReal,

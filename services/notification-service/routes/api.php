@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\DeviceTokenController;
+use App\Http\Controllers\Api\V1\Internal\PersonalDataController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PushSubscriptionController;
 use App\Http\Controllers\Api\V1\RatingController;
@@ -18,6 +19,11 @@ Route::prefix('v1')->group(function () {
         ->middleware('jwt.service');
 
     // Clave pública VAPID — necesaria para suscribirse, sin datos sensibles.
+    // Borrado de datos personales (Ley 1581), solo servicio-a-servicio desde auth-service.
+    Route::delete('/internal/users/{id}/personal-data', [PersonalDataController::class, 'destroy'])
+        ->whereUuid('id')
+        ->middleware('jwt.service');
+
     Route::get('/push/vapid-public-key', [PushSubscriptionController::class, 'vapidPublicKey']);
 
     Route::middleware('jwt.auth')->group(function () {

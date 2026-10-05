@@ -83,18 +83,18 @@ export function PassengerActiveTripCard({ trip: propTrip, onCancel }: PassengerA
   };
 
   const statusInfo = getStatusInfo();
-  const driverName = trip.driverName || trip.driver_name || 'Carlos Mendoza';
+  const driverName = trip.driverName || trip.driver_name || '—';
   const driverPhone = trip.driverPhone || trip.driver_phone || trip.driver_phone_number || '3158924410';
   const driverRating = Number(trip.driverRating || trip.driver_rating || trip.rating || 4.9).toFixed(1);
-  const driverInitials = driverName.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || 'C';
-  const vehicle = trip.vehicle || trip.vehicle_model || 'Mazda 3 (Rojo)';
-  const plate = trip.plate || trip.vehicle_plate || 'KLU-492';
-  const boardingPin = trip.boardingPin || trip.pin || trip.boarding_pin || '4829';
+  const driverInitials = driverName === '—' ? '—' : driverName.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || 'C';
+  const vehicle = trip.vehicle || trip.vehicle_model || '—';
+  const plate = trip.plate || trip.vehicle_plate || '—';
+  const boardingPin = trip.boardingPin || trip.pin || trip.boarding_pin || '—';
   const departureTime = trip.departureTime || trip.departure_time || '06:45 AM';
   const origin = trip.origin || trip.pickup || 'Punto acordado';
   const destination = trip.destination || 'Campus El Jardín';
   const meetingPoint = trip.meeting_point || trip.meetingPoint || null;
-  const fare = trip.fare || (trip.fare_cop ? `$ ${Number(trip.fare_cop).toLocaleString('es-CO')}` : '$ 4.500');
+  const fare = trip.fare || (trip.fare_cop ? `$ ${Number(trip.fare_cop).toLocaleString('es-CO')}` : '—');
 
   const handleCall = () => {
     const cleanPhone = driverPhone.replace(/\D/g, '');
