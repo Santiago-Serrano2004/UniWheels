@@ -2,7 +2,6 @@
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\RateLimiter;
 
 uses(RefreshDatabase::class);
 
@@ -29,6 +28,6 @@ test('5 codigos incorrectos invalidan el codigo de recuperacion', function () {
     expect(Cache::get('password_reset_'.$correo))->toBeNull();
 
     // El throttle por minuto no es lo que bloquea: aun sin él, el código correcto ya no sirve.
-    RateLimiter::clear('reset-email:'.$correo);
+    $this->travel(61)->seconds();
     resetear($correo, '123456')->assertStatus(422);
 });
