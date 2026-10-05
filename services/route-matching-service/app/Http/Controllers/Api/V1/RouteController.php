@@ -201,6 +201,7 @@ class RouteController extends Controller
             'max_detour_minutes' => $datos['max_detour_minutes'] ?? 15,
             'accumulated_detour_minutes' => 0.0,
             'available_seats' => $datos['available_seats'],
+            'total_seats' => $datos['available_seats'],
             'base_contribution_cop' => $datos['base_contribution_cop'],
             'distance_km' => round($distanciaKm, 2),
             'suggested_contribution_cop' => $sugerido,

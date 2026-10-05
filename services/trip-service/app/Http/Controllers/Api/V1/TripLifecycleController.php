@@ -144,23 +144,46 @@ class TripLifecycleController extends Controller
 
         $pin = str_pad((string) random_int(1000, 9999), 4, '0', STR_PAD_LEFT);
 
-        $trip = Trip::create([
-            'route_id' => $routeId,
-            'driver_id' => $driverId,
-            'passenger_id' => $passengerId,
-            'vehicle_id' => $datos['vehicle_id'] ?? null,
-            'driver_name' => $datos['driver_name'] ?? 'Conductor UniWheels',
-            'passenger_name' => $datos['passenger_name'] ?? 'Pasajero UniWheels',
-            'vehicle_plate' => $datos['vehicle_plate'] ?? 'KLU-492',
-            'vehicle_model' => $datos['vehicle_model'] ?? 'Mazda 3',
-            'pickup_address' => $datos['pickup_address'],
-            'dropoff_address' => $datos['dropoff_address'],
-            'boarding_pin' => $pin,
-            'is_pin_verified' => false,
-            'total_fare_cop' => $tarifa,
-            'status' => Trip::STATUS_CONFIRMADO,
-            'scheduled_pickup_time' => $salidaProgramada,
-        ]);
+        // SIM-001: el cupo se descuenta de forma atómica en route-matching antes de crear el viaje.
+        $cupo = $this->routeMatchingClient->reserveSeat($routeId);
+
+        if ($cupo === RouteMatchingClient::SEAT_FULL) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La ruta ya no tiene cupos disponibles.',
+            ], 409);
+        }
+
+        if ($cupo !== RouteMatchingClient::SEAT_RESERVED) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No fue posible reservar el cupo. Intenta nuevamente.',
+            ], 503);
+        }
+
+        try {
+            $trip = Trip::create([
+                'route_id' => $routeId,
+                'driver_id' => $driverId,
+                'passenger_id' => $passengerId,
+                'vehicle_id' => $datos['vehicle_id'] ?? null,
+                'driver_name' => $datos['driver_name'] ?? 'Conductor UniWheels',
+                'passenger_name' => $datos['passenger_name'] ?? 'Pasajero UniWheels',
+                'vehicle_plate' => $datos['vehicle_plate'] ?? 'KLU-492',
+                'vehicle_model' => $datos['vehicle_model'] ?? 'Mazda 3',
+                'pickup_address' => $datos['pickup_address'],
+                'dropoff_address' => $datos['dropoff_address'],
+                'boarding_pin' => $pin,
+                'is_pin_verified' => false,
+                'total_fare_cop' => $tarifa,
+                'status' => Trip::STATUS_CONFIRMADO,
+                'scheduled_pickup_time' => $salidaProgramada,
+            ]);
+        } catch (\Throwable $e) {
+            $this->routeMatchingClient->releaseSeat($routeId);
+
+            throw $e;
+        }
 
         return response()->json([
             'success' => true,
@@ -336,6 +359,11 @@ class TripLifecycleController extends Controller
 
         $motivo = $request->input('reason');
         $userId = $request->attributes->get('user_id');
+        $estabaActivo = ! in_array($trip->status, [
+            Trip::STATUS_COMPLETADO,
+            Trip::STATUS_CANCELADO_CONDUCTOR,
+            Trip::STATUS_CANCELADO_PASAJERO,
+        ], true);
 
         // El rol sale del JWT, nunca del cuerpo (`cancelled_by` se ignora): el
         // conductor del viaje cancela como conductor, el pasajero como pasajero.
@@ -343,6 +371,7 @@ class TripLifecycleController extends Controller
 
         if ($rol === 'conductor') {
             $resultado = $trip->cancelByDriver($motivo, $userId);
+            $this->liberarCupoSiEstabaActivo($trip, $estabaActivo);
 
             return response()->json([
                 'success' => true,
@@ -356,6 +385,7 @@ class TripLifecycleController extends Controller
         }
 
         $resultado = $trip->cancelByPassenger($motivo, $userId);
+        $this->liberarCupoSiEstabaActivo($trip, $estabaActivo);
 
         return response()->json([
             'success' => true,
@@ -366,6 +396,17 @@ class TripLifecycleController extends Controller
                 'late_cancellation' => $resultado['penalized'],
             ] + $this->lateCancellationOutcome($resultado['penalized'], $userId),
         ]);
+    }
+
+    /**
+     * SIM-001: al cancelar un viaje activo (cualquier rol) el cupo vuelve a la ruta.
+     * Si route-matching falla, releaseSeat() registra un warning y la cancelación sigue.
+     */
+    private function liberarCupoSiEstabaActivo(Trip $trip, bool $estabaActivo): void
+    {
+        if ($estabaActivo) {
+            $this->routeMatchingClient->releaseSeat((string) $trip->route_id);
+        }
     }
 
     /**
