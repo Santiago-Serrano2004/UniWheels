@@ -383,7 +383,7 @@ class TripLifecycleTest extends TestCase
 
     public function test_si_route_matching_no_responde_la_reserva_da_503_sin_crear_el_viaje(): void
     {
-        $routeId = $this->fakeRouteMatching((string) Str::uuid());
+        $routeId = (string) Str::uuid();
         Http::fake([
             '*/api/v1/internal/routes/*/reserve-seat' => Http::response([], 500),
             '*/api/v1/routes/*' => Http::response(['success' => true, 'data' => [
