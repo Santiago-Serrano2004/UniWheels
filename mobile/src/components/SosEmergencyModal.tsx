@@ -243,8 +243,7 @@ export function SosEmergencyModal({
     <Modal visible={isOpen} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable className="flex-1 bg-slate-950/85 items-center justify-center p-4" onPress={onClose}>
         <Animated.View
-          style={[contentAnimatedStyle, { maxHeight: '90%', width: '100%' }]}
-          className="w-full max-w-sm"
+          style={[contentAnimatedStyle, { maxHeight: '90%', width: '100%', maxWidth: 384 }]}
         >
           <Pressable
             className="w-full bg-slate-900 rounded-3xl p-5 border-2 border-rose-500/60 shadow-2xl shadow-rose-950/80 gap-3.5"

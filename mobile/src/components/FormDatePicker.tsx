@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Calendar } from 'lucide-react-native';
 
 export interface FormDatePickerProps {
@@ -57,9 +57,9 @@ export function FormDatePicker({
     setShowPicker(false);
   };
 
-  const handleAndroidDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+  const handleAndroidDateChange = (_event: unknown, selectedDate: Date) => {
     setShowPicker(false);
-    if (event.type === 'set' && selectedDate) {
+    if (selectedDate) {
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
@@ -152,9 +152,7 @@ export function FormDatePicker({
                   display="spinner"
                   minimumDate={minDate}
                   maximumDate={maxDate}
-                  onChange={(_, d) => {
-                    if (d) setTempDate(d);
-                  }}
+                  onValueChange={(_, d) => setTempDate(d)}
                 />
               </View>
             </Pressable>
@@ -170,7 +168,8 @@ export function FormDatePicker({
           display="default"
           minimumDate={minDate}
           maximumDate={maxDate}
-          onChange={handleAndroidDateChange}
+          onValueChange={handleAndroidDateChange}
+          onDismiss={() => setShowPicker(false)}
         />
       )}
     </View>

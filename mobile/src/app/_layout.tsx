@@ -3,13 +3,12 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import * as Notifications from 'expo-notifications';
 import { authService, useAppStore } from '@uniwheels/shared';
 
 import { BrandedSplash } from '@/components/BrandedSplash';
 import { LiveTripIslandWidget } from '@/components/LiveTripIslandWidget';
 import { bootstrapSdk } from '@/lib/sdk';
-import { registerForPushNotificationsAsync } from '@/services/pushNotificationService';
+import { addNotificationResponseListener, registerForPushNotificationsAsync } from '@/services/pushNotificationService';
 
 SplashScreen.preventAutoHideAsync();
 // Al importar el módulo, no en un useEffect: la config de API y el storage
@@ -50,8 +49,7 @@ export default function RootLayout() {
 
   // Listener de interacción al tocar una notificación push (enrutamiento profundo)
   useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      const data = response.notification.request.content.data;
+    return addNotificationResponseListener((data) => {
       if (!data) return;
 
       // Enrutamiento según el tipo de notificación
@@ -74,8 +72,6 @@ export default function RootLayout() {
           break;
       }
     });
-
-    return () => subscription.remove();
   }, [router]);
 
   // Se muestra hasta que se cumplan AMBAS condiciones: terminó su propia

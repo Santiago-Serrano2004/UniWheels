@@ -154,21 +154,22 @@ export function LiveTripIslandWidget() {
   const progressPercent = isStarted ? 70 : 35;
 
   return (
+    // Tres capas: la externa lleva posición y animaciones de layout (sin opacity, para no
+    // chocar con FadeOut), la del medio la animación de entrada y la interna los estilos de
+    // NativeWind (className no se aplica en Animated.View).
     <Animated.View
-      style={[
-        {
-          position: 'absolute',
-          top: Math.max(insets.top + 6, 12),
-          left: 16,
-          right: 16,
-          zIndex: 9999,
-        },
-        containerEntranceStyle,
-      ]}
+      style={{
+        position: 'absolute',
+        top: Math.max(insets.top + 6, 12),
+        left: 16,
+        right: 16,
+        zIndex: 9999,
+      }}
       exiting={FadeOut.duration(200)}
       layout={LinearTransition.springify()}
-      className="bg-white dark:bg-slate-900 rounded-3xl border-2 border-lochmara-500 shadow-xl shadow-lochmara-500/20 overflow-hidden"
     >
+      <Animated.View style={containerEntranceStyle}>
+        <View className="bg-white dark:bg-slate-900 rounded-3xl border-2 border-lochmara-500 shadow-xl shadow-lochmara-500/20 overflow-hidden">
       {/* Barra Compacta (Isla Dinámica) */}
       <Pressable
         onPress={() => setIsExpanded((prev) => !prev)}
@@ -227,8 +228,8 @@ export function LiveTripIslandWidget() {
           entering={FadeIn.duration(200)}
           exiting={FadeOut.duration(150)}
           layout={LinearTransition.springify()}
-          className="px-3.5 pb-3.5 pt-1 border-t border-slate-100 dark:border-slate-800 gap-3"
         >
+          <View className="px-3.5 pb-3.5 pt-1 border-t border-slate-100 dark:border-slate-800 gap-3">
           {/* Detalles del trayecto y vehículo */}
           <View className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 gap-1.5">
             <View className="flex-row items-center justify-between">
@@ -292,8 +293,11 @@ export function LiveTripIslandWidget() {
               <Text className="text-xs font-bold text-rose-600 dark:text-rose-400">Cancelar</Text>
             </Pressable>
           </View>
+          </View>
         </Animated.View>
       )}
+        </View>
+      </Animated.View>
     </Animated.View>
   );
 }
