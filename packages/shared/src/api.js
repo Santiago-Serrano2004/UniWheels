@@ -501,8 +501,9 @@ export const tripsService = {
     try {
       const response = await tripLifecycleClient.get('/driver/history');
       return response.data?.data || [];
-    } catch {
-      return [];
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'No se pudo cargar el historial de viajes.' };
     }
   },
 
@@ -517,7 +518,12 @@ export const tripsService = {
 
   async getActiveTripsForRoute(routeId) {
     if (!routeId) return [];
-    const historial = await this.getDriverHistory();
+    let historial;
+    try {
+      historial = await this.getDriverHistory();
+    } catch {
+      return [];
+    }
     const estadosActivos = ['confirmado', 'en_camino', 'en_punto_encuentro', 'recogido'];
     return historial.filter((t) => t.route_id === routeId && estadosActivos.includes(t.status));
   },
@@ -528,7 +534,7 @@ export const tripsService = {
       return response.data;
     } catch (error) {
       if (error.response?.data) throw error.response.data;
-      return { success: true };
+      throw { message: 'No se pudo enviar la calificación.' };
     }
   },
 

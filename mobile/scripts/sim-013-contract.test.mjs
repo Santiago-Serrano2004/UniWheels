@@ -1,5 +1,5 @@
 // SIM-013: eliminar cuenta usa el endpoint real y solo cierra sesión si el backend responde éxito.
-// Ejecutar: node --test mobile/scripts/sim-013-contract.test.mjs
+// SIM-014/022 (parcial): getDriverHistory y submitRating no ocultan el fallo.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -33,4 +33,23 @@ test('profile.tsx: logout solo tras éxito, nunca en finally', () => {
   assert.ok(catchIdx !== -1 && logoutIdx > catchIdx, 'logout() debe ir después del catch');
   assert.match(fn.slice(catchIdx, logoutIdx), /return;/, 'el catch debe salir antes del logout');
   assert.match(fn, /Tu cuenta fue eliminada\./);
+});
+
+test('getDriverHistory y submitRating lanzan el error en vez de ocultarlo', () => {
+  const api = leer('packages/shared/src/api.js');
+  const historial = cuerpo(api, 'async getDriverHistory(');
+  assert.match(historial, /throw/);
+  assert.doesNotMatch(historial, /return \[\];\s*\}\s*$/);
+  const rating = cuerpo(api, 'async submitRating(');
+  assert.match(rating, /throw \{ message/);
+  assert.doesNotMatch(rating, /success: true/);
+});
+
+test('las llamadas de la app a submitRating y getDriverHistory muestran el error', () => {
+  for (const f of ['mobile/src/app/(tabs)/history.tsx', 'mobile/src/components/driver/DriverHistoryView.tsx']) {
+    const t = leer(f);
+    assert.match(t, /Alert\.alert\('No se pudo (enviar la calificación|cargar el historial)'/, f);
+  }
+  const t = leer('mobile/src/components/driver/DriverHistoryView.tsx');
+  assert.match(t, /getDriverHistory\(\)[\s\S]*\.catch\(/);
 });
