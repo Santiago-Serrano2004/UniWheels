@@ -434,6 +434,26 @@ class TripLifecycleTest extends TestCase
         Http::assertSentCount(1);
     }
 
+    public function test_cancelar_un_viaje_ya_cancelado_o_completado_devuelve_409_sin_otra_fila_ni_cupo(): void
+    {
+        Http::fake(['*/api/v1/internal/routes/*/release-seat' => Http::response(['success' => true], 200)]);
+
+        foreach (['cancelado_por_pasajero', 'cancelado_por_conductor', 'completado', 'no_asistio'] as $estado) {
+            $trip = $this->crearViajeBase('4829', 4500.0, null, null, Carbon::now()->addHours(3));
+            $trip->update(['status' => $estado]);
+
+            $this->withToken($this->jwtDePrueba($trip->passenger_id))
+                ->postJson("/api/v1/trips/{$trip->id}/cancel", ['reason' => 'Ya no puedo ir.'])
+                ->assertStatus(409)
+                ->assertJsonPath('message', 'Este viaje ya no se puede cancelar.');
+
+            $this->assertDatabaseMissing('trip_cancellations', ['trip_id' => $trip->id]);
+            $this->assertSame($estado, $trip->fresh()->status);
+        }
+
+        Http::assertNothingSent();
+    }
+
     public function test_cancelacion_por_conductor_con_mas_de_15_min_no_aplica_penalizacion(): void
     {
         $trip = $this->crearViajeBase('4829', 4500.0, null, null, Carbon::now()->addMinutes(45));

@@ -28,6 +28,8 @@ class Trip extends Model
 
     const STATUS_CANCELADO_PASAJERO = 'cancelado_por_pasajero';
 
+    const STATUS_NO_ASISTIO = 'no_asistio';
+
     protected $fillable = [
         'route_id',
         'driver_id',
@@ -147,6 +149,19 @@ class Trip extends Model
         }
 
         return max(0, (int) round(now()->diffInSeconds($this->scheduled_pickup_time, false) / 60));
+    }
+
+    /**
+     * Un viaje se puede cancelar mientras no haya terminado (completado, cancelado o no_asistio).
+     */
+    public function isCancellable(): bool
+    {
+        return ! in_array($this->status, [
+            self::STATUS_COMPLETADO,
+            self::STATUS_CANCELADO_CONDUCTOR,
+            self::STATUS_CANCELADO_PASAJERO,
+            self::STATUS_NO_ASISTIO,
+        ], true);
     }
 
     /**

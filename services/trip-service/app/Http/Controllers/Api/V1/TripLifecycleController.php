@@ -357,13 +357,16 @@ class TripLifecycleController extends Controller
             return $authError;
         }
 
+        // SIM-015: un viaje terminado no se cancela otra vez (ni otra fila de cancelación ni cupo liberado).
+        if (! $trip->isCancellable()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este viaje ya no se puede cancelar.',
+            ], 409);
+        }
+
         $motivo = $request->input('reason');
         $userId = $request->attributes->get('user_id');
-        $estabaActivo = ! in_array($trip->status, [
-            Trip::STATUS_COMPLETADO,
-            Trip::STATUS_CANCELADO_CONDUCTOR,
-            Trip::STATUS_CANCELADO_PASAJERO,
-        ], true);
 
         // El rol sale del JWT, nunca del cuerpo (`cancelled_by` se ignora): el
         // conductor del viaje cancela como conductor, el pasajero como pasajero.
@@ -371,7 +374,7 @@ class TripLifecycleController extends Controller
 
         if ($rol === 'conductor') {
             $resultado = $trip->cancelByDriver($motivo, $userId);
-            $this->liberarCupoSiEstabaActivo($trip, $estabaActivo);
+            $this->liberarCupo($trip);
 
             return response()->json([
                 'success' => true,
@@ -385,7 +388,7 @@ class TripLifecycleController extends Controller
         }
 
         $resultado = $trip->cancelByPassenger($motivo, $userId);
-        $this->liberarCupoSiEstabaActivo($trip, $estabaActivo);
+        $this->liberarCupo($trip);
 
         return response()->json([
             'success' => true,
@@ -399,14 +402,12 @@ class TripLifecycleController extends Controller
     }
 
     /**
-     * SIM-001: al cancelar un viaje activo (cualquier rol) el cupo vuelve a la ruta.
+     * SIM-001: al cancelar un viaje (cualquier rol) el cupo vuelve a la ruta.
      * Si route-matching falla, releaseSeat() registra un warning y la cancelación sigue.
      */
-    private function liberarCupoSiEstabaActivo(Trip $trip, bool $estabaActivo): void
+    private function liberarCupo(Trip $trip): void
     {
-        if ($estabaActivo) {
-            $this->routeMatchingClient->releaseSeat((string) $trip->route_id);
-        }
+        $this->routeMatchingClient->releaseSeat((string) $trip->route_id);
     }
 
     /**
