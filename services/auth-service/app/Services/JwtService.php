@@ -3,14 +3,11 @@
 namespace App\Services;
 
 use App\Models\User;
-use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Firebase\JWT\SignatureInvalidException;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 use stdClass;
-use UnexpectedValueException;
 
 /**
  * Emisión y verificación de JWT compartido entre los microservicios UniWheels.
@@ -48,7 +45,8 @@ class JwtService
     {
         try {
             $claims = JWT::decode($token, new Key(config('jwt.secret'), config('jwt.algo')));
-        } catch (ExpiredException|SignatureInvalidException|UnexpectedValueException) {
+        } catch (\Throwable) {
+            // Cualquier fallo al decodificar (firma, expiración, JSON/estructura mal formados) = 401.
             return null;
         }
 
