@@ -89,7 +89,8 @@ export function LiveTripIslandWidget() {
   const trip = activeRole === 'driver' ? activeDriverTrip : activePassengerBooking;
 
   // Si no hay viaje o si ya estamos en la pantalla del mapa del tab activo
-  if (!trip) return null;
+  // El conductor ya ve el estado de su viaje en la cabina; la isla es solo para el pasajero.
+  if (!trip || activeRole === 'driver') return null;
 
   const isDriver = activeRole === 'driver';
   const driverName = trip.driverName || trip.driver_name || (isDriver ? 'Tú (Conductor)' : '—');

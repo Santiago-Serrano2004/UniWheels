@@ -18,6 +18,7 @@ import {
 import {
   tripLifecycleService,
   getPlaceCoordinates,
+  routesService,
   openExternalNavigation,
 } from '@uniwheels/shared';
 import { LeafletMap, type LeafletMapRef, type LeafletMarker, type LeafletPolyline } from '@/components/map/LeafletMap';
@@ -52,11 +53,35 @@ export function InAppGpsNavigator({
   const [permissionError, setPermissionError] = useState('');
 
   // Destino actual: si el pasajero no ha sido verificado, navegar al punto de recogida; si ya abordó, navegar al campus/destino
-  const pickupCoords = trip?.pickup_address
-    ? getPlaceCoordinates(trip.pickup_address, false)
-    : null;
+  // Geometría real de la ruta publicada (OSRM en el servidor), no la adivinada por nombres.
+  const [rutaReal, setRutaReal] = useState<[number, number][]>([]);
+  const routeId = route?.id || trip?.route_id || trip?.id;
+  useEffect(() => {
+    if (!routeId) return undefined;
+    let activo = true;
+    routesService
+      .getRoute(routeId)
+      .then((detalle: any) => {
+        const coords: [number, number][] = (detalle?.coordinates || []).map((c: any) => [Number(c[0]), Number(c[1])]);
+        if (activo && coords.length > 1) setRutaReal(coords);
+      })
+      .catch(() => {});
+    return () => {
+      activo = false;
+    };
+  }, [routeId]);
 
-  const campusCoords = route?.destination_coords
+  // Solo se navega al punto de recogida si se conocen sus coordenadas reales.
+  const pickupLat = trip?.pickup_lat;
+  const pickupLng = trip?.pickup_lng;
+  const pickupCoords = useMemo<[number, number] | null>(
+    () => (pickupLat != null && pickupLng != null ? [Number(pickupLat), Number(pickupLng)] : null),
+    [pickupLat, pickupLng]
+  );
+
+  const campusCoords = rutaReal.length > 1
+    ? rutaReal[rutaReal.length - 1]
+    : route?.destination_coords
     ? [route.destination_coords[0], route.destination_coords[1]]
     : route?.destination_lat != null
     ? [route.destination_lat, route.destination_lng]
@@ -208,6 +233,8 @@ export function InAppGpsNavigator({
   const polylines: LeafletPolyline[] = useMemo(() => {
     const routeCoords = turnByTurn.routeCoordinates.length >= 2
       ? turnByTurn.routeCoordinates
+      : rutaReal.length > 1
+      ? rutaReal
       : targetCoords
       ? [driverCoords, targetCoords]
       : [];
@@ -224,7 +251,7 @@ export function InAppGpsNavigator({
       ];
     }
     return [];
-  }, [turnByTurn.routeCoordinates, targetCoords, driverCoords]);
+  }, [turnByTurn.routeCoordinates, rutaReal, targetCoords, driverCoords]);
 
   return (
     <View className="flex-1 bg-slate-950">
