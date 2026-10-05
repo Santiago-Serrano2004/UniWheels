@@ -23,12 +23,14 @@ class PostGisSpatialRepository
      * @param  float  $pickupLng  Longitud del punto de recogida del pasajero
      * @param  float  $radiusMeters  Radio de tolerancia (default: 800m)
      * @param  int|null  $destinationCampusId  ID opcional de la sede universitaria
+     * @param  int|null  $limit  Máximo de candidatas (las más cercanas al punto); null = sin límite
      */
     public function findCandidateRoutes(
         float $pickupLat,
         float $pickupLng,
         float $radiusMeters = 800.0,
-        ?int $destinationCampusId = null
+        ?int $destinationCampusId = null,
+        ?int $limit = null
     ): Collection {
         $query = Route::query()
             ->select('routes.*')
@@ -62,9 +64,13 @@ class PostGisSpatialRepository
             $query->where('destination_campus_id', $destinationCampusId);
         }
 
-        return $query
-            ->orderBy('distance_to_route_meters', 'asc')
-            ->get();
+        $query->orderBy('distance_to_route_meters', 'asc');
+
+        if ($limit !== null) {
+            $query->limit($limit);
+        }
+
+        return $query->get();
     }
 
     /**
