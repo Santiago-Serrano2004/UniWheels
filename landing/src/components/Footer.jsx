@@ -29,6 +29,12 @@ export const Footer = () => (
           Política de tratamiento de datos
         </a>
         <a
+          href="/terminos"
+          className="text-[var(--color-tinta)] hover:text-lochmara-700 transition-colors"
+        >
+          Términos de uso
+        </a>
+        <a
           href="/soporte"
           className="text-[var(--color-tinta)] hover:text-lochmara-700 transition-colors"
         >

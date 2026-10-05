@@ -81,7 +81,7 @@ Apple y Google revisan la app iniciando sesión, y **sus revisores no tienen un 
 
 > Si se agrega analítica o algún SDK de terceros (Sentry, Firebase, etc.), hay que **actualizar estas declaraciones antes** de publicar la versión.
 
-## 7. Términos de uso (BORRADOR, pendiente de aprobación del usuario y de revisión legal)
+## 7. Términos de uso (APROBADOS por el usuario el 2026-10-05; publicados en /terminos; pendiente revisión legal)
 Se publicarán en `/terminos` cuando estén aprobados.
 
 1. **Qué es UniWheels.** Una herramienta para que miembros verificados de una comunidad universitaria coordinen viajes compartidos. UniWheels **no presta servicios de transporte** ni es empleador de los conductores.

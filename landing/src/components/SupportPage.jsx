@@ -27,6 +27,10 @@ export const SupportPage = () => (
           Consulta cómo tratamos tus datos en la{' '}
           <a href="/privacidad" className="text-lochmara-700 underline">
             política de privacidad
+          </a>{' '}
+          y las condiciones de uso en los{' '}
+          <a href="/terminos" className="text-lochmara-700 underline">
+            términos de uso
           </a>
           .
         </p>
