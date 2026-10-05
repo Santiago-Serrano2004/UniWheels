@@ -295,3 +295,280 @@ export const PantallaPublicar: React.FC = () => {
     </div>
   );
 };
+
+// ---------- Pantallas adicionales del flujo completo ----------
+
+const Mapa: React.FC<{ alto: number; progreso: number }> = ({ alto, progreso }) => {
+  const largo = 520;
+  const x = interpolate(progreso, [0, 0.45, 1], [40, 190, 190]);
+  const y = interpolate(progreso, [0, 0.45, 1], [alto - 40, alto - 40, 40]);
+  return (
+    <svg width="100%" height={alto} viewBox={`0 0 350 ${alto}`} style={{ display: 'block', background: color.lochmara50 }}>
+      {[0.2, 0.45, 0.7, 0.92].map((f) => (
+        <line key={f} x1="0" y1={alto * f} x2="350" y2={alto * f} stroke={color.linea} strokeWidth="12" />
+      ))}
+      {[60, 190, 300].map((xx) => (
+        <line key={xx} x1={xx} y1="0" x2={xx} y2={alto} stroke={color.linea} strokeWidth="12" />
+      ))}
+      <path
+        d={`M 40 ${alto - 40} L 190 ${alto - 40} L 190 40 L 300 40`}
+        fill="none"
+        stroke={color.lochmara600}
+        strokeWidth="7"
+        strokeLinecap="round"
+        strokeDasharray={largo}
+        strokeDashoffset={0}
+      />
+      <circle cx="190" cy={alto * 0.45} r="11" fill={color.recogida} />
+      <rect x="290" y="30" width="20" height="20" rx="5" fill={color.tinta} />
+      <g transform={`translate(${x} ${y})`}>
+        <circle r="15" fill={color.lochmara600} opacity="0.25" />
+        <circle r="9" fill={color.lochmara600} stroke="#fff" strokeWidth="3" />
+      </g>
+    </svg>
+  );
+};
+
+const Pantalla: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div style={{ width: ANCHO_LOGICO, height: '100%', background: color.niebla, position: 'relative' }}>
+    <Barra />
+    {children}
+  </div>
+);
+
+const Fila: React.FC<{ k: string; v: string }> = ({ k, v }) => (
+  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, marginTop: 6 }}>
+    <span style={{ color: color.cuerpo }}>{k}</span>
+    <span style={{ color: color.tinta, fontWeight: 700 }}>{v}</span>
+  </div>
+);
+
+export const PantallaReservaRecibida: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const aviso = aparece(frame, 12, fps);
+  return (
+    <Pantalla>
+      <Encabezado titulo="Tu ruta de hoy" subtitulo="Cabecera hacia tu campus · 6:50 a. m." />
+      <div style={{ padding: '0 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div
+          style={{
+            opacity: aviso,
+            transform: `translateY(${(1 - aviso) * -30}px)`,
+            background: color.tinta,
+            color: '#fff',
+            borderRadius: 18,
+            padding: '14px 16px',
+            fontFamily: fuenteTexto,
+          }}
+        >
+          <div style={{ fontWeight: 700, fontSize: 15 }}>Nueva reserva</div>
+          <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Laura M. reservó 1 cupo en tu ruta</div>
+        </div>
+        <Tarjeta>
+          <Fila k="Pasajeros" v="1 de 3" />
+          <Fila k="Aporte por cupo" v="$ 3.200" />
+          <Fila k="Punto de recogida" v="Calle 48 con Cra. 33" />
+        </Tarjeta>
+      </div>
+    </Pantalla>
+  );
+};
+
+export const PantallaViajeActivo: React.FC = () => (
+  <Pantalla>
+    <Encabezado titulo="Tu viaje" subtitulo="Sale a las 6:50 a. m." />
+    <div style={{ padding: '0 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <Tarjeta>
+        <div style={{ fontWeight: 700, color: color.tinta, fontSize: 17 }}>Andrés R.</div>
+        <div style={{ color: color.cuerpo, fontSize: 13, marginTop: 4 }}>Mazda 2 gris · placa ABC 123</div>
+        <Fila k="Punto de encuentro" v="Calle 48 con Cra. 33" />
+        <Fila k="Aporte" v="$ 3.200" />
+      </Tarjeta>
+      <div
+        style={{
+          background: '#ecfdf5',
+          color: '#047857',
+          borderRadius: 16,
+          padding: '14px 0',
+          textAlign: 'center',
+          fontFamily: fuenteTexto,
+          fontWeight: 700,
+          fontSize: 15,
+        }}
+      >
+        Cupo confirmado
+      </div>
+    </div>
+  </Pantalla>
+);
+
+export const PantallaNavegacion: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { durationInFrames } = useVideoConfig();
+  const p = interpolate(frame, [0, durationInFrames], [0, 0.45], { extrapolateRight: 'clamp' });
+  return (
+    <Pantalla>
+      <Encabezado titulo="Recoger a Laura" subtitulo="Llegas al punto en 3 min" />
+      <div style={{ padding: '0 18px' }}>
+        <Tarjeta style={{ padding: 0, overflow: 'hidden' }}>
+          <Mapa alto={420} progreso={p} />
+        </Tarjeta>
+      </div>
+    </Pantalla>
+  );
+};
+
+export const PantallaVerificarPin: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const digitos = ['4', '8', '2', '9'];
+  const escritos = Math.min(4, Math.max(0, Math.floor((frame - 10) / 8)));
+  const ok = aparece(frame, 50, fps);
+  return (
+    <Pantalla>
+      <Encabezado titulo="Confirma el PIN" subtitulo="Pídeselo a Laura al subir" />
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 20 }}>
+        {digitos.map((d, i) => (
+          <div
+            key={i}
+            style={{
+              width: 62,
+              height: 80,
+              borderRadius: 18,
+              border: `2px solid ${i < escritos ? color.lochmara600 : color.linea}`,
+              background: color.papel,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: fuenteDisplay,
+              fontSize: 40,
+              fontWeight: 800,
+              color: color.tinta,
+            }}
+          >
+            {i < escritos ? d : ''}
+          </div>
+        ))}
+      </div>
+      <div style={{ padding: '30px 18px 0', opacity: ok, transform: `scale(${0.9 + ok * 0.1})` }}>
+        <div
+          style={{
+            background: '#ecfdf5',
+            color: '#047857',
+            borderRadius: 16,
+            padding: '16px 0',
+            textAlign: 'center',
+            fontFamily: fuenteTexto,
+            fontWeight: 700,
+            fontSize: 16,
+          }}
+        >
+          PIN correcto. Viaje iniciado
+        </div>
+      </div>
+    </Pantalla>
+  );
+};
+
+export const PantallaEnViaje: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+  const p = interpolate(frame, [0, durationInFrames], [0.45, 1], { extrapolateRight: 'clamp' });
+  const latido = 1 + 0.06 * Math.sin((frame / fps) * Math.PI * 2);
+  return (
+    <Pantalla>
+      <Encabezado titulo="En camino a tu campus" subtitulo="Llegas en 14 min" />
+      <div style={{ padding: '0 18px' }}>
+        <Tarjeta style={{ padding: 0, overflow: 'hidden' }}>
+          <Mapa alto={360} progreso={p} />
+        </Tarjeta>
+      </div>
+      <div style={{ position: 'absolute', bottom: 60, right: 26 }}>
+        <div
+          style={{
+            width: 80,
+            height: 80,
+            borderRadius: 80,
+            background: color.peligro,
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontFamily: fuenteDisplay,
+            fontWeight: 800,
+            fontSize: 20,
+            transform: `scale(${latido})`,
+            boxShadow: '0 0 0 12px rgba(239,68,68,0.15)',
+          }}
+        >
+          SOS
+        </div>
+      </div>
+    </Pantalla>
+  );
+};
+
+export const PantallaCompletar: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const pulsa = interpolate(frame, [70, 76, 82], [1, 0.94, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const hecho = aparece(frame, 84, fps);
+  return (
+    <Pantalla>
+      <Encabezado titulo="Llegaste al campus" subtitulo="Recibe el aporte de tus pasajeros" />
+      <div style={{ padding: '0 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <Tarjeta>
+          <div style={{ fontSize: 13, color: color.cuerpo }}>Laura M. te paga directo</div>
+          <div style={{ fontFamily: fuenteDisplay, fontSize: 32, fontWeight: 800, color: color.tinta }}>$ 3.200</div>
+          <div style={{ fontSize: 13, color: color.cuerpo }}>En efectivo o Nequi. UniWheels no cobra comisión.</div>
+        </Tarjeta>
+        {hecho < 0.5 ? (
+          <Boton texto="Completar viaje" escala={pulsa} />
+        ) : (
+          <div
+            style={{
+              opacity: hecho,
+              background: '#ecfdf5',
+              color: '#047857',
+              borderRadius: 16,
+              padding: '16px 0',
+              textAlign: 'center',
+              fontFamily: fuenteTexto,
+              fontWeight: 700,
+              fontSize: 16,
+            }}
+          >
+            Viaje completado
+          </div>
+        )}
+      </div>
+    </Pantalla>
+  );
+};
+
+export const PantallaCalificar: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  return (
+    <Pantalla>
+      <Encabezado titulo="¿Cómo te fue con Andrés?" subtitulo="Tu calificación ayuda a la comunidad" />
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 30 }}>
+        {[0, 1, 2, 3, 4].map((i) => {
+          const p = aparece(frame, 8 + i * 6, fps);
+          return (
+            <svg key={i} width="54" height="54" viewBox="0 0 24 24" style={{ transform: `scale(${0.7 + p * 0.3})` }}>
+              <path
+                d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"
+                fill={p > 0.5 ? color.recogida : color.linea}
+              />
+            </svg>
+          );
+        })}
+      </div>
+      <div style={{ padding: '36px 18px 0' }}>
+        <Boton texto="Enviar calificación" />
+      </div>
+    </Pantalla>
+  );
+};
