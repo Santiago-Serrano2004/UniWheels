@@ -119,14 +119,14 @@ npm run build:all
 ## 🏪 Checklist para Publicación en Tiendas
 
 ### Google Play Store (Android)
-- [x] Identificador de paquete configurado: `co.edu.unab.uniwheels`.
+- [x] Identificador de paquete configurado: `org.uniwheels.app`.
 - [x] Versión y `versionCode` sincronizados en `app.json`.
 - [x] Permisos declarados estrictamente necesarios (`ACCESS_FINE_LOCATION`, `POST_NOTIFICATIONS`, `CAMERA`, `READ_MEDIA_IMAGES`).
 - [ ] Declaración de política de datos de ubicación en segundo plano y primer plano para emparejamiento de viajes.
 - [ ] Ficha técnica, descripción y capturas de pantalla de 6.5" y 10" listas en Google Play Console.
 
 ### Apple App Store (iOS)
-- [x] Bundle Identifier configurado: `co.edu.unab.uniwheels`.
+- [x] Bundle Identifier configurado: `org.uniwheels.app`.
 - [x] Cadenas explicativas de privacidad en español en `infoPlist`:
   - `NSLocationWhenInUseUsageDescription`
   - `NSCameraUsageDescription`

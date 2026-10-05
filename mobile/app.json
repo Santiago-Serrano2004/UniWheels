@@ -8,7 +8,7 @@
     "scheme": "uniwheels",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "co.edu.unab.uniwheels",
+      "bundleIdentifier": "org.uniwheels.app",
       "buildNumber": "1",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "UniWheels requiere tu ubicación para conectarte con conductores y mostrarte rutas seguras en tiempo real hacia tu campus.",
@@ -23,7 +23,7 @@
       }
     },
     "android": {
-      "package": "co.edu.unab.uniwheels",
+      "package": "org.uniwheels.app",
       "versionCode": 1,
       "permissions": [
         "ACCESS_FINE_LOCATION",
