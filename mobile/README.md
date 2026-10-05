@@ -127,10 +127,7 @@ npm run build:all
 
 ### Apple App Store (iOS)
 - [x] Bundle Identifier configurado: `org.uniwheels.app`.
-- [x] Cadenas explicativas de privacidad en español en `infoPlist`:
-  - `NSLocationWhenInUseUsageDescription`
-  - `NSCameraUsageDescription`
-  - `NSPhotoLibraryUsageDescription`
-  - `UIBackgroundModes` con `remote-notification`.
+- [x] Cadenas explicativas de privacidad en español, definidas una sola vez en los plugins `expo-location` y `expo-image-picker` de `app.json` (generan `NSLocationWhenInUseUsageDescription`, `NSCameraUsageDescription` y `NSPhotoLibraryUsageDescription`).
+- [x] `infoPlist` solo declara `UIBackgroundModes` con `remote-notification`.
 - [x] Flujo de eliminación de cuenta (Habeas Data / Ley 1581 / Directriz Apple 5.1.1(v)) disponible desde el perfil del usuario.
 - [ ] Credenciales de usuario demo (`reviewer@unab.edu.co`) configuradas para los revisores de Apple.

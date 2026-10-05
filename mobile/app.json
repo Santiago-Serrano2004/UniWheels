@@ -11,9 +11,6 @@
       "bundleIdentifier": "org.uniwheels.app",
       "buildNumber": "1",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "UniWheels requiere tu ubicación para conectarte con conductores y mostrarte rutas seguras en tiempo real hacia tu campus.",
-        "NSCameraUsageDescription": "UniWheels necesita tu cámara para fotografiar tus documentos vehiculares y foto de perfil.",
-        "NSPhotoLibraryUsageDescription": "UniWheels requiere acceso a tu galería para adjuntar los certificados de SOAT y tarjeta de propiedad.",
         "UIBackgroundModes": [
           "remote-notification"
         ]
@@ -64,7 +61,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "UniWheels necesita tu ubicación para mostrarte en el mapa y calcular puntos de encuentro con conductores o pasajeros cercanos."
+          "locationWhenInUsePermission": "UniWheels usa tu ubicación mientras usas la app para mostrarte en el mapa, encontrar rutas cercanas y compartirla en una emergencia (SOS)."
         }
       ],
       "expo-asset",
@@ -72,8 +69,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "UniWheels necesita acceso a tus fotos para que elijas una imagen de perfil.",
-          "cameraPermission": "UniWheels necesita acceso a tu cámara para tomarte una foto de perfil."
+          "photosPermission": "UniWheels accede a tus fotos para que adjuntes los documentos de tu vehículo o elijas tu foto de perfil.",
+          "cameraPermission": "UniWheels usa la cámara para que fotografíes los documentos de tu vehículo y tu foto de perfil."
         }
       ]
     ],
