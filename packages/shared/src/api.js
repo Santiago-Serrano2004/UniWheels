@@ -385,11 +385,9 @@ export const vehicleService = {
     }
   },
 
-  async checkApprovedVehicle(userId, plateNumber) {
+  async checkApprovedVehicle() {
     try {
-      const response = await vehicleApiClient.get('/vehicles/check-approved', {
-        params: { user_id: userId, plate_number: plateNumber },
-      });
+      const response = await vehicleApiClient.get('/vehicles/check-approved');
       return response.data;
     } catch (error) {
       if (error.response?.data) return error.response.data;
@@ -466,7 +464,7 @@ export const vehicleService = {
 
   async getAllVehiclesForAdmin() {
     try {
-      const response = await vehicleApiClient.get('/vehicles');
+      const response = await vehicleApiClient.get('/admin/vehicles');
       return response.data?.data || [];
     } catch (error) {
       if (error.response?.data) throw error.response.data;
