@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Car, Calendar, Sparkles, Star } from 'lucide-react-native';
 import { tripsService, useAppStore } from '@uniwheels/shared';
@@ -47,9 +47,9 @@ export default function HistoryScreen() {
         score: rating,
         optional_comment: comment || undefined,
       });
-    } catch {
-      // Igual que en la web: se registra en el store local aunque falle el
-      // envío puntual — no bloquea la UI del pasajero.
+    } catch (error: any) {
+      Alert.alert('No se pudo enviar la calificación', error?.message || 'Inténtalo de nuevo más tarde.');
+      return;
     }
     setHistory((prev) => prev.map((v) => (v.id === trip.id ? { ...v, rated: true, ratingScore: rating } : v)));
   };

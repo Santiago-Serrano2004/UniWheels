@@ -120,6 +120,9 @@ class SpatialMatchingTest extends TestCase
      */
     public function test_un_pasajero_fuera_de_ruta_empareja_en_modalidad_2_con_ia(): void
     {
+        // SIM-011: la modalidad 2 depende de la IA; si no responde, la candidata se descarta.
+        Http::fake(['*/optimize/match' => Http::response(['detour_minutes' => 6.0, 'traffic_status' => 'Fluido'], 200)]);
+
         $ruta = $this->crearRutaBase('Cañaveral', 6, 45, 7, 30, 20.0, 4500);
 
         // Pasajero desviado ~700 metros de Carrera 33 (fuera del radio de match directo de 500m)
@@ -144,6 +147,9 @@ class SpatialMatchingTest extends TestCase
      */
     public function test_modalidad_2_sugiere_el_aporte_de_la_ruta_aunque_haya_desvio(): void
     {
+        // SIM-011: la modalidad 2 depende de la IA; si no responde, la candidata se descarta.
+        Http::fake(['*/optimize/match' => Http::response(['detour_minutes' => 6.0, 'traffic_status' => 'Fluido'], 200)]);
+
         $ruta = $this->crearRutaBase('Cañaveral', 6, 45, 7, 30, 20.0, 4500);
 
         $response = $this->withToken($this->jwtDePrueba((string) Str::uuid()))->postJson('/api/v1/routes/search-match', [

@@ -81,6 +81,9 @@ export function DriverHistoryView() {
       }));
       setViajesHistorial(formateados);
       setIsLoading(false);
+    }).catch((error: any) => {
+      setIsLoading(false);
+      Alert.alert('No se pudo cargar el historial', error?.message || 'Inténtalo de nuevo más tarde.');
     });
   }, []);
 
@@ -187,8 +190,9 @@ export function DriverHistoryView() {
         score: rating,
         optional_comment: comment || undefined,
       });
-    } catch {
-      // Registrar localmente
+    } catch (error: any) {
+      Alert.alert('No se pudo enviar la calificación', error?.message || 'Inténtalo de nuevo más tarde.');
+      return;
     }
 
     setViajesHistorial((prev) =>
