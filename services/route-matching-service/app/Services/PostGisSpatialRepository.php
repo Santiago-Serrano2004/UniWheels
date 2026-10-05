@@ -48,6 +48,7 @@ class PostGisSpatialRepository
             )
             ->where('status', 'publicada')
             ->where('available_seats', '>', 0)
+            ->whereRaw('scheduled_departure_time > now()')
             ->whereRaw(
                 'ST_DWithin(
                     path_geometry::geography, 
