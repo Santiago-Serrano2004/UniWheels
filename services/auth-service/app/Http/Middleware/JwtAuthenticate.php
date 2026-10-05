@@ -35,6 +35,14 @@ class JwtAuthenticate
             ], 401);
         }
 
+
+        if ($this->jwtService->sessionRevoked($claims)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tu sesión ya no es válida. Inicia sesión de nuevo.',
+            ], 401);
+        }
+
         $userId = (string) $claims->sub;
 
         $usuario = User::find($userId);

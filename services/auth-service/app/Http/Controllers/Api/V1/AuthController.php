@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\UserReputationStats;
 use App\Services\AccountErasureService;
 use App\Services\JwtService;
+use App\Services\SessionRevoker;
 use App\Services\SmsService;
 use App\Services\UserSuspensionService;
 use Illuminate\Http\JsonResponse;
@@ -250,6 +251,7 @@ class AuthController extends Controller
 
         Cache::forget('password_reset_'.$correo);
         Cache::forget($claveIntentos);
+        app(SessionRevoker::class)->revokeAll((string) $usuario->id);
 
         return response()->json([
             'success' => true,
@@ -390,6 +392,9 @@ class AuthController extends Controller
     {
         $token = $request->bearerToken();
         $claimsAnteriores = $token ? $this->jwtService->verifyForRefresh($token) : null;
+        if ($claimsAnteriores && $this->jwtService->sessionRevoked($claimsAnteriores)) {
+            $claimsAnteriores = null;
+        }
         $usuario = $claimsAnteriores ? User::find($claimsAnteriores->sub) : null;
 
         if (! $usuario || ! $usuario->is_active) {

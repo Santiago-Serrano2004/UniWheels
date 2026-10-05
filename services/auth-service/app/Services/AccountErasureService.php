@@ -15,7 +15,7 @@ use Illuminate\Support\Str;
  */
 class AccountErasureService
 {
-    public function __construct(private PersonalDataEraser $eraser) {}
+    public function __construct(private PersonalDataEraser $eraser, private SessionRevoker $sessions) {}
 
     public function erase(User $usuario): void
     {
@@ -48,6 +48,8 @@ class AccountErasureService
 
             $usuario->delete();
         });
+
+        $this->sessions->revokeAll($userId);
 
         if ($foto) {
             $this->borrarFotoDePerfil($foto);
