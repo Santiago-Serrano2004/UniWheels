@@ -543,7 +543,7 @@ export function DriverCockpitCard({
           className="flex-1 bg-black/75 items-center justify-center p-4"
           onPress={() => setSelectedPassengerForPin(null)}
         >
-          <Animated.View style={pinModalAnimatedStyle} className="w-full max-w-[320px]">
+          <Animated.View style={[pinModalAnimatedStyle, { width: '100%', maxWidth: 320 }]}>
             <Pressable
               className="w-full bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 gap-3.5 shadow-2xl"
               onPress={(e) => e.stopPropagation()}

@@ -177,7 +177,7 @@ export function LiveTripIslandWidget() {
         <View className="flex-row items-center gap-2.5 flex-1 mr-2">
           {/* Indicador pulsante de estado en vivo */}
           <View className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 items-center justify-center">
-            <Animated.View style={pulseStyle} className="w-3 h-3 rounded-full bg-emerald-500" />
+            <Animated.View style={[pulseStyle, { width: 12, height: 12, borderRadius: 6, backgroundColor: '#10b981' }]} />
           </View>
 
           <View className="flex-1">

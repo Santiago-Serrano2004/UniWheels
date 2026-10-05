@@ -595,6 +595,23 @@ export const routesService = {
   },
 
   /** @param {string|null} [preferredTime] */
+  /** Detalle de una ruta, incluida su geometría real ([lat, lng][] en `coordinates`). */
+  async getRoute(routeId) {
+    try {
+      const response = await routeApiClient.get(`/routes/${routeId}`);
+      return response.data?.data || null;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'No se pudo cargar la ruta.' };
+    }
+  },
+
+  /**
+   * @param {number} pickupLat
+   * @param {number} pickupLng
+   * @param {number} [destinationCampusId]
+   * @param {string|null} [preferredTime]
+   */
   async searchMatches(pickupLat, pickupLng, destinationCampusId = 1, preferredTime = null) {
     try {
       const response = await routeApiClient.post('/routes/search-match', {

@@ -153,10 +153,9 @@ export function PassengerActiveTripCard({ trip: propTrip, onCancel }: PassengerA
   };
 
   return (
-    <Animated.View
-      style={animatedStyle}
-      className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 gap-3.5 shadow-sm"
-    >
+    <Animated.View style={animatedStyle}>
+      {/* NativeWind no aplica className en Animated.View: los estilos van en un View interno. */}
+      <View className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 gap-3.5 shadow-sm">
       {/* Estado con badge de color y hora */}
       <View className="flex-row items-center justify-between gap-2">
         <View className={`flex-row items-center gap-1.5 px-2.5 py-1 rounded-full ${statusInfo.badgeBg}`}>
@@ -309,6 +308,7 @@ export function PassengerActiveTripCard({ trip: propTrip, onCancel }: PassengerA
           <AlertTriangle size={13} color="#ef4444" />
           <Text className="text-xs font-bold text-rose-600 dark:text-rose-400">Cancelar</Text>
         </Pressable>
+      </View>
       </View>
     </Animated.View>
   );

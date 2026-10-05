@@ -27,6 +27,7 @@ import {
 import {
   fetchRoadGeometry,
   getPlaceCoordinates,
+  routesService,
   tripLifecycleService,
   useAppStore,
 } from '@uniwheels/shared';
@@ -456,14 +457,39 @@ function RouteBookingView({
   onBooked: (payload: any) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [originCoord] = useState<[number, number]>(() => getPlaceCoordinates(route.origin, false));
-  const [destinationCoord] = useState<[number, number]>(() => getPlaceCoordinates(route.destination, true));
+  // Ruta real que guardó el conductor (PostGIS). Los nombres de lugar solo se usan si el
+  // backend no responde, como respaldo.
+  const [originCoord, setOriginCoord] = useState<[number, number]>(() => getPlaceCoordinates(route.origin, false));
+  const [destinationCoord, setDestinationCoord] = useState<[number, number]>(() => getPlaceCoordinates(route.destination, true));
   const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
   const [isBooking, setIsBooking] = useState(false);
+  const pickupCoord: [number, number] | null =
+    route.pickup_lat != null && route.pickup_lng != null ? [Number(route.pickup_lat), Number(route.pickup_lng)] : null;
 
   useEffect(() => {
-    fetchRoadGeometry([originCoord, destinationCoord]).then(setRouteCoords);
-  }, [originCoord, destinationCoord]);
+    let activo = true;
+    routesService
+      .getRoute(route.id)
+      .then((detalle: any) => {
+        const coords: [number, number][] = (detalle?.coordinates || []).map((c: any) => [Number(c[0]), Number(c[1])]);
+        if (!activo) return;
+        if (coords.length > 1) {
+          setRouteCoords(coords);
+          setOriginCoord(coords[0]);
+          setDestinationCoord(coords[coords.length - 1]);
+        } else {
+          fetchRoadGeometry([originCoord, destinationCoord]).then((c: [number, number][]) => activo && setRouteCoords(c));
+        }
+      })
+      .catch(() => {
+        fetchRoadGeometry([originCoord, destinationCoord]).then((c: [number, number][]) => activo && setRouteCoords(c));
+      });
+    return () => {
+      activo = false;
+    };
+    // Solo al abrir la vista previa de esta ruta.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route.id]);
 
   const fareCop = Number(route.fare_cop ?? 0);
 
@@ -496,8 +522,8 @@ function RouteBookingView({
         destination: route.destination,
         fare: fareCop,
         boardingPin: respuesta?.data?.boarding_pin,
-        pickup_lat: originCoord[0],
-        pickup_lng: originCoord[1],
+        pickup_lat: pickupCoord ? pickupCoord[0] : originCoord[0],
+        pickup_lng: pickupCoord ? pickupCoord[1] : originCoord[1],
         destination_lat: destinationCoord[0],
         destination_lng: destinationCoord[1],
       });
@@ -513,7 +539,7 @@ function RouteBookingView({
 
   return (
     <View className="flex-1 bg-slate-100 dark:bg-slate-950">
-      <TripRouteMap originCoord={originCoord} destinationCoord={destinationCoord} routeCoords={routeCoords} />
+      <TripRouteMap originCoord={originCoord} destinationCoord={destinationCoord} routeCoords={routeCoords} pickupCoord={pickupCoord} />
 
       <SafeAreaView edges={['top']} className="absolute top-0 left-0 right-0" pointerEvents="box-none">
         <View className="px-3 pt-2">

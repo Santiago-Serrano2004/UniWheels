@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -115,6 +115,8 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [editablePointName, setEditablePointName] = useState('');
   const [editableCoords, setEditableCoords] = useState<[number, number] | null>(null);
+  // Punto de recogida usado en la última búsqueda: se pasa a la vista previa del viaje.
+  const ultimoPickupRef = useRef<[number, number] | null>(null);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
 
@@ -159,6 +161,7 @@ export default function HomeScreen() {
       destCampusId = campusIdByName[selectedDestinationCampus] || 2;
     }
 
+    ultimoPickupRef.current = pickup;
     const timer = setTimeout(async () => {
       setIsLoadingMatches(true);
       setSearchErrorMsg('');
@@ -294,6 +297,8 @@ export default function HomeScreen() {
       availableSeats: ride.available_seats,
       fare: ride.fare,
       fare_cop: ride.fare_cop,
+      pickup_lat: ultimoPickupRef.current?.[0],
+      pickup_lng: ultimoPickupRef.current?.[1],
     });
     // setActiveTab en el store es un campo heredado de la web (renderActiveView
     // por estado) que en mobile no mueve nada por sí solo — la navegación real
