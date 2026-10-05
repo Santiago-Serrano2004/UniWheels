@@ -128,7 +128,7 @@ export function PassengerActiveTripCard({ trip: propTrip, onCancel }: PassengerA
             setIsCancelling(true);
             try {
               if (trip.id) {
-                const respuesta = await tripLifecycleService.cancelTrip(trip.id, 'passenger', 'Cancelado por el pasajero');
+                const respuesta = await tripLifecycleService.cancelTrip(trip.id, 'pasajero', 'Cancelado por el pasajero');
                 procesarRespuestaCancelacion(respuesta, logout);
               }
             } catch {
