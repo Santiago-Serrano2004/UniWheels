@@ -20,6 +20,7 @@ export function usePassengerBookingSync(activo: boolean) {
         activePassengerBooking: {
           ...(previa?.id === t.trip_id ? previa : {}),
           id: t.trip_id,
+          route_id: t.route_id,
           status: t.status,
           isStarted: Boolean(t.is_pin_verified),
           boarding_pin: t.boarding_pin,

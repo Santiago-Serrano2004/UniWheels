@@ -170,10 +170,28 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
     pickupCoords: pickupCoord,
   });
 
-  // Trazar polilínea de la ruta
+  // Trazar la ruta real publicada por el conductor; si no se conoce, la calculada entre los puntos.
+  const routeId = booking.route_id;
   useEffect(() => {
-    fetchRoadGeometry([pickupCoord, destinationCoord]).then(setRouteCoords);
-  }, [pickupCoord, destinationCoord]);
+    let activo = true;
+    const respaldo = () => fetchRoadGeometry([pickupCoord, destinationCoord]).then((c: [number, number][]) => activo && setRouteCoords(c));
+    if (!routeId) {
+      respaldo();
+    } else {
+      routesService
+        .getRoute(routeId)
+        .then((detalle: any) => {
+          const coords: [number, number][] = (detalle?.coordinates || []).map((c: any) => [Number(c[0]), Number(c[1])]);
+          if (!activo) return;
+          if (coords.length > 1) setRouteCoords(coords);
+          else respaldo();
+        })
+        .catch(respaldo);
+    }
+    return () => {
+      activo = false;
+    };
+  }, [routeId, pickupCoord, destinationCoord]);
 
   // Tipo de vehículo
   const isMoto =
@@ -281,7 +299,8 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
       />
 
       {/* Cabecera Flotante con ETA y Telemetría en Vivo */}
-      <SafeAreaView edges={['top']} className="absolute top-0 left-0 right-0" pointerEvents="box-none">
+      {/* className en SafeAreaView no aplica `absolute`; el layout de pestañas ya pone el área segura. */}
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0 }} pointerEvents="box-none">
         <View className="px-3 pt-2 gap-2" pointerEvents="box-none">
           <View className="flex-row items-center justify-between" pointerEvents="box-none">
             <Pressable
@@ -335,7 +354,7 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
             </View>
           </View>
         </View>
-      </SafeAreaView>
+      </View>
 
       {/* Controles Flotantes Laterales: Recentrado */}
       <View className="absolute right-4 bottom-52 gap-2" pointerEvents="box-none">

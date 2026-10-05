@@ -472,6 +472,7 @@ class TripLifecycleController extends Controller
             'has_active_trip' => (bool) $trip,
             'data' => $trip ? [
                 'trip_id' => $trip->id,
+                'route_id' => $trip->route_id,
                 'driver_name' => $trip->driver_name,
                 'vehicle_plate' => $trip->vehicle_plate,
                 'vehicle_model' => $trip->vehicle_model,
