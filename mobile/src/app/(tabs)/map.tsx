@@ -22,7 +22,6 @@ import {
   MapPin,
   Locate,
   Radio,
-  ShieldAlert,
 } from 'lucide-react-native';
 import {
   fetchRoadGeometry,
@@ -34,7 +33,6 @@ import {
 import { TripRouteMap } from '@/components/TripRouteMap';
 import { ActiveRoleConflictBlocker } from '@/components/ActiveRoleConflictBlocker';
 import { usePassengerLiveTracking } from '@/hooks/usePassengerLiveTracking';
-import { SosEmergencyModal } from '@/components/SosEmergencyModal';
 
 const initialsOf = (name?: string) =>
   name
@@ -141,7 +139,6 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
   const colorScheme = useColorScheme();
   const mapRef = useRef<LeafletMapRef>(null);
 
-  const [sosModalOpen, setSosModalOpen] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const [cameraMode, setCameraMode] = useState<'driver' | 'pickup' | 'overview'>('overview');
 
@@ -311,14 +308,6 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
               <Text className="text-xs font-bold text-slate-800 dark:text-white">Inicio</Text>
             </Pressable>
 
-            {/* Botón SOS de Pánico en el Mapa */}
-            <Pressable
-              onPress={() => setSosModalOpen(true)}
-              className="flex-row items-center gap-1.5 px-3 py-2 rounded-2xl bg-rose-600 active:bg-rose-700 border border-rose-500 shadow-lg shadow-rose-950/40"
-            >
-              <ShieldAlert size={15} color="#ffffff" />
-              <Text className="text-white text-xs font-black tracking-wide">SOS</Text>
-            </Pressable>
           </View>
 
           {/* Banner de Estado en Vivo */}
@@ -450,18 +439,6 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
         )}
       </View>
 
-      {/* Modal de Emergencia SOS */}
-      <SosEmergencyModal
-        isOpen={sosModalOpen}
-        onClose={() => setSosModalOpen(false)}
-        currentCoords={currentDriverPos}
-        tripInfo={{
-          id: booking.id,
-          driverName: booking.driverName,
-          vehicle: booking.vehicle,
-          plate: booking.plate,
-        }}
-      />
     </View>
   );
 }
