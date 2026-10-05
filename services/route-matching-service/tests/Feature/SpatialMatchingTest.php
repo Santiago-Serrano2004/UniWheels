@@ -47,7 +47,7 @@ class SpatialMatchingTest extends TestCase
         $vehicleId = (string) Str::uuid();
 
         Http::fake([
-            '*/api/v1/vehicles/*/public-summary' => Http::response(['success' => true, 'data' => ['vehicle_type' => 'carro']], 200),
+            '*/api/v1/vehicles/*/public-summary' => Http::response(['success' => true, 'data' => ['vehicle_type' => 'carro', 'status' => 'aprobado', 'owner_id' => $driverId, 'available_seats' => 4]], 200),
             '*/route/v1/driving/*' => Http::response([], 500), // OSRM caído: respaldo geodésico (~7,3 km → sugerido $ 5.000)
         ]);
 
