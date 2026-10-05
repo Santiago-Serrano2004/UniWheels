@@ -331,7 +331,7 @@ export const authService = {
       return response.data;
     } catch (error) {
       if (error.response?.data) throw error.response.data;
-      return { success: true, message: 'Código de verificación enviado al correo institucional.', data: { email } };
+      throw { message: 'No se pudo enviar el código de verificación. Revisa tu conexión e intenta de nuevo.' };
     }
   },
 
@@ -341,7 +341,7 @@ export const authService = {
       return response.data;
     } catch (error) {
       if (error.response?.data) throw error.response.data;
-      return { success: true, message: 'Contraseña actualizada correctamente.' };
+      throw { message: 'No se pudo restablecer la contraseña. Revisa tu conexión e intenta de nuevo.' };
     }
   },
 
@@ -606,8 +606,9 @@ export const routesService = {
         preferred_time: preferredTime || undefined,
       });
       return response.data?.data || [];
-    } catch {
-      return [];
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'No se pudo buscar rutas. Revisa tu conexión e intenta de nuevo.' };
     }
   },
 
@@ -697,9 +698,10 @@ export const tripLifecycleService = {
         timestamp: new Date().toISOString(),
       });
       return response.data;
-    } catch {
-      // Si el endpoint no existe o falla, no bloquear el flujo de llamada telefónica del dispositivo
-      return { success: false, fallback: true };
+    } catch (error) {
+      // El error se propaga: la app avisa que la alerta no quedó registrada y ofrece llamar al 123.
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'No se pudo registrar la alerta SOS.' };
     }
   },
 
