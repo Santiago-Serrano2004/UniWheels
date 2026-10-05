@@ -24,12 +24,13 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
     Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
     Route::post('/auth/send-verification-code', [AuthController::class, 'sendVerificationCode'])->middleware('throttle:5,1');
+    // Renovar sesión: acepta tokens vencidos hace menos de 7 días, por eso no pasa por jwt.auth.
+    Route::post('/auth/refresh', [AuthController::class, 'refresh'])->middleware('throttle:30,1');
     Route::post('/auth/send-sms-code', [AuthController::class, 'sendSmsCode'])->middleware('throttle:5,1');
 
     // Rutas protegidas estrictamente por Bearer Token (JWT compartido)
     Route::middleware('jwt.auth')->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me']);
-        Route::post('/auth/refresh', [AuthController::class, 'refresh']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::post('/driver/register', [AuthController::class, 'registerDriver']);
         Route::delete('/auth/account', [AuthController::class, 'deleteAccount']);
