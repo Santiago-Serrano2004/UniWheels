@@ -98,30 +98,44 @@ class VehicleOwnershipTest extends TestCase
             ->assertStatus(201);
     }
 
-    public function test_la_sugerencia_de_aporte_valida_dueno_y_aprobacion(): void
+    private function queryDeSugerencia(): string
     {
-        $query = http_build_query([
+        return http_build_query([
             'vehicle_id' => (string) Str::uuid(),
             'origin_lat' => 7.0678,
             'origin_lng' => -73.1066,
             'destination_lat' => 7.1165,
             'destination_lng' => -73.1054,
         ]);
+    }
 
+    // Cada escenario va en su propio test: los Http::fake se acumulan y gana el primero que coincide.
+    public function test_la_sugerencia_de_aporte_rechaza_un_vehiculo_ajeno(): void
+    {
         $this->fakeVehiculo((string) Str::uuid());
-        $this->withToken($this->jwtDePrueba((string) Str::uuid()))
-            ->getJson('/api/v1/routes/contribution-suggestion?'.$query)
-            ->assertStatus(422);
 
+        $this->withToken($this->jwtDePrueba((string) Str::uuid()))
+            ->getJson('/api/v1/routes/contribution-suggestion?'.$this->queryDeSugerencia())
+            ->assertStatus(422);
+    }
+
+    public function test_la_sugerencia_de_aporte_rechaza_un_vehiculo_no_aprobado(): void
+    {
         $conductor = (string) Str::uuid();
         $this->fakeVehiculo($conductor, 'pendiente_revision');
-        $this->withToken($this->jwtDePrueba($conductor))
-            ->getJson('/api/v1/routes/contribution-suggestion?'.$query)
-            ->assertStatus(422);
 
-        $this->fakeVehiculo($conductor);
         $this->withToken($this->jwtDePrueba($conductor))
-            ->getJson('/api/v1/routes/contribution-suggestion?'.$query)
+            ->getJson('/api/v1/routes/contribution-suggestion?'.$this->queryDeSugerencia())
+            ->assertStatus(422);
+    }
+
+    public function test_la_sugerencia_de_aporte_responde_para_un_vehiculo_propio_aprobado(): void
+    {
+        $conductor = (string) Str::uuid();
+        $this->fakeVehiculo($conductor);
+
+        $this->withToken($this->jwtDePrueba($conductor))
+            ->getJson('/api/v1/routes/contribution-suggestion?'.$this->queryDeSugerencia())
             ->assertStatus(200);
     }
 }
