@@ -585,431 +585,437 @@ export default function HomeScreen() {
   return (
     <SafeAreaView edges={[]} className="flex-1 bg-slate-100 dark:bg-slate-950">
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, gap: 10 }} keyboardShouldPersistTaps="handled">
-        {activePassengerBooking && <PassengerActiveTripCard />}
+        {/* Con un viaje activo solo se muestra ese viaje: no se puede reservar otro a la vez. */}
+        {activePassengerBooking ? (
+          <PassengerActiveTripCard />
+        ) : (
+          <>
 
-        {/* Cabecera con saludo + avatar */}
-        <View className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800">
-          <View className="flex-row items-center justify-between mb-3">
-            <View className="flex-1">
-              <Text className="text-base font-black text-slate-900 dark:text-white" numberOfLines={1}>
-                Hola, {user?.name?.split(' ')[0] || 'Estudiante'}
-              </Text>
-              <Text className="text-xs text-slate-500 dark:text-slate-400">¿Cuál es tu trayecto universitario?</Text>
-            </View>
-            <View className="w-10 h-10 rounded-2xl bg-lochmara-600 items-center justify-center">
-              <Text className="text-white font-black text-xs">{initials}</Text>
-            </View>
-          </View>
-
-          {/* Toggle de 3 sentidos — con pill deslizante (spring), igual que
-              layoutId="direction-pill-home" en HomeHeroRouteCard.jsx */}
-          <View className="mb-3">
-            <AnimatedSegmentedControl
-              segments={[
-                { key: 'towards', label: 'Hacia Campus' },
-                { key: 'from', label: 'Desde Campus' },
-                { key: 'inter_campus', label: 'Entre Sedes' },
-              ]}
-              value={direction}
-              onChange={setDirection}
-            />
-          </View>
-
-          {/* Corredor origen/destino */}
-          <View className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-            {/* ORIGEN */}
-            <View className="flex-row items-center gap-2.5">
-              <View className="w-2.5 h-2.5 rounded-full bg-lochmara-500" />
+          {/* Cabecera con saludo + avatar */}
+          <View className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800">
+            <View className="flex-row items-center justify-between mb-3">
               <View className="flex-1">
-                <Text className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Origen</Text>
-                {direction === 'from' || direction === 'inter_campus' ? (
-                  <Pressable
-                    onPress={() => {
-                      setCampusModalTarget('origin');
-                      setIsCampusModalOpen(true);
-                    }}
-                    className="flex-row items-center justify-between mt-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5"
-                  >
-                    <View className="flex-row items-center gap-2 flex-1 mr-2">
-                      <Building2 size={14} color="#0284c7" />
-                      <Text className="text-xs font-black text-slate-900 dark:text-white" numberOfLines={1}>
-                        {selectedOriginCampus}
-                      </Text>
-                    </View>
-                    <View className="flex-row items-center gap-0.5">
-                      <Text className="text-[10px] font-bold text-lochmara-500">Cambiar</Text>
-                      <ChevronRight size={12} color="#0284c7" />
-                    </View>
-                  </Pressable>
-                ) : (
-                  <View className="flex-row items-center gap-1.5 mt-0.5">
-                    <View className="relative flex-1">
-                      <View className="flex-row items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5">
-                        <Search size={13} color="#94a3b8" />
-                        <TextInput
-                          value={searchQuery || editablePointName}
-                          onChangeText={setSearchQuery}
-                          placeholder="¿Dónde te recogemos?"
-                          placeholderTextColor="#94a3b8"
-                          className="flex-1 text-xs font-bold text-slate-900 dark:text-white ml-1.5 py-0"
-                        />
-                        {isSearchingPlaces ? (
-                          <ActivityIndicator size="small" color="#0284c7" />
-                        ) : (searchQuery || editablePointName) ? (
-                          <Pressable onPress={() => { setSearchQuery(''); setEditablePointName(''); setEditableCoords(null); }} hitSlop={6}>
-                            <X size={13} color="#94a3b8" />
-                          </Pressable>
-                        ) : null}
-                      </View>
-                      {suggestions.length > 0 && (
-                        <View className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden z-10">
-                          {suggestions.map((item, idx) => (
-                            <Pressable
-                              key={idx}
-                              onPress={() => handleSelectSuggestion(item)}
-                              className="p-2.5 border-b border-slate-100 dark:border-slate-800 last:border-b-0"
-                            >
-                              <Text className="text-xs font-bold text-slate-900 dark:text-white" numberOfLines={1}>
-                                {item.nombre || item.name}
-                              </Text>
-                              <Text className="text-[10px] text-slate-400" numberOfLines={1}>
-                                {item.direccion || item.address}
-                              </Text>
-                            </Pressable>
-                          ))}
-                        </View>
-                      )}
-                    </View>
-
-                    <Pressable
-                      onPress={usarCasa}
-                      className={`px-2 py-1 rounded-xl flex-row items-center gap-1 border shrink-0 ${
-                        savedHomeLocation
-                          ? 'bg-amber-500/10 border-amber-500/20'
-                          : 'bg-slate-500/10 border-slate-500/20'
-                      }`}
-                    >
-                      <Home size={11} color={savedHomeLocation ? '#f59e0b' : '#94a3b8'} />
-                      <Text className={`text-[10px] font-extrabold ${savedHomeLocation ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}>
-                        Casa
-                      </Text>
-                    </Pressable>
-
-                    <Pressable
-                      onPress={() => setIsMapPickerOpen(true)}
-                      className="px-2 py-1 rounded-xl bg-lochmara-500/10 flex-row items-center gap-1 shrink-0"
-                    >
-                      <MapPin size={11} color="#0284c7" />
-                      <Text className="text-[10px] font-extrabold text-lochmara-600 dark:text-lochmara-400">Mapa</Text>
-                    </Pressable>
-                  </View>
-                )}
+                <Text className="text-base font-black text-slate-900 dark:text-white" numberOfLines={1}>
+                  Hola, {user?.name?.split(' ')[0] || 'Estudiante'}
+                </Text>
+                <Text className="text-xs text-slate-500 dark:text-slate-400">¿Cuál es tu trayecto universitario?</Text>
+              </View>
+              <View className="w-10 h-10 rounded-2xl bg-lochmara-600 items-center justify-center">
+                <Text className="text-white font-black text-xs">{initials}</Text>
               </View>
             </View>
 
-            <View className="border-l-2 border-dashed border-slate-300 dark:border-slate-700 h-2.5 ml-1 my-1" />
-
-            {/* DESTINO */}
-            <View className="flex-row items-center gap-2.5">
-              <View className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-              <View className="flex-1">
-                <Text className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Destino</Text>
-                {direction === 'towards' ? (
-                  <Pressable
-                    onPress={() => {
-                      setCampusModalTarget('destination');
-                      setIsCampusModalOpen(true);
-                    }}
-                    className="flex-row items-center justify-between mt-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5"
-                  >
-                    <View className="flex-row items-center gap-2 flex-1 mr-2">
-                      <Building2 size={14} color="#0284c7" />
-                      <Text className="text-xs font-black text-slate-900 dark:text-white" numberOfLines={1}>
-                        {selectedCampus}
-                      </Text>
-                    </View>
-                    <View className="flex-row items-center gap-0.5">
-                      <Text className="text-[10px] font-bold text-lochmara-500">Cambiar</Text>
-                      <ChevronRight size={12} color="#0284c7" />
-                    </View>
-                  </Pressable>
-                ) : direction === 'inter_campus' ? (
-                  <Pressable
-                    onPress={() => {
-                      setCampusModalTarget('destination');
-                      setIsCampusModalOpen(true);
-                    }}
-                    className="flex-row items-center justify-between mt-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5"
-                  >
-                    <View className="flex-row items-center gap-2 flex-1 mr-2">
-                      <Building2 size={14} color="#10b981" />
-                      <Text className="text-xs font-black text-slate-900 dark:text-white" numberOfLines={1}>
-                        {selectedDestinationCampus}
-                      </Text>
-                    </View>
-                    <View className="flex-row items-center gap-0.5">
-                      <Text className="text-[10px] font-bold text-lochmara-500">Cambiar</Text>
-                      <ChevronRight size={12} color="#0284c7" />
-                    </View>
-                  </Pressable>
-                ) : (
-                  <View className="flex-row items-center gap-1.5 mt-0.5">
-                    <View className="relative flex-1">
-                      <View className="flex-row items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5">
-                        <Search size={13} color="#94a3b8" />
-                        <TextInput
-                          value={searchQuery || editablePointName}
-                          onChangeText={setSearchQuery}
-                          placeholder="¿A dónde te diriges?"
-                          placeholderTextColor="#94a3b8"
-                          className="flex-1 text-xs font-bold text-slate-900 dark:text-white ml-1.5 py-0"
-                        />
-                        {isSearchingPlaces ? (
-                          <ActivityIndicator size="small" color="#0284c7" />
-                        ) : (searchQuery || editablePointName) ? (
-                          <Pressable onPress={() => { setSearchQuery(''); setEditablePointName(''); setEditableCoords(null); }} hitSlop={6}>
-                            <X size={13} color="#94a3b8" />
-                          </Pressable>
-                        ) : null}
-                      </View>
-                      {suggestions.length > 0 && (
-                        <View className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden z-10">
-                          {suggestions.map((item, idx) => (
-                            <Pressable
-                              key={idx}
-                              onPress={() => handleSelectSuggestion(item)}
-                              className="p-2.5 border-b border-slate-100 dark:border-slate-800 last:border-b-0"
-                            >
-                              <Text className="text-xs font-bold text-slate-900 dark:text-white" numberOfLines={1}>
-                                {item.nombre || item.name}
-                              </Text>
-                              <Text className="text-[10px] text-slate-400" numberOfLines={1}>
-                                {item.direccion || item.address}
-                              </Text>
-                            </Pressable>
-                          ))}
-                        </View>
-                      )}
-                    </View>
-
-                    <Pressable
-                      onPress={usarCasa}
-                      className={`px-2 py-1 rounded-xl flex-row items-center gap-1 border shrink-0 ${
-                        savedHomeLocation
-                          ? 'bg-amber-500/10 border-amber-500/20'
-                          : 'bg-slate-500/10 border-slate-500/20'
-                      }`}
-                    >
-                      <Home size={11} color={savedHomeLocation ? '#f59e0b' : '#94a3b8'} />
-                      <Text className={`text-[10px] font-extrabold ${savedHomeLocation ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}>
-                        Casa
-                      </Text>
-                    </Pressable>
-
-                    <Pressable
-                      onPress={() => setIsMapPickerOpen(true)}
-                      className="px-2 py-1 rounded-xl bg-lochmara-500/10 flex-row items-center gap-1 shrink-0"
-                    >
-                      <MapPin size={11} color="#0284c7" />
-                      <Text className="text-[10px] font-extrabold text-lochmara-600 dark:text-lochmara-400">Mapa</Text>
-                    </Pressable>
-                  </View>
-                )}
-              </View>
-            </View>
-          </View>
-
-          {/* Barra de fecha + horario — mismo bloque que "BARRA DE CONTROL DE
-              FECHA Y HORARIO" en HomeHeroRouteCard.jsx: 3 opciones de fecha
-              (Hoy/Mañana/Fecha personalizada) con pill deslizante + selector
-              de hora compacto aparte. */}
-          <View className="flex-row items-center gap-2 mt-3">
-            <View className="flex-1">
+            {/* Toggle de 3 sentidos — con pill deslizante (spring), igual que
+                layoutId="direction-pill-home" en HomeHeroRouteCard.jsx */}
+            <View className="mb-3">
               <AnimatedSegmentedControl
                 segments={[
-                  { key: 'today', label: 'Hoy' },
-                  { key: 'tomorrow', label: 'Mañana' },
-                  {
-                    key: 'custom',
-                    label: dateMode === 'custom' ? formatCustomDateLabel(selectedDate) : 'Fecha',
-                    icon: <Calendar size={10} color={dateMode === 'custom' ? '#ffffff' : '#94a3b8'} />,
-                  },
+                  { key: 'towards', label: 'Hacia Campus' },
+                  { key: 'from', label: 'Desde Campus' },
+                  { key: 'inter_campus', label: 'Entre Sedes' },
                 ]}
-                value={dateMode}
-                onChange={(mode) => {
-                  if (mode === 'today') setSelectedDate(todayStr());
-                  else if (mode === 'tomorrow') setSelectedDate(tomorrowStr());
-                  else setShowDatePicker(true);
-                }}
+                value={direction}
+                onChange={setDirection}
               />
             </View>
 
-            <Pressable
-              onPress={() => setShowTimePicker(true)}
-              className="shrink-0 px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex-row items-center gap-1.5"
-            >
-              <Clock size={14} color="#0284c7" />
-              <Text className="text-xs font-black text-slate-900 dark:text-white">
-                {passengerTimeFilter || '--:--'}
-              </Text>
-              {passengerTimeFilter ? (
-                <Pressable onPress={() => setPassengerTimeFilter(null)} hitSlop={6}>
-                  <X size={12} color="#94a3b8" />
-                </Pressable>
-              ) : null}
-            </Pressable>
-          </View>
-
-          {showDatePicker && (
-            <DateTimePicker
-              value={isCustomDate ? new Date(`${selectedDate}T00:00:00`) : new Date()}
-              mode="date"
-              minimumDate={new Date()}
-              onChange={(_e, date) => {
-                setShowDatePicker(false);
-                if (date) setSelectedDate(fechaLocalStr(date));
-              }}
-            />
-          )}
-          {showTimePicker && (
-            <DateTimePicker
-              value={(() => {
-                const d = new Date();
-                if (passengerTimeFilter) {
-                  const [h, m] = passengerTimeFilter.split(':').map(Number);
-                  d.setHours(h, m, 0, 0);
-                }
-                return d;
-              })()}
-              mode="time"
-              is24Hour
-              onChange={(_e, date) => {
-                setShowTimePicker(false);
-                if (date) {
-                  const hh = String(date.getHours()).padStart(2, '0');
-                  const mm = String(date.getMinutes()).padStart(2, '0');
-                  setPassengerTimeFilter(`${hh}:${mm}`);
-                }
-              }}
-            />
-          )}
-        </View>
-
-        {/* Resultados */}
-        <View className="flex-row items-center justify-between px-1 mt-2">
-          <View className="flex-row items-center gap-1.5">
-            <Navigation size={13} color="#10b981" />
-            <Text className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Viajes Disponibles ({filteredRides.length})
-            </Text>
-          </View>
-        </View>
-
-        {isLoadingMatches ? (
-          <View className="items-center py-10 gap-2">
-            <ActivityIndicator color="#0284c7" />
-            <Text className="text-[11px] text-slate-400 font-semibold">Buscando rutas cercanas con PostGIS...</Text>
-          </View>
-        ) : searchErrorMsg ? (
-          <View className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-300 dark:border-rose-900/50">
-            <Text className="text-xs font-semibold text-rose-600 dark:text-rose-400 text-center">{searchErrorMsg}</Text>
-          </View>
-        ) : filteredRides.length > 0 ? (
-          filteredRides.map((ride) => {
-            const isDirect = ride.detour_minutes === '+0 min' || ride.is_direct;
-            return (
-              <Pressable
-                key={ride.id}
-                onPress={() => handleSelectRide(ride)}
-                className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-800 gap-3"
-              >
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-2.5 flex-1">
-                    <View className="w-9 h-9 rounded-xl bg-lochmara-100 dark:bg-lochmara-500/20 items-center justify-center">
-                      <Text className="text-xs font-black text-lochmara-800 dark:text-lochmara-300">
-                        {ride.driver_avatar_initials || ride.driver_name?.charAt(0) || 'U'}
-                      </Text>
-                    </View>
-                    <View className="flex-1">
-                      <View className="flex-row items-center gap-1">
+            {/* Corredor origen/destino */}
+            <View className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+              {/* ORIGEN */}
+              <View className="flex-row items-center gap-2.5">
+                <View className="w-2.5 h-2.5 rounded-full bg-lochmara-500" />
+                <View className="flex-1">
+                  <Text className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Origen</Text>
+                  {direction === 'from' || direction === 'inter_campus' ? (
+                    <Pressable
+                      onPress={() => {
+                        setCampusModalTarget('origin');
+                        setIsCampusModalOpen(true);
+                      }}
+                      className="flex-row items-center justify-between mt-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5"
+                    >
+                      <View className="flex-row items-center gap-2 flex-1 mr-2">
+                        <Building2 size={14} color="#0284c7" />
                         <Text className="text-xs font-black text-slate-900 dark:text-white" numberOfLines={1}>
-                          {ride.driver_name}
-                        </Text>
-                        <ShieldCheck size={13} color="#0284c7" />
-                      </View>
-                      <Text className="text-[10px] text-slate-400" numberOfLines={1}>
-                        {ride.vehicle} • {ride.plate}
-                      </Text>
-                    </View>
-                  </View>
-                  <View className="items-end">
-                    <Text className="text-sm font-black text-lochmara-600 dark:text-lochmara-400">{ride.fare}</Text>
-                    <Text className="text-[9px] text-slate-400 font-medium">{ride.available_seats} cupo(s)</Text>
-                  </View>
-                </View>
-
-                <View className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 gap-1.5">
-                  <View className="flex-row items-center gap-2">
-                    <View className="w-2 h-2 rounded-full bg-lochmara-500" />
-                    <Text className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400">De:</Text>
-                    <Text className="text-xs font-black text-slate-900 dark:text-slate-100 flex-1" numberOfLines={1}>
-                      {ride.origin}
-                    </Text>
-                  </View>
-                  <View className="flex-row items-center gap-2">
-                    <View className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <Text className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400">A:</Text>
-                    <Text className="text-xs font-black text-slate-900 dark:text-slate-100 flex-1" numberOfLines={1}>
-                      {ride.destination}
-                    </Text>
-                  </View>
-                </View>
-
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-2 flex-wrap flex-1">
-                    <View className="flex-row items-center gap-1">
-                      <Clock size={11} color="#0284c7" />
-                      <Text className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                        Llegada: {ride.arrival_time || '—'}
-                      </Text>
-                    </View>
-                    {isDirect ? (
-                      <View className="flex-row items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-500/10">
-                        <CheckCircle2 size={10} color="#10b981" />
-                        <Text className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">Ruta directa</Text>
-                      </View>
-                    ) : ride.is_detour_feasible ? (
-                      <View className="flex-row items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/10">
-                        <Sparkles size={10} color="#f59e0b" />
-                        <Text className="text-[9px] font-bold text-amber-600 dark:text-amber-400">
-                          Desvío viable ({ride.detour_minutes})
+                          {selectedOriginCampus}
                         </Text>
                       </View>
-                    ) : (
-                      <View className="flex-row items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-500/10">
-                        <AlertCircle size={10} color="#64748b" />
-                        <Text className="text-[9px] font-bold text-slate-500">Desvío no disponible</Text>
+                      <View className="flex-row items-center gap-0.5">
+                        <Text className="text-[10px] font-bold text-lochmara-500">Cambiar</Text>
+                        <ChevronRight size={12} color="#0284c7" />
                       </View>
-                    )}
-                  </View>
-                  <View className="flex-row items-center gap-0.5">
-                    <Text className="text-xs font-bold text-lochmara-600 dark:text-lochmara-400">Ver Ruta</Text>
-                    <ArrowRight size={13} color="#0284c7" />
-                  </View>
+                    </Pressable>
+                  ) : (
+                    <View className="flex-row items-center gap-1.5 mt-0.5">
+                      <View className="relative flex-1">
+                        <View className="flex-row items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5">
+                          <Search size={13} color="#94a3b8" />
+                          <TextInput
+                            value={searchQuery || editablePointName}
+                            onChangeText={setSearchQuery}
+                            placeholder="¿Dónde te recogemos?"
+                            placeholderTextColor="#94a3b8"
+                            className="flex-1 text-xs font-bold text-slate-900 dark:text-white ml-1.5 py-0"
+                          />
+                          {isSearchingPlaces ? (
+                            <ActivityIndicator size="small" color="#0284c7" />
+                          ) : (searchQuery || editablePointName) ? (
+                            <Pressable onPress={() => { setSearchQuery(''); setEditablePointName(''); setEditableCoords(null); }} hitSlop={6}>
+                              <X size={13} color="#94a3b8" />
+                            </Pressable>
+                          ) : null}
+                        </View>
+                        {suggestions.length > 0 && (
+                          <View className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden z-10">
+                            {suggestions.map((item, idx) => (
+                              <Pressable
+                                key={idx}
+                                onPress={() => handleSelectSuggestion(item)}
+                                className="p-2.5 border-b border-slate-100 dark:border-slate-800 last:border-b-0"
+                              >
+                                <Text className="text-xs font-bold text-slate-900 dark:text-white" numberOfLines={1}>
+                                  {item.nombre || item.name}
+                                </Text>
+                                <Text className="text-[10px] text-slate-400" numberOfLines={1}>
+                                  {item.direccion || item.address}
+                                </Text>
+                              </Pressable>
+                            ))}
+                          </View>
+                        )}
+                      </View>
+
+                      <Pressable
+                        onPress={usarCasa}
+                        className={`px-2 py-1 rounded-xl flex-row items-center gap-1 border shrink-0 ${
+                          savedHomeLocation
+                            ? 'bg-amber-500/10 border-amber-500/20'
+                            : 'bg-slate-500/10 border-slate-500/20'
+                        }`}
+                      >
+                        <Home size={11} color={savedHomeLocation ? '#f59e0b' : '#94a3b8'} />
+                        <Text className={`text-[10px] font-extrabold ${savedHomeLocation ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                          Casa
+                        </Text>
+                      </Pressable>
+
+                      <Pressable
+                        onPress={() => setIsMapPickerOpen(true)}
+                        className="px-2 py-1 rounded-xl bg-lochmara-500/10 flex-row items-center gap-1 shrink-0"
+                      >
+                        <MapPin size={11} color="#0284c7" />
+                        <Text className="text-[10px] font-extrabold text-lochmara-600 dark:text-lochmara-400">Mapa</Text>
+                      </Pressable>
+                    </View>
+                  )}
                 </View>
+              </View>
+
+              <View className="border-l-2 border-dashed border-slate-300 dark:border-slate-700 h-2.5 ml-1 my-1" />
+
+              {/* DESTINO */}
+              <View className="flex-row items-center gap-2.5">
+                <View className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <View className="flex-1">
+                  <Text className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Destino</Text>
+                  {direction === 'towards' ? (
+                    <Pressable
+                      onPress={() => {
+                        setCampusModalTarget('destination');
+                        setIsCampusModalOpen(true);
+                      }}
+                      className="flex-row items-center justify-between mt-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5"
+                    >
+                      <View className="flex-row items-center gap-2 flex-1 mr-2">
+                        <Building2 size={14} color="#0284c7" />
+                        <Text className="text-xs font-black text-slate-900 dark:text-white" numberOfLines={1}>
+                          {selectedCampus}
+                        </Text>
+                      </View>
+                      <View className="flex-row items-center gap-0.5">
+                        <Text className="text-[10px] font-bold text-lochmara-500">Cambiar</Text>
+                        <ChevronRight size={12} color="#0284c7" />
+                      </View>
+                    </Pressable>
+                  ) : direction === 'inter_campus' ? (
+                    <Pressable
+                      onPress={() => {
+                        setCampusModalTarget('destination');
+                        setIsCampusModalOpen(true);
+                      }}
+                      className="flex-row items-center justify-between mt-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5"
+                    >
+                      <View className="flex-row items-center gap-2 flex-1 mr-2">
+                        <Building2 size={14} color="#10b981" />
+                        <Text className="text-xs font-black text-slate-900 dark:text-white" numberOfLines={1}>
+                          {selectedDestinationCampus}
+                        </Text>
+                      </View>
+                      <View className="flex-row items-center gap-0.5">
+                        <Text className="text-[10px] font-bold text-lochmara-500">Cambiar</Text>
+                        <ChevronRight size={12} color="#0284c7" />
+                      </View>
+                    </Pressable>
+                  ) : (
+                    <View className="flex-row items-center gap-1.5 mt-0.5">
+                      <View className="relative flex-1">
+                        <View className="flex-row items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5">
+                          <Search size={13} color="#94a3b8" />
+                          <TextInput
+                            value={searchQuery || editablePointName}
+                            onChangeText={setSearchQuery}
+                            placeholder="¿A dónde te diriges?"
+                            placeholderTextColor="#94a3b8"
+                            className="flex-1 text-xs font-bold text-slate-900 dark:text-white ml-1.5 py-0"
+                          />
+                          {isSearchingPlaces ? (
+                            <ActivityIndicator size="small" color="#0284c7" />
+                          ) : (searchQuery || editablePointName) ? (
+                            <Pressable onPress={() => { setSearchQuery(''); setEditablePointName(''); setEditableCoords(null); }} hitSlop={6}>
+                              <X size={13} color="#94a3b8" />
+                            </Pressable>
+                          ) : null}
+                        </View>
+                        {suggestions.length > 0 && (
+                          <View className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden z-10">
+                            {suggestions.map((item, idx) => (
+                              <Pressable
+                                key={idx}
+                                onPress={() => handleSelectSuggestion(item)}
+                                className="p-2.5 border-b border-slate-100 dark:border-slate-800 last:border-b-0"
+                              >
+                                <Text className="text-xs font-bold text-slate-900 dark:text-white" numberOfLines={1}>
+                                  {item.nombre || item.name}
+                                </Text>
+                                <Text className="text-[10px] text-slate-400" numberOfLines={1}>
+                                  {item.direccion || item.address}
+                                </Text>
+                              </Pressable>
+                            ))}
+                          </View>
+                        )}
+                      </View>
+
+                      <Pressable
+                        onPress={usarCasa}
+                        className={`px-2 py-1 rounded-xl flex-row items-center gap-1 border shrink-0 ${
+                          savedHomeLocation
+                            ? 'bg-amber-500/10 border-amber-500/20'
+                            : 'bg-slate-500/10 border-slate-500/20'
+                        }`}
+                      >
+                        <Home size={11} color={savedHomeLocation ? '#f59e0b' : '#94a3b8'} />
+                        <Text className={`text-[10px] font-extrabold ${savedHomeLocation ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                          Casa
+                        </Text>
+                      </Pressable>
+
+                      <Pressable
+                        onPress={() => setIsMapPickerOpen(true)}
+                        className="px-2 py-1 rounded-xl bg-lochmara-500/10 flex-row items-center gap-1 shrink-0"
+                      >
+                        <MapPin size={11} color="#0284c7" />
+                        <Text className="text-[10px] font-extrabold text-lochmara-600 dark:text-lochmara-400">Mapa</Text>
+                      </Pressable>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </View>
+
+            {/* Barra de fecha + horario — mismo bloque que "BARRA DE CONTROL DE
+                FECHA Y HORARIO" en HomeHeroRouteCard.jsx: 3 opciones de fecha
+                (Hoy/Mañana/Fecha personalizada) con pill deslizante + selector
+                de hora compacto aparte. */}
+            <View className="flex-row items-center gap-2 mt-3">
+              <View className="flex-1">
+                <AnimatedSegmentedControl
+                  segments={[
+                    { key: 'today', label: 'Hoy' },
+                    { key: 'tomorrow', label: 'Mañana' },
+                    {
+                      key: 'custom',
+                      label: dateMode === 'custom' ? formatCustomDateLabel(selectedDate) : 'Fecha',
+                      icon: <Calendar size={10} color={dateMode === 'custom' ? '#ffffff' : '#94a3b8'} />,
+                    },
+                  ]}
+                  value={dateMode}
+                  onChange={(mode) => {
+                    if (mode === 'today') setSelectedDate(todayStr());
+                    else if (mode === 'tomorrow') setSelectedDate(tomorrowStr());
+                    else setShowDatePicker(true);
+                  }}
+                />
+              </View>
+
+              <Pressable
+                onPress={() => setShowTimePicker(true)}
+                className="shrink-0 px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex-row items-center gap-1.5"
+              >
+                <Clock size={14} color="#0284c7" />
+                <Text className="text-xs font-black text-slate-900 dark:text-white">
+                  {passengerTimeFilter || '--:--'}
+                </Text>
+                {passengerTimeFilter ? (
+                  <Pressable onPress={() => setPassengerTimeFilter(null)} hitSlop={6}>
+                    <X size={12} color="#94a3b8" />
+                  </Pressable>
+                ) : null}
               </Pressable>
-            );
-          })
-        ) : (
-          <View className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 items-center gap-2">
-            <Car size={20} color="#0284c7" />
-            <Text className="text-xs font-black text-slate-900 dark:text-white text-center">
-              ¡Pronto habrá nuevos viajes disponibles!
-            </Text>
-            <Text className="text-[11px] text-slate-400 text-center">
-              Los conductores universitarios publican rutas continuamente.
-            </Text>
+            </View>
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={isCustomDate ? new Date(`${selectedDate}T00:00:00`) : new Date()}
+                mode="date"
+                minimumDate={new Date()}
+                onChange={(_e, date) => {
+                  setShowDatePicker(false);
+                  if (date) setSelectedDate(fechaLocalStr(date));
+                }}
+              />
+            )}
+            {showTimePicker && (
+              <DateTimePicker
+                value={(() => {
+                  const d = new Date();
+                  if (passengerTimeFilter) {
+                    const [h, m] = passengerTimeFilter.split(':').map(Number);
+                    d.setHours(h, m, 0, 0);
+                  }
+                  return d;
+                })()}
+                mode="time"
+                is24Hour
+                onChange={(_e, date) => {
+                  setShowTimePicker(false);
+                  if (date) {
+                    const hh = String(date.getHours()).padStart(2, '0');
+                    const mm = String(date.getMinutes()).padStart(2, '0');
+                    setPassengerTimeFilter(`${hh}:${mm}`);
+                  }
+                }}
+              />
+            )}
           </View>
+
+          {/* Resultados */}
+          <View className="flex-row items-center justify-between px-1 mt-2">
+            <View className="flex-row items-center gap-1.5">
+              <Navigation size={13} color="#10b981" />
+              <Text className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Viajes Disponibles ({filteredRides.length})
+              </Text>
+            </View>
+          </View>
+
+          {isLoadingMatches ? (
+            <View className="items-center py-10 gap-2">
+              <ActivityIndicator color="#0284c7" />
+              <Text className="text-[11px] text-slate-400 font-semibold">Buscando rutas cercanas con PostGIS...</Text>
+            </View>
+          ) : searchErrorMsg ? (
+            <View className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-300 dark:border-rose-900/50">
+              <Text className="text-xs font-semibold text-rose-600 dark:text-rose-400 text-center">{searchErrorMsg}</Text>
+            </View>
+          ) : filteredRides.length > 0 ? (
+            filteredRides.map((ride) => {
+              const isDirect = ride.detour_minutes === '+0 min' || ride.is_direct;
+              return (
+                <Pressable
+                  key={ride.id}
+                  onPress={() => handleSelectRide(ride)}
+                  className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-800 gap-3"
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-2.5 flex-1">
+                      <View className="w-9 h-9 rounded-xl bg-lochmara-100 dark:bg-lochmara-500/20 items-center justify-center">
+                        <Text className="text-xs font-black text-lochmara-800 dark:text-lochmara-300">
+                          {ride.driver_avatar_initials || ride.driver_name?.charAt(0) || 'U'}
+                        </Text>
+                      </View>
+                      <View className="flex-1">
+                        <View className="flex-row items-center gap-1">
+                          <Text className="text-xs font-black text-slate-900 dark:text-white" numberOfLines={1}>
+                            {ride.driver_name}
+                          </Text>
+                          <ShieldCheck size={13} color="#0284c7" />
+                        </View>
+                        <Text className="text-[10px] text-slate-400" numberOfLines={1}>
+                          {ride.vehicle} • {ride.plate}
+                        </Text>
+                      </View>
+                    </View>
+                    <View className="items-end">
+                      <Text className="text-sm font-black text-lochmara-600 dark:text-lochmara-400">{ride.fare}</Text>
+                      <Text className="text-[9px] text-slate-400 font-medium">{ride.available_seats} cupo(s)</Text>
+                    </View>
+                  </View>
+
+                  <View className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 gap-1.5">
+                    <View className="flex-row items-center gap-2">
+                      <View className="w-2 h-2 rounded-full bg-lochmara-500" />
+                      <Text className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400">De:</Text>
+                      <Text className="text-xs font-black text-slate-900 dark:text-slate-100 flex-1" numberOfLines={1}>
+                        {ride.origin}
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center gap-2">
+                      <View className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <Text className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400">A:</Text>
+                      <Text className="text-xs font-black text-slate-900 dark:text-slate-100 flex-1" numberOfLines={1}>
+                        {ride.destination}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-2 flex-wrap flex-1">
+                      <View className="flex-row items-center gap-1">
+                        <Clock size={11} color="#0284c7" />
+                        <Text className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                          Llegada: {ride.arrival_time || '—'}
+                        </Text>
+                      </View>
+                      {isDirect ? (
+                        <View className="flex-row items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-500/10">
+                          <CheckCircle2 size={10} color="#10b981" />
+                          <Text className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">Ruta directa</Text>
+                        </View>
+                      ) : ride.is_detour_feasible ? (
+                        <View className="flex-row items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/10">
+                          <Sparkles size={10} color="#f59e0b" />
+                          <Text className="text-[9px] font-bold text-amber-600 dark:text-amber-400">
+                            Desvío viable ({ride.detour_minutes})
+                          </Text>
+                        </View>
+                      ) : (
+                        <View className="flex-row items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-500/10">
+                          <AlertCircle size={10} color="#64748b" />
+                          <Text className="text-[9px] font-bold text-slate-500">Desvío no disponible</Text>
+                        </View>
+                      )}
+                    </View>
+                    <View className="flex-row items-center gap-0.5">
+                      <Text className="text-xs font-bold text-lochmara-600 dark:text-lochmara-400">Ver Ruta</Text>
+                      <ArrowRight size={13} color="#0284c7" />
+                    </View>
+                  </View>
+                </Pressable>
+              );
+            })
+          ) : (
+            <View className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 items-center gap-2">
+              <Car size={20} color="#0284c7" />
+              <Text className="text-xs font-black text-slate-900 dark:text-white text-center">
+                ¡Pronto habrá nuevos viajes disponibles!
+              </Text>
+              <Text className="text-[11px] text-slate-400 text-center">
+                Los conductores universitarios publican rutas continuamente.
+              </Text>
+            </View>
+          )}
+          </>
         )}
       </ScrollView>
 

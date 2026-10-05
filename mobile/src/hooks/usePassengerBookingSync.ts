@@ -34,7 +34,11 @@ export function usePassengerBookingSync(activo: boolean) {
           origin: previa?.id === t.trip_id ? previa.origin : t.pickup_address,
           destination: previa?.id === t.trip_id ? previa.destination : t.dropoff_address,
           fare_cop: t.total_fare_cop,
-          departure_time: t.scheduled_pickup_time,
+          departure_time: t.scheduled_pickup_time
+            ? new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit' }).format(
+                new Date(t.scheduled_pickup_time)
+              )
+            : previa?.departure_time,
         },
       });
     });
