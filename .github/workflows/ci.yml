@@ -176,6 +176,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Tests de contrato (node --test)
+        run: node --test scripts/*.test.mjs
+
       # TODO: tsc puede tener errores preexistentes en la base; no bloquea la CI
       # hasta que se limpien. Quitar continue-on-error cuando tsc quede en 0.
       - name: Chequeo de tipos (tsc)

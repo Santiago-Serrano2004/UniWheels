@@ -355,9 +355,10 @@ export const authService = {
     }
   },
 
-  async deleteAccount(email) {
+  // DELETE /auth/account (auth-service): usa el token del usuario; `password` es opcional.
+  async deleteAccount(password) {
     try {
-      const response = await apiClient.post('/auth/delete-account-direct', { email });
+      const response = await apiClient.delete('/auth/account', password ? { data: { password } } : undefined);
       return response.data;
     } catch (error) {
       if (error.response?.data) throw error.response.data;

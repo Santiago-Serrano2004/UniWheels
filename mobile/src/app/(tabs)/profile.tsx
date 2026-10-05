@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ShieldCheck,
@@ -50,12 +50,16 @@ export default function ProfileScreen() {
   const confirmarEliminarCuenta = async () => {
     setIsDeleting(true);
     try {
-      await authService.deleteAccount(user?.email);
-    } finally {
+      await authService.deleteAccount();
+    } catch (error: any) {
       setIsDeleting(false);
-      setModalEliminarAbierto(false);
-      logout();
+      Alert.alert('No se pudo eliminar la cuenta', error?.message || 'Inténtalo de nuevo más tarde.');
+      return;
     }
+    setIsDeleting(false);
+    setModalEliminarAbierto(false);
+    logout();
+    Alert.alert('Tu cuenta fue eliminada.');
   };
 
   return (
