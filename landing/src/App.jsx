@@ -6,6 +6,7 @@ import { Modalities } from './components/Modalities';
 import { Security } from './components/Security';
 import { ForDrivers } from './components/ForDrivers';
 import { ForUniversities } from './components/ForUniversities';
+import { Waitlist } from './components/Waitlist';
 import { FAQ } from './components/FAQ';
 import { Footer } from './components/Footer';
 import { PrivacyModal } from './components/PrivacyModal';
@@ -24,6 +25,7 @@ export default function App() {
         <Security onOpenPrivacy={abrirPrivacidad} />
         <ForDrivers />
         <ForUniversities />
+        <Waitlist onOpenPrivacy={abrirPrivacidad} />
         <FAQ onOpenPrivacy={abrirPrivacidad} />
       </main>
       <Footer onOpenPrivacy={abrirPrivacidad} />

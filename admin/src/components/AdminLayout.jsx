@@ -15,6 +15,7 @@ import {
   X,
   ShieldCheck,
   Activity,
+  ClipboardList,
 } from 'lucide-react';
 
 export const AdminLayout = () => {
@@ -77,6 +78,11 @@ export const AdminLayout = () => {
       to: '/piloto',
       label: 'Piloto',
       icon: Activity,
+    },
+    {
+      to: '/lista-espera',
+      label: 'Lista de espera',
+      icon: ClipboardList,
     },
   ];
 

@@ -401,3 +401,31 @@ export const pilotService = {
     return response.data;
   },
 };
+
+// ==========================================
+// Servicios de Lista de Espera
+// ==========================================
+export const waitlistService = {
+  async getWaitlist({ role = '', campus_id = '', direction = '', page = 1, per_page = 15 } = {}) {
+    const params = new URLSearchParams();
+    if (role) params.append('role', role);
+    if (campus_id) params.append('campus_id', campus_id);
+    if (direction) params.append('direction', direction);
+    params.append('page', page);
+    params.append('per_page', per_page);
+
+    const response = await apiClient.get(`/admin/waitlist?${params.toString()}`);
+    return response.data;
+  },
+
+  // CSV con todas las columnas; se pide con el token (no basta un enlace directo).
+  async exportCsv({ role = '', campus_id = '', direction = '' } = {}) {
+    const params = new URLSearchParams();
+    if (role) params.append('role', role);
+    if (campus_id) params.append('campus_id', campus_id);
+    if (direction) params.append('direction', direction);
+
+    const response = await apiClient.get(`/admin/waitlist/export?${params.toString()}`, { responseType: 'blob' });
+    return response.data;
+  },
+};

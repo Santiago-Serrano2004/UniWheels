@@ -35,5 +35,13 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(60)->by('ip:'.$request->ip()),
             ];
         });
+
+        // Lista de espera pública: 5/min por IP y 3/día por correo.
+        RateLimiter::for('waitlist', function ($request) {
+            return [
+                Limit::perMinute(5)->by('waitlist-ip:'.$request->ip()),
+                Limit::perDay(3)->by('waitlist-email:'.strtolower((string) $request->input('email'))),
+            ];
+        });
     }
 }
