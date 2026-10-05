@@ -170,6 +170,11 @@ class RouteController extends Controller
         // evita que un usuario publique una ruta suplantando a otro conductor.
         $datos['driver_id'] = $request->attributes->get('user_id');
 
+        // SIM-005: las horas con offset (-05:00) se normalizan a UTC antes de guardar;
+        // sin esto el cast guarda el wall-time del offset en una columna sin zona.
+        $datos['scheduled_departure_time'] = Carbon::parse($datos['scheduled_departure_time'])->utc();
+        $datos['target_arrival_time'] = Carbon::parse($datos['target_arrival_time'])->utc();
+
         $origen = [(float) $datos['origin_lat'], (float) $datos['origin_lng']];
         $destino = [(float) $datos['destination_lat'], (float) $datos['destination_lng']];
 
