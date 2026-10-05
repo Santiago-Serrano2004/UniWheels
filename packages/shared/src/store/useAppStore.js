@@ -324,6 +324,27 @@ export const useAppStore = create((set, get) => ({
     });
   },
 
+  // Actualiza el usuario guardado con los datos actuales del servidor (/auth/me). Así una sesión
+  // vieja no queda con datos desactualizados (p. ej. un conductor aprobado después del login).
+  syncUserFromServer: (apiUser) => {
+    const state = get();
+    if (!state.user || !apiUser) return;
+    const roles = apiUser.roles || [];
+    const isDriver = Boolean(apiUser.is_driver);
+    const usuarioActualizado = {
+      ...state.user,
+      name: apiUser.name ?? state.user.name,
+      isDriver,
+      driverStatus: isDriver ? 'approved' : state.user.driverStatus || 'unregistered',
+      isAdmin: roles.includes('administrador'),
+    };
+    writeStoredSession(usuarioActualizado);
+    set({
+      user: usuarioActualizado,
+      activeRole: isDriver ? state.activeRole : 'passenger',
+    });
+  },
+
   login: (datosUsuario) => {
     const isDriver = Boolean(
       datosUsuario?.isDriver ||

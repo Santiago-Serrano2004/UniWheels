@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Notifications from 'expo-notifications';
-import { useAppStore } from '@uniwheels/shared';
+import { authService, useAppStore } from '@uniwheels/shared';
 
 import { BrandedSplash } from '@/components/BrandedSplash';
 import { LiveTripIslandWidget } from '@/components/LiveTripIslandWidget';
@@ -25,7 +25,11 @@ export default function RootLayout() {
   const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
-    hydrateSession();
+    hydrateSession().then(() => {
+      if (useAppStore.getState().isAuthenticated) {
+        authService.me().then((u: any) => u && useAppStore.getState().syncUserFromServer(u));
+      }
+    });
     // El splash nativo de Expo (pantalla en blanco con el ícono, previa a
     // cualquier JS) se oculta de inmediato — nuestro splash de marca
     // (BrandedSplash, mismo degradado/logo que la web) toma el control desde
