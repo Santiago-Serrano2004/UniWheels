@@ -246,3 +246,18 @@ jobs:
 
       - name: Pruebas del CLI (migrate y start)
         run: bash scripts/test-uniwheels-cli.sh
+
+  # -----------------------------------------------------------------------
+  # Compose de producción: cada *_URL de config/services.php debe estar definida.
+  # -----------------------------------------------------------------------
+  compose-service-urls:
+    name: "Check: URLs entre servicios en compose"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verificar *_URL en docker-compose.prod.yml
+        run: |
+          pip install pyyaml
+          python3 scripts/check_compose_service_urls.py
