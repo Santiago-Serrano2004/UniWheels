@@ -6,7 +6,6 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import {
   X,
@@ -40,7 +39,6 @@ export function InAppGpsNavigator({
   onComplete,
 }: InAppGpsNavigatorProps) {
   const mapRef = useRef<LeafletMapRef>(null);
-  const insets = useSafeAreaInsets();
 
   const initialOrigin: [number, number] = route?.origin_coords
     ? [route.origin_coords[0], route.origin_coords[1]]
@@ -266,8 +264,9 @@ export function InAppGpsNavigator({
         style={{ width: '100%', height: '100%' }}
       />
 
+      {/* El layout de pestañas ya aplica el área segura: no sumar insets aquí. */}
       {/* 2. HUD SUPERIOR: PRÓXIMA MANIOBRA & SALIR */}
-      <View pointerEvents="box-none" style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingTop: insets.top + 8, paddingHorizontal: 16 }}>
+      <View pointerEvents="box-none" style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingTop: 8, paddingHorizontal: 16 }}>
         <View className="p-4 rounded-3xl bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 shadow-2xl gap-2">
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-2.5 flex-1 mr-2">
@@ -302,7 +301,7 @@ export function InAppGpsNavigator({
       </View>
 
       {/* 3. HUD INFERIOR: VELOCÍMETRO, EXTERNAL LINKS Y BOTÓN FINALIZAR */}
-      <View pointerEvents="box-none" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: insets.bottom + 8, paddingHorizontal: 16 }}>
+      <View pointerEvents="box-none" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: 8, paddingHorizontal: 16 }}>
         <View className="p-4 rounded-3xl bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 shadow-2xl gap-3">
           {/* Fila con Velocímetro y Apps Externas */}
           <View className="flex-row items-center justify-between">
