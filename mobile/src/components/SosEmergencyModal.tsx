@@ -91,14 +91,14 @@ export function SosEmergencyModal({
     tripInfo?.driverName ||
     activePassengerBooking?.driverName ||
     activeDriverTrip?.driverName ||
-    (user?.role === 'driver' ? user?.name : 'Carlos Mendoza') ||
+    (user?.role === 'driver' ? user?.name : undefined) ||
     'Conductor Asignado';
 
   const plate =
     tripInfo?.plate ||
     activePassengerBooking?.plate ||
     activeDriverTrip?.plate ||
-    'KLU-492';
+    '—';
 
   const vehicle =
     tripInfo?.vehicle ||

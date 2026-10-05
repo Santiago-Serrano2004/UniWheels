@@ -166,11 +166,13 @@ class TripLifecycleController extends Controller
                 'route_id' => $routeId,
                 'driver_id' => $driverId,
                 'passenger_id' => $passengerId,
-                'vehicle_id' => $datos['vehicle_id'] ?? null,
-                'driver_name' => $datos['driver_name'] ?? 'Conductor UniWheels',
+                // SIM-016: conductor y vehículo salen del servidor (route-matching), nunca del cliente
+                // ni de valores por defecto; si no están disponibles se guarda null.
+                'vehicle_id' => $ruta['vehicle_id'] ?? $datos['vehicle_id'] ?? null,
+                'driver_name' => $ruta['driver_name'] ?? null,
                 'passenger_name' => $datos['passenger_name'] ?? 'Pasajero UniWheels',
-                'vehicle_plate' => $datos['vehicle_plate'] ?? 'KLU-492',
-                'vehicle_model' => $datos['vehicle_model'] ?? 'Mazda 3',
+                'vehicle_plate' => $ruta['vehicle_plate'] ?? null,
+                'vehicle_model' => $ruta['vehicle_model'] ?? null,
                 'pickup_address' => $datos['pickup_address'],
                 'dropoff_address' => $datos['dropoff_address'],
                 'boarding_pin' => $pin,

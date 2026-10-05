@@ -14,7 +14,7 @@ class TripLifecycleTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function fakeRouteMatching(string $driverId, float $baseFareCop = 4500.0, ?string $routeId = null, ?Carbon $salida = null): string
+    protected function fakeRouteMatching(string $driverId, float $baseFareCop = 4500.0, ?string $routeId = null, ?Carbon $salida = null, array $datosRuta = []): string
     {
         $routeId = $routeId ?? (string) Str::uuid();
         $salida = $salida ?? Carbon::now()->addDay();
@@ -29,7 +29,7 @@ class TripLifecycleTest extends TestCase
                     'driver_id' => $driverId,
                     'base_contribution_cop' => $baseFareCop,
                     'scheduled_departure_time' => $salida->copy()->utc()->toISOString(),
-                ],
+                ] + $datosRuta,
             ], 200),
         ]);
 
@@ -71,6 +71,54 @@ class TripLifecycleTest extends TestCase
             'passenger_id' => $passengerId,
             'driver_id' => $driverId,
         ]);
+    }
+
+    public function test_la_reserva_guarda_conductor_y_vehiculo_del_servidor_y_no_inventa_nada(): void
+    {
+        $driverId = (string) Str::uuid();
+        $vehicleId = (string) Str::uuid();
+        $routeId = $this->fakeRouteMatching($driverId, 4500.0, null, null, [
+            'vehicle_id' => $vehicleId,
+            'driver_name' => 'María Real',
+            'vehicle_plate' => 'ABC123',
+            'vehicle_model' => 'Kia Rio (Negro)',
+        ]);
+
+        // El cliente intenta fijar otros datos: se ignoran, manda route-matching.
+        $this->withToken($this->jwtDePrueba((string) Str::uuid()))->postJson('/api/v1/trips', [
+            'route_id' => $routeId,
+            'driver_name' => 'Impostor',
+            'vehicle_plate' => 'ZZZ999',
+            'pickup_address' => 'Parque San Pío',
+            'dropoff_address' => 'Campus El Jardín',
+            'total_fare_cop' => 4500,
+        ])->assertStatus(201)->assertJsonPath('data.driver_name', 'María Real');
+
+        $this->assertDatabaseHas('trips', [
+            'route_id' => $routeId,
+            'vehicle_id' => $vehicleId,
+            'driver_name' => 'María Real',
+            'vehicle_plate' => 'ABC123',
+            'vehicle_model' => 'Kia Rio (Negro)',
+        ]);
+    }
+
+    public function test_si_route_matching_no_trae_datos_del_conductor_se_guarda_null(): void
+    {
+        $driverId = (string) Str::uuid();
+        $routeId = $this->fakeRouteMatching($driverId, 4500.0);
+
+        $this->withToken($this->jwtDePrueba((string) Str::uuid()))->postJson('/api/v1/trips', [
+            'route_id' => $routeId,
+            'pickup_address' => 'Parque San Pío',
+            'dropoff_address' => 'Campus El Jardín',
+            'total_fare_cop' => 4500,
+        ])->assertStatus(201)->assertJsonPath('data.driver_name', null);
+
+        $trip = Trip::where('route_id', $routeId)->firstOrFail();
+        $this->assertNull($trip->driver_name);
+        $this->assertNull($trip->vehicle_plate);
+        $this->assertNull($trip->vehicle_model);
     }
 
     public static function tarifasDistintasDelAporteDeLaRuta(): array

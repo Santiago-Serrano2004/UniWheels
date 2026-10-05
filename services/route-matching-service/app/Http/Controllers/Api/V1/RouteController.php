@@ -49,7 +49,10 @@ class RouteController extends Controller
             $query->where('destination_campus_id', $campusId);
         }
 
-        $routes = $query->get()->map(function ($route) use ($mine) {
+        $perfiles = [];
+        $vehiculos = [];
+
+        $routes = $query->get()->map(function ($route) use ($mine, &$perfiles, &$vehiculos) {
             $base = [
                 'id' => $route->id,
                 'driver_id' => $route->driver_id,
@@ -81,14 +84,16 @@ class RouteController extends Controller
             }
             $base['route_path'] = $this->spatialRepo->getRouteCoordinates($route->id);
 
-            // Los campos de conductor/vehículo aquí son solo para el listado público
-            // de búsqueda del pasajero (aún no enriquecido con datos reales de
-            // auth-service/vehicle-service) — en "mine" no aplican, es el propio conductor.
+            // SIM-016: datos reales de auth-service/vehicle-service (null si no responden).
+            // En "mine" no aplican, es el propio conductor.
             if (! $mine) {
-                $base['driver_name'] = 'Carlos Mendoza';
-                $base['vehicle'] = 'Mazda 3 (Rojo)';
-                $base['plate'] = 'KLU-492';
-                $base['rating'] = 4.9;
+                $perfil = $perfiles[$route->driver_id] ??= $this->driverProfileClient->getDriverProfile($route->driver_id);
+                $vehiculo = $vehiculos[$route->vehicle_id] ??= $this->driverProfileClient->getVehicleSummary($route->vehicle_id);
+
+                $base['driver_name'] = $perfil['name'];
+                $base['vehicle'] = DriverProfileClient::describeVehicle($vehiculo);
+                $base['plate'] = $vehiculo['plate_number'];
+                $base['rating'] = $perfil['rating'];
             }
 
             return $base;
@@ -334,12 +339,18 @@ class RouteController extends Controller
     {
         $ruta = Route::findOrFail($id);
         $coordenadas = $this->spatialRepo->getRouteCoordinates($ruta->id);
+        $perfil = $this->driverProfileClient->getDriverProfile((string) $ruta->driver_id);
+        $vehiculo = $this->driverProfileClient->getVehicleSummary((string) $ruta->vehicle_id);
 
         return response()->json([
             'success' => true,
             'data' => [
                 'id' => $ruta->id,
                 'driver_id' => $ruta->driver_id,
+                'vehicle_id' => $ruta->vehicle_id,
+                'driver_name' => $perfil['name'],
+                'vehicle_plate' => $vehiculo['plate_number'],
+                'vehicle_model' => DriverProfileClient::describeVehicle($vehiculo),
                 'origin_name' => $ruta->origin_name,
                 'destination_campus_name' => $ruta->destination_campus_name,
                 'scheduled_departure_time' => $ruta->scheduled_departure_time->toISOString(),

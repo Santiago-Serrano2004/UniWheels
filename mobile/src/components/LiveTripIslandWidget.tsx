@@ -92,9 +92,9 @@ export function LiveTripIslandWidget() {
   if (!trip) return null;
 
   const isDriver = activeRole === 'driver';
-  const driverName = trip.driverName || trip.driver_name || (isDriver ? 'Tú (Conductor)' : 'Carlos Mendoza');
-  const vehicle = trip.vehicle || trip.vehicle_model || 'Mazda 3 (Rojo)';
-  const plate = trip.plate || trip.vehicle_plate || 'KLU-492';
+  const driverName = trip.driverName || trip.driver_name || (isDriver ? 'Tú (Conductor)' : '—');
+  const vehicle = trip.vehicle || trip.vehicle_model || '—';
+  const plate = trip.plate || trip.vehicle_plate || '—';
   const destination = trip.destination || 'Campus El Jardín';
   const origin = trip.origin || trip.pickup || 'Origen';
   const boardingPin = trip.boardingPin || trip.pin || trip.boarding_pin || '4829';
