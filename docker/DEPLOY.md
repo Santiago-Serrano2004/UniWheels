@@ -122,6 +122,14 @@ Para cada uno de los 5 servicios Laravel, copia su `.env.example` a
   `VEHICLE_SERVICE_URL`, `AI_ROUTE_SERVICE_URL`, `TRIP_SERVICE_URL`) deben usar
   el nombre del servicio Docker en vez de `127.0.0.1`, p. ej.
   `AUTH_SERVICE_URL=http://auth-service:8001`.
+  **`docker-compose.prod.yml` ya las fija en `environment`** (tienen prioridad
+  sobre `.env.production`), así un `.env.production` incompleto no deja a un
+  servicio apuntando a `127.0.0.1`: auth-service (`VEHICLE_`, `ROUTE_MATCHING_`,
+  `TRIP_` y `NOTIFICATION_SERVICE_URL`), notification-service (`AUTH_` y
+  `TRIP_SERVICE_URL`), route-matching-service (`AUTH_`, `VEHICLE_`,
+  `AI_ROUTE_SERVICE_URL` y `OSRM_BACKEND_URL`) y trip-service (`AUTH_` y
+  `ROUTE_MATCHING_SERVICE_URL`). `python3 scripts/check_compose_service_urls.py`
+  (corre en la CI) falla si un servicio lee una `*_URL` que el compose no define.
 - `JWT_SECRET`: **el mismo valor exacto en los 5 servicios** (y en
   `ai-route-service`) — es un secreto compartido entre microservicios, no por
   servicio.

@@ -20,10 +20,11 @@ class RegisterRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $idInstitucion = $this->input('institution_id');
-        $prefijoCorreo = trim($this->input('email_prefix', ''));
+        $prefijoCorreo = $this->input('email_prefix');
+        $prefijoCorreo = is_string($prefijoCorreo) ? trim($prefijoCorreo) : '';
 
         // Si se suministra el prefijo, concatenar automáticamente el dominio institucional
-        if ($prefijoCorreo !== '' && $idInstitucion) {
+        if ($prefijoCorreo !== '' && is_scalar($idInstitucion) && $idInstitucion) {
             $institucion = Institution::find($idInstitucion);
             if ($institucion) {
                 $prefijoLimpio = explode('@', $prefijoCorreo)[0];
@@ -31,7 +32,7 @@ class RegisterRequest extends FormRequest
                     'email' => strtolower($prefijoLimpio.'@'.$institucion->domain),
                 ]);
             }
-        } elseif ($this->has('email')) {
+        } elseif (is_string($this->input('email'))) {
             $this->merge([
                 'email' => strtolower(trim($this->input('email'))),
             ]);
@@ -65,8 +66,6 @@ class RegisterRequest extends FormRequest
             'academic_program_or_department' => ['nullable', 'string', 'max:150'],
             'semester' => ['nullable', 'integer', 'min:1', 'max:12'],
             'password' => ['required', 'string', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
-            'profile_photo' => ['nullable'],
-            'profile_photo_path' => ['nullable', 'string'],
             'verification_code' => ['required', 'string', 'size:6'],
             'phone_verification_code' => ['nullable', 'string', 'size:6'],
         ];

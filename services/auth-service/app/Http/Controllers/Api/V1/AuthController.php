@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\UserReputationStats;
 use App\Services\AccountErasureService;
 use App\Services\JwtService;
+use App\Services\SessionRevoker;
 use App\Services\SmsService;
 use App\Services\UserSuspensionService;
 use Illuminate\Http\JsonResponse;
@@ -61,7 +62,6 @@ class AuthController extends Controller
                 'id_document_number' => $datosValidados['id_document_number'] ?? '00000000',
                 'id_document_type' => $datosValidados['id_document_type'] ?? 'CC',
                 'phone_number' => $datosValidados['phone_number'] ?? '3000000000',
-                'profile_photo_path' => $datosValidados['profile_photo_path'] ?? null,
                 'institution_id' => $datosValidados['institution_id'],
                 'campus_id' => $datosValidados['campus_id'] ?? null,
                 'member_type' => $datosValidados['member_type'] ?? 'estudiante',
@@ -163,7 +163,7 @@ class AuthController extends Controller
     public function forgotPassword(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'string', 'email'],
         ]);
 
         $correo = $request->input('email');
@@ -203,7 +203,7 @@ class AuthController extends Controller
     public function resetPassword(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'string', 'email'],
             'code' => ['required', 'string', 'size:6'],
             'password' => ['required', 'string', 'min:8'],
         ]);
@@ -214,7 +214,23 @@ class AuthController extends Controller
 
         $codigoAlmacenado = Cache::get('password_reset_'.$correo);
 
-        if (! $codigoAlmacenado || $codigoAlmacenado !== $codigoIngresado) {
+        $claveIntentos = 'password_reset_attempts_'.$correo;
+
+        if (! $codigoAlmacenado || ! hash_equals((string) $codigoAlmacenado, $codigoIngresado)) {
+            // Al 5.º fallo el código se invalida: 6 dígitos no resisten fuerza bruta.
+            if ($codigoAlmacenado) {
+                Cache::add($claveIntentos, 0, now()->addMinutes(15));
+                if (Cache::increment($claveIntentos) >= 5) {
+                    Cache::forget('password_reset_'.$correo);
+                    Cache::forget($claveIntentos);
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Demasiados intentos. Solicita un código nuevo.',
+                    ], 422);
+                }
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'El código de verificación es inválido o ha expirado.',
@@ -234,6 +250,8 @@ class AuthController extends Controller
         ]);
 
         Cache::forget('password_reset_'.$correo);
+        Cache::forget($claveIntentos);
+        app(SessionRevoker::class)->revokeAll((string) $usuario->id);
 
         return response()->json([
             'success' => true,
@@ -247,7 +265,7 @@ class AuthController extends Controller
     public function sendVerificationCode(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'string', 'email'],
         ]);
 
         $correo = $request->input('email');
@@ -374,6 +392,9 @@ class AuthController extends Controller
     {
         $token = $request->bearerToken();
         $claimsAnteriores = $token ? $this->jwtService->verifyForRefresh($token) : null;
+        if ($claimsAnteriores && $this->jwtService->sessionRevoked($claimsAnteriores)) {
+            $claimsAnteriores = null;
+        }
         $usuario = $claimsAnteriores ? User::find($claimsAnteriores->sub) : null;
 
         if (! $usuario || ! $usuario->is_active) {

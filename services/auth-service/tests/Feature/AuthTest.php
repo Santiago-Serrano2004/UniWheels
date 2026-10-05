@@ -265,3 +265,21 @@ test('un usuario puede cerrar sesion y revocar su token', function () {
 
     $this->assertDatabaseCount('personal_access_tokens', 0);
 });
+
+test('el registro ignora profile_photo_path enviado por el cliente', function () {
+    $institution = Institution::where('code', 'UNAB')->first();
+    Cache::put('email_verification_fotoajena@unab.edu.co', '123456', 300);
+
+    $this->postJson('/api/v1/auth/register', [
+        'name' => 'Foto Ajena',
+        'email_prefix' => 'fotoajena',
+        'verification_code' => '123456',
+        'institution_id' => $institution->id,
+        'phone_number' => '3159876543',
+        'member_type' => 'estudiante',
+        'password' => 'Clave'.Str::random(10).'1!',
+        'profile_photo_path' => 'profile-photos/de-otro-usuario.jpg',
+    ])->assertStatus(201);
+
+    expect(User::where('email', 'fotoajena@unab.edu.co')->first()->profile_photo_path)->toBeNull();
+});
