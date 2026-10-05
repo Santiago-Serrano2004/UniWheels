@@ -6,7 +6,7 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import {
   X,
@@ -40,6 +40,7 @@ export function InAppGpsNavigator({
   onComplete,
 }: InAppGpsNavigatorProps) {
   const mapRef = useRef<LeafletMapRef>(null);
+  const insets = useSafeAreaInsets();
 
   const initialOrigin: [number, number] = route?.origin_coords
     ? [route.origin_coords[0], route.origin_coords[1]]
@@ -254,7 +255,7 @@ export function InAppGpsNavigator({
   }, [turnByTurn.routeCoordinates, rutaReal, targetCoords, driverCoords]);
 
   return (
-    <View className="flex-1 bg-slate-950">
+    <View className="flex-1 bg-slate-100 dark:bg-slate-950">
       {/* 1. MAPA NAVEGADOR COMPLETO */}
       <LeafletMap
         ref={mapRef}
@@ -266,18 +267,18 @@ export function InAppGpsNavigator({
       />
 
       {/* 2. HUD SUPERIOR: PRÓXIMA MANIOBRA & SALIR */}
-      <SafeAreaView edges={['top']} className="absolute top-0 left-0 right-0 p-4 pointer-events-box-none">
-        <View className="p-4 rounded-3xl bg-slate-900/95 border border-slate-800 shadow-2xl backdrop-blur-xl gap-2">
+      <View pointerEvents="box-none" style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingTop: insets.top + 8, paddingHorizontal: 16 }}>
+        <View className="p-4 rounded-3xl bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 shadow-2xl gap-2">
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-2.5 flex-1 mr-2">
               <View className="w-9 h-9 rounded-2xl bg-lochmara-600 items-center justify-center shadow-md">
                 <ArrowUpRight size={20} color="#ffffff" />
               </View>
               <View className="flex-1">
-                <Text className="text-[10px] font-bold uppercase tracking-wider text-lochmara-400">
+                <Text className="text-[10px] font-bold uppercase tracking-wider text-lochmara-600 dark:text-lochmara-400">
                   {turnByTurn.distanciaFormateada ? `${turnByTurn.distanciaFormateada} restantes` : 'Ruta Activa'}
                 </Text>
-                <Text className="text-sm font-black text-white" numberOfLines={2}>
+                <Text className="text-sm font-black text-slate-900 dark:text-white" numberOfLines={2}>
                   {turnByTurn.instruccion || (trip?.is_pin_verified ? 'Rumbo al Campus' : 'Rumbo al Punto de Encuentro')}
                 </Text>
               </View>
@@ -286,28 +287,28 @@ export function InAppGpsNavigator({
             <Pressable
               onPress={onExit}
               hitSlop={8}
-              className="w-10 h-10 rounded-2xl bg-slate-800 border border-slate-700 items-center justify-center active:scale-95"
+              className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 items-center justify-center"
             >
-              <X size={18} color="#ffffff" />
+              <X size={18} color="#64748b" />
             </Pressable>
           </View>
 
           {permissionError ? (
             <View className="p-2 rounded-xl bg-amber-500/20 border border-amber-500/40">
-              <Text className="text-[11px] font-bold text-amber-300">{permissionError}</Text>
+              <Text className="text-[11px] font-bold text-amber-700 dark:text-amber-300">{permissionError}</Text>
             </View>
           ) : null}
         </View>
-      </SafeAreaView>
+      </View>
 
       {/* 3. HUD INFERIOR: VELOCÍMETRO, EXTERNAL LINKS Y BOTÓN FINALIZAR */}
-      <SafeAreaView edges={['bottom']} className="absolute bottom-0 left-0 right-0 p-4 pointer-events-box-none">
-        <View className="p-4 rounded-3xl bg-slate-900/95 border border-slate-800 shadow-2xl backdrop-blur-xl gap-3">
+      <View pointerEvents="box-none" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: insets.bottom + 8, paddingHorizontal: 16 }}>
+        <View className="p-4 rounded-3xl bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 shadow-2xl gap-3">
           {/* Fila con Velocímetro y Apps Externas */}
           <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center gap-2 px-3 py-1.5 rounded-2xl bg-slate-800/80 border border-slate-700">
+            <View className="flex-row items-center gap-2 px-3 py-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
               <Gauge size={16} color="#0284c7" />
-              <Text className="text-base font-mono font-black text-white">
+              <Text className="text-base font-mono font-black text-slate-900 dark:text-white">
                 {speedKmh} <Text className="text-[10px] font-sans font-bold text-slate-400">km/h</Text>
               </Text>
             </View>
@@ -322,7 +323,7 @@ export function InAppGpsNavigator({
 
               <Pressable
                 onPress={handleOpenGoogleMaps}
-                className="px-3 py-2 rounded-2xl bg-white items-center justify-center"
+                className="px-3 py-2 rounded-2xl bg-white border border-slate-200 items-center justify-center"
               >
                 <Text className="text-xs font-black text-slate-900">Maps</Text>
               </Pressable>
@@ -330,9 +331,9 @@ export function InAppGpsNavigator({
               {Platform.OS === 'ios' && (
                 <Pressable
                   onPress={handleOpenAppleMaps}
-                  className="px-3 py-2 rounded-2xl bg-slate-800 items-center justify-center border border-slate-700"
+                  className="px-3 py-2 rounded-2xl bg-slate-100 dark:bg-slate-800 items-center justify-center border border-slate-200 dark:border-slate-700"
                 >
-                  <Compass size={16} color="#ffffff" />
+                  <Compass size={16} color="#64748b" />
                 </Pressable>
               )}
             </View>
@@ -347,7 +348,7 @@ export function InAppGpsNavigator({
             <Text className="text-xs font-bold text-white">Finalizar y Liquidar Viaje</Text>
           </Pressable>
         </View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }
