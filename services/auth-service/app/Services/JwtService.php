@@ -38,6 +38,24 @@ class JwtService
     }
 
     /**
+     * Token de corta duración (60 s) para llamadas servicio-a-servicio, igual al que
+     * firman los demás servicios (type=service). Requiere el mismo JWT_SECRET.
+     */
+    public function issueServiceToken(string $serviceName = 'auth-service'): string
+    {
+        $ahora = time();
+
+        return JWT::encode([
+            'iss' => 'uniwheels-'.$serviceName,
+            'sub' => $serviceName,
+            'type' => 'service',
+            'jti' => (string) Str::uuid(),
+            'iat' => $ahora,
+            'exp' => $ahora + 60,
+        ], config('jwt.secret'), config('jwt.algo'));
+    }
+
+    /**
      * Verifica firma y expiración. Devuelve los claims decodificados o null si el
      * token es inválido, expiró, o su jti está en la blocklist de revocación.
      */

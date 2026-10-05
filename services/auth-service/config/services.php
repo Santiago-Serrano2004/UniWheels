@@ -43,4 +43,12 @@ return [
         'twilio_from' => env('TWILIO_FROM'),
     ],
 
+    // Servicios que guardan datos personales y deben borrarlos al eliminar la cuenta (Ley 1581).
+    'personal_data_erasure' => [
+        'vehicle-service' => env('VEHICLE_SERVICE_URL', 'http://127.0.0.1:8002'),
+        'route-matching-service' => env('ROUTE_MATCHING_SERVICE_URL', 'http://127.0.0.1:8003'),
+        'trip-service' => env('TRIP_SERVICE_URL', 'http://127.0.0.1:8004'),
+        'notification-service' => env('NOTIFICATION_SERVICE_URL', 'http://127.0.0.1:8005'),
+    ],
+
 ];

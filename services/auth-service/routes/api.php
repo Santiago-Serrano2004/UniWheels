@@ -32,7 +32,6 @@ Route::prefix('v1')->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::post('/driver/register', [AuthController::class, 'registerDriver']);
         Route::delete('/auth/account', [AuthController::class, 'deleteAccount']);
-        Route::post('/auth/delete-account', [AuthController::class, 'deleteAccount']);
 
         // Reputación del usuario autenticado (antes pública y por query param)
         Route::get('/user/reputation-stats', [AuthController::class, 'reputationStats']);

@@ -13,6 +13,7 @@ use App\Mail\RecuperacionClaveMail;
 use App\Mail\VerificacionCorreoMail;
 use App\Models\User;
 use App\Models\UserReputationStats;
+use App\Services\AccountErasureService;
 use App\Services\JwtService;
 use App\Services\SmsService;
 use App\Services\UserSuspensionService;
@@ -409,7 +410,7 @@ class AuthController extends Controller
     /**
      * Eliminar la cuenta del usuario autenticado (Habeas Data Ley 1581) y enviar correo de despedida.
      */
-    public function deleteAccount(Request $request): JsonResponse
+    public function deleteAccount(Request $request, AccountErasureService $erasure): JsonResponse
     {
         $usuario = $request->user();
 
@@ -441,9 +442,8 @@ class AuthController extends Controller
             $this->jwtService->revoke($claims);
         }
 
-        // Desactivar y soft-delete de la cuenta
-        $usuario->update(['is_active' => false]);
-        $usuario->delete();
+        // Anonimizar los datos personales (aquí y en los demás servicios) y soft-delete.
+        $erasure->erase($usuario);
 
         return response()->json([
             'success' => true,
