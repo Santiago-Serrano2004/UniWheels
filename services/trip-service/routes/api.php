@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Admin\AdminSosEventController;
 use App\Http\Controllers\Api\V1\Admin\AdminTripController;
 use App\Http\Controllers\Api\V1\Internal\PersonalDataController;
+use App\Http\Controllers\Api\V1\Internal\TripParticipationController;
 use App\Http\Controllers\Api\V1\TrainingDataController;
 use App\Http\Controllers\Api\V1\TripLifecycleController;
 use App\Http\Controllers\Api\V1\TripTrackingController;
@@ -18,6 +19,11 @@ Route::prefix('v1')->group(function () {
     // Exportación de datos reales de viajes completados para reentrenar el
     // modelo XGBoost de ETA en ai-route-service — solo servicio-a-servicio.
     Route::get('/trips/training-data/completed', [TrainingDataController::class, 'completedTrips'])
+        ->middleware('jwt.service');
+
+    // Participantes y estado de un viaje (para validar calificaciones), solo servicio-a-servicio.
+    Route::get('/internal/trips/{id}', [TripParticipationController::class, 'show'])
+        ->whereUuid('id')
         ->middleware('jwt.service');
 
     // Borrado de datos personales (Ley 1581), solo servicio-a-servicio desde auth-service.

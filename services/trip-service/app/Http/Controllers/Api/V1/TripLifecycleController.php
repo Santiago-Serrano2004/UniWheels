@@ -8,6 +8,7 @@ use App\Http\Requests\CreateTripRequest;
 use App\Http\Requests\VerifyPinRequest;
 use App\Models\Trip;
 use App\Models\TripCompletedSummary;
+use App\Services\AuthReputationClient;
 use App\Services\LateCancellationPolicy;
 use App\Services\RouteMatchingClient;
 use Carbon\Carbon;
@@ -19,7 +20,8 @@ class TripLifecycleController extends Controller
 {
     public function __construct(
         private RouteMatchingClient $routeMatchingClient,
-        private LateCancellationPolicy $lateCancellationPolicy
+        private LateCancellationPolicy $lateCancellationPolicy,
+        private AuthReputationClient $authReputationClient
     ) {}
 
     /**
@@ -302,6 +304,10 @@ class TripLifecycleController extends Controller
 
         $trip->complete();
         $this->registrarResumenParaEntrenamiento($trip);
+
+        // SIM-020: el viaje completado suma a la reputación de ambos participantes.
+        $this->authReputationClient->recordCompletedTrip((string) $trip->driver_id, 'conductor');
+        $this->authReputationClient->recordCompletedTrip((string) $trip->passenger_id, 'pasajero');
 
         return response()->json([
             'success' => true,

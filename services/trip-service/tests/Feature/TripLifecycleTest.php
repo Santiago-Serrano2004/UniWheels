@@ -273,6 +273,23 @@ class TripLifecycleTest extends TestCase
         $this->assertNotNull($trip->fresh()->actual_dropoff_time);
     }
 
+    public function test_completar_un_viaje_suma_la_reputacion_de_conductor_y_pasajero_y_un_fallo_no_lo_bloquea(): void
+    {
+        $trip = $this->crearViajeBase('4829', 5000.0);
+        $trip->verifyBoardingPin('4829');
+        Http::fake(['*/api/v1/internal/users/*/reputation' => Http::response([], 500)]);
+
+        $this->withToken($this->jwtDePrueba($trip->driver_id))
+            ->postJson("/api/v1/trips/{$trip->id}/complete")
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', 'completado');
+
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), "/api/v1/internal/users/{$trip->driver_id}/reputation")
+            && $request['type'] === 'trip_completed' && $request['role'] === 'conductor');
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), "/api/v1/internal/users/{$trip->passenger_id}/reputation")
+            && $request['type'] === 'trip_completed' && $request['role'] === 'pasajero');
+    }
+
     public function test_cancelacion_por_conductor_con_menos_de_15_min_aplica_penalizacion(): void
     {
         $trip = $this->crearViajeBase('4829', 4500.0, null, null, Carbon::now()->addMinutes(5));

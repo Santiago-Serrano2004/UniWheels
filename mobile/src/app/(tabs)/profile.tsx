@@ -42,7 +42,7 @@ export default function ProfileScreen() {
   const [modalAlertasAbierto, setModalAlertasAbierto] = useState(false);
 
   useEffect(() => {
-    tripsService.getUserReputationStats().then(setStats);
+    tripsService.getUserReputationStats().then(setStats).catch(() => setStats({}));
   }, []);
 
   const initials = user?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || 'UN';
@@ -209,7 +209,7 @@ export default function ProfileScreen() {
               <Text className="text-xs font-bold text-slate-900 dark:text-white">Reputación y Calificaciones</Text>
               <Text className="text-[10px] text-slate-500">
                 {stats
-                  ? `${stats.rating_average?.toFixed(1) ?? '—'} ★ · ${stats.total_trips ?? 0} viaje(s) · ${stats.reviews_count ?? 0} reseña(s)`
+                  ? `${(stats.rating_average_driver ?? stats.rating_average_passenger)?.toFixed(1) ?? '—'} ★ · ${(stats.total_trips_as_driver ?? 0) + (stats.total_trips_as_passenger ?? 0)} viaje(s) · ${stats.reviews_count ?? 0} reseña(s)`
                   : 'Cargando...'}
               </Text>
             </View>

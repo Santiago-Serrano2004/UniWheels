@@ -538,23 +538,14 @@ export const tripsService = {
     }
   },
 
+  /**
+   * Reputación del usuario autenticado. Campos reales del backend:
+   * rating_average_driver, rating_average_passenger (null hasta tener 3 calificaciones),
+   * total_trips_as_driver, total_trips_as_passenger y reviews_count. Lanza si falla.
+   */
   async getUserReputationStats() {
-    try {
-      const response = await apiClient.get('/user/reputation-stats');
-      if (response.data?.data) return response.data.data;
-    } catch {
-      // Fallback
-    }
-    return {
-      rating_average: 5.0,
-      total_trips: 0,
-      puntualidad: 5.0,
-      amabilidad: 5.0,
-      conduccion_segura: 5.0,
-      vehiculo_limpio: 5.0,
-      comunicacion: 5.0,
-      reviews_count: 0,
-    };
+    const response = await apiClient.get('/user/reputation-stats');
+    return response.data?.data ?? null;
   },
 };
 
