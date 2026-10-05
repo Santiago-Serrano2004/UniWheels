@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   ShieldCheck,
+  Activity,
 } from 'lucide-react';
 
 export const AdminLayout = () => {
@@ -71,6 +72,11 @@ export const AdminLayout = () => {
       to: '/viajes',
       label: 'Viajes',
       icon: Route,
+    },
+    {
+      to: '/piloto',
+      label: 'Piloto',
+      icon: Activity,
     },
   ];
 

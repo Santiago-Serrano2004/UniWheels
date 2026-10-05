@@ -32,4 +32,16 @@ return [
         'detour_cache_ttl' => 60,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Métricas del piloto
+    |--------------------------------------------------------------------------
+    |
+    | Llave HMAC con la que se hashean los ids de usuario antes de salir hacia
+    | trip-service. Debe ser la misma en ambos servicios. Si está vacía se deriva
+    | del JWT_SECRET compartido.
+    |
+    */
+    'metrics_hash_secret' => env('METRICS_HASH_SECRET'),
+
 ];

@@ -7,6 +7,7 @@ use App\Http\Requests\ContributionSuggestionRequest;
 use App\Http\Requests\PublishRouteRequest;
 use App\Http\Requests\SearchMatchRequest;
 use App\Models\Route;
+use App\Models\SearchLog;
 use App\Services\AiRouteServiceClient;
 use App\Services\ContributionCalculator;
 use App\Services\DriverProfileClient;
@@ -17,6 +18,7 @@ use App\Services\VehicleNotFoundException;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class RouteController extends Controller
 {
@@ -309,6 +311,28 @@ class RouteController extends Controller
     }
 
     /**
+     * Registra la búsqueda para las métricas del piloto. Nunca rompe la búsqueda.
+     */
+    private function logSearch(string $passengerId, array $coincidencias): void
+    {
+        try {
+            $modalidad1 = count(array_filter($coincidencias, fn ($m) => ($m['modality'] ?? null) === 'modalidad_1_directa'));
+
+            SearchLog::create([
+                'passenger_id' => $passengerId,
+                'results_count' => count($coincidencias),
+                'modality_1_count' => $modalidad1,
+                'modality_2_count' => count($coincidencias) - $modalidad1,
+                'created_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo registrar la búsqueda en search_logs.', [
+                'exception_class' => get_class($e),
+            ]);
+        }
+    }
+
+    /**
      * Buscar rutas coincidentes (Modalidad 1 y Modalidad 2 con IA) para un pasajero.
      */
     public function searchMatches(SearchMatchRequest $request): JsonResponse
@@ -321,6 +345,8 @@ class RouteController extends Controller
             (int) $datos['destination_campus_id'],
             $datos['preferred_time'] ?? null
         );
+
+        $this->logSearch((string) $request->attributes->get('user_id'), $coincidencias);
 
         return response()->json([
             'success' => true,

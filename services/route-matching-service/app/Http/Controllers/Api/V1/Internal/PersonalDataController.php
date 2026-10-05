@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Internal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Route;
+use App\Models\SearchLog;
 use App\Models\TripRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,8 @@ class PersonalDataController extends Controller
             TripRequest::where('passenger_id', $id)
                 ->whereIn('status', ['solicitado', 'aceptado'])
                 ->update(['status' => 'cancelado']);
+
+            SearchLog::where('passenger_id', $id)->delete();
 
             TripRequest::where('passenger_id', $id)->update(['pickup_name' => 'Dirección eliminada']);
         });

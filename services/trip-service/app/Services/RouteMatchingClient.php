@@ -37,6 +37,33 @@ class RouteMatchingClient
         return null;
     }
 
+    /**
+     * Hashes de usuarios activos (buscaron o publicaron) por semana, desde route-matching-service.
+     * Devuelve null si no responde: quien llama debe marcar el resultado como parcial.
+     *
+     * @return array<string, list<string>>|null
+     */
+    public function weeklyActiveUserHashes(int $weeks): ?array
+    {
+        try {
+            $respuesta = Http::withToken($this->jwtVerifier->issueServiceToken('trip-service'))
+                ->timeout(3)
+                ->get(config('services.route_matching.url').'/api/v1/internal/metrics/weekly-active-users', ['weeks' => $weeks]);
+
+            if ($respuesta->successful() && is_array($respuesta->json('data'))) {
+                return $respuesta->json('data');
+            }
+
+            Log::warning('route-matching-service no devolvió los usuarios activos.', ['status' => $respuesta->status()]);
+        } catch (\Throwable $e) {
+            Log::warning('No se pudieron pedir los usuarios activos a route-matching-service.', [
+                'exception_class' => get_class($e),
+            ]);
+        }
+
+        return null;
+    }
+
     public const SEAT_RESERVED = 'reserved';
 
     public const SEAT_FULL = 'full';
