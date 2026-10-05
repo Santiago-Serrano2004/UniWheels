@@ -257,7 +257,7 @@ export default function ProfileScreen() {
             <View className="gap-1">
               <Text className="text-base font-extrabold text-rose-500">¿Deseas eliminar tu cuenta?</Text>
               <Text className="text-xs text-slate-600 dark:text-slate-400">
-                Esta acción desactivará tu perfil, tus estadísticas de viaje y tus métodos de pago bajo el cumplimiento de la Ley 1581 (Habeas Data).
+                Esta acción elimina tu cuenta y anonimiza tus datos personales (nombre, correo, teléfono, documentos y ubicaciones) según la Ley 1581 (Habeas Data). No se puede deshacer.
               </Text>
             </View>
 
