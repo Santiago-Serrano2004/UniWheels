@@ -206,3 +206,21 @@ VPS de pago (Hetzner ~$4-5 USD/mes por 2vCPU/4GB, DigitalOcean, o un shape
 pago de la propia Oracle) sin rediseñar nada. El siguiente escalón después de
 eso (separar cada microservicio a su propio host, balanceo de carga) es un
 proyecto aparte, no algo que este stack necesite ahora.
+
+## OSRM (ruteo por calles)
+Sin OSRM, route-matching guarda las rutas como **línea recta** (respaldo geodésico): el mapa, la distancia y el aporte sugerido quedan mal.
+Los datos (`docker/osrm-data/santander.osrm*`, ~44 MB) no están en git y se generan así (en un PC con RAM; la VM no alcanza):
+
+```bash
+mkdir -p /tmp/osrm && cd /tmp/osrm
+curl -L -o colombia.osm.pbf https://download.geofabrik.de/south-america/colombia-latest.osm.pbf
+# Recorte del área metropolitana (mismos límites que valida PublishRouteRequest)
+podman run --rm -v $PWD:/data:Z docker.io/iboates/osmium:latest extract -b -73.35,6.80,-72.95,7.35 /data/colombia.osm.pbf -o /data/santander.osm.pbf --overwrite
+podman run --rm -v $PWD:/data:Z docker.io/osrm/osrm-backend:latest osrm-extract -p /opt/car.lua /data/santander.osm.pbf
+podman run --rm -v $PWD:/data:Z docker.io/osrm/osrm-backend:latest osrm-partition /data/santander.osrm
+podman run --rm -v $PWD:/data:Z docker.io/osrm/osrm-backend:latest osrm-customize /data/santander.osrm
+rsync -a santander.osrm* azureuser_uniwheels@<VM>:uniwheels/docker/osrm-data/
+# En la VM:
+docker compose --file docker/docker-compose.prod.yml up -d --no-deps osrm_backend
+```
+Usa ~25 MB de RAM. Conviene regenerarlo cada pocos meses para tomar calles nuevas de OpenStreetMap.
