@@ -15,7 +15,7 @@ export function useDriverRoutesSync(activo: boolean) {
       const rutas: any[] = await routesService.getMyRoutes();
       const ahora = Date.now();
       const vigentes = rutas.filter(
-        (r) => r.status === 'publicada' && (!r.scheduled_departure_time || Date.parse(r.scheduled_departure_time) > ahora)
+        (r) => r.status === 'en_curso' || (r.status === 'publicada' && (!r.scheduled_departure_time || Date.parse(r.scheduled_departure_time) > ahora))
       );
       const conPasajeros = await Promise.all(
         vigentes.map(async (r) => {

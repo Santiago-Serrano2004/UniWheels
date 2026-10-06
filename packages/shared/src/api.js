@@ -607,6 +607,20 @@ export const routesService = {
   },
 
   /**
+   * Cambia el estado de una ruta propia: 'en_curso', 'finalizada' o 'cancelada'.
+   * Al salir de 'publicada' deja de aparecer en búsquedas y no acepta reservas. Lanza si falla.
+   */
+  async updateRouteStatus(routeId, status) {
+    try {
+      const response = await routeApiClient.post(`/routes/${routeId}/status`, { status });
+      return response.data?.data || null;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'No se pudo actualizar el estado de la ruta.' };
+    }
+  },
+
+  /**
    * @param {number} pickupLat
    * @param {number} pickupLng
    * @param {number} [destinationCampusId]

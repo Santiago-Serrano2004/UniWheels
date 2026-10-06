@@ -1,4 +1,5 @@
-import { tripLifecycleService, tripsService } from '@uniwheels/shared';
+import { Alert } from 'react-native';
+import { routesService, tripLifecycleService, tripsService } from '@uniwheels/shared';
 
 /**
  * Acciones del conductor sobre una ruta publicada. El servidor no tiene "viaje del
@@ -35,6 +36,9 @@ export async function completarViajesDeRuta(routeId: string) {
   }
   if (fallos.length) throw new Error(fallos.join('\n'));
 
+  // La ruta se cierra solo si no queda nadie esperando: con pasajeros sin abordar sigue abierta.
+  if (!sinAbordar.length) await routesService.updateRouteStatus(routeId, 'finalizada');
+
   return { completados: abordados.length, sinAbordar };
 }
 
@@ -51,6 +55,7 @@ export async function cancelarViajesDeRuta(routeId: string, motivo: string) {
     }
   }
   if (fallos.length) throw new Error(fallos.join('\n'));
+  await routesService.updateRouteStatus(routeId, 'cancelada');
   return { cancelados: viajes.length, respuesta: ultimaRespuesta };
 }
 
@@ -70,9 +75,33 @@ async function transicionar(routeId: string, estados: string[], accion: (id: str
 }
 
 /** El conductor sale hacia los puntos de encuentro: los viajes confirmados pasan a "en camino". */
-export const iniciarRecorridoDeRuta = (routeId: string) =>
-  transicionar(routeId, ['confirmado'], (id) => tripLifecycleService.startDriving(id), 'no se pudo iniciar.');
+export async function iniciarRecorridoDeRuta(routeId: string) {
+  const n = await transicionar(routeId, ['confirmado'], (id) => tripLifecycleService.startDriving(id), 'no se pudo iniciar.');
+  await routesService.updateRouteStatus(routeId, 'en_curso');
+  return n;
+}
 
 /** El conductor llegó al punto de encuentro: los viajes en camino pasan a "en punto de encuentro". */
 export const llegarAlPuntoDeRuta = (routeId: string) =>
   transicionar(routeId, ['en_camino'], (id) => tripLifecycleService.arriveAtMeetingPoint(id), 'no se pudo registrar la llegada.');
+
+/**
+ * Pide confirmación y cancela una ruta publicada en el servidor (y los viajes de sus
+ * pasajeros). `alTerminar` se llama solo si el servidor aceptó la cancelación.
+ */
+export function confirmarCancelacionDeRuta(routeId: string, alTerminar: () => void) {
+  Alert.alert('Cancelar ruta', 'Los pasajeros que reservaron quedarán sin cupo y se les avisará. ¿Cancelar esta ruta?', [
+    { text: 'No', style: 'cancel' },
+    {
+      text: 'Sí, cancelar',
+      style: 'destructive',
+      onPress: () => {
+        cancelarViajesDeRuta(routeId, 'Ruta cancelada por el conductor')
+          .then(alTerminar)
+          .catch((error: any) =>
+            Alert.alert('No se pudo cancelar la ruta', error?.message || 'Revisa tu conexión e inténtalo de nuevo.')
+          );
+      },
+    },
+  ]);
+}

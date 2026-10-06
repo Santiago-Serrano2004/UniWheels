@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Internal\PersonalDataController;
 use App\Http\Controllers\Api\V1\Internal\PilotMetricsController;
 use App\Http\Controllers\Api\V1\RouteController;
 use App\Http\Controllers\Api\V1\RouteSeatController;
+use App\Http\Controllers\Api\V1\RouteStatusController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -42,6 +43,7 @@ Route::prefix('v1')->middleware('jwt.auth')->group(function () {
     Route::get('/routes', [RouteController::class, 'index']);
     Route::post('/routes', [RouteController::class, 'store']);
     Route::get('/routes/{id}', [RouteController::class, 'show'])->whereUuid('id');
+    Route::post('/routes/{id}/status', [RouteStatusController::class, 'update'])->whereUuid('id');
 
     // Optimización multi-pasajero (ALNS) del orden de paradas de una ruta activa.
     Route::post('/routes/{id}/optimize-passengers', [RouteController::class, 'optimizePassengers'])

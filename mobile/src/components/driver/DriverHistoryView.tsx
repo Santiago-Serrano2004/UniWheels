@@ -26,6 +26,7 @@ import {
   X,
 } from 'lucide-react-native';
 import { fechaColombiaStr, routesService, tripsService, useAppStore } from '@uniwheels/shared';
+import { confirmarCancelacionDeRuta } from '@/services/viajesDeRuta';
 import { RatingFeedbackModal } from '@/components/RatingFeedbackModal';
 import { useDriverRoutesSync } from '@/hooks/useDriverRoutesSync';
 
@@ -33,9 +34,8 @@ type PeriodFilter = 'todos' | 'semana' | 'mes';
 
 export function DriverHistoryView() {
   const publishedDriverTrips = useAppStore((state) => state.publishedDriverTrips);
-  useDriverRoutesSync(true);
+  const { sincronizar } = useDriverRoutesSync(true);
   const setPublishedDriverTrips = useAppStore((state) => state.setPublishedDriverTrips);
-  const cancelPublishedTrip = useAppStore((state) => state.cancelPublishedTrip);
   const startPublishedTrip = useAppStore((state) => state.startPublishedTrip);
   const recurringDriverTrips = useAppStore((state) => state.recurringDriverTrips);
   const toggleRecurringDriverTrip = useAppStore((state) => state.toggleRecurringDriverTrip);
@@ -438,12 +438,7 @@ export function DriverHistoryView() {
                         <Text className="text-xs font-black text-white">Iniciar en Cabina GPS</Text>
                       </Pressable>
                       <Pressable
-                        onPress={() =>
-                          Alert.alert('Cancelar ruta', '¿Deseas cancelar esta ruta publicada?', [
-                            { text: 'No', style: 'cancel' },
-                            { text: 'Sí, cancelar', style: 'destructive', onPress: () => cancelPublishedTrip(viaje.id) },
-                          ])
-                        }
+                        onPress={() => confirmarCancelacionDeRuta(String(viaje.id), sincronizar)}
                         className="px-3.5 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20"
                       >
                         <Text className="text-xs font-bold text-rose-600 dark:text-rose-400">Cancelar</Text>

@@ -31,7 +31,7 @@ import { ActiveRoleConflictBlocker } from '@/components/ActiveRoleConflictBlocke
 import { DriverOnboardingView } from '@/components/driver/DriverOnboardingView';
 import { DriverCockpitCard } from '@/components/driver/DriverCockpitCard';
 import { DriverRoutePublishForm } from '@/components/driver/DriverRoutePublishForm';
-import { completarViajesDeRuta } from '@/services/viajesDeRuta';
+import { completarViajesDeRuta, confirmarCancelacionDeRuta } from '@/services/viajesDeRuta';
 import { InAppGpsNavigator } from '@/components/driver/InAppGpsNavigator';
 import { CancelTripPenaltyModal } from '@/components/driver/CancelTripPenaltyModal';
 import { PassengerActiveTripCard } from '@/components/PassengerActiveTripCard';
@@ -97,7 +97,6 @@ export default function HomeScreen() {
   usePassengerBookingSync(activeRole === 'passenger');
   const { sincronizar: sincronizarRutasConductor } = useDriverRoutesSync(activeRole === 'driver' && Boolean(user?.isDriver));
   const startPublishedTrip = useAppStore((state) => state.startPublishedTrip);
-  const cancelPublishedTrip = useAppStore((state) => state.cancelPublishedTrip);
   const toggleRecurringDriverTrip = useAppStore((state) => state.toggleRecurringDriverTrip);
 
   const [showPublishForm, setShowPublishForm] = useState(false);
@@ -507,7 +506,7 @@ export default function HomeScreen() {
                       <Text className="text-xs font-black text-white">Abrir Cabina GPS</Text>
                     </Pressable>
                     <Pressable
-                      onPress={() => cancelPublishedTrip(trip.id)}
+                      onPress={() => confirmarCancelacionDeRuta(String(trip.id), sincronizarRutasConductor)}
                       className="px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20"
                     >
                       <Text className="text-[11px] font-bold text-rose-600 dark:text-rose-400">Cancelar</Text>
