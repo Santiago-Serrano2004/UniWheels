@@ -30,6 +30,7 @@ import {
   Shield,
 } from 'lucide-react-native';
 import { tripLifecycleService, useAppStore } from '@uniwheels/shared';
+import { viajesActivosDeRuta } from '@/services/viajesDeRuta';
 
 export interface SosEmergencyModalProps {
   isOpen: boolean;
@@ -108,10 +109,11 @@ export function SosEmergencyModal({
     activeDriverTrip?.vehicle ||
     'Vehículo en servicio';
 
-  const tripId =
-    tripInfo?.id ||
-    activePassengerBooking?.id ||
-    activeDriverTrip?.id;
+  // El pasajero reporta en su propio viaje. El conductor no tiene viaje propio en el
+  // servidor: su alerta se registra en el viaje de cada pasajero de la ruta.
+  const esConductor = !activePassengerBooking && Boolean(activeDriverTrip);
+  const rutaConductor = esConductor ? String(activeDriverTrip?.route_id || activeDriverTrip?.id || '') : '';
+  const tripId = esConductor ? rutaConductor : tripInfo?.id || activePassengerBooking?.id;
 
   // Actualizar coordenadas GPS en alta precisión al abrir el modal
   useEffect(() => {
@@ -144,11 +146,14 @@ export function SosEmergencyModal({
 
       // Disparar reporte de SOS al backend para registro de auditoría
       if (tripId) {
-        tripLifecycleService
-          .triggerEmergencySos(tripId, {
-            latitude: targetLat,
-            longitude: targetLng,
-            emergencyType: 'panico_usuario',
+        const alerta = { latitude: targetLat, longitude: targetLng, emergencyType: 'panico_usuario' };
+        const viajes = esConductor
+          ? viajesActivosDeRuta(rutaConductor).then((vs) => vs.map((v) => v.id))
+          : Promise.resolve([tripId]);
+        viajes
+          .then((ids) => {
+            if (!ids.length) throw new Error('Tu ruta no tiene pasajeros activos; la alerta no quedó asociada a un viaje.');
+            return Promise.all(ids.map((id) => tripLifecycleService.triggerEmergencySos(id, alerta)));
           })
           .catch((err: any) => {
             if (isMounted) {

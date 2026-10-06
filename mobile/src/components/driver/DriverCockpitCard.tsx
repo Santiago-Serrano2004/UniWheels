@@ -35,6 +35,7 @@ import {
   routesService,
   getPlaceCoordinates,
 } from '@uniwheels/shared';
+import { iniciarRecorridoDeRuta, llegarAlPuntoDeRuta } from '@/services/viajesDeRuta';
 import { AlertBanner } from '@/components/AlertBanner';
 
 export interface DriverCockpitCardProps {
@@ -176,12 +177,12 @@ export function DriverCockpitCard({
     setIsUpdatingLifecycle(true);
     setGeneralError('');
     try {
-      await tripLifecycleService.startDriving(activeDriverTrip.id);
-    } catch {
-      // Tolera modo offline o simulación
+      await iniciarRecorridoDeRuta(String(activeDriverTrip.route_id || activeDriverTrip.id));
+      setTripStatus('en_camino');
+      setActiveDriverTrip({ ...activeDriverTrip, status: 'en_camino' });
+    } catch (error: any) {
+      setGeneralError(error?.message || 'No se pudo actualizar el viaje. Inténtalo de nuevo.');
     }
-    setTripStatus('en_camino');
-    setActiveDriverTrip({ ...activeDriverTrip, status: 'en_camino' });
     setIsUpdatingLifecycle(false);
   };
 
@@ -189,12 +190,12 @@ export function DriverCockpitCard({
     setIsUpdatingLifecycle(true);
     setGeneralError('');
     try {
-      await tripLifecycleService.arriveAtMeetingPoint(activeDriverTrip.id);
-    } catch {
-      // Tolera simulación
+      await llegarAlPuntoDeRuta(String(activeDriverTrip.route_id || activeDriverTrip.id));
+      setTripStatus('en_punto_encuentro');
+      setActiveDriverTrip({ ...activeDriverTrip, status: 'en_punto_encuentro' });
+    } catch (error: any) {
+      setGeneralError(error?.message || 'No se pudo actualizar el viaje. Inténtalo de nuevo.');
     }
-    setTripStatus('en_punto_encuentro');
-    setActiveDriverTrip({ ...activeDriverTrip, status: 'en_punto_encuentro' });
     setIsUpdatingLifecycle(false);
   };
 

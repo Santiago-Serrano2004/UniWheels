@@ -20,6 +20,7 @@ import {
   routesService,
   openExternalNavigation,
 } from '@uniwheels/shared';
+import { viajesActivosDeRuta } from '@/services/viajesDeRuta';
 import { LeafletMap, type LeafletMapRef, type LeafletMarker, type LeafletPolyline } from '@/components/map/LeafletMap';
 import { useTurnByTurnNavigation } from '@/hooks/useTurnByTurnNavigation';
 
@@ -94,6 +95,25 @@ export function InAppGpsNavigator({
 
   // Telemetría GPS cada 5s y seguimiento de cámara
   const lastReportRef = useRef(0);
+  // La posición se reporta en el viaje de cada pasajero (el servidor no conoce un "viaje
+  // del conductor"); la lista se refresca cada 30 s por si alguien reserva o cancela.
+  const viajesPasajerosRef = useRef<string[]>([]);
+  useEffect(() => {
+    if (!routeId) return undefined;
+    let activo = true;
+    const cargar = () =>
+      viajesActivosDeRuta(String(routeId))
+        .then((viajes) => {
+          if (activo) viajesPasajerosRef.current = viajes.map((v) => v.id);
+        })
+        .catch(() => {});
+    cargar();
+    const intervalo = setInterval(cargar, 30000);
+    return () => {
+      activo = false;
+      clearInterval(intervalo);
+    };
+  }, [routeId]);
 
   useEffect(() => {
     let locationSubscription: Location.LocationSubscription | null = null;
@@ -132,16 +152,18 @@ export function InAppGpsNavigator({
 
             // Reportar telemetría al backend cada 5s
             const now = Date.now();
-            const tripIdToReport = trip?.id || route?.id;
-            if (tripIdToReport && now - lastReportRef.current >= 5000) {
+            if (viajesPasajerosRef.current.length && now - lastReportRef.current >= 5000) {
               lastReportRef.current = now;
-              tripLifecycleService.reportPosition(tripIdToReport, {
+              const posicion = {
                 latitude: lat,
                 longitude: lng,
                 speed_kmh: currentSpeed,
                 heading_degrees: currentHeading,
                 accuracy_meters: loc.coords.accuracy || undefined,
-              }).catch(() => {});
+              };
+              viajesPasajerosRef.current.forEach((id) => {
+                tripLifecycleService.reportPosition(id, posicion).catch(() => {});
+              });
             }
           }
         );

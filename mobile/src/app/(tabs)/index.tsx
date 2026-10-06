@@ -22,7 +22,7 @@ import {
   Power,
   Plus,
 } from 'lucide-react-native';
-import { authService, fechaColombiaStr, fechaLocalStr, placesApiService, routesService, tripLifecycleService, useAppStore } from '@uniwheels/shared';
+import { authService, fechaColombiaStr, fechaLocalStr, placesApiService, routesService, useAppStore } from '@uniwheels/shared';
 import { CampusSelectorModal, type Campus } from '@/components/CampusSelectorModal';
 import { SetHomeLocationModal } from '@/components/SetHomeLocationModal';
 import { LocationPickerModal } from '@/components/LocationPickerModal';
@@ -31,6 +31,7 @@ import { ActiveRoleConflictBlocker } from '@/components/ActiveRoleConflictBlocke
 import { DriverOnboardingView } from '@/components/driver/DriverOnboardingView';
 import { DriverCockpitCard } from '@/components/driver/DriverCockpitCard';
 import { DriverRoutePublishForm } from '@/components/driver/DriverRoutePublishForm';
+import { completarViajesDeRuta } from '@/services/viajesDeRuta';
 import { InAppGpsNavigator } from '@/components/driver/InAppGpsNavigator';
 import { CancelTripPenaltyModal } from '@/components/driver/CancelTripPenaltyModal';
 import { PassengerActiveTripCard } from '@/components/PassengerActiveTripCard';
@@ -255,16 +256,20 @@ export default function HomeScreen() {
   }, [searchQuery]);
 
   const completarViaje = async () => {
-    const tripId = activeDriverTrip?.id || activeDriverTrip?.route_id;
-    if (tripId) {
-      try {
-        await tripLifecycleService.completeTrip(tripId);
-      } catch (err) {
-        console.warn('Notice from completeTrip:', err);
-      }
+    const routeId = activeDriverTrip?.route_id || activeDriverTrip?.id;
+    if (!routeId) return;
+    try {
+      const { completados, sinAbordar } = await completarViajesDeRuta(String(routeId));
+      finishActiveDriverTrip();
+      sincronizarRutasConductor();
+      const pendientes = sinAbordar.length
+        ? `\n${sinAbordar.length} ${sinAbordar.length === 1 ? 'pasajero no abordó' : 'pasajeros no abordaron'} y su reserva sigue abierta.`
+        : '';
+      Alert.alert('Viaje completado', `${completados} ${completados === 1 ? 'pasajero llegó' : 'pasajeros llegaron'} a destino.${pendientes}`);
+    } catch (error: any) {
+      // El viaje sigue abierto: el conductor puede reintentar.
+      Alert.alert('No se pudo completar el viaje', error?.message || 'Revisa tu conexión e inténtalo de nuevo.');
     }
-    finishActiveDriverTrip();
-    Alert.alert('Viaje completado', 'Viaje completado.');
   };
 
   const handleSelectSuggestion = (item: any) => {

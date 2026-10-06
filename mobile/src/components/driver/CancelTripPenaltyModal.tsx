@@ -5,13 +5,15 @@ import {
   Text,
   View,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import {
   AlertTriangle,
   X,
   ShieldAlert,
 } from 'lucide-react-native';
-import { useAppStore, tripLifecycleService } from '@uniwheels/shared';
+import { useAppStore } from '@uniwheels/shared';
+import { cancelarViajesDeRuta } from '@/services/viajesDeRuta';
 import { FormSelect } from '@/components/FormSelect';
 import { procesarRespuestaCancelacion } from '@/utils/cancelTripFeedback';
 
@@ -53,15 +55,10 @@ export function CancelTripPenaltyModal({
   const handleConfirm = async () => {
     setIsCancelling(true);
     try {
-      const tripId = activeDriverTrip?.id || activeDriverTrip?.route_id;
-      let respuesta = null;
-      if (tripId) {
-        try {
-          respuesta = await tripLifecycleService.cancelTrip(tripId, 'conductor', selectedReason);
-        } catch (err) {
-          console.warn('Notice from cancelTrip:', err);
-        }
-      }
+      const routeId = activeDriverTrip?.route_id || activeDriverTrip?.id;
+      const { respuesta } = routeId
+        ? await cancelarViajesDeRuta(String(routeId), selectedReason)
+        : { respuesta: null };
 
       cancelDriverTrip();
       procesarRespuestaCancelacion(respuesta, logout);
@@ -70,9 +67,9 @@ export function CancelTripPenaltyModal({
         onConfirmCancel(hasPassengers);
       }
       onClose();
-    } catch {
-      cancelDriverTrip();
-      onClose();
+    } catch (error: any) {
+      // No se limpia el viaje local: en el servidor sigue activo y el conductor debe reintentar.
+      Alert.alert('No se pudo cancelar', error?.message || 'Revisa tu conexión e inténtalo de nuevo.');
     } finally {
       setIsCancelling(false);
     }
