@@ -73,6 +73,40 @@ class TripLifecycleTest extends TestCase
         ]);
     }
 
+    public function test_la_reserva_guarda_las_coordenadas_de_recogida_y_el_pasajero_las_recibe(): void
+    {
+        $passengerId = (string) Str::uuid();
+        $routeId = $this->fakeRouteMatching((string) Str::uuid(), 4500.0);
+
+        $this->withToken($this->jwtDePrueba($passengerId))->postJson('/api/v1/trips', [
+            'route_id' => $routeId,
+            'pickup_address' => 'Centro Comercial Acrópolis',
+            'pickup_lat' => 7.0712345,
+            'pickup_lng' => -73.1054321,
+            'dropoff_address' => 'Campus El Bosque',
+            'total_fare_cop' => 4500,
+        ])->assertStatus(201);
+
+        $this->withToken($this->jwtDePrueba($passengerId))->getJson('/api/v1/passenger/active-trip')
+            ->assertOk()
+            ->assertJsonPath('data.route_id', $routeId)
+            ->assertJsonPath('data.pickup_lat', 7.0712345)
+            ->assertJsonPath('data.pickup_lng', -73.1054321);
+    }
+
+    public function test_la_reserva_rechaza_una_sola_coordenada_de_recogida(): void
+    {
+        $routeId = $this->fakeRouteMatching((string) Str::uuid(), 4500.0);
+
+        $this->withToken($this->jwtDePrueba((string) Str::uuid()))->postJson('/api/v1/trips', [
+            'route_id' => $routeId,
+            'pickup_address' => 'Acrópolis',
+            'pickup_lat' => 7.07,
+            'dropoff_address' => 'Campus El Bosque',
+            'total_fare_cop' => 4500,
+        ])->assertStatus(422)->assertJsonValidationErrors('pickup_lng');
+    }
+
     public function test_la_reserva_guarda_conductor_y_vehiculo_del_servidor_y_no_inventa_nada(): void
     {
         $driverId = (string) Str::uuid();

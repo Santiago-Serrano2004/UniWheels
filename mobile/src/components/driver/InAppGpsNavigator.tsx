@@ -71,9 +71,34 @@ export function InAppGpsNavigator({
     };
   }, [routeId]);
 
-  // Solo se navega al punto de recogida si se conocen sus coordenadas reales.
-  const pickupLat = trip?.pickup_lat;
-  const pickupLng = trip?.pickup_lng;
+  // Viajes de los pasajeros de la ruta: la posición se reporta en cada uno (el servidor no
+  // conoce un "viaje del conductor") y se navega al primero que falta por recoger. La lista
+  // se refresca cada 30 s por si alguien reserva o cancela.
+  const [viajesPasajeros, setViajesPasajeros] = useState<any[]>([]);
+  const viajesPasajerosRef = useRef<string[]>([]);
+  useEffect(() => {
+    if (!routeId) return undefined;
+    let activo = true;
+    const cargar = () =>
+      viajesActivosDeRuta(String(routeId))
+        .then((viajes) => {
+          if (!activo) return;
+          viajesPasajerosRef.current = viajes.map((v) => v.id);
+          setViajesPasajeros(viajes);
+        })
+        .catch(() => {});
+    cargar();
+    const intervalo = setInterval(cargar, 30000);
+    return () => {
+      activo = false;
+      clearInterval(intervalo);
+    };
+  }, [routeId]);
+
+  // Solo se navega a una recogida con coordenadas reales guardadas en la reserva.
+  const siguiente = viajesPasajeros.find((v) => v.status !== 'recogido' && v.pickup_lat != null && v.pickup_lng != null);
+  const pickupLat = siguiente?.pickup_lat;
+  const pickupLng = siguiente?.pickup_lng;
   const pickupCoords = useMemo<[number, number] | null>(
     () => (pickupLat != null && pickupLng != null ? [Number(pickupLat), Number(pickupLng)] : null),
     [pickupLat, pickupLng]
@@ -87,7 +112,7 @@ export function InAppGpsNavigator({
     ? [route.destination_lat, route.destination_lng]
     : getPlaceCoordinates(route?.destination, true);
 
-  const targetCoords: [number, number] = trip?.is_pin_verified || !pickupCoords
+  const targetCoords: [number, number] = !pickupCoords
     ? (campusCoords as [number, number])
     : (pickupCoords as [number, number]);
 
@@ -95,25 +120,6 @@ export function InAppGpsNavigator({
 
   // Telemetría GPS cada 5s y seguimiento de cámara
   const lastReportRef = useRef(0);
-  // La posición se reporta en el viaje de cada pasajero (el servidor no conoce un "viaje
-  // del conductor"); la lista se refresca cada 30 s por si alguien reserva o cancela.
-  const viajesPasajerosRef = useRef<string[]>([]);
-  useEffect(() => {
-    if (!routeId) return undefined;
-    let activo = true;
-    const cargar = () =>
-      viajesActivosDeRuta(String(routeId))
-        .then((viajes) => {
-          if (activo) viajesPasajerosRef.current = viajes.map((v) => v.id);
-        })
-        .catch(() => {});
-    cargar();
-    const intervalo = setInterval(cargar, 30000);
-    return () => {
-      activo = false;
-      clearInterval(intervalo);
-    };
-  }, [routeId]);
 
   useEffect(() => {
     let locationSubscription: Location.LocationSubscription | null = null;
@@ -237,7 +243,7 @@ export function InAppGpsNavigator({
     ];
 
     if (targetCoords) {
-      const isDestCampus = trip?.is_pin_verified || !pickupCoords;
+      const isDestCampus = !pickupCoords;
       list.push({
         id: 'target-dest',
         coordinate: targetCoords,
@@ -249,7 +255,7 @@ export function InAppGpsNavigator({
     }
 
     return list;
-  }, [driverCoords, heading, speedKmh, isMoto, targetCoords, trip?.is_pin_verified, pickupCoords]);
+  }, [driverCoords, heading, speedKmh, isMoto, targetCoords, pickupCoords]);
 
   const polylines: LeafletPolyline[] = useMemo(() => {
     const routeCoords = turnByTurn.routeCoordinates.length >= 2
@@ -300,7 +306,7 @@ export function InAppGpsNavigator({
                   {turnByTurn.distanciaFormateada ? `${turnByTurn.distanciaFormateada} restantes` : 'Ruta Activa'}
                 </Text>
                 <Text className="text-sm font-black text-slate-900 dark:text-white" numberOfLines={2}>
-                  {turnByTurn.instruccion || (trip?.is_pin_verified ? 'Rumbo al Campus' : 'Rumbo al Punto de Encuentro')}
+                  {turnByTurn.instruccion || (pickupCoords ? `Recoger a ${siguiente?.passenger_name || 'tu pasajero'}` : 'Rumbo al campus')}
                 </Text>
               </View>
             </View>

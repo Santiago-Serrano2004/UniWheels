@@ -41,6 +41,8 @@ class Trip extends Model
         'vehicle_model',
         'pickup_stop_id',
         'pickup_address',
+        'pickup_lat',
+        'pickup_lng',
         'dropoff_stop_id',
         'dropoff_address',
         'boarding_pin',
@@ -57,6 +59,8 @@ class Trip extends Model
     {
         return [
             'is_pin_verified' => 'boolean',
+            'pickup_lat' => 'float',
+            'pickup_lng' => 'float',
             'pin_verified_at' => 'datetime',
             'total_fare_cop' => 'float',
             'scheduled_pickup_time' => 'datetime',

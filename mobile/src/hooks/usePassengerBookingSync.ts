@@ -32,6 +32,8 @@ export function usePassengerBookingSync(activo: boolean) {
           vehicle_model: t.vehicle_model,
           vehicle: t.vehicle_model,
           pickup: t.pickup_address,
+          pickup_lat: t.pickup_lat ?? (previa?.id === t.trip_id ? previa.pickup_lat : undefined),
+          pickup_lng: t.pickup_lng ?? (previa?.id === t.trip_id ? previa.pickup_lng : undefined),
           origin: previa?.id === t.trip_id ? previa.origin : t.pickup_address,
           destination: previa?.id === t.trip_id ? previa.destination : t.dropoff_address,
           fare_cop: t.total_fare_cop,

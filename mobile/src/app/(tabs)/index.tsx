@@ -122,6 +122,8 @@ export default function HomeScreen() {
   const [editableCoords, setEditableCoords] = useState<[number, number] | null>(null);
   // Punto de recogida usado en la última búsqueda: se pasa a la vista previa del viaje.
   const ultimoPickupRef = useRef<[number, number] | null>(null);
+  // Nombre del punto de recogida que se buscó, para guardarlo en la reserva.
+  const ultimoPickupNombreRef = useRef<string | null>(null);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
 
@@ -167,6 +169,7 @@ export default function HomeScreen() {
     }
 
     ultimoPickupRef.current = pickup;
+    ultimoPickupNombreRef.current = direction === 'towards' ? editablePointName || null : selectedOriginCampus || null;
     const timer = setTimeout(async () => {
       setIsLoadingMatches(true);
       setSearchErrorMsg('');
@@ -192,6 +195,7 @@ export default function HomeScreen() {
     selectedOriginCampus,
     selectedDestinationCampus,
     editableCoords,
+    editablePointName,
     campusIdByName,
     passengerTimeFilter,
     campuses,
@@ -308,6 +312,7 @@ export default function HomeScreen() {
       fare_cop: ride.fare_cop,
       pickup_lat: ultimoPickupRef.current?.[0],
       pickup_lng: ultimoPickupRef.current?.[1],
+      pickup_name: ultimoPickupNombreRef.current,
     });
     // setActiveTab en el store es un campo heredado de la web (renderActiveView
     // por estado) que en mobile no mueve nada por sí solo — la navegación real

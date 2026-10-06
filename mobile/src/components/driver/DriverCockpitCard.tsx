@@ -33,7 +33,6 @@ import {
   tripsService,
   tripLifecycleService,
   routesService,
-  getPlaceCoordinates,
 } from '@uniwheels/shared';
 import { iniciarRecorridoDeRuta, llegarAlPuntoDeRuta } from '@/services/viajesDeRuta';
 import { AlertBanner } from '@/components/AlertBanner';
@@ -107,18 +106,20 @@ export function DriverCockpitCard({
         : activeDriverTrip.passengers || [];
 
       if (activeTripsList.length >= 2) {
-        const candidates = activeTripsList.map((t: any) => {
-          const coords = getPlaceCoordinates(t.pickup_address, false);
-          return {
+        // Solo pasajeros con coordenadas reales de recogida; sin ellas no hay orden que optimizar.
+        const candidates = activeTripsList
+          .filter((t: any) => t.pickup_lat != null && t.pickup_lng != null)
+          .map((t: any) => ({
             id: t.id,
             name: t.passenger_name || t.name,
             pickup_address: t.pickup_address || t.pickup,
-            pickup_lat: coords ? coords[0] : 7.1193,
-            pickup_lng: coords ? coords[1] : -73.1042,
-          };
-        });
+            pickup_lat: Number(t.pickup_lat),
+            pickup_lng: Number(t.pickup_lng),
+          }));
 
-        const optimization = await routesService.optimizePassengers(activeDriverTrip.id, candidates);
+        const optimization = candidates.length >= 2
+          ? await routesService.optimizePassengers(activeDriverTrip.id, candidates)
+          : null;
         const stops = optimization?.data?.ordered_stops;
         if (optimization?.ai_powered && Array.isArray(stops) && stops.length > 0) {
           const orderedIds = stops.map((s: any) => s.user_id || s.id).filter(Boolean);
