@@ -17,6 +17,7 @@ import {
   Sparkles,
 } from 'lucide-react-native';
 import { authService, tripsService, useAppStore } from '@uniwheels/shared';
+import { FUNCIONES_SOLO_LOCALES } from '@/config/funciones';
 import { SetHomeLocationModal } from '@/components/SetHomeLocationModal';
 import { ReputationStatsModal } from '@/components/ReputationStatsModal';
 import { SmartMatchAlertsModal } from '@/components/SmartMatchAlertsModal';
@@ -185,6 +186,7 @@ export default function ProfileScreen() {
             <ChevronRight size={15} color="#94a3b8" />
           </Pressable>
 
+          {FUNCIONES_SOLO_LOCALES && (
           <Pressable
             onPress={() => setModalAlertasAbierto(true)}
             className="flex-row items-center gap-3 p-3.5 border-b border-slate-100 dark:border-slate-800"
@@ -200,6 +202,7 @@ export default function ProfileScreen() {
             </View>
             <ChevronRight size={15} color="#94a3b8" />
           </Pressable>
+          )}
 
           <Pressable onPress={() => setModalReputacionAbierto(true)} className="flex-row items-center gap-3 p-3.5">
             <View className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 items-center justify-center">

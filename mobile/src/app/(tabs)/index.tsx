@@ -23,6 +23,7 @@ import {
   Plus,
 } from 'lucide-react-native';
 import { authService, fechaColombiaStr, fechaLocalStr, placesApiService, routesService, useAppStore } from '@uniwheels/shared';
+import { FUNCIONES_SOLO_LOCALES } from '@/config/funciones';
 import { CampusSelectorModal, type Campus } from '@/components/CampusSelectorModal';
 import { SetHomeLocationModal } from '@/components/SetHomeLocationModal';
 import { LocationPickerModal } from '@/components/LocationPickerModal';
@@ -523,6 +524,7 @@ export default function HomeScreen() {
           </View>
 
           {/* Rutas Recurrentes Activas */}
+          {FUNCIONES_SOLO_LOCALES && (
           <View className="gap-2.5">
             <View className="flex-row items-center justify-between px-1">
               <View className="flex-row items-center gap-1.5">
@@ -581,6 +583,7 @@ export default function HomeScreen() {
               ))
             )}
           </View>
+          )}
         </ScrollView>
       </SafeAreaView>
     );

@@ -26,6 +26,7 @@ import {
   X,
 } from 'lucide-react-native';
 import { fechaColombiaStr, routesService, tripsService, useAppStore } from '@uniwheels/shared';
+import { FUNCIONES_SOLO_LOCALES } from '@/config/funciones';
 import { confirmarCancelacionDeRuta } from '@/services/viajesDeRuta';
 import { RatingFeedbackModal } from '@/components/RatingFeedbackModal';
 import { useDriverRoutesSync } from '@/hooks/useDriverRoutesSync';
@@ -291,6 +292,7 @@ export function DriverHistoryView() {
           </Text>
         </Pressable>
 
+        {FUNCIONES_SOLO_LOCALES && (
         <Pressable
           onPress={() => setActiveSection('recurring')}
           className={`flex-1 py-2 rounded-xl items-center justify-center ${
@@ -305,6 +307,7 @@ export function DriverHistoryView() {
             Recurrentes ({recurringDriverTrips.length})
           </Text>
         </Pressable>
+        )}
 
         <Pressable
           onPress={() => setActiveSection('history')}

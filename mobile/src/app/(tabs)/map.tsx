@@ -346,13 +346,13 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
 
             <View className="items-end pl-2">
               <View className="flex-row items-center gap-1">
-                <View className={`w-2 h-2 rounded-full ${isTrackingActive ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                <View className={`w-2 h-2 rounded-full ${isTrackingActive && driverCoords ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                 <Text
                   className={`text-[10px] font-mono font-black ${
-                    isTrackingActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-500'
+                    isTrackingActive && driverCoords ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-500'
                   }`}
                 >
-                  {isTrackingActive ? 'GPS ACTIVO' : 'CONECTANDO'}
+                  {isTrackingActive && driverCoords ? 'GPS ACTIVO' : 'SIN SEÑAL'}
                 </Text>
               </View>
               {driverCoords?.speed != null && (

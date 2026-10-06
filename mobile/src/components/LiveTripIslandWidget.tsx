@@ -25,6 +25,7 @@ import {
   Star,
 } from 'lucide-react-native';
 import { tripLifecycleService, useAppStore } from '@uniwheels/shared';
+import { usePassengerLiveTracking } from '@/hooks/usePassengerLiveTracking';
 import { procesarRespuestaCancelacion } from '@/utils/cancelTripFeedback';
 
 export function LiveTripIslandWidget() {
@@ -39,7 +40,6 @@ export function LiveTripIslandWidget() {
   const logout = useAppStore((state: any) => state.logout);
 
   const [isExpanded, setIsExpanded] = useState(false);
-  const [etaMinutes, setEtaMinutes] = useState(6);
 
   // Entrada con spring (stiffness: 400, damping: 30) replicando framer-motion web
   const entranceY = useSharedValue(-20);
@@ -78,15 +78,20 @@ export function LiveTripIslandWidget() {
     opacity: pulseOpacity.value,
   }));
 
-  // Simular avance del ETA cada 45 segundos
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setEtaMinutes((prev) => Math.max(1, prev - 1));
-    }, 45000);
-    return () => clearInterval(timer);
-  }, []);
 
   const trip = activeRole === 'driver' ? activeDriverTrip : activePassengerBooking;
+
+  // Llegada estimada real: distancia del último GPS del conductor al punto de recogida.
+  // Sin posición del conductor o sin coordenadas de recogida no se muestra ningún tiempo.
+  const recogida: [number, number] | null =
+    activePassengerBooking?.pickup_lat != null && activePassengerBooking?.pickup_lng != null
+      ? [Number(activePassengerBooking.pickup_lat), Number(activePassengerBooking.pickup_lng)]
+      : null;
+  const { etaMinutes } = usePassengerLiveTracking({
+    tripId: activeRole === 'passenger' ? activePassengerBooking?.id : undefined,
+    tripStatus: activePassengerBooking?.status || 'confirmado',
+    pickupCoords: recogida,
+  });
 
   // Si no hay viaje o si ya estamos en la pantalla del mapa del tab activo
   // El conductor ya ve el estado de su viaje en la cabina; la isla es solo para el pasajero.
@@ -196,10 +201,16 @@ export function LiveTripIslandWidget() {
             </View>
 
             <Text className="text-[11px] text-slate-500 dark:text-slate-400" numberOfLines={1}>
-              {isStarted ? 'Rumbo al destino: ' : 'Llegada estimada: '}
-              <Text className="font-extrabold text-lochmara-600 dark:text-lochmara-400">
-                ~{etaMinutes} min
-              </Text>
+              {isStarted ? (
+                'Rumbo al destino'
+              ) : etaMinutes != null ? (
+                <>
+                  {'Llegada estimada: '}
+                  <Text className="font-extrabold text-lochmara-600 dark:text-lochmara-400">~{etaMinutes} min</Text>
+                </>
+              ) : (
+                'Reserva confirmada'
+              )}
             </Text>
           </View>
         </View>
@@ -264,9 +275,9 @@ export function LiveTripIslandWidget() {
                   {isStarted ? 'En trayecto hacia destino' : 'En camino al punto de encuentro'}
                 </Text>
               </View>
-              <Text className="text-[10px] font-bold text-lochmara-600 dark:text-lochmara-400">
-                ~{etaMinutes} min
-              </Text>
+              {!isStarted && etaMinutes != null ? (
+                <Text className="text-[10px] font-bold text-lochmara-600 dark:text-lochmara-400">~{etaMinutes} min</Text>
+              ) : null}
             </View>
 
             <View className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { Bell, Car, CheckCheck, Clock, Send, ShieldAlert, ShieldCheck, Sparkles, UserCheck, X } from 'lucide-react-native';
+import { Bell, Car, CheckCheck, Clock, ShieldAlert, ShieldCheck, Sparkles, UserCheck, X } from 'lucide-react-native';
 import { notificationsService, useAppStore } from '@uniwheels/shared';
 import { Emblem } from './Emblem';
 import { SosEmergencyModal } from './SosEmergencyModal';
@@ -17,27 +17,6 @@ import { SosEmergencyModal } from './SosEmergencyModal';
  * botón SOS de la web solo aparece con viaje activo, que tampoco existe aún
  * en esta fase (se agrega junto con la reserva real de viajes).
  */
-// Mismo relleno inicial que NotificationCenterModal.jsx — se reemplaza por
-// datos reales del backend en cuanto responden (si trae algo); si el
-// endpoint no devuelve nada, esto es lo que se ve en vez de una bandeja vacía.
-const MOCK_NOTIFICATIONS = [
-  {
-    id: 'notif-1',
-    title: '¡Tu conductor inició el recorrido!',
-    body: 'Tu conductor viene en camino. Tiempo estimado: 6 minutos.',
-    type: 'conductor_en_camino',
-    is_read: false,
-    created_at: new Date(Date.now() - 3 * 60000).toISOString(),
-  },
-  {
-    id: 'notif-2',
-    title: 'PIN de Abordaje Seguro emitido',
-    body: 'Tu código de verificación es 4829. Díctaselo al conductor al momento de subirte al vehículo.',
-    type: 'abordaje_verificado',
-    is_read: false,
-    created_at: new Date(Date.now() - 10 * 60000).toISOString(),
-  },
-];
 
 export function AppHeader() {
   const user = useAppStore((state) => state.user);
@@ -50,8 +29,8 @@ export function AppHeader() {
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [sosModalOpen, setSosModalOpen] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>(MOCK_NOTIFICATIONS);
-  const [unreadCount, setUnreadCount] = useState(2);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const hasActiveTrip = Boolean(activeDriverTrip || activePassengerBooking);
 
@@ -66,10 +45,9 @@ export function AppHeader() {
 
   useEffect(() => {
     notificationsService.getUserNotifications().then((res: any) => {
-      if (res?.data?.length > 0) {
-        setNotifications(res.data);
-        setUnreadCount(res.unread_count || 0);
-      }
+      // Solo notificaciones reales del servidor; sin datos, la bandeja queda vacía.
+      setNotifications(res?.data ?? []);
+      setUnreadCount(res?.unread_count || 0);
     });
   }, []);
 
@@ -85,22 +63,6 @@ export function AppHeader() {
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     setUnreadCount(0);
     await notificationsService.markAllAsRead();
-  };
-
-  const simularNotificacionEnVivo = () => {
-    // Igual que en la web: solo una actualización visual local — el
-    // despacho real (/notifications/send) es servicio-a-servicio, no
-    // invocable desde el cliente.
-    const nueva = {
-      id: `notif-${Date.now()}`,
-      title: '¡Tu conductor está a 200 metros!',
-      body: 'Tu conductor ha ingresado a la vía principal. Ten listo tu PIN para abordar.',
-      type: 'conductor_en_camino',
-      is_read: false,
-      created_at: new Date().toISOString(),
-    };
-    setNotifications((prev) => [nueva, ...prev]);
-    setUnreadCount((prev) => prev + 1);
   };
 
   const iconForType = (type: string) => {
@@ -263,16 +225,6 @@ export function AppHeader() {
               )}
             </ScrollView>
 
-            {/* Botón inferior fijo */}
-            <View className="pt-2 border-t border-slate-100 dark:border-slate-800">
-              <Pressable
-                onPress={simularNotificacionEnVivo}
-                className="py-2 rounded-2xl bg-lochmara-600 flex-row items-center justify-center gap-1.5"
-              >
-                <Send size={12} color="#ffffff" />
-                <Text className="text-white text-[11px] font-bold">Simular Alerta en Vivo</Text>
-              </Pressable>
-            </View>
           </Pressable>
         </Pressable>
       </Modal>

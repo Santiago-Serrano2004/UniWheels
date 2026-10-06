@@ -3,6 +3,7 @@ import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Car, Calendar, Sparkles, Star } from 'lucide-react-native';
 import { tripsService, useAppStore } from '@uniwheels/shared';
+import { FUNCIONES_SOLO_LOCALES } from '@/config/funciones';
 import { RatingFeedbackModal } from '@/components/RatingFeedbackModal';
 import { ActiveRoleConflictBlocker } from '@/components/ActiveRoleConflictBlocker';
 import { DriverHistoryView } from '@/components/driver/DriverHistoryView';
@@ -91,6 +92,7 @@ export default function HistoryScreen() {
       {activePassengerBooking && <PassengerActiveTripCard />}
 
       {/* Rutinas Smart Match */}
+      {FUNCIONES_SOLO_LOCALES && (
       <View className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 flex-row items-center justify-between">
         <View className="flex-row items-center gap-2.5 flex-1 mr-2">
           <View className="w-9 h-9 rounded-2xl bg-amber-500/10 border border-amber-500/20 items-center justify-center">
@@ -112,6 +114,7 @@ export default function HistoryScreen() {
           <Text className="text-[11px] font-black text-amber-600 dark:text-amber-400">Gestionar</Text>
         </Pressable>
       </View>
+      )}
 
       <Text className="text-xs font-bold uppercase tracking-wider text-slate-500 px-1">Historial de Viajes</Text>
 
