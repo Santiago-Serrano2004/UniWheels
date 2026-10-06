@@ -16,6 +16,7 @@ import {
   Star,
 } from 'lucide-react-native';
 import { tripLifecycleService, useAppStore } from '@uniwheels/shared';
+import { procesarRespuestaCancelacion } from '@/utils/cancelTripFeedback';
 
 export interface PassengerActiveTripCardProps {
   trip?: any;
@@ -25,6 +26,7 @@ export interface PassengerActiveTripCardProps {
 export function PassengerActiveTripCard({ trip: propTrip, onCancel }: PassengerActiveTripCardProps) {
   const storeTrip = useAppStore((state) => state.activePassengerBooking);
   const cancelPassengerBooking = useAppStore((state) => state.cancelPassengerBooking);
+  const logout = useAppStore((state) => state.logout);
   const [isCancelling, setIsCancelling] = useState(false);
 
   const opacity = useSharedValue(0);
@@ -81,18 +83,18 @@ export function PassengerActiveTripCard({ trip: propTrip, onCancel }: PassengerA
   };
 
   const statusInfo = getStatusInfo();
-  const driverName = trip.driverName || trip.driver_name || 'Carlos Mendoza';
+  const driverName = trip.driverName || trip.driver_name || '—';
   const driverPhone = trip.driverPhone || trip.driver_phone || trip.driver_phone_number || '3158924410';
   const driverRating = Number(trip.driverRating || trip.driver_rating || trip.rating || 4.9).toFixed(1);
-  const driverInitials = driverName.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || 'C';
-  const vehicle = trip.vehicle || trip.vehicle_model || 'Mazda 3 (Rojo)';
-  const plate = trip.plate || trip.vehicle_plate || 'KLU-492';
-  const boardingPin = trip.boardingPin || trip.pin || trip.boarding_pin || '4829';
+  const driverInitials = driverName === '—' ? '—' : driverName.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || 'C';
+  const vehicle = trip.vehicle || trip.vehicle_model || '—';
+  const plate = trip.plate || trip.vehicle_plate || '—';
+  const boardingPin = trip.boardingPin || trip.pin || trip.boarding_pin || '—';
   const departureTime = trip.departureTime || trip.departure_time || '06:45 AM';
   const origin = trip.origin || trip.pickup || 'Punto acordado';
   const destination = trip.destination || 'Campus El Jardín';
   const meetingPoint = trip.meeting_point || trip.meetingPoint || null;
-  const fare = trip.fare || (trip.fare_cop ? `$ ${Number(trip.fare_cop).toLocaleString('es-CO')}` : '$ 4.500');
+  const fare = trip.fare || (trip.fare_cop ? `$ ${Number(trip.fare_cop).toLocaleString('es-CO')}` : '—');
 
   const handleCall = () => {
     const cleanPhone = driverPhone.replace(/\D/g, '');
@@ -126,7 +128,8 @@ export function PassengerActiveTripCard({ trip: propTrip, onCancel }: PassengerA
             setIsCancelling(true);
             try {
               if (trip.id) {
-                await tripLifecycleService.cancelTrip(trip.id, 'passenger', 'Cancelado por el pasajero');
+                const respuesta = await tripLifecycleService.cancelTrip(trip.id, 'pasajero', 'Cancelado por el pasajero');
+                procesarRespuestaCancelacion(respuesta, logout);
               }
             } catch {
               // Ignore network errors on local cancel fallback
@@ -150,10 +153,9 @@ export function PassengerActiveTripCard({ trip: propTrip, onCancel }: PassengerA
   };
 
   return (
-    <Animated.View
-      style={animatedStyle}
-      className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 gap-3.5 shadow-sm"
-    >
+    <Animated.View style={animatedStyle}>
+      {/* NativeWind no aplica className en Animated.View: los estilos van en un View interno. */}
+      <View className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 gap-3.5 shadow-sm">
       {/* Estado con badge de color y hora */}
       <View className="flex-row items-center justify-between gap-2">
         <View className={`flex-row items-center gap-1.5 px-2.5 py-1 rounded-full ${statusInfo.badgeBg}`}>
@@ -306,6 +308,7 @@ export function PassengerActiveTripCard({ trip: propTrip, onCancel }: PassengerA
           <AlertTriangle size={13} color="#ef4444" />
           <Text className="text-xs font-bold text-rose-600 dark:text-rose-400">Cancelar</Text>
         </Pressable>
+      </View>
       </View>
     </Animated.View>
   );

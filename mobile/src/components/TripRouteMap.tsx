@@ -6,6 +6,8 @@ export type TripRouteMapProps = {
   originCoord: [number, number];
   destinationCoord: [number, number];
   routeCoords: [number, number][];
+  /** Punto donde el pasajero espera al conductor (opcional). */
+  pickupCoord?: [number, number] | null;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -14,7 +16,7 @@ export type TripRouteMapProps = {
  * conductor, marcador de destino (campus) y la polilínea real de la ruta.
  * Construido con Leaflet 1.9.4 en WebView (paridad 1:1 con frontend).
  */
-export function TripRouteMap({ originCoord, destinationCoord, routeCoords, style }: TripRouteMapProps) {
+export function TripRouteMap({ originCoord, destinationCoord, routeCoords, pickupCoord, style }: TripRouteMapProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const lineColor = isDark ? '#38bdf8' : '#0284c7';
@@ -40,8 +42,19 @@ export function TripRouteMap({ originCoord, destinationCoord, routeCoords, style
         color: '#10b981',
         forceBirrete: true,
       },
+      ...(pickupCoord
+        ? [
+            {
+              id: 'pickup',
+              coordinate: pickupCoord,
+              kind: 'pickup' as const,
+              label: 'Tu punto de recogida',
+              color: '#f59e0b',
+            },
+          ]
+        : []),
     ],
-    [originCoord, destinationCoord]
+    [originCoord, destinationCoord, pickupCoord]
   );
 
   const polylines: LeafletPolyline[] = useMemo(() => {

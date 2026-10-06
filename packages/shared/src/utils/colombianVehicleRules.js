@@ -3,6 +3,8 @@
  * @description Reglas legales y normativas del Código Nacional de Tránsito de Colombia (Ley 769/2002, Ley 2294/2023).
  */
 
+import { fechaColombiaStr } from './fechas.js';
+
 export const FORMATO_PLACA_CARRO = /^[A-Z]{3}\d{3}$/;
 export const FORMATO_PLACA_MOTO = /^[A-Z]{3}\d{2}[A-Z]$/;
 
@@ -104,7 +106,7 @@ export function requiereTecnomecanica(tipoVehiculo, ano, anioActual = 2026) {
 /**
  * Validar si una fecha de vencimiento ya expiró con respecto al día de hoy
  */
-export function haExpiradoFecha(fechaVencimiento, fechaHoy = new Date().toISOString().split('T')[0]) {
+export function haExpiradoFecha(fechaVencimiento, fechaHoy = fechaColombiaStr()) {
   if (!fechaVencimiento) return false;
   return fechaVencimiento < fechaHoy;
 }

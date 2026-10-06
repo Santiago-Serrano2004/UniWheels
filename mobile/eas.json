@@ -10,6 +10,10 @@
       "channel": "development",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://uniwheels.org/api/v1",
+        "EXPO_PUBLIC_VEHICLE_API_URL": "https://uniwheels.org/api/v1",
+        "EXPO_PUBLIC_ROUTE_API_URL": "https://uniwheels.org/api/v1",
+        "EXPO_PUBLIC_TRIP_API_URL": "https://uniwheels.org/api/v1",
+        "EXPO_PUBLIC_NOTIFICATION_API_URL": "https://uniwheels.org/api/v1",
         "EXPO_PUBLIC_APP_ENV": "development"
       }
     },
@@ -24,6 +28,10 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://uniwheels.org/api/v1",
+        "EXPO_PUBLIC_VEHICLE_API_URL": "https://uniwheels.org/api/v1",
+        "EXPO_PUBLIC_ROUTE_API_URL": "https://uniwheels.org/api/v1",
+        "EXPO_PUBLIC_TRIP_API_URL": "https://uniwheels.org/api/v1",
+        "EXPO_PUBLIC_NOTIFICATION_API_URL": "https://uniwheels.org/api/v1",
         "EXPO_PUBLIC_APP_ENV": "staging"
       }
     },
@@ -38,8 +46,13 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://uniwheels.org/api/v1",
+        "EXPO_PUBLIC_VEHICLE_API_URL": "https://uniwheels.org/api/v1",
+        "EXPO_PUBLIC_ROUTE_API_URL": "https://uniwheels.org/api/v1",
+        "EXPO_PUBLIC_TRIP_API_URL": "https://uniwheels.org/api/v1",
+        "EXPO_PUBLIC_NOTIFICATION_API_URL": "https://uniwheels.org/api/v1",
         "EXPO_PUBLIC_APP_ENV": "production"
-      }
+      },
+      "autoIncrement": true
     }
   },
   "submit": {
@@ -49,8 +62,8 @@
         "track": "internal"
       },
       "ios": {
-        "appleId": "santiago@unab.edu.co",
-        "ascAppId": "1234567890"
+        "appleId": "REEMPLAZAR_APPLE_ID_EMAIL",
+        "ascAppId": "REEMPLAZAR_ASC_APP_ID"
       }
     }
   }

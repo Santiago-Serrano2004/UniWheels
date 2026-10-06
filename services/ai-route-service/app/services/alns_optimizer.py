@@ -404,12 +404,6 @@ class ALNSOptimizer:
         final_duration_min = eta_res["predicted_eta_minutes"]
         total_detour_min = max(0.0, round(final_duration_min - driver_direct_time_min, 1))
 
-        # Desglose de Tarifas
-        fare_breakdown = {}
-        for p in best_accepted:
-            fare = 4500 + int(total_detour_min * 300)
-            fare_breakdown[p.passenger_id] = min(8500, max(4500, (fare // 100) * 100))
-
         # Calcular afinidad agregada (Punto 3)
         total_affinity = 0.0
         all_tags = []
@@ -460,7 +454,6 @@ class ALNSOptimizer:
             "carbon_report": carbon_data,
             "alns_cost_score": round(best_cost, 2),
             "route_polyline": route_geo["coordinates"],
-            "fare_breakdown": fare_breakdown,
         }
 
 

@@ -36,8 +36,7 @@ export function DriverOnboardingView({ onBack, onRegistered }: DriverOnboardingV
     setComprobando(true);
     setMensajeEstado(null);
     try {
-      const plate = user?.driverApplication?.plate_number || user?.driverInfo?.plate_number;
-      const res = await vehicleService.checkApprovedVehicle(user?.id, plate);
+      const res = await vehicleService.checkApprovedVehicle();
       if (res?.has_approved_vehicle || res?.status === 'approved' || res?.is_approved) {
         updateDriverStatus('approved', res?.vehicle || user?.driverApplication);
         setModalCelebracionAbierto(true);
@@ -91,7 +90,7 @@ export function DriverOnboardingView({ onBack, onRegistered }: DriverOnboardingV
     },
     {
       titulo: '3. Licencia de Conducción',
-      descripcion: 'Categoría vigente (A2 / B1 / C1) validada ante el RUNT.',
+      descripcion: 'Categoría vigente (A2 / B1 / C1), revisada por Bienestar Universitario.',
       icono: CreditCard,
       colorBg: 'bg-amber-50 dark:bg-amber-950/40',
       colorIcon: '#f59e0b',
@@ -135,7 +134,7 @@ export function DriverOnboardingView({ onBack, onRegistered }: DriverOnboardingV
             </View>
 
             <Text className="text-[11px] text-amber-900/80 dark:text-amber-200 leading-relaxed">
-              Hemos recibido tu registro vehicular. Una vez verificadas las pólizas ante el RUNT y autoridades de tránsito, tu rol de conductor se habilitará automáticamente.
+              Hemos recibido tu registro vehicular. Cuando Bienestar Universitario verifique tus documentos, tu rol de conductor se habilitará automáticamente.
             </Text>
 
             {mensajeEstado ? (

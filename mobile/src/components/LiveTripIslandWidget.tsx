@@ -24,7 +24,9 @@ import {
   Navigation,
   Star,
 } from 'lucide-react-native';
-import { useAppStore } from '@uniwheels/shared';
+import { tripLifecycleService, useAppStore } from '@uniwheels/shared';
+import { usePassengerLiveTracking } from '@/hooks/usePassengerLiveTracking';
+import { procesarRespuestaCancelacion } from '@/utils/cancelTripFeedback';
 
 export function LiveTripIslandWidget() {
   const insets = useSafeAreaInsets();
@@ -35,9 +37,9 @@ export function LiveTripIslandWidget() {
   const activeRole = useAppStore((state) => state.activeRole);
   const cancelPassengerBooking = useAppStore((state) => state.cancelPassengerBooking);
   const cancelDriverTrip = useAppStore((state) => state.cancelDriverTrip);
+  const logout = useAppStore((state: any) => state.logout);
 
   const [isExpanded, setIsExpanded] = useState(false);
-  const [etaMinutes, setEtaMinutes] = useState(6);
 
   // Entrada con spring (stiffness: 400, damping: 30) replicando framer-motion web
   const entranceY = useSharedValue(-20);
@@ -76,26 +78,33 @@ export function LiveTripIslandWidget() {
     opacity: pulseOpacity.value,
   }));
 
-  // Simular avance del ETA cada 45 segundos
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setEtaMinutes((prev) => Math.max(1, prev - 1));
-    }, 45000);
-    return () => clearInterval(timer);
-  }, []);
 
   const trip = activeRole === 'driver' ? activeDriverTrip : activePassengerBooking;
 
+  // Llegada estimada real: distancia del último GPS del conductor al punto de recogida.
+  // Sin posición del conductor o sin coordenadas de recogida no se muestra ningún tiempo.
+  const recogida: [number, number] | null =
+    activePassengerBooking?.pickup_lat != null && activePassengerBooking?.pickup_lng != null
+      ? [Number(activePassengerBooking.pickup_lat), Number(activePassengerBooking.pickup_lng)]
+      : null;
+  const { etaMinutes } = usePassengerLiveTracking({
+    tripId: activeRole === 'passenger' ? activePassengerBooking?.id : undefined,
+    tripStatus: activePassengerBooking?.status || 'confirmado',
+    pickupCoords: recogida,
+  });
+
   // Si no hay viaje o si ya estamos en la pantalla del mapa del tab activo
-  if (!trip) return null;
+  // El conductor ya ve el estado de su viaje en la cabina; la isla es solo para el pasajero.
+  // En el mapa en vivo el estado ya está en su propia cabecera.
+  if (!trip || activeRole === 'driver' || pathname === '/map') return null;
 
   const isDriver = activeRole === 'driver';
-  const driverName = trip.driverName || trip.driver_name || (isDriver ? 'Tú (Conductor)' : 'Carlos Mendoza');
-  const vehicle = trip.vehicle || trip.vehicle_model || 'Mazda 3 (Rojo)';
-  const plate = trip.plate || trip.vehicle_plate || 'KLU-492';
+  const driverName = trip.driverName || trip.driver_name || (isDriver ? 'Tú (Conductor)' : '—');
+  const vehicle = trip.vehicle || trip.vehicle_model || '—';
+  const plate = trip.plate || trip.vehicle_plate || '—';
   const destination = trip.destination || 'Campus El Jardín';
   const origin = trip.origin || trip.pickup || 'Origen';
-  const boardingPin = trip.boardingPin || trip.pin || trip.boarding_pin || '4829';
+  const boardingPin = trip.boardingPin || trip.pin || trip.boarding_pin || '—';
   const isStarted = trip.status === 'in_progress' || trip.status === 'recogido' || Boolean(trip.isStarted);
 
   const handleGoToMap = () => {
@@ -109,19 +118,39 @@ export function LiveTripIslandWidget() {
     Alert.alert(
       isDriver ? 'Cancelar viaje' : 'Cancelar reserva',
       isDriver
-        ? '¿Deseas cancelar el viaje en curso? Podría aplicar penalización si hay pasajeros asignados.'
+        ? '¿Deseas cancelar el viaje en curso? Si hay pasajeros confirmados y faltan menos de 15 minutos para la salida, se registra una cancelación tardía.'
         : '¿Estás seguro de que deseas cancelar tu reserva?',
       [
         { text: 'Volver', style: 'cancel' },
         {
           text: 'Sí, cancelar',
           style: 'destructive',
-          onPress: () => {
-            setIsExpanded(false);
-            if (isDriver) {
-              cancelDriverTrip(false);
-            } else {
-              cancelPassengerBooking();
+          onPress: async () => {
+            const tripId = isDriver ? trip.id || trip.route_id : trip.id;
+            try {
+              if (tripId) {
+                const respuesta = await tripLifecycleService.cancelTrip(
+                  tripId,
+                  isDriver ? 'conductor' : 'pasajero',
+                  isDriver ? 'Cancelado por el conductor' : 'Cancelado por el pasajero'
+                );
+                setIsExpanded(false);
+                if (isDriver) {
+                  cancelDriverTrip();
+                } else {
+                  cancelPassengerBooking();
+                }
+                procesarRespuestaCancelacion(respuesta, logout);
+                return;
+              }
+              setIsExpanded(false);
+              if (isDriver) {
+                cancelDriverTrip();
+              } else {
+                cancelPassengerBooking();
+              }
+            } catch (err: any) {
+              Alert.alert('No se pudo cancelar', err?.message || 'Intenta nuevamente.');
             }
           },
         },
@@ -132,21 +161,22 @@ export function LiveTripIslandWidget() {
   const progressPercent = isStarted ? 70 : 35;
 
   return (
+    // Tres capas: la externa lleva posición y animaciones de layout (sin opacity, para no
+    // chocar con FadeOut), la del medio la animación de entrada y la interna los estilos de
+    // NativeWind (className no se aplica en Animated.View).
     <Animated.View
-      style={[
-        {
-          position: 'absolute',
-          top: Math.max(insets.top + 6, 12),
-          left: 16,
-          right: 16,
-          zIndex: 9999,
-        },
-        containerEntranceStyle,
-      ]}
+      style={{
+        position: 'absolute',
+        top: Math.max(insets.top + 6, 12),
+        left: 16,
+        right: 16,
+        zIndex: 9999,
+      }}
       exiting={FadeOut.duration(200)}
       layout={LinearTransition.springify()}
-      className="bg-white dark:bg-slate-900 rounded-3xl border-2 border-lochmara-500 shadow-xl shadow-lochmara-500/20 overflow-hidden"
     >
+      <Animated.View style={containerEntranceStyle}>
+        <View className="bg-white dark:bg-slate-900 rounded-3xl border-2 border-lochmara-500 shadow-xl shadow-lochmara-500/20 overflow-hidden">
       {/* Barra Compacta (Isla Dinámica) */}
       <Pressable
         onPress={() => setIsExpanded((prev) => !prev)}
@@ -155,7 +185,7 @@ export function LiveTripIslandWidget() {
         <View className="flex-row items-center gap-2.5 flex-1 mr-2">
           {/* Indicador pulsante de estado en vivo */}
           <View className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 items-center justify-center">
-            <Animated.View style={pulseStyle} className="w-3 h-3 rounded-full bg-emerald-500" />
+            <Animated.View style={[pulseStyle, { width: 12, height: 12, borderRadius: 6, backgroundColor: '#10b981' }]} />
           </View>
 
           <View className="flex-1">
@@ -171,10 +201,16 @@ export function LiveTripIslandWidget() {
             </View>
 
             <Text className="text-[11px] text-slate-500 dark:text-slate-400" numberOfLines={1}>
-              {isStarted ? 'Rumbo al destino: ' : 'Llegada estimada: '}
-              <Text className="font-extrabold text-lochmara-600 dark:text-lochmara-400">
-                ~{etaMinutes} min
-              </Text>
+              {isStarted ? (
+                'Rumbo al destino'
+              ) : etaMinutes != null ? (
+                <>
+                  {'Llegada estimada: '}
+                  <Text className="font-extrabold text-lochmara-600 dark:text-lochmara-400">~{etaMinutes} min</Text>
+                </>
+              ) : (
+                'Reserva confirmada'
+              )}
             </Text>
           </View>
         </View>
@@ -205,8 +241,8 @@ export function LiveTripIslandWidget() {
           entering={FadeIn.duration(200)}
           exiting={FadeOut.duration(150)}
           layout={LinearTransition.springify()}
-          className="px-3.5 pb-3.5 pt-1 border-t border-slate-100 dark:border-slate-800 gap-3"
         >
+          <View className="px-3.5 pb-3.5 pt-1 border-t border-slate-100 dark:border-slate-800 gap-3">
           {/* Detalles del trayecto y vehículo */}
           <View className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 gap-1.5">
             <View className="flex-row items-center justify-between">
@@ -239,9 +275,9 @@ export function LiveTripIslandWidget() {
                   {isStarted ? 'En trayecto hacia destino' : 'En camino al punto de encuentro'}
                 </Text>
               </View>
-              <Text className="text-[10px] font-bold text-lochmara-600 dark:text-lochmara-400">
-                ~{etaMinutes} min
-              </Text>
+              {!isStarted && etaMinutes != null ? (
+                <Text className="text-[10px] font-bold text-lochmara-600 dark:text-lochmara-400">~{etaMinutes} min</Text>
+              ) : null}
             </View>
 
             <View className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">
@@ -270,8 +306,11 @@ export function LiveTripIslandWidget() {
               <Text className="text-xs font-bold text-rose-600 dark:text-rose-400">Cancelar</Text>
             </Pressable>
           </View>
+          </View>
         </Animated.View>
       )}
+        </View>
+      </Animated.View>
     </Animated.View>
   );
 }

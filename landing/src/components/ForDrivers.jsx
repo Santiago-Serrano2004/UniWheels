@@ -1,5 +1,4 @@
 import React from 'react';
-import { Check } from 'lucide-react';
 import { Reveal } from './Reveal';
 
 const REQUISITOS = [
@@ -30,9 +29,6 @@ export const ForDrivers = () => (
         <ul className="mt-6 space-y-0 divide-y divide-[var(--color-linea)] border-y border-[var(--color-linea)]">
           {REQUISITOS.map((r, i) => (
             <Reveal as="li" key={r} delay={0.15 + i * 0.15} y={0} className="flex gap-4 py-4 leading-relaxed">
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lochmara-600 text-white">
-                <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden="true" />
-              </span>
               <span>{r}</span>
             </Reveal>
           ))}

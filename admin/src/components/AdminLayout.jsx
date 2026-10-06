@@ -7,13 +7,15 @@ import {
   Car,
   AlertTriangle,
   Users,
-  CreditCard,
+  Route,
   LogOut,
   Sun,
   Moon,
   Menu,
   X,
   ShieldCheck,
+  Activity,
+  ClipboardList,
 } from 'lucide-react';
 
 export const AdminLayout = () => {
@@ -68,9 +70,19 @@ export const AdminLayout = () => {
       icon: Users,
     },
     {
-      to: '/viajes-pagos',
-      label: 'Viajes y Pagos',
-      icon: CreditCard,
+      to: '/viajes',
+      label: 'Viajes',
+      icon: Route,
+    },
+    {
+      to: '/piloto',
+      label: 'Piloto',
+      icon: Activity,
+    },
+    {
+      to: '/lista-espera',
+      label: 'Lista de espera',
+      icon: ClipboardList,
     },
   ];
 

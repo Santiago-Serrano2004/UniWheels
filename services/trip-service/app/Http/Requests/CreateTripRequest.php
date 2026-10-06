@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Trip;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class CreateTripRequest extends FormRequest
 {
@@ -27,10 +25,13 @@ class CreateTripRequest extends FormRequest
             'vehicle_plate' => ['nullable', 'string', 'max:10'],
             'vehicle_model' => ['nullable', 'string', 'max:80'],
             'pickup_address' => ['required', 'string', 'max:150'],
+            // Coordenadas del punto de recogida; las dos o ninguna.
+            'pickup_lat' => ['nullable', 'numeric', 'between:-90,90', 'required_with:pickup_lng'],
+            'pickup_lng' => ['nullable', 'numeric', 'between:-180,180', 'required_with:pickup_lat'],
             'dropoff_address' => ['required', 'string', 'max:150'],
-            'total_fare_cop' => ['required', 'numeric', 'min:2000', 'max:100000'],
-            'scheduled_pickup_time' => ['required', 'date'],
-            'payment_method' => ['required', 'string', Rule::in(Trip::PAYMENT_METHODS)],
+            'total_fare_cop' => ['required', 'numeric', 'min:0', 'max:100000'],
+            // Opcional e ignorado: la hora de recogida sale de la ruta (SIM-009).
+            'scheduled_pickup_time' => ['nullable', 'date'],
         ];
     }
 }

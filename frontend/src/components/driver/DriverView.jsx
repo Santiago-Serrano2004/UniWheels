@@ -75,7 +75,7 @@ export const DriverView = () => {
   // Vehículo aprobado del conductor (requerido por route-matching-service para publicar).
   useEffect(() => {
     if (!user?.id) return;
-    vehicleService.checkApprovedVehicle(user.id).then((res) => {
+    vehicleService.checkApprovedVehicle().then((res) => {
       if (res?.has_approved_vehicle && res?.data?.id) {
         setVehiculoId(res.data.id);
       }

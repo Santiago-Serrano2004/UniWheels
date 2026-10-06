@@ -50,8 +50,9 @@ export function AnimatedSegmentedControl<T extends string>({
       {containerWidth > 0 && (
         <Animated.View
           pointerEvents="none"
-          className="absolute top-1 bottom-1 left-1 rounded-xl bg-lochmara-600"
           style={[
+            // Estilos en línea: className no se aplica en Animated.View.
+            { position: 'absolute', top: 4, bottom: 4, left: 4, borderRadius: 12, backgroundColor: '#0284c7' },
             pillStyle,
             { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3 },
           ]}

@@ -38,14 +38,14 @@ Crea un archivo `.env` o `.env.local` en el directorio `mobile/` basado en la si
 # URL base del API Gateway / Backend UniWheels
 EXPO_PUBLIC_API_URL=https://uniwheels.org/api/v1
 
-# Entorno de la aplicación (development | staging | production)
-EXPO_PUBLIC_APP_ENV=development
+# URLs de cada microservicio (valores por defecto en src/lib/env.ts: localhost:8002 a 8005)
+EXPO_PUBLIC_VEHICLE_API_URL=https://uniwheels.org/api/v1
+EXPO_PUBLIC_ROUTE_API_URL=https://uniwheels.org/api/v1
+EXPO_PUBLIC_TRIP_API_URL=https://uniwheels.org/api/v1
+EXPO_PUBLIC_NOTIFICATION_API_URL=https://uniwheels.org/api/v1
 
-# Claves de Servicios de Tráfico y Geocodificación
-EXPO_PUBLIC_TOMTOM_KEY=tu_tomtom_api_key
-
-# Pasarela de Pagos Wompi
-EXPO_PUBLIC_WOMPI_PUBLIC_KEY=pub_prod_...
+# Clave de TomTom (tráfico y geocodificación)
+EXPO_PUBLIC_TOMTOM_API_KEY=tu_tomtom_api_key
 ```
 
 > **Nota:** Las variables con prefijo `EXPO_PUBLIC_` se incrustan en tiempo de empaquetado por Expo CLI / EAS Build.
@@ -119,18 +119,24 @@ npm run build:all
 ## 🏪 Checklist para Publicación en Tiendas
 
 ### Google Play Store (Android)
-- [x] Identificador de paquete configurado: `co.edu.unab.uniwheels`.
+- [x] Identificador de paquete configurado: `org.uniwheels.app`.
 - [x] Versión y `versionCode` sincronizados en `app.json`.
 - [x] Permisos declarados estrictamente necesarios (`ACCESS_FINE_LOCATION`, `POST_NOTIFICATIONS`, `CAMERA`, `READ_MEDIA_IMAGES`).
 - [ ] Declaración de política de datos de ubicación en segundo plano y primer plano para emparejamiento de viajes.
 - [ ] Ficha técnica, descripción y capturas de pantalla de 6.5" y 10" listas en Google Play Console.
 
 ### Apple App Store (iOS)
-- [x] Bundle Identifier configurado: `co.edu.unab.uniwheels`.
-- [x] Cadenas explicativas de privacidad en español en `infoPlist`:
-  - `NSLocationWhenInUseUsageDescription`
-  - `NSCameraUsageDescription`
-  - `NSPhotoLibraryUsageDescription`
-  - `UIBackgroundModes` con `remote-notification`.
+- [x] Bundle Identifier configurado: `org.uniwheels.app`.
+- [x] Cadenas explicativas de privacidad en español, definidas una sola vez en los plugins `expo-location` y `expo-image-picker` de `app.json` (generan `NSLocationWhenInUseUsageDescription`, `NSCameraUsageDescription` y `NSPhotoLibraryUsageDescription`).
+- [x] `infoPlist` solo declara `UIBackgroundModes` con `remote-notification`.
 - [x] Flujo de eliminación de cuenta (Habeas Data / Ley 1581 / Directriz Apple 5.1.1(v)) disponible desde el perfil del usuario.
 - [ ] Credenciales de usuario demo (`reviewer@unab.edu.co`) configuradas para los revisores de Apple.
+
+---
+
+## Configuración de EAS para publicar (T3a)
+
+- **Variables públicas**: `eas.json` define en los tres perfiles las URLs de los servicios (`EXPO_PUBLIC_*_API_URL` apuntando a `https://uniwheels.org/api/v1`).
+- **TomTom**: `EXPO_PUBLIC_TOMTOM_API_KEY` NO está en el repo. Configúrala como variable de entorno de EAS, por ejemplo: `eas env:create --name EXPO_PUBLIC_TOMTOM_API_KEY --value <tu-clave> --environment production --visibility sensitive` (repite para `preview` y `development`).
+- **`submit` en `eas.json`** (no admite comentarios, por eso la guía va aquí): `appleId` y `ascAppId` son placeholders (`REEMPLAZAR_APPLE_ID_EMAIL`, `REEMPLAZAR_ASC_APP_ID`). Reemplázalos con el correo de tu cuenta de Apple Developer y el ID numérico de la app en App Store Connect antes de `eas submit`. `serviceAccountKeyPath` apunta a `./google-service-account.json` (no se commitea): descárgalo de Google Cloud / Play Console.
+- `appVersionSource` es `remote` y el perfil `production` usa `autoIncrement`.

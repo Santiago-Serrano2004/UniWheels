@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Plus, Minus } from 'lucide-react';
 import { Reveal } from './Reveal';
 
 const PREGUNTAS = [
@@ -11,17 +10,22 @@ const PREGUNTAS = [
   {
     pregunta: '¿Cómo se paga el viaje?',
     respuesta:
-      'Al reservar eliges cómo pagar: en efectivo, por Nequi o Daviplata directamente al conductor, o con tarjeta a través de la pasarela Wompi dentro de la app. Ves la tarifa antes de confirmar la reserva.',
+      'El conductor indica un aporte por cupo al publicar su ruta. La app sugiere un valor máximo según la distancia, y el conductor puede cobrar menos o llevarte gratis. Le pagas el aporte directamente, en efectivo o por Nequi. UniWheels no cobra comisión ni procesa pagos.',
   },
   {
     pregunta: '¿Puedo cancelar una reserva?',
-    respuesta: 'Sí, desde la app y antes de que inicie el viaje. El cupo queda libre para otro compañero.',
+    respuesta:
+      'Sí, desde la app y antes de que empiece el viaje. Si cancelas a menos de 2 minutos de la salida (o, siendo conductor, a menos de 15 minutos con pasajeros confirmados), se registra una cancelación tardía. Con 3 cancelaciones tardías en 30 días, la cuenta se suspende por 30 días.',
   },
   {
     pregunta: '¿Qué pasa con mis datos?',
     respuesta:
-      'Se tratan según la Ley 1581 de 2012 y el Decreto 1377 de 2013. Tu información de contacto y tus trayectos se usan únicamente para operar el servicio y para la seguridad de los viajes, sin venta a terceros. La comunicación entre la app y nuestros servidores viaja cifrada.',
+      'Los tratamos según la Ley 1581 de 2012. Los usamos solo para operar el servicio y para la seguridad de los viajes; no los vendemos ni procesamos pagos. La comunicación con nuestros servidores viaja cifrada.',
     conPolitica: true,
+  },
+  {
+    pregunta: '¿Cuánto cuesta usar UniWheels?',
+    respuesta: 'Nada. La app es gratis para estudiantes, docentes y personal: la licencia la paga tu universidad.',
   },
   {
     pregunta: '¿Cuándo sale la app en las tiendas?',
@@ -70,11 +74,9 @@ export const FAQ = ({ onOpenPrivacy }) => {
                     className="flex w-full items-center justify-between gap-6 py-5 text-left text-[var(--color-tinta)]"
                   >
                     {item.pregunta}
-                    {expandida ? (
-                      <Minus className="h-5 w-5 shrink-0 text-lochmara-600" aria-hidden="true" />
-                    ) : (
-                      <Plus className="h-5 w-5 shrink-0 text-lochmara-600" aria-hidden="true" />
-                    )}
+                    <span className="shrink-0 text-sm font-semibold text-lochmara-700">
+                      {expandida ? 'Cerrar' : 'Ver'}
+                    </span>
                   </button>
                 </h3>
                 <div id={idPanel} hidden={!expandida} className="pb-6 pr-10">

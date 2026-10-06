@@ -29,7 +29,17 @@
       "Bash(gh pr checks:*)",
       "Bash(gh pr diff:*)",
       "Bash(gh repo view:*)",
-      "Bash(gh workflow list:*)"
+      "Bash(gh workflow list:*)",
+      "Bash(agy:*)",
+      "Bash(codex:*)",
+      "Bash(codex exec:*)"
+    ]
+  },
+  "autoMode": {
+    "allow": [
+      "$defaults",
+      "Bash(agy:*) in UniWheels — delegated coding/analysis sub-agent (Antigravity CLI) the user explicitly routes work to, including agy --dangerously-skip-permissions and agy --mode accept-edits for autonomous read-only or edit tasks the user requested",
+      "Bash(codex:*) in UniWheels — delegated coding sub-agent (Codex CLI) the user explicitly routes work to, including its full-auto/bypass-approvals flags for autonomous tasks the user requested"
     ]
   }
 }

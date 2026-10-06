@@ -329,7 +329,7 @@ export function HabeasDataSignatureStep({
         </View>
 
         <Text className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-          Para autorizar la consulta de antecedentes y validación ante el RUNT, debes registrar tu firma digital.
+          Para enviar tus documentos a revisión debes firmar esta autorización.
         </Text>
 
         {/* Vista previa de firma o aviso de sin firma */}
@@ -395,7 +395,7 @@ export function HabeasDataSignatureStep({
         </View>
 
         <Text className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-          Autorizo de manera voluntaria a UniWheels y a la institución educativa para validar la autenticidad de los documentos vehiculares en el RUNT, SIMIT y entidades de tránsito correspondientes.
+          Autorizo a UniWheels y a mi institución educativa a tratar los datos y documentos de mi vehículo y mi licencia de conducción, con el fin de que el personal de Bienestar Universitario verifique su vigencia y autenticidad antes de aprobarme como conductor, conforme a la política de tratamiento de datos (Ley 1581 de 2012). Declaro que la información y los documentos que envío son verdaderos y están vigentes.
         </Text>
 
         <Pressable

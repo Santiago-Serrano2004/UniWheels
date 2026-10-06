@@ -6,7 +6,6 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import {
   X,
@@ -18,8 +17,10 @@ import {
 import {
   tripLifecycleService,
   getPlaceCoordinates,
+  routesService,
   openExternalNavigation,
 } from '@uniwheels/shared';
+import { viajesActivosDeRuta } from '@/services/viajesDeRuta';
 import { LeafletMap, type LeafletMapRef, type LeafletMarker, type LeafletPolyline } from '@/components/map/LeafletMap';
 import { useTurnByTurnNavigation } from '@/hooks/useTurnByTurnNavigation';
 
@@ -52,17 +53,66 @@ export function InAppGpsNavigator({
   const [permissionError, setPermissionError] = useState('');
 
   // Destino actual: si el pasajero no ha sido verificado, navegar al punto de recogida; si ya abordó, navegar al campus/destino
-  const pickupCoords = trip?.pickup_address
-    ? getPlaceCoordinates(trip.pickup_address, false)
-    : null;
+  // Geometría real de la ruta publicada (OSRM en el servidor), no la adivinada por nombres.
+  const [rutaReal, setRutaReal] = useState<[number, number][]>([]);
+  const routeId = route?.id || trip?.route_id || trip?.id;
+  useEffect(() => {
+    if (!routeId) return undefined;
+    let activo = true;
+    routesService
+      .getRoute(routeId)
+      .then((detalle: any) => {
+        const coords: [number, number][] = (detalle?.coordinates || []).map((c: any) => [Number(c[0]), Number(c[1])]);
+        if (activo && coords.length > 1) setRutaReal(coords);
+      })
+      .catch(() => {});
+    return () => {
+      activo = false;
+    };
+  }, [routeId]);
 
-  const campusCoords = route?.destination_coords
+  // Viajes de los pasajeros de la ruta: la posición se reporta en cada uno (el servidor no
+  // conoce un "viaje del conductor") y se navega al primero que falta por recoger. La lista
+  // se refresca cada 30 s por si alguien reserva o cancela.
+  const [viajesPasajeros, setViajesPasajeros] = useState<any[]>([]);
+  const viajesPasajerosRef = useRef<string[]>([]);
+  useEffect(() => {
+    if (!routeId) return undefined;
+    let activo = true;
+    const cargar = () =>
+      viajesActivosDeRuta(String(routeId))
+        .then((viajes) => {
+          if (!activo) return;
+          viajesPasajerosRef.current = viajes.map((v) => v.id);
+          setViajesPasajeros(viajes);
+        })
+        .catch(() => {});
+    cargar();
+    const intervalo = setInterval(cargar, 30000);
+    return () => {
+      activo = false;
+      clearInterval(intervalo);
+    };
+  }, [routeId]);
+
+  // Solo se navega a una recogida con coordenadas reales guardadas en la reserva.
+  const siguiente = viajesPasajeros.find((v) => v.status !== 'recogido' && v.pickup_lat != null && v.pickup_lng != null);
+  const pickupLat = siguiente?.pickup_lat;
+  const pickupLng = siguiente?.pickup_lng;
+  const pickupCoords = useMemo<[number, number] | null>(
+    () => (pickupLat != null && pickupLng != null ? [Number(pickupLat), Number(pickupLng)] : null),
+    [pickupLat, pickupLng]
+  );
+
+  const campusCoords = rutaReal.length > 1
+    ? rutaReal[rutaReal.length - 1]
+    : route?.destination_coords
     ? [route.destination_coords[0], route.destination_coords[1]]
     : route?.destination_lat != null
     ? [route.destination_lat, route.destination_lng]
     : getPlaceCoordinates(route?.destination, true);
 
-  const targetCoords: [number, number] = trip?.is_pin_verified || !pickupCoords
+  const targetCoords: [number, number] = !pickupCoords
     ? (campusCoords as [number, number])
     : (pickupCoords as [number, number]);
 
@@ -108,16 +158,18 @@ export function InAppGpsNavigator({
 
             // Reportar telemetría al backend cada 5s
             const now = Date.now();
-            const tripIdToReport = trip?.id || route?.id;
-            if (tripIdToReport && now - lastReportRef.current >= 5000) {
+            if (viajesPasajerosRef.current.length && now - lastReportRef.current >= 5000) {
               lastReportRef.current = now;
-              tripLifecycleService.reportPosition(tripIdToReport, {
+              const posicion = {
                 latitude: lat,
                 longitude: lng,
                 speed_kmh: currentSpeed,
                 heading_degrees: currentHeading,
                 accuracy_meters: loc.coords.accuracy || undefined,
-              }).catch(() => {});
+              };
+              viajesPasajerosRef.current.forEach((id) => {
+                tripLifecycleService.reportPosition(id, posicion).catch(() => {});
+              });
             }
           }
         );
@@ -191,7 +243,7 @@ export function InAppGpsNavigator({
     ];
 
     if (targetCoords) {
-      const isDestCampus = trip?.is_pin_verified || !pickupCoords;
+      const isDestCampus = !pickupCoords;
       list.push({
         id: 'target-dest',
         coordinate: targetCoords,
@@ -203,11 +255,13 @@ export function InAppGpsNavigator({
     }
 
     return list;
-  }, [driverCoords, heading, speedKmh, isMoto, targetCoords, trip?.is_pin_verified, pickupCoords]);
+  }, [driverCoords, heading, speedKmh, isMoto, targetCoords, pickupCoords]);
 
   const polylines: LeafletPolyline[] = useMemo(() => {
     const routeCoords = turnByTurn.routeCoordinates.length >= 2
       ? turnByTurn.routeCoordinates
+      : rutaReal.length > 1
+      ? rutaReal
       : targetCoords
       ? [driverCoords, targetCoords]
       : [];
@@ -224,10 +278,10 @@ export function InAppGpsNavigator({
       ];
     }
     return [];
-  }, [turnByTurn.routeCoordinates, targetCoords, driverCoords]);
+  }, [turnByTurn.routeCoordinates, rutaReal, targetCoords, driverCoords]);
 
   return (
-    <View className="flex-1 bg-slate-950">
+    <View className="flex-1 bg-slate-100 dark:bg-slate-950">
       {/* 1. MAPA NAVEGADOR COMPLETO */}
       <LeafletMap
         ref={mapRef}
@@ -238,20 +292,21 @@ export function InAppGpsNavigator({
         style={{ width: '100%', height: '100%' }}
       />
 
+      {/* El layout de pestañas ya aplica el área segura: no sumar insets aquí. */}
       {/* 2. HUD SUPERIOR: PRÓXIMA MANIOBRA & SALIR */}
-      <SafeAreaView edges={['top']} className="absolute top-0 left-0 right-0 p-4 pointer-events-box-none">
-        <View className="p-4 rounded-3xl bg-slate-900/95 border border-slate-800 shadow-2xl backdrop-blur-xl gap-2">
+      <View pointerEvents="box-none" style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingTop: 8, paddingHorizontal: 16 }}>
+        <View className="p-4 rounded-3xl bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 shadow-2xl gap-2">
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-2.5 flex-1 mr-2">
               <View className="w-9 h-9 rounded-2xl bg-lochmara-600 items-center justify-center shadow-md">
                 <ArrowUpRight size={20} color="#ffffff" />
               </View>
               <View className="flex-1">
-                <Text className="text-[10px] font-bold uppercase tracking-wider text-lochmara-400">
+                <Text className="text-[10px] font-bold uppercase tracking-wider text-lochmara-600 dark:text-lochmara-400">
                   {turnByTurn.distanciaFormateada ? `${turnByTurn.distanciaFormateada} restantes` : 'Ruta Activa'}
                 </Text>
-                <Text className="text-sm font-black text-white" numberOfLines={2}>
-                  {turnByTurn.instruccion || (trip?.is_pin_verified ? 'Rumbo al Campus' : 'Rumbo al Punto de Encuentro')}
+                <Text className="text-sm font-black text-slate-900 dark:text-white" numberOfLines={2}>
+                  {turnByTurn.instruccion || (pickupCoords ? `Recoger a ${siguiente?.passenger_name || 'tu pasajero'}` : 'Rumbo al campus')}
                 </Text>
               </View>
             </View>
@@ -259,28 +314,28 @@ export function InAppGpsNavigator({
             <Pressable
               onPress={onExit}
               hitSlop={8}
-              className="w-10 h-10 rounded-2xl bg-slate-800 border border-slate-700 items-center justify-center active:scale-95"
+              className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 items-center justify-center"
             >
-              <X size={18} color="#ffffff" />
+              <X size={18} color="#64748b" />
             </Pressable>
           </View>
 
           {permissionError ? (
             <View className="p-2 rounded-xl bg-amber-500/20 border border-amber-500/40">
-              <Text className="text-[11px] font-bold text-amber-300">{permissionError}</Text>
+              <Text className="text-[11px] font-bold text-amber-700 dark:text-amber-300">{permissionError}</Text>
             </View>
           ) : null}
         </View>
-      </SafeAreaView>
+      </View>
 
       {/* 3. HUD INFERIOR: VELOCÍMETRO, EXTERNAL LINKS Y BOTÓN FINALIZAR */}
-      <SafeAreaView edges={['bottom']} className="absolute bottom-0 left-0 right-0 p-4 pointer-events-box-none">
-        <View className="p-4 rounded-3xl bg-slate-900/95 border border-slate-800 shadow-2xl backdrop-blur-xl gap-3">
+      <View pointerEvents="box-none" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: 8, paddingHorizontal: 16 }}>
+        <View className="p-4 rounded-3xl bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 shadow-2xl gap-3">
           {/* Fila con Velocímetro y Apps Externas */}
           <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center gap-2 px-3 py-1.5 rounded-2xl bg-slate-800/80 border border-slate-700">
+            <View className="flex-row items-center gap-2 px-3 py-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
               <Gauge size={16} color="#0284c7" />
-              <Text className="text-base font-mono font-black text-white">
+              <Text className="text-base font-mono font-black text-slate-900 dark:text-white">
                 {speedKmh} <Text className="text-[10px] font-sans font-bold text-slate-400">km/h</Text>
               </Text>
             </View>
@@ -295,7 +350,7 @@ export function InAppGpsNavigator({
 
               <Pressable
                 onPress={handleOpenGoogleMaps}
-                className="px-3 py-2 rounded-2xl bg-white items-center justify-center"
+                className="px-3 py-2 rounded-2xl bg-white border border-slate-200 items-center justify-center"
               >
                 <Text className="text-xs font-black text-slate-900">Maps</Text>
               </Pressable>
@@ -303,9 +358,9 @@ export function InAppGpsNavigator({
               {Platform.OS === 'ios' && (
                 <Pressable
                   onPress={handleOpenAppleMaps}
-                  className="px-3 py-2 rounded-2xl bg-slate-800 items-center justify-center border border-slate-700"
+                  className="px-3 py-2 rounded-2xl bg-slate-100 dark:bg-slate-800 items-center justify-center border border-slate-200 dark:border-slate-700"
                 >
-                  <Compass size={16} color="#ffffff" />
+                  <Compass size={16} color="#64748b" />
                 </Pressable>
               )}
             </View>
@@ -320,7 +375,7 @@ export function InAppGpsNavigator({
             <Text className="text-xs font-bold text-white">Finalizar y Liquidar Viaje</Text>
           </Pressable>
         </View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }

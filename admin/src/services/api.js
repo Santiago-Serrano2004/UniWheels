@@ -382,28 +382,50 @@ export const adminTripService = {
     const response = await apiClient.get(`/admin/trips?${params.toString()}`);
     return response.data;
   },
+};
 
-  async getTripPayments({ status = '', from = '', to = '', page = 1, per_page = 15 } = {}) {
-    const params = new URLSearchParams();
-    if (status && status !== 'todos') params.append('status', status);
-    if (from) params.append('from', from);
-    if (to) params.append('to', to);
-    if (page) params.append('page', page);
-    if (per_page) params.append('per_page', per_page);
-
-    const response = await apiClient.get(`/admin/payments/trips?${params.toString()}`);
+// ==========================================
+// Servicios de Métricas del Piloto
+// ==========================================
+export const pilotService = {
+  // trip-service: viajes, cancelaciones, repetición y usuarios activos únicos (unión).
+  async getTripMetrics(weeks = 12) {
+    const response = await apiClient.get(`/admin/metrics/weekly?weeks=${weeks}`);
     return response.data;
   },
 
-  async getTopupPayments({ status = '', from = '', to = '', page = 1, per_page = 15 } = {}) {
-    const params = new URLSearchParams();
-    if (status && status !== 'todos') params.append('status', status);
-    if (from) params.append('from', from);
-    if (to) params.append('to', to);
-    if (page) params.append('page', page);
-    if (per_page) params.append('per_page', per_page);
+  // route-matching-service: búsquedas y conductores que publican. El gateway reescribe
+  // este alias a /admin/metrics/weekly de route-matching (las dos rutas comparten path).
+  async getMatchingMetrics(weeks = 12) {
+    const response = await apiClient.get(`/admin/metrics/matching?weeks=${weeks}`);
+    return response.data;
+  },
+};
 
-    const response = await apiClient.get(`/admin/payments/topups?${params.toString()}`);
+// ==========================================
+// Servicios de Lista de Espera
+// ==========================================
+export const waitlistService = {
+  async getWaitlist({ role = '', campus_id = '', direction = '', page = 1, per_page = 15 } = {}) {
+    const params = new URLSearchParams();
+    if (role) params.append('role', role);
+    if (campus_id) params.append('campus_id', campus_id);
+    if (direction) params.append('direction', direction);
+    params.append('page', page);
+    params.append('per_page', per_page);
+
+    const response = await apiClient.get(`/admin/waitlist?${params.toString()}`);
+    return response.data;
+  },
+
+  // CSV con todas las columnas; se pide con el token (no basta un enlace directo).
+  async exportCsv({ role = '', campus_id = '', direction = '' } = {}) {
+    const params = new URLSearchParams();
+    if (role) params.append('role', role);
+    if (campus_id) params.append('campus_id', campus_id);
+    if (direction) params.append('direction', direction);
+
+    const response = await apiClient.get(`/admin/waitlist/export?${params.toString()}`, { responseType: 'blob' });
     return response.data;
   },
 };

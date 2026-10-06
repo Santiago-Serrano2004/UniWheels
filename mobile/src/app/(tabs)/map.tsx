@@ -18,37 +18,21 @@ import {
   Route as RouteIcon,
   Search,
   ShieldCheck,
-  Smartphone,
   Car,
-  Bike,
   MapPin,
   Locate,
   Radio,
-  ShieldAlert,
 } from 'lucide-react-native';
 import {
   fetchRoadGeometry,
   getPlaceCoordinates,
+  routesService,
   tripLifecycleService,
   useAppStore,
 } from '@uniwheels/shared';
 import { TripRouteMap } from '@/components/TripRouteMap';
-import { PaymentMethodSelectorModal, type PaymentMethodId } from '@/components/PaymentMethodSelectorModal';
-import { WompiWidgetModal, type WompiWidgetParams } from '@/components/WompiWidgetModal';
 import { ActiveRoleConflictBlocker } from '@/components/ActiveRoleConflictBlocker';
 import { usePassengerLiveTracking } from '@/hooks/usePassengerLiveTracking';
-import { SosEmergencyModal } from '@/components/SosEmergencyModal';
-
-const PAYMENT_METHOD_BACKEND_MAP: Record<PaymentMethodId, string> = {
-  nequi_direct: 'nequi_directo',
-  cash_direct: 'efectivo',
-  card_instant: 'tarjeta',
-};
-const PAYMENT_METHOD_LABEL: Record<PaymentMethodId, string> = {
-  nequi_direct: 'Nequi Directo',
-  cash_direct: 'Efectivo al abordar',
-  card_instant: 'Tarjeta Débito/Crédito',
-};
 
 const initialsOf = (name?: string) =>
   name
@@ -155,22 +139,28 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
   const colorScheme = useColorScheme();
   const mapRef = useRef<LeafletMapRef>(null);
 
-  const [sosModalOpen, setSosModalOpen] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const [cameraMode, setCameraMode] = useState<'driver' | 'pickup' | 'overview'>('overview');
 
-  // Coordenadas de recogida y destino
-  const pickupCoord: [number, number] = useMemo(() => [
-    booking.pickup_lat != null ? booking.pickup_lat : getPlaceCoordinates(booking.origin, false)[0],
-    booking.pickup_lng != null ? booking.pickup_lng : getPlaceCoordinates(booking.origin, false)[1],
-  ], [booking.pickup_lat, booking.pickup_lng, booking.origin]);
-
-  const destinationCoord: [number, number] = useMemo(() => [
-    booking.destination_lat != null ? booking.destination_lat : getPlaceCoordinates(booking.destination, true)[0],
-    booking.destination_lng != null ? booking.destination_lng : getPlaceCoordinates(booking.destination, true)[1],
-  ], [booking.destination_lat, booking.destination_lng, booking.destination]);
-
   const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
+  // Puntos de la ruta real publicada (inicio y fin), si ya se cargó.
+  const [rutaReal, setRutaReal] = useState<[number, number][]>([]);
+  const inicioRuta = rutaReal.length > 1 ? rutaReal[0] : null;
+  const finRuta = rutaReal.length > 1 ? rutaReal[rutaReal.length - 1] : null;
+
+  // Recogida y destino: coordenadas reales si existen; si no, los extremos de la ruta publicada;
+  // la adivinanza por nombre queda solo como último recurso.
+  const pickupCoord: [number, number] = useMemo(() => {
+    if (booking.pickup_lat != null && booking.pickup_lng != null) return [Number(booking.pickup_lat), Number(booking.pickup_lng)];
+    if (inicioRuta) return inicioRuta;
+    return getPlaceCoordinates(booking.origin, false) as [number, number];
+  }, [booking.pickup_lat, booking.pickup_lng, booking.origin, inicioRuta]);
+
+  const destinationCoord: [number, number] = useMemo(() => {
+    if (booking.destination_lat != null && booking.destination_lng != null) return [Number(booking.destination_lat), Number(booking.destination_lng)];
+    if (finRuta) return finRuta;
+    return getPlaceCoordinates(booking.destination, true) as [number, number];
+  }, [booking.destination_lat, booking.destination_lng, booking.destination, finRuta]);
 
   // Hook de telemetría reactiva cada 5 segundos
   const {
@@ -184,10 +174,39 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
     pickupCoords: pickupCoord,
   });
 
-  // Trazar polilínea de la ruta
+  // Trazar la ruta real publicada por el conductor; si no se conoce, la calculada entre los puntos.
+  const routeId = booking.route_id;
+  const [rutaFallida, setRutaFallida] = useState(false);
   useEffect(() => {
-    fetchRoadGeometry([pickupCoord, destinationCoord]).then(setRouteCoords);
-  }, [pickupCoord, destinationCoord]);
+    if (!routeId) return undefined;
+    let activo = true;
+    routesService
+      .getRoute(routeId)
+      .then((detalle: any) => {
+        const coords: [number, number][] = (detalle?.coordinates || []).map((c: any) => [Number(c[0]), Number(c[1])]);
+        if (!activo) return;
+        if (coords.length > 1) {
+          setRouteCoords(coords);
+          setRutaReal(coords);
+        } else {
+          setRutaFallida(true);
+        }
+      })
+      .catch(() => activo && setRutaFallida(true));
+    return () => {
+      activo = false;
+    };
+  }, [routeId]);
+
+  // Sin ruta publicada conocida: geometría calculada entre recogida y destino.
+  useEffect(() => {
+    if (routeId && !rutaFallida) return undefined;
+    let activo = true;
+    fetchRoadGeometry([pickupCoord, destinationCoord]).then((c: [number, number][]) => activo && setRouteCoords(c));
+    return () => {
+      activo = false;
+    };
+  }, [routeId, rutaFallida, pickupCoord, destinationCoord]);
 
   // Tipo de vehículo
   const isMoto =
@@ -295,7 +314,8 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
       />
 
       {/* Cabecera Flotante con ETA y Telemetría en Vivo */}
-      <SafeAreaView edges={['top']} className="absolute top-0 left-0 right-0" pointerEvents="box-none">
+      {/* className en SafeAreaView no aplica `absolute`; el layout de pestañas ya pone el área segura. */}
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0 }} pointerEvents="box-none">
         <View className="px-3 pt-2 gap-2" pointerEvents="box-none">
           <View className="flex-row items-center justify-between" pointerEvents="box-none">
             <Pressable
@@ -306,14 +326,6 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
               <Text className="text-xs font-bold text-slate-800 dark:text-white">Inicio</Text>
             </Pressable>
 
-            {/* Botón SOS de Pánico en el Mapa */}
-            <Pressable
-              onPress={() => setSosModalOpen(true)}
-              className="flex-row items-center gap-1.5 px-3 py-2 rounded-2xl bg-rose-600 active:bg-rose-700 border border-rose-500 shadow-lg shadow-rose-950/40"
-            >
-              <ShieldAlert size={15} color="#ffffff" />
-              <Text className="text-white text-xs font-black tracking-wide">SOS</Text>
-            </Pressable>
           </View>
 
           {/* Banner de Estado en Vivo */}
@@ -334,13 +346,13 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
 
             <View className="items-end pl-2">
               <View className="flex-row items-center gap-1">
-                <View className={`w-2 h-2 rounded-full ${isTrackingActive ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                <View className={`w-2 h-2 rounded-full ${isTrackingActive && driverCoords ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                 <Text
                   className={`text-[10px] font-mono font-black ${
-                    isTrackingActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-500'
+                    isTrackingActive && driverCoords ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-500'
                   }`}
                 >
-                  {isTrackingActive ? 'GPS ACTIVO' : 'CONECTANDO'}
+                  {isTrackingActive && driverCoords ? 'GPS ACTIVO' : 'SIN SEÑAL'}
                 </Text>
               </View>
               {driverCoords?.speed != null && (
@@ -349,7 +361,7 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
             </View>
           </View>
         </View>
-      </SafeAreaView>
+      </View>
 
       {/* Controles Flotantes Laterales: Recentrado */}
       <View className="absolute right-4 bottom-52 gap-2" pointerEvents="box-none">
@@ -445,18 +457,6 @@ function PassengerLiveTrackingMapView({ booking }: { booking: any }) {
         )}
       </View>
 
-      {/* Modal de Emergencia SOS */}
-      <SosEmergencyModal
-        isOpen={sosModalOpen}
-        onClose={() => setSosModalOpen(false)}
-        currentCoords={currentDriverPos}
-        tripInfo={{
-          id: booking.id,
-          driverName: booking.driverName,
-          vehicle: booking.vehicle,
-          plate: booking.plate,
-        }}
-      />
     </View>
   );
 }
@@ -471,37 +471,62 @@ function RouteBookingView({
   onBooked: (payload: any) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [originCoord] = useState<[number, number]>(() => getPlaceCoordinates(route.origin, false));
-  const [destinationCoord] = useState<[number, number]>(() => getPlaceCoordinates(route.destination, true));
+  // Ruta real que guardó el conductor (PostGIS). Los nombres de lugar solo se usan si el
+  // backend no responde, como respaldo.
+  const [originCoord, setOriginCoord] = useState<[number, number]>(() => getPlaceCoordinates(route.origin, false));
+  const [destinationCoord, setDestinationCoord] = useState<[number, number]>(() => getPlaceCoordinates(route.destination, true));
   const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodId>('nequi_direct');
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
-  const [wompiParams, setWompiParams] = useState<WompiWidgetParams | null>(null);
+  const pickupCoord: [number, number] | null =
+    route.pickup_lat != null && route.pickup_lng != null ? [Number(route.pickup_lat), Number(route.pickup_lng)] : null;
 
   useEffect(() => {
-    fetchRoadGeometry([originCoord, destinationCoord]).then(setRouteCoords);
-  }, [originCoord, destinationCoord]);
+    let activo = true;
+    routesService
+      .getRoute(route.id)
+      .then((detalle: any) => {
+        const coords: [number, number][] = (detalle?.coordinates || []).map((c: any) => [Number(c[0]), Number(c[1])]);
+        if (!activo) return;
+        if (coords.length > 1) {
+          setRouteCoords(coords);
+          setOriginCoord(coords[0]);
+          setDestinationCoord(coords[coords.length - 1]);
+        } else {
+          fetchRoadGeometry([originCoord, destinationCoord]).then((c: [number, number][]) => activo && setRouteCoords(c));
+        }
+      })
+      .catch(() => {
+        fetchRoadGeometry([originCoord, destinationCoord]).then((c: [number, number][]) => activo && setRouteCoords(c));
+      });
+    return () => {
+      activo = false;
+    };
+    // Solo al abrir la vista previa de esta ruta.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route.id]);
 
-  const fareCop = route.fare_cop || 4500;
+  const fareCop = Number(route.fare_cop ?? 0);
 
   const confirmarReserva = async () => {
     setIsBooking(true);
     try {
-      const metodoPagoBackend = PAYMENT_METHOD_BACKEND_MAP[paymentMethod];
       const respuesta = await tripLifecycleService.bookTrip({
         route_id: route.id,
+        passenger_name: useAppStore.getState().user?.name,
         driver_name: route.driverName,
         vehicle_plate: route.plate,
         vehicle_model: route.vehicle,
-        pickup_address: route.origin,
+        pickup_address: route.pickup_name || route.origin,
+        ...(pickupCoord ? { pickup_lat: pickupCoord[0], pickup_lng: pickupCoord[1] } : {}),
         dropoff_address: route.destination,
         total_fare_cop: fareCop,
         scheduled_pickup_time: route.scheduled_date ? `${route.scheduled_date}T00:00:00` : new Date().toISOString(),
-        payment_method: metodoPagoBackend,
       });
 
-      const tripIdReal = respuesta?.data?.trip_id || route.id;
+      const tripIdReal = respuesta?.data?.trip_id;
+      if (!tripIdReal) {
+        throw new Error('El servidor no devolvió el id del viaje.');
+      }
 
       onBooked({
         id: tripIdReal,
@@ -513,21 +538,11 @@ function RouteBookingView({
         destination: route.destination,
         fare: fareCop,
         boardingPin: respuesta?.data?.boarding_pin,
-        paymentMethod,
-        pickup_lat: originCoord[0],
-        pickup_lng: originCoord[1],
+        pickup_lat: pickupCoord ? pickupCoord[0] : originCoord[0],
+        pickup_lng: pickupCoord ? pickupCoord[1] : originCoord[1],
         destination_lat: destinationCoord[0],
         destination_lng: destinationCoord[1],
       });
-
-      if (metodoPagoBackend === 'tarjeta' && respuesta?.data?.trip_id) {
-        try {
-          const params = await tripLifecycleService.initCardPayment(respuesta.data.trip_id);
-          if (params?.public_key) setWompiParams(params);
-        } catch {
-          // El conductor verá el viaje como pago pendiente — no bloquea la reserva.
-        }
-      }
 
       onClear();
       router.push('/(tabs)/history');
@@ -540,7 +555,7 @@ function RouteBookingView({
 
   return (
     <View className="flex-1 bg-slate-100 dark:bg-slate-950">
-      <TripRouteMap originCoord={originCoord} destinationCoord={destinationCoord} routeCoords={routeCoords} />
+      <TripRouteMap originCoord={originCoord} destinationCoord={destinationCoord} routeCoords={routeCoords} pickupCoord={pickupCoord} />
 
       <SafeAreaView edges={['top']} className="absolute top-0 left-0 right-0" pointerEvents="box-none">
         <View className="px-3 pt-2">
@@ -617,29 +632,18 @@ function RouteBookingView({
         {expanded ? (
           <>
             <Pressable
-              onPress={() => setIsPaymentModalOpen(true)}
-              className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex-row items-center justify-between"
-            >
-              <View className="flex-row items-center gap-2">
-                <Smartphone size={16} color="#a855f7" />
-                <View>
-                  <Text className="text-xs font-bold text-slate-900 dark:text-white">{PAYMENT_METHOD_LABEL[paymentMethod]}</Text>
-                  <Text className="text-[10px] text-slate-400">Método de pago seleccionado</Text>
-                </View>
-              </View>
-              <Text className="text-[10px] font-bold text-lochmara-500">Cambiar</Text>
-            </Pressable>
-
-            <Pressable
               onPress={confirmarReserva}
               disabled={isBooking}
               className="py-3.5 rounded-2xl bg-emerald-600 flex-row items-center justify-center gap-2 disabled:opacity-60"
             >
               {isBooking ? <ActivityIndicator color="#ffffff" /> : <CheckCircle2 size={16} color="#ffffff" />}
-              <Text className="text-white text-xs font-black">
-                Confirmar Reserva (${fareCop.toLocaleString('es-CO')} COP)
-              </Text>
+              <Text className="text-white text-xs font-black">Reservar cupo</Text>
             </Pressable>
+            <Text className="text-[11px] text-center text-slate-500 dark:text-slate-400">
+              {fareCop > 0
+                ? `Aporte al conductor: $${fareCop.toLocaleString('es-CO')}, en efectivo o Nequi, directo.`
+                : 'Viaje gratis'}
+            </Text>
           </>
         ) : (
           <Pressable
@@ -651,21 +655,6 @@ function RouteBookingView({
           </Pressable>
         )}
       </View>
-
-      <PaymentMethodSelectorModal
-        isOpen={isPaymentModalOpen}
-        onClose={() => setIsPaymentModalOpen(false)}
-        selectedMethod={paymentMethod}
-        onSelectMethod={setPaymentMethod}
-        fareAmount={fareCop}
-      />
-
-      <WompiWidgetModal
-        isOpen={Boolean(wompiParams)}
-        params={wompiParams}
-        onClose={() => setWompiParams(null)}
-        onResult={() => setWompiParams(null)}
-      />
     </View>
   );
 }

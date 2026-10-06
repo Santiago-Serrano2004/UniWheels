@@ -175,7 +175,7 @@ test('descargar un documento privado genera un registro inmutable de auditoria H
     // Generar URL firmada
     $urlFirmada = app(HabeasDataAuditService::class)->generateSignedDownloadUrl($documento, [
         'auditor_id' => $auditorId,
-        'purpose' => 'verificacion_inicial',
+        'purpose' => 'verificacion',
     ]);
 
     // Ejecutar descarga (como administrador/auditor de Bienestar Universitario)
@@ -188,7 +188,7 @@ test('descargar un documento privado genera un registro inmutable de auditoria H
         'auditor_user_id' => $auditorId,
         'target_user_id' => $userId,
         'document_id' => $documento->id,
-        'access_purpose' => 'verificacion_inicial',
+        'access_purpose' => 'verificacion',
     ]);
 });
 
@@ -226,4 +226,26 @@ test('la verificacion de documentos actualiza el estado del vehiculo a aprobado 
     }
 
     $this->assertEquals('aprobado', $vehiculo->fresh()->status);
+});
+
+test('public-summary expone owner_id, status y available_seats para validar publicaciones de ruta', function () {
+    $userId = (string) Str::uuid();
+    $vehiculo = Vehicle::create([
+        'user_id' => $userId,
+        'vehicle_type' => 'carro',
+        'plate_number' => 'PQR123',
+        'brand' => 'Mazda',
+        'model_line' => 'Mazda 2',
+        'year' => 2021,
+        'color' => 'Negro',
+        'available_seats' => 3,
+        'status' => 'aprobado',
+    ]);
+
+    $this->withToken(jwtDePrueba((string) Str::uuid()))
+        ->getJson("/api/v1/vehicles/{$vehiculo->id}/public-summary")
+        ->assertStatus(200)
+        ->assertJsonPath('data.owner_id', $userId)
+        ->assertJsonPath('data.status', 'aprobado')
+        ->assertJsonPath('data.available_seats', 3);
 });
