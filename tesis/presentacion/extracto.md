@@ -109,4 +109,65 @@ AMB (2026), Bucaramanga Cómo Vamos (2025), CREG (2026), Dirección de tránsito
 - URL pública: https://uniwheels.org (`README.md`, `landing/`).
 
 ## 18. Inconsistencias del documento (resumen)
-Ver la lista completa en el reporte final y en `preguntas_probables.md` (sección de riesgos al responder).
+Ver `revision_autor.md` (pendientes) y el reporte final.
+
+## 19. Evidencia calculada desde el repo (v2, 2026-10-28)
+Todas las cifras de la diapositiva 11 y los hitos de la 9 salen de estos comandos, ejecutados sobre `origin/pivote/b2b-sin-pagos` (HEAD `81a54d5`).
+
+| Dato | Comando / fuente | Resultado |
+|---|---|---|
+| Pruebas Laravel estilo Pest | `grep -rEh '^\s*(it\|test)\(' services/{auth,vehicle}-service/tests \| wc -l` | 90 + 32 = 122 |
+| Pruebas Laravel estilo PHPUnit | `grep -rEh 'public function test_' services/*/tests \| wc -l` (auth 4, vehicle 4, route-matching 82, trip 76, notification 34) | 200 |
+| Pruebas Python | `grep -rEh 'def test_' services/ai-route-service/tests \| wc -l` | 25 |
+| **Total de pruebas declaradas** | 122 + 200 + 25 (conteo estático, no ejecución) | **347** (el README dice ~190: está desactualizado) |
+| CI | GitHub Actions `ci.yml`: 198 ejecuciones; la última, run #198 (28 oct, `81a54d5`, rama `pivote/b2b-sin-pagos`) → `success` | 198, en verde |
+| Producción | `curl -sI https://uniwheels.org` | `HTTP/2 200` (28 oct) |
+| Microservicios en producción | `docker/docker-compose.prod.yml`: auth, vehicle, route-matching, trip, notification, ai-route | 6 |
+| Dominio de correo institucional | `services/auth-service/app/Rules/InstitutionalEmailRule.php:36-44` (consulta `Institution::where('domain', …)->where('is_active', true)`) | implementado |
+| AES-256 / OWASP | `grep -ril "aes-256\|owasp" services/` | solo `config/app.php` de cada servicio (cifrado por defecto del framework): **no hay cifrado extremo a extremo** → fila excluida del respaldo |
+| Redis | `docker-compose.prod.yml`: `depends_on redis` en auth, trip y notification | confirmado |
+
+### Hitos de la diapositiva 9 (`git log`)
+| Fecha | Commit | Mensaje | Hito |
+|---|---|---|---|
+| 2026-09-23 | `791d241` | docs(specs): mapa de mobile con Leaflet en WebView | primer commit del repo: ya contiene los 6 servicios, `ci.yml`, `docker-compose.prod.yml`, `gateway/nginx.prod.conf` |
+| 2026-10-04 | `12a2f69` | docs(negocio): pivote a B2B institucional sin procesamiento de pagos | pivote B2B (ADR 0001) |
+| 2026-10-05 | `4d5d006` | fix(compose): define las URLs entre servicios en producción (A1) | configuración de producción |
+| 2026-10-05 | `25e8be6` | Merge pull request #20 (pivote/t3a-tiendas) | app lista para las tiendas |
+
+## 20. Auditoría de afirmaciones (diapositiva → afirmación → origen)
+| Diap. | Afirmación | Origen |
+|---|---|---|
+| 1 | Autor, director, título | [Doc L1, L3-4, L8-9] |
+| 2 | +640.000 motocicletas; 44 por cada 100 habitantes | [Doc L71] (RUNT, 2026) |
+| 2 | Horas pico 5:30–6:30 (mañana y tarde) | [Doc L72] |
+| 2 | 1 ocupante por vehículo, en promedio | [Doc L73, L95] |
+| 2 | Parqueadero desde $125.000 al mes (carro) | [Doc L72] (UNAB, 2026) |
+| 3 | Estancamientos en horas pico | [Doc L72] |
+| 3 | Gasolina $16.049 por galón; parqueaderos saturados | [Doc L73, L72] (CREG, 2026; UNAB, 2026) |
+| 3 | Alternativa al transporte informal | [Doc L78, L95] |
+| 3 | Menor huella de carbono institucional | [Doc L80, L67] |
+| 4 | Objetivo general y 4 específicos (paráfrasis; se omitió "web", "React", "WebSockets") | [Doc L106, L110-114] |
+| 5 | Redes sociales: publicación de trayectos, gestión precaria; Vai (Uniandes), US$530.000 | [Doc L96] (Forbes, 2023) |
+| 5 | UniWheels: comunidad verificada, emparejamiento por ruta, paradas sugeridas, enfoque UNAB | [Doc L67, L96-98, L124] |
+| 5 | "—" = sin dato en el documento (no se afirma que el referente carezca de la función) | decisión de diseño |
+| 6 | Conductores y pasajeros verificados, hacia/desde/entre sedes | [Doc L67] |
+| 6 | App móvil; sin pagos en la app | [Repo: README.md, docs/adr/0001-pivote-b2b-sin-pagos.md] |
+| 6 | Pantalla de la app | captura real `capturas/app_inicio_splash.png` (Expo web export) |
+| 7 | Publicar → reservar (punto de recogida con coordenadas reales) → recoger (PIN) → finalizar | [Repo: README.md trip-service; commits `9d781e8`, `89f9bf5`] |
+| 8 | Clientes → gateway; gateway → 5 servicios y ai-route | [Repo: `gateway/api-locations.conf`, `gateway/nginx.prod.conf`] |
+| 8 | route-matching → ai-route-service | [Repo: `route-matching-service/app/Services/AiRouteServiceClient.php`] |
+| 8 | auth-service → Resend (línea discontinua) | [Repo: `auth-service/config/mail.php` (`resend`), `app/Mail/*`] |
+| 8 | ai-route-service → OSRM y TomTom | [Repo: `ai-route-service/app/services/osrm_client.py`, `tomtom_traffic_service.py`] |
+| 8 | PostgreSQL+PostGIS (una base por servicio), Redis | [Repo: `docker/docker-compose.prod.yml`, `README.md`] |
+| 9 | Hitos 23 sep, 4 oct, 5 oct, 5 oct | sección 19 (commits) |
+| 9 | TRL 3 → 6 | [Doc L121] |
+| 9 | PMBOK; iterativo-incremental | [Doc L338-342, L346] (texto genérico: ver `revision_autor.md`) |
+| 10 | Correo institucional vigente | [Doc L124] + [Repo: `InstitutionalEmailRule.php`] |
+| 10 | Verificados; gastos compartidos sin lucro | [Doc L67, L95, L135] |
+| 11 | SUS ≥ 80; < 2 s con 100 usuarios; ≥ 2 versiones Android/iOS | [Doc L390, L388, L385] (metas) |
+| 11 | 347 pruebas; 6 microservicios; 198 CI en verde; HTTP 200 | sección 19 |
+| 12 | Riesgos adopción / seguridad entre pares / servicios externos y mitigaciones | [Repo: specs/pivote-b2b-sin-pagos.md; `trip-service` (PIN); `AiRouteServiceClient.php` (fallback)]; impacto adopción [Doc L415], otros [Pendiente] |
+| 13 | Aporte a pasajero, conductor, UNAB | [Doc L95] |
+| 13 | TRL 6; base para escalamiento | [Doc L121, L426] |
+| 14 | https://uniwheels.org | [Repo: README.md]; QR decodificado en `scripts/qa.py` |

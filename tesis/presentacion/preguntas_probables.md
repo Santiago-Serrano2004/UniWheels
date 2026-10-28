@@ -48,4 +48,4 @@ Origen de cada respuesta: **[Doc Lxx]** = `tesis/export/proyecto-de-grado_latest
     El documento no lo trata [Pendiente]. Argumento defendible desde el documento: la demanda preexistente es alta (alto uso de motos y carros con un solo ocupante, parqueaderos desbordados) y la comunidad es cerrada, lo que concentra los trayectos en las mismas cuatro sedes [Doc L71-73, L95].
 
 15. **¿Por qué solo 3 riesgos?**
-    La tabla del documento es genérica y no incluye probabilidad [Doc L412-416]. Reconocerlo y ofrecer ampliarla (seguridad física, arranque en frío, cumplimiento legal del aporte) en la versión final [Pendiente].
+    Son los tres que sostiene el repositorio: adopción (arranque en frío, piloto institucional), seguridad entre pares (verificación institucional y PIN de viaje) y dependencia de servicios externos (fallback PostGIS si falla el servicio de IA) [Repo]. La tabla de riesgos del documento es genérica y no incluye probabilidad [Doc L412-416]; conviene ampliarla (cumplimiento legal del aporte, seguridad física) en la versión final [Pendiente].
