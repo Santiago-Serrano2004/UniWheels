@@ -5,6 +5,44 @@ Ritmo: unas 125 palabras por minuto. **Negrita** = frase que tiene que salir sí
 
 ---
 
+## ▶ Apertura con video promocional (1:00 incluido en los 10:00)
+
+**Video:** `marketing/anuncio/out/uniwheels-real-voz-9x16.mp4` (56,5 s, **con voz**). Las versiones 16:9 (`uniwheels-real-16x9.mp4`, `uniwheels-anuncio-16x9.mp4`) **no tienen audio**; úsalas solo si vas a narrar encima.
+**Montaje:** inserta una diapositiva 0 oscura (layout de cierre de la plantilla, sin logo centrado) con el video vertical centrado (alto completo, ~608 × 1080 pt), **reproducción automática** al entrar y sin controles. Pruébalo con el sonido de la sala. Lleva una copia del MP4 en una USB.
+**Arranque:** no digas nada antes. Apenas entres, das clic, corre el video, y cuando termine pasas a la portada.
+
+### Cronograma ajustado (10:00)
+| # | Diapositiva | Antes | Ahora | Inicio |
+|---|---|---|---|---|
+| 0 | **Video** | — | **1:00** | 0:00 |
+| 1 | Portada | 0:30 | **0:15** | 1:00 |
+| 2 | El problema | 0:50 | 0:50 | 1:15 |
+| 3 | ¿Por qué importa? | 0:40 | **0:25** | 2:05 |
+| 4 | Objetivos | 0:50 | 0:50 | 2:30 |
+| 5 | Estado del arte | 0:40 | 0:40 | 3:20 |
+| 6 | La solución | 0:50 | **0:40** | 4:00 |
+| 7 | Cómo funciona | 0:40 | 0:40 | 4:40 |
+| 8 | Arquitectura | 0:50 | 0:50 | 5:20 |
+| 9 | Metodología | 0:40 | **0:30** | 6:10 |
+| 10 | Comunidad verificada | 0:40 | 0:40 | 6:40 |
+| 11 | Validación / Resultados | 0:50 | 0:50 | 7:20 |
+| 12 | Riesgos | 0:40 | 0:40 | 8:10 |
+| 13 | Aporte | 0:40 | 0:40 | 8:50 |
+| 14+15 | QR + cierre (fusionadas) | 0:40 | **0:30** | 9:30 |
+
+**Control de tiempo:** a los **4:00** debes entrar a la solución y a los **7:20** a la validación.
+
+### Textos que cambian
+- **1. Portada (0:15):** "Lo que acaban de ver es UniWheels. Soy Santiago Serrano Ortiz, de Ingeniería de Sistemas, y mi director es el profesor Julián Santiago Santoyo. Les voy a contar por qué existe y cómo lo construimos."
+- **3. ¿Por qué importa? (0:25):** quita las explicaciones y nombra solo los cuatro frentes con un dato cada uno: "Congestión en las vías de acceso, gasolina a dieciséis mil pesos el galón, transporte informal para quien no tiene carro y la huella de carbono de la universidad."
+- **6. La solución (0:40):** no describas la app, porque el video ya la mostró. Di solo las dos decisiones: "Solo entra quien tiene correo institucional, y la app no maneja dinero: el modelo es B2B."
+- **9. Metodología (0:30):** "PMBOK iterativo. Hitos: primer commit el 23 de septiembre, pivote a B2B el 4 de octubre, producción el 5. De TRL 3 a TRL 6."
+- **14+15. QR y cierre (0:30):** deja el QR en pantalla mientras dices: "Pueden verlo en uniwheels.org. Hay asientos vacíos que van al mismo lugar que nosotros: UniWheels los conecta. Gracias, con gusto respondo sus preguntas."
+
+**Pregunta probable sobre el video:** "¿Quién hizo el video?" → Lo generé en código con Remotion (React), con capturas reales de la app.
+
+---
+
 ## Parte 1. Guion (10:00)
 
 ### 1. Portada · 0:00 → 0:30
