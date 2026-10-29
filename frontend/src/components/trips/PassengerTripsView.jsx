@@ -319,7 +319,7 @@ export const PassengerTripsView = () => {
 
                 <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-lochmara-500/10 text-lochmara-600 dark:text-lochmara-400 border border-lochmara-500/20 font-mono font-black text-xs">
                   <KeyRound className="w-3.5 h-3.5" />
-                  <span>PIN: {activePassengerBooking.boardingPin || '4829'}</span>
+                  <span>PIN: {activePassengerBooking.boardingPin || '—'}</span>
                 </div>
               </div>
 
@@ -342,7 +342,7 @@ export const PassengerTripsView = () => {
 
                 <div className="text-right">
                   <span className="text-xs font-black text-lochmara-500">
-                    {activePassengerBooking.fare || '$ 4.500'}
+                    {activePassengerBooking.fare || '—'}
                   </span>
                   <p className="text-[9px] text-slate-400 font-bold">1 cupo asegurado</p>
                 </div>

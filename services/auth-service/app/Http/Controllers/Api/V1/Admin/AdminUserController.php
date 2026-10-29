@@ -60,7 +60,7 @@ class AdminUserController extends Controller
 
     public function show(string $id): JsonResponse
     {
-        $user = User::with(['institution', 'campus', 'reputationStats', 'wallet', 'suspensionLogs.admin'])
+        $user = User::with(['institution', 'campus', 'reputationStats', 'suspensionLogs.admin'])
             ->findOrFail($id);
 
         return response()->json([

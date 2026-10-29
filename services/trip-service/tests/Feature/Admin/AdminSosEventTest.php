@@ -28,11 +28,7 @@ class AdminSosEventTest extends TestCase
             'boarding_pin' => '1234',
             'is_pin_verified' => false,
             'total_fare_cop' => 8000,
-            'driver_amount_cop' => 7040,
-            'platform_commission_cop' => 960,
-            'commission_status' => 'pendiente_debito',
             'status' => Trip::STATUS_EN_CAMINO,
-            'payment_method' => Trip::PAYMENT_METHOD_EFECTIVO,
             'scheduled_pickup_time' => Carbon::tomorrow()->setHour(7)->setMinute(0),
         ], $attributes));
     }
@@ -144,5 +140,33 @@ class AdminSosEventTest extends TestCase
         $this->assertNotNull($eventoActualizado->attended_at);
         $this->assertEquals($adminId, $eventoActualizado->attended_by_user_id);
         $this->assertEquals('Se contactó a cuadrante de policía local y a seguridad universitaria.', $eventoActualizado->attention_notes);
+    }
+
+    public function test_atender_un_evento_ya_atendido_devuelve_409_sin_sobrescribir(): void
+    {
+        $primerAdmin = (string) Str::uuid();
+        $segundoAdmin = (string) Str::uuid();
+        $trip = $this->crearViajeEnCamino((string) Str::uuid(), (string) Str::uuid());
+
+        $evento = TripSosEvent::create([
+            'trip_id' => $trip->id,
+            'triggered_by_user_id' => (string) Str::uuid(),
+            'latitude' => 7.119349,
+            'longitude' => -73.122741,
+            'emergency_type' => 'panico_usuario',
+            'triggered_at' => now(),
+        ]);
+
+        $this->withToken($this->jwtDePrueba($primerAdmin, ['administrador']))
+            ->patchJson("/api/v1/admin/sos-events/{$evento->id}/attend", ['notes' => 'Primera atención.'])
+            ->assertStatus(200);
+
+        $this->withToken($this->jwtDePrueba($segundoAdmin, ['administrador']))
+            ->patchJson("/api/v1/admin/sos-events/{$evento->id}/attend", ['notes' => 'Segunda atención.'])
+            ->assertStatus(409);
+
+        $evento = $evento->fresh();
+        $this->assertSame($primerAdmin, $evento->attended_by_user_id);
+        $this->assertSame('Primera atención.', $evento->attention_notes);
     }
 }

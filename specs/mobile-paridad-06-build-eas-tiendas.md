@@ -1,3 +1,5 @@
+> **Nota (2026-10-05):** los pagos, la billetera y Wompi fueron eliminados del producto. Ver `docs/adr/0001-pivote-b2b-sin-pagos.md` y `specs/pivote-b2b-sin-pagos.md`.
+
 # Spec: Paridad móvil 06 — Pipeline de Compilación EAS Build y Publicación en Tiendas (Google Play / App Store)
 
 ## Contexto mínimo (ya investigado, no repetir)

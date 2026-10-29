@@ -423,14 +423,9 @@ export const vehicleService = {
   },
 
   // Verificar si el conductor tiene un vehículo aprobado
-  async checkApprovedVehicle(userId, plateNumber) {
+  async checkApprovedVehicle() {
     try {
-      const response = await vehicleApiClient.get('/vehicles/check-approved', {
-        params: {
-          user_id: userId,
-          plate_number: plateNumber,
-        },
-      });
+      const response = await vehicleApiClient.get('/vehicles/check-approved');
       return response.data;
     } catch (error) {
       if (error.response?.data) return error.response.data;
@@ -475,11 +470,10 @@ export const vehicleService = {
 
   // --- PANEL DE ADMINISTRACIÓN (Bienestar Universitario) ---
 
-  // Listar todos los vehículos registrados (solo administradores; sin user_id el
-  // backend devuelve el listado completo cuando el rol del JWT es 'administrador').
+  // Listar todos los vehículos registrados (endpoint de administración).
   async getAllVehiclesForAdmin() {
     try {
-      const response = await vehicleApiClient.get('/vehicles');
+      const response = await vehicleApiClient.get('/admin/vehicles');
       return response.data?.data || [];
     } catch (error) {
       if (error.response?.data) throw error.response.data;

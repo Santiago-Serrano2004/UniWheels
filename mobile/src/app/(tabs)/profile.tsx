@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ShieldCheck,
@@ -14,13 +14,12 @@ import {
   Home,
   X,
   Clock,
-  CreditCard,
   Sparkles,
 } from 'lucide-react-native';
 import { authService, tripsService, useAppStore } from '@uniwheels/shared';
+import { FUNCIONES_SOLO_LOCALES } from '@/config/funciones';
 import { SetHomeLocationModal } from '@/components/SetHomeLocationModal';
 import { ReputationStatsModal } from '@/components/ReputationStatsModal';
-import { PaymentMethodsManagerModal } from '@/components/PaymentMethodsManagerModal';
 import { SmartMatchAlertsModal } from '@/components/SmartMatchAlertsModal';
 
 /**
@@ -34,8 +33,6 @@ export default function ProfileScreen() {
   const openDriverInviteModal = useAppStore((state) => state.openDriverInviteModal);
   const logout = useAppStore((state) => state.logout);
   const savedHomeLocation = useAppStore((state) => state.savedHomeLocation);
-  const pendingOpenPaymentManagerModal = useAppStore((state) => state.pendingOpenPaymentManagerModal);
-  const setPendingOpenPaymentManagerModal = useAppStore((state) => state.setPendingOpenPaymentManagerModal);
   const isDriver = Boolean(user?.isDriver);
 
   const [stats, setStats] = useState<any>(null);
@@ -43,18 +40,10 @@ export default function ProfileScreen() {
   const [modalEliminarAbierto, setModalEliminarAbierto] = useState(false);
   const [modalCasaAbierto, setModalCasaAbierto] = useState(false);
   const [modalReputacionAbierto, setModalReputacionAbierto] = useState(false);
-  const [modalPagosAbierto, setModalPagosAbierto] = useState(false);
   const [modalAlertasAbierto, setModalAlertasAbierto] = useState(false);
 
   useEffect(() => {
-    if (pendingOpenPaymentManagerModal) {
-      setModalPagosAbierto(true);
-      setPendingOpenPaymentManagerModal(false);
-    }
-  }, [pendingOpenPaymentManagerModal, setPendingOpenPaymentManagerModal]);
-
-  useEffect(() => {
-    tripsService.getUserReputationStats().then(setStats);
+    tripsService.getUserReputationStats().then(setStats).catch(() => setStats({}));
   }, []);
 
   const initials = user?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || 'UN';
@@ -62,12 +51,16 @@ export default function ProfileScreen() {
   const confirmarEliminarCuenta = async () => {
     setIsDeleting(true);
     try {
-      await authService.deleteAccount(user?.email);
-    } finally {
+      await authService.deleteAccount();
+    } catch (error: any) {
       setIsDeleting(false);
-      setModalEliminarAbierto(false);
-      logout();
+      Alert.alert('No se pudo eliminar la cuenta', error?.message || 'Inténtalo de nuevo más tarde.');
+      return;
     }
+    setIsDeleting(false);
+    setModalEliminarAbierto(false);
+    logout();
+    Alert.alert('Tu cuenta fue eliminada.');
   };
 
   return (
@@ -193,22 +186,7 @@ export default function ProfileScreen() {
             <ChevronRight size={15} color="#94a3b8" />
           </Pressable>
 
-          <Pressable
-            onPress={() => setModalPagosAbierto(true)}
-            className="flex-row items-center gap-3 p-3.5 border-b border-slate-100 dark:border-slate-800"
-          >
-            <View className="w-9 h-9 rounded-xl bg-lochmara-50 dark:bg-lochmara-500/10 border border-lochmara-200 dark:border-lochmara-500/30 items-center justify-center">
-              <CreditCard size={16} color="#0284c7" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-xs font-bold text-slate-900 dark:text-white">Métodos de Pago</Text>
-              <Text className="text-[10px] text-slate-500" numberOfLines={1}>
-                Tarjetas guardadas y billetera digital Nequi
-              </Text>
-            </View>
-            <ChevronRight size={15} color="#94a3b8" />
-          </Pressable>
-
+          {FUNCIONES_SOLO_LOCALES && (
           <Pressable
             onPress={() => setModalAlertasAbierto(true)}
             className="flex-row items-center gap-3 p-3.5 border-b border-slate-100 dark:border-slate-800"
@@ -224,6 +202,7 @@ export default function ProfileScreen() {
             </View>
             <ChevronRight size={15} color="#94a3b8" />
           </Pressable>
+          )}
 
           <Pressable onPress={() => setModalReputacionAbierto(true)} className="flex-row items-center gap-3 p-3.5">
             <View className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 items-center justify-center">
@@ -233,7 +212,7 @@ export default function ProfileScreen() {
               <Text className="text-xs font-bold text-slate-900 dark:text-white">Reputación y Calificaciones</Text>
               <Text className="text-[10px] text-slate-500">
                 {stats
-                  ? `${stats.rating_average?.toFixed(1) ?? '—'} ★ · ${stats.total_trips ?? 0} viaje(s) · ${stats.reviews_count ?? 0} reseña(s)`
+                  ? `${(stats.rating_average_driver ?? stats.rating_average_passenger)?.toFixed(1) ?? '—'} ★ · ${(stats.total_trips_as_driver ?? 0) + (stats.total_trips_as_passenger ?? 0)} viaje(s) · ${stats.reviews_count ?? 0} reseña(s)`
                   : 'Cargando...'}
               </Text>
             </View>
@@ -281,7 +260,7 @@ export default function ProfileScreen() {
             <View className="gap-1">
               <Text className="text-base font-extrabold text-rose-500">¿Deseas eliminar tu cuenta?</Text>
               <Text className="text-xs text-slate-600 dark:text-slate-400">
-                Esta acción desactivará tu perfil, tus estadísticas de viaje y tus métodos de pago bajo el cumplimiento de la Ley 1581 (Habeas Data).
+                Esta acción elimina tu cuenta y anonimiza tus datos personales (nombre, correo, teléfono, documentos y ubicaciones) según la Ley 1581 (Habeas Data). No se puede deshacer.
               </Text>
             </View>
 
@@ -319,7 +298,6 @@ export default function ProfileScreen() {
 
       <SetHomeLocationModal isOpen={modalCasaAbierto} onClose={() => setModalCasaAbierto(false)} />
       <ReputationStatsModal isOpen={modalReputacionAbierto} onClose={() => setModalReputacionAbierto(false)} stats={stats} />
-      <PaymentMethodsManagerModal isOpen={modalPagosAbierto} onClose={() => setModalPagosAbierto(false)} />
       <SmartMatchAlertsModal isOpen={modalAlertasAbierto} onClose={() => setModalAlertasAbierto(false)} />
     </SafeAreaView>
   );

@@ -331,7 +331,7 @@ export const authService = {
       return response.data;
     } catch (error) {
       if (error.response?.data) throw error.response.data;
-      return { success: true, message: 'Código de verificación enviado al correo institucional.', data: { email } };
+      throw { message: 'No se pudo enviar el código de verificación. Revisa tu conexión e intenta de nuevo.' };
     }
   },
 
@@ -341,7 +341,7 @@ export const authService = {
       return response.data;
     } catch (error) {
       if (error.response?.data) throw error.response.data;
-      return { success: true, message: 'Contraseña actualizada correctamente.' };
+      throw { message: 'No se pudo restablecer la contraseña. Revisa tu conexión e intenta de nuevo.' };
     }
   },
 
@@ -355,9 +355,10 @@ export const authService = {
     }
   },
 
-  async deleteAccount(email) {
+  // DELETE /auth/account (auth-service): usa el token del usuario; `password` es opcional.
+  async deleteAccount(password) {
     try {
-      const response = await apiClient.post('/auth/delete-account-direct', { email });
+      const response = await apiClient.delete('/auth/account', password ? { data: { password } } : undefined);
       return response.data;
     } catch (error) {
       if (error.response?.data) throw error.response.data;
@@ -384,11 +385,9 @@ export const vehicleService = {
     }
   },
 
-  async checkApprovedVehicle(userId, plateNumber) {
+  async checkApprovedVehicle() {
     try {
-      const response = await vehicleApiClient.get('/vehicles/check-approved', {
-        params: { user_id: userId, plate_number: plateNumber },
-      });
+      const response = await vehicleApiClient.get('/vehicles/check-approved');
       return response.data;
     } catch (error) {
       if (error.response?.data) return error.response.data;
@@ -465,7 +464,7 @@ export const vehicleService = {
 
   async getAllVehiclesForAdmin() {
     try {
-      const response = await vehicleApiClient.get('/vehicles');
+      const response = await vehicleApiClient.get('/admin/vehicles');
       return response.data?.data || [];
     } catch (error) {
       if (error.response?.data) throw error.response.data;
@@ -500,8 +499,9 @@ export const tripsService = {
     try {
       const response = await tripLifecycleClient.get('/driver/history');
       return response.data?.data || [];
-    } catch {
-      return [];
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'No se pudo cargar el historial de viajes.' };
     }
   },
 
@@ -516,18 +516,14 @@ export const tripsService = {
 
   async getActiveTripsForRoute(routeId) {
     if (!routeId) return [];
-    const historial = await this.getDriverHistory();
-    const estadosActivos = ['confirmado', 'en_camino', 'en_punto_encuentro', 'recogido'];
-    return historial.filter((t) => t.route_id === routeId && estadosActivos.includes(t.status));
-  },
-
-  async getWalletTransactions() {
+    let historial;
     try {
-      const response = await apiClient.get('/wallet/transactions');
-      return response.data?.data || [];
+      historial = await this.getDriverHistory();
     } catch {
       return [];
     }
+    const estadosActivos = ['confirmado', 'en_camino', 'en_punto_encuentro', 'recogido'];
+    return historial.filter((t) => t.route_id === routeId && estadosActivos.includes(t.status));
   },
 
   async submitRating(ratingPayload) {
@@ -536,27 +532,18 @@ export const tripsService = {
       return response.data;
     } catch (error) {
       if (error.response?.data) throw error.response.data;
-      return { success: true };
+      throw { message: 'No se pudo enviar la calificación.' };
     }
   },
 
+  /**
+   * Reputación del usuario autenticado. Campos reales del backend:
+   * rating_average_driver, rating_average_passenger (null hasta tener 3 calificaciones),
+   * total_trips_as_driver, total_trips_as_passenger y reviews_count. Lanza si falla.
+   */
   async getUserReputationStats() {
-    try {
-      const response = await apiClient.get('/user/reputation-stats');
-      if (response.data?.data) return response.data.data;
-    } catch {
-      // Fallback
-    }
-    return {
-      rating_average: 5.0,
-      total_trips: 0,
-      puntualidad: 5.0,
-      amabilidad: 5.0,
-      conduccion_segura: 5.0,
-      vehiculo_limpio: 5.0,
-      comunicacion: 5.0,
-      reviews_count: 0,
-    };
+    const response = await apiClient.get('/user/reputation-stats');
+    return response.data?.data ?? null;
   },
 };
 
@@ -568,6 +555,24 @@ export const routesService = {
     } catch (error) {
       if (error.response?.data) throw error.response.data;
       throw { message: 'Error al publicar la ruta.' };
+    }
+  },
+
+  async getContributionSuggestion({ vehicleId, originLat, originLng, destinationLat, destinationLng }) {
+    try {
+      const response = await routeApiClient.get('/routes/contribution-suggestion', {
+        params: {
+          vehicle_id: vehicleId,
+          origin_lat: originLat,
+          origin_lng: originLng,
+          destination_lat: destinationLat,
+          destination_lng: destinationLng,
+        },
+      });
+      return response.data?.data;
+    } catch (error) {
+      if (error.response?.data) throw { ...error.response.data, status: error.response.status };
+      throw { message: 'No se pudo calcular el aporte sugerido.' };
     }
   },
 
@@ -590,6 +595,37 @@ export const routesService = {
   },
 
   /** @param {string|null} [preferredTime] */
+  /** Detalle de una ruta, incluida su geometría real ([lat, lng][] en `coordinates`). */
+  async getRoute(routeId) {
+    try {
+      const response = await routeApiClient.get(`/routes/${routeId}`);
+      return response.data?.data || null;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'No se pudo cargar la ruta.' };
+    }
+  },
+
+  /**
+   * Cambia el estado de una ruta propia: 'en_curso', 'finalizada' o 'cancelada'.
+   * Al salir de 'publicada' deja de aparecer en búsquedas y no acepta reservas. Lanza si falla.
+   */
+  async updateRouteStatus(routeId, status) {
+    try {
+      const response = await routeApiClient.post(`/routes/${routeId}/status`, { status });
+      return response.data?.data || null;
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'No se pudo actualizar el estado de la ruta.' };
+    }
+  },
+
+  /**
+   * @param {number} pickupLat
+   * @param {number} pickupLng
+   * @param {number} [destinationCampusId]
+   * @param {string|null} [preferredTime]
+   */
   async searchMatches(pickupLat, pickupLng, destinationCampusId = 1, preferredTime = null) {
     try {
       const response = await routeApiClient.post('/routes/search-match', {
@@ -599,8 +635,9 @@ export const routesService = {
         preferred_time: preferredTime || undefined,
       });
       return response.data?.data || [];
-    } catch {
-      return [];
+    } catch (error) {
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'No se pudo buscar rutas. Revisa tu conexión e intenta de nuevo.' };
     }
   },
 
@@ -641,18 +678,6 @@ export const routesService = {
         reason: detourMin <= 15 ? 'Desvío estimado dentro del rango viable' : 'Excede el límite estimado de desvío',
       },
     };
-  },
-};
-
-export const walletService = {
-  async initRecharge(amountCop) {
-    try {
-      const response = await apiClient.post('/wallet/recharge/init', { amount_cop: amountCop });
-      return response.data?.data || null;
-    } catch (error) {
-      if (error.response?.data) throw error.response.data;
-      throw { message: 'No se pudo iniciar la recarga de billetera.' };
-    }
   },
 };
 
@@ -702,9 +727,10 @@ export const tripLifecycleService = {
         timestamp: new Date().toISOString(),
       });
       return response.data;
-    } catch {
-      // Si el endpoint no existe o falla, no bloquear el flujo de llamada telefónica del dispositivo
-      return { success: false, fallback: true };
+    } catch (error) {
+      // El error se propaga: la app avisa que la alerta no quedó registrada y ofrece llamar al 123.
+      if (error.response?.data) throw error.response.data;
+      throw { message: 'No se pudo registrar la alerta SOS.' };
     }
   },
 
@@ -752,16 +778,6 @@ export const tripLifecycleService = {
       return response.data?.data || null;
     } catch {
       return null;
-    }
-  },
-
-  async initCardPayment(tripId) {
-    try {
-      const response = await tripLifecycleClient.post(`/trips/${tripId}/payment/card/init`);
-      return response.data?.data || null;
-    } catch (error) {
-      if (error.response?.data) throw error.response.data;
-      throw { message: 'No se pudo iniciar el pago con tarjeta.' };
     }
   },
 };

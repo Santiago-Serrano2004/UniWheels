@@ -7,10 +7,10 @@ Este documento detalla el esquema de datos físico y lógico implementado en **P
 ## 1. Mapa General de Bases de Datos
 
 ```text
-├── auth_db             (Identidad, Perfil UNAB, Roles Spatie, Billeteras Prepago y Reputación)
+├── auth_db             (Identidad, perfil institucional, Roles Spatie, suspensiones (suspended_until, bitácora) y Reputación)
 ├── vehicle_db          (Vehículos, Catálogo Marcas NHTSA, Documentos Legales y Habeas Data)
 ├── route_gis_db        (Rutas PostGIS SRID 4326, Paradas e Índices Espaciales GiST)
-├── trip_db             (Viajes, Máquina de Estados, PIN de Abordaje, Índices Compuestos y Liquidación)
+├── trip_db             (Viajes, Máquina de Estados, PIN de Abordaje, Índices Compuestos y Cancelaciones)
 └── notification_db     (Calificaciones 1 a 5 estrellas, Reportes de Seguridad y Notificaciones)
 ```
 
@@ -30,12 +30,12 @@ Este documento detalla el esquema de datos físico y lógico implementado en **P
 * `name`, `email` (UNIQUE), `id_document_number` (UNIQUE), `id_document_type` (`CC`, `CE`), `phone_number`.
 * `member_type` (`estudiante`, `docente`, `administrativo`), `student_code` (`UXXXXXXXX`), `semester`.
 * `is_driver` (`boolean`), `is_active` (`boolean`), `verification_expires_at` (`timestamptz`).
+* `suspended_until` (`timestamptz`, nullable): fin de una suspensión automática por cancelaciones tardías. Las suspensiones manuales de un administrador no tienen fecha.
 * `deleted_at` (`timestamptz`): Soporte de **borrado lógico (*Soft Deletes*)** para cumplimiento de Habeas Data e integridad de auditoría histórica.
 
-#### Tablas: `user_wallets` y `wallet_transactions` (Control de Concurrencia)
-* **`user_wallets`**: Saldo prepago en pesos colombianos (`balance_cop`) y estado de bloqueo (`is_locked`).
-* **`wallet_transactions`**: Bitácora inmutable con doble contabilidad (`balance_before_cop`, `amount_cop`, `balance_after_cop`, `reference_id`, `status`).
-* **Bloqueo Pesimista (*Pessimistic Locking*):** Todas las operaciones financieras son gestionadas por `WalletTransactionService` mediante `UserWallet::where('user_id', $id)->lockForUpdate()->firstOrFail();` dentro de transacciones atómicas `DB::transaction()`.
+#### Tabla: `user_suspension_logs`
+* `id` (`uuid`, PK), `user_id` (`uuid`, FK), `admin_user_id` (`uuid`, nullable: `null` en las acciones automáticas), `action`, `reason`, `created_at`.
+* Acciones: `suspended` y `reactivated` (administrador); `auto_suspended` y `auto_reactivated` (sistema, por cancelaciones tardías).
 
 ---
 
@@ -57,7 +57,8 @@ Este documento detalla el esquema de datos físico y lógico implementado en **P
 #### Tabla: `routes`
 * `id` (`uuid`, PK), `driver_id` (`uuid`), `vehicle_id` (`uuid`).
 * `origin_name` (`varchar(150)`), `destination_campus_id` (`bigint`), `destination_campus_name` (`varchar(100)`).
-* `scheduled_departure_time`, `target_arrival_time`, `estimated_duration_minutes`, `available_seats`, `base_contribution_cop`.
+* `scheduled_departure_time`, `target_arrival_time`, `estimated_duration_minutes`, `available_seats`.
+* Aporte (la plataforma no procesa pagos): `base_contribution_cop` (`decimal(10,2)`, por defecto 0): aporte indicado por el conductor, entre 0 y el sugerido; `distance_km` (`decimal(6,2)`, nullable): distancia vial; `suggested_contribution_cop` (`decimal(10,2)`, nullable): aporte sugerido y tope al publicar.
 * **Columnas de Geometría PostGIS (SRID 4326):**
   * `path_geometry`: `GEOMETRY(LineString, 4326)`
   * `origin_geom`: `GEOMETRY(Point, 4326)`
@@ -78,13 +79,17 @@ Este documento detalla el esquema de datos físico y lógico implementado en **P
 * `id` (`uuid`, PK), `route_id` (`uuid`), `driver_id` (`uuid`), `passenger_id` (`uuid`), `vehicle_id` (`uuid`).
 * `driver_name`, `passenger_name`, `vehicle_plate`, `vehicle_model`, `pickup_address`, `dropoff_address`.
 * `boarding_pin` (`varchar(10)`), `is_pin_verified` (`boolean`), `pin_verified_at` (`timestamptz`).
-* `total_fare_cop` (`decimal(10,2)`), `driver_amount_cop`, `platform_commission_cop` (12%), `commission_status`.
+* `total_fare_cop` (`decimal(10,2)`): aporte acordado, se paga fuera de la plataforma.
 * `status` (`solicitado`, `confirmado`, `en_camino`, `recogido`, `completado`, `cancelado_por_conductor`, `cancelado_por_pasajero`).
 * **Índices Compuestos de Alto Rendimiento:**
   ```sql
   CREATE INDEX idx_trips_driver_status_scheduled ON trips (driver_id, status, scheduled_pickup_time);
   CREATE INDEX idx_trips_passenger_status_scheduled ON trips (passenger_id, status, scheduled_pickup_time);
   ```
+
+#### Tabla: `trip_cancellations`
+* `trip_id`, `cancelled_by_user_id`, `canceller_role` (`conductor`, `pasajero`), `reason_category`, `detailed_reason`, `minutes_before_departure`, `had_penalty`.
+* `had_penalty` (`boolean`) significa "cancelación tardía". Tres cancelaciones tardías en 30 días suspenden la cuenta por 30 días (ver `services/trip-service/README.md`).
 
 ---
 

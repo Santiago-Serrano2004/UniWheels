@@ -261,7 +261,7 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
           source={{ html: htmlContent }}
           onMessage={handleMessage}
           onLoadStart={() => {
-            // Al recargar (cambio de tema) el mapa anterior deja de existir:
+            // Al volver a cargar (cambio de tema) el mapa anterior deja de existir:
             // encolar las inyecciones hasta el próximo 'onReady'.
             isReadyRef.current = false;
           }}

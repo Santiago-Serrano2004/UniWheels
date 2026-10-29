@@ -78,7 +78,7 @@ export const PassengerActiveTripCard = () => {
 
           <div className="text-right">
             <span className="text-sm font-extrabold text-emerald-500">
-              {activePassengerBooking.fare || '$ 4.500'}
+              {activePassengerBooking.fare || '—'}
             </span>
             <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Aporte acordado</p>
           </div>
@@ -108,7 +108,7 @@ export const PassengerActiveTripCard = () => {
                 : 'bg-white text-slate-900 border-slate-200'
             }`}
           >
-            {activePassengerBooking.boardingPin || '4829'}
+            {activePassengerBooking.boardingPin || '—'}
           </div>
         </div>
 

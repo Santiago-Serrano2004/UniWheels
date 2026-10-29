@@ -35,6 +35,14 @@ return [
         ],
     ],
 
+    'trip_service' => [
+        'url' => env('TRIP_SERVICE_URL', 'http://127.0.0.1:8004'),
+    ],
+
+    'auth_service' => [
+        'url' => env('AUTH_SERVICE_URL', 'http://127.0.0.1:8001'),
+    ],
+
     'vapid' => [
         'public_key' => env('VAPID_PUBLIC_KEY'),
         'private_key' => env('VAPID_PRIVATE_KEY'),

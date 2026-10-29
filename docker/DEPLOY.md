@@ -122,11 +122,30 @@ Para cada uno de los 5 servicios Laravel, copia su `.env.example` a
   `VEHICLE_SERVICE_URL`, `AI_ROUTE_SERVICE_URL`, `TRIP_SERVICE_URL`) deben usar
   el nombre del servicio Docker en vez de `127.0.0.1`, p. ej.
   `AUTH_SERVICE_URL=http://auth-service:8001`.
+  **`docker-compose.prod.yml` ya las fija en `environment`** (tienen prioridad
+  sobre `.env.production`), así un `.env.production` incompleto no deja a un
+  servicio apuntando a `127.0.0.1`: auth-service (`VEHICLE_`, `ROUTE_MATCHING_`,
+  `TRIP_` y `NOTIFICATION_SERVICE_URL`), notification-service (`AUTH_` y
+  `TRIP_SERVICE_URL`), route-matching-service (`AUTH_`, `VEHICLE_`,
+  `AI_ROUTE_SERVICE_URL` y `OSRM_BACKEND_URL`) y trip-service (`AUTH_` y
+  `ROUTE_MATCHING_SERVICE_URL`). `python3 scripts/check_compose_service_urls.py`
+  (corre en la CI) falla si un servicio lee una `*_URL` que el compose no define.
 - `JWT_SECRET`: **el mismo valor exacto en los 5 servicios** (y en
   `ai-route-service`) — es un secreto compartido entre microservicios, no por
   servicio.
-- Credenciales reales de Wompi (`WOMPI_*`), Sentry (`SENTRY_LARAVEL_DSN`) y,
-  en `vehicle-service`, las `R2_*` del paso 4a.
+- Credenciales reales de Sentry (`SENTRY_LARAVEL_DSN`) y, en `vehicle-service`,
+  las `R2_*` del paso 4a. UniWheels no procesa pagos: no hay credenciales de
+  pasarela de pago (ADR 0001).
+- **`trip-service`** necesita `AUTH_SERVICE_URL` (le pide a auth-service la
+  suspensión automática por cancelaciones tardías) y acepta
+  `LATE_CANCEL_THRESHOLD` (3), `LATE_CANCEL_WINDOW_DAYS` (30) y
+  `LATE_CANCEL_SUSPENSION_DAYS` (30). `docker-compose.prod.yml` ya los define
+  con esos valores por defecto; para cambiarlos, ponlos en `docker/.env`.
+- **`route-matching-service`** acepta `CONTRIBUTION_CAR_BASE` (2000),
+  `CONTRIBUTION_CAR_PER_KM` (400), `CONTRIBUTION_MOTO_BASE` (1000) y
+  `CONTRIBUTION_MOTO_PER_KM` (250): fórmula del aporte sugerido
+  (`base + km × valor_por_km`, redondeado hacia arriba a la centena). También
+  tienen esos valores por defecto en `docker-compose.prod.yml`.
 
 Para `ai-route-service`, copia igual su `.env.example` a `.env.production` y
 ajusta `TRIP_SERVICE_URL=http://trip-service:8004`.
@@ -187,3 +206,21 @@ VPS de pago (Hetzner ~$4-5 USD/mes por 2vCPU/4GB, DigitalOcean, o un shape
 pago de la propia Oracle) sin rediseñar nada. El siguiente escalón después de
 eso (separar cada microservicio a su propio host, balanceo de carga) es un
 proyecto aparte, no algo que este stack necesite ahora.
+
+## OSRM (ruteo por calles)
+Sin OSRM, route-matching guarda las rutas como **línea recta** (respaldo geodésico): el mapa, la distancia y el aporte sugerido quedan mal.
+Los datos (`docker/osrm-data/santander.osrm*`, ~44 MB) no están en git y se generan así (en un PC con RAM; la VM no alcanza):
+
+```bash
+mkdir -p /tmp/osrm && cd /tmp/osrm
+curl -L -o colombia.osm.pbf https://download.geofabrik.de/south-america/colombia-latest.osm.pbf
+# Recorte del área metropolitana (mismos límites que valida PublishRouteRequest)
+podman run --rm -v $PWD:/data:Z docker.io/iboates/osmium:latest extract -b -73.35,6.80,-72.95,7.35 /data/colombia.osm.pbf -o /data/santander.osm.pbf --overwrite
+podman run --rm -v $PWD:/data:Z docker.io/osrm/osrm-backend:latest osrm-extract -p /opt/car.lua /data/santander.osm.pbf
+podman run --rm -v $PWD:/data:Z docker.io/osrm/osrm-backend:latest osrm-partition /data/santander.osrm
+podman run --rm -v $PWD:/data:Z docker.io/osrm/osrm-backend:latest osrm-customize /data/santander.osrm
+rsync -a santander.osrm* azureuser_uniwheels@<VM>:uniwheels/docker/osrm-data/
+# En la VM:
+docker compose --file docker/docker-compose.prod.yml up -d --no-deps osrm_backend
+```
+Usa ~25 MB de RAM. Conviene regenerarlo cada pocos meses para tomar calles nuevas de OpenStreetMap.

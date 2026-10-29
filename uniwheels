@@ -69,9 +69,28 @@ kill_port() {
     fi
 }
 
+# OSRM necesita los datos preprocesados (docker/osrm-data/*.osrm*). Sin ellos el contenedor
+# sale con código 1 y los servicios usan el respaldo geodésico (SIM-025).
+osrm_has_data() {
+    compgen -G "${ROOT_DIR}/docker/osrm-data/*.osrm*" >/dev/null 2>&1
+}
+
+warn_if_osrm_without_data() {
+    if ! osrm_has_data; then
+        echo -e "  ${YELLOW}⚠ OSRM sin datos (docker/osrm-data vacío): no se levanta OSRM y se usa respaldo geodésico.${NC}"
+    fi
+}
+
 # Iniciar contenedor de infraestructura básica si no está activo
 start_infrastructure() {
     echo -e "${BLUE}▶ Verificando infraestructura de bases de datos (PostgreSQL 16, PostGIS, Redis, OSRM)...${NC}"
+    warn_if_osrm_without_data
+
+    # Sin datos de OSRM no se pide su contenedor (saldría con código 1).
+    local compose_services=(postgres_gis redis uptime_kuma)
+    if osrm_has_data; then
+        compose_services+=(osrm_backend)
+    fi
     
     if check_port 5432 && check_port 6379; then
         echo -e "  ${GREEN}✓${NC} PostgreSQL y Redis ya se encuentran en ejecución."
@@ -80,10 +99,10 @@ start_infrastructure() {
 
     if command -v podman >/dev/null 2>&1; then
         echo -e "  ${YELLOW} Levantando contenedores con Podman Compose...${NC}"
-        podman compose -f "${ROOT_DIR}/docker/docker-compose.yml" up -d >/dev/null 2>&1 || true
+        podman compose -f "${ROOT_DIR}/docker/docker-compose.yml" up -d "${compose_services[@]}" >/dev/null 2>&1 || true
     elif command -v docker >/dev/null 2>&1; then
         echo -e "  ${YELLOW} Levantando contenedores con Docker Compose...${NC}"
-        docker compose -f "${ROOT_DIR}/docker/docker-compose.yml" up -d >/dev/null 2>&1 || true
+        docker compose -f "${ROOT_DIR}/docker/docker-compose.yml" up -d "${compose_services[@]}" >/dev/null 2>&1 || true
     else
         echo -e "  ${YELLOW} Podman/Docker no detectado. Asumiendo servicios locales de PostgreSQL y Redis.${NC}"
     fi
@@ -110,18 +129,20 @@ cmd_start() {
 
         echo -ne "  ${CYAN}${NC} Arrancando ${BOLD}${name}${NC} (: ${port} )... "
         
-        # Ejecutar en subshell en background
+        # Ejecutar en subshell en background. El subshell completo (no solo el comando) redirige
+        # stdout/stderr al log y stdin a /dev/null: si hereda la salida de quien llama, un
+        # `./uniwheels start | cat` nunca termina porque el pipe sigue abierto (SIM-025c).
         (
             cd "${ROOT_DIR}/${path}"
-            eval "${cmd}" > "${log_file}" 2>&1
-        ) &
+            eval "${cmd}"
+        ) > "${log_file}" 2>&1 < /dev/null &
         local pid=$!
         echo "${pid}" > "${pid_file}"
 
         # Esperar confirmación de puerto (hasta 10 segundos)
         local count=0
         local started=false
-        while [ $count -lt 20 ]; do
+        while [ $count -lt "${UNIWHEELS_PORT_WAIT_TICKS:-20}" ]; do
             if check_port "${port}"; then
                 started=true
                 break
@@ -290,10 +311,21 @@ cmd_migrate() {
     echo -e "${BLUE}▶ Ejecutando migraciones en todas las bases de datos...${NC}"
     
     local laravel_services=("auth-service" "vehicle-service" "route-matching-service" "trip-service" "notification-service")
+    local failed=()
     for s in "${laravel_services[@]}"; do
         echo -e "  ${CYAN}⚡ Migrando ${s}...${NC}"
-        (cd "${ROOT_DIR}/services/${s}" && php artisan migrate --force)
+        # `if !` evita que `set -e` corte el bucle: se migran los demás servicios y al final
+        # se sale con código distinto de 0 si alguno falló (SIM-025a).
+        if ! (cd "${ROOT_DIR}/services/${s}" && php artisan migrate --force); then
+            echo -e "  ${RED}✗ Falló la migración de ${s}.${NC}"
+            failed+=("${s}")
+        fi
     done
+
+    if [ "${#failed[@]}" -gt 0 ]; then
+        echo -e "${RED}✗ Migraciones con errores en: ${failed[*]}. Revisa el error de arriba.${NC}" >&2
+        exit 1
+    fi
 
     echo -e "${GREEN}✓ Migraciones completadas en los 5 microservicios.${NC}"
 }

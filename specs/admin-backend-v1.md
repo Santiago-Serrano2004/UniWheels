@@ -1,3 +1,5 @@
+> **Nota (2026-10-05):** los pagos, la billetera y Wompi fueron eliminados del producto. Ver `docs/adr/0001-pivote-b2b-sin-pagos.md` y `specs/pivote-b2b-sin-pagos.md`.
+
 # Backend del panel de administración v1 (revisión segura, SOS, usuarios, viajes, pagos)
 
 **Documento:** `specs/admin-backend-v1.md`

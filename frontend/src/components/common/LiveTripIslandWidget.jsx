@@ -148,7 +148,7 @@ export const LiveTripIslandWidget = () => {
         vehicle: trip.vehicle || 'Mazda 3',
         plate: trip.plate || 'KLU-492',
         etaMinutes: isStarted ? destinationEtaMinutes : etaMinutesMostrado,
-        boardingPin: trip.boardingPin || '4829',
+        boardingPin: trip.boardingPin || '—',
         destination: trip.destination || 'Campus El Jardín',
       });
     }
@@ -274,7 +274,7 @@ export const LiveTripIslandWidget = () => {
                 }`}>
                   <KeyRound className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                   <span className="text-xs font-mono font-black tracking-wider">
-                    {trip.boardingPin || '4829'}
+                    {trip.boardingPin || '—'}
                   </span>
                 </div>
               )}

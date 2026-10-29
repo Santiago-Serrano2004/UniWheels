@@ -20,6 +20,7 @@ class AdminUserListResource extends JsonResource
             'role' => $this->getRoleNames()->first() ?? 'estudiante',
             'roles' => $this->getRoleNames(),
             'is_active' => (bool) $this->is_active,
+            'suspended_until' => $this->suspended_until?->toISOString(),
             'is_driver' => (bool) $this->is_driver,
             'created_at' => $this->created_at?->toISOString(),
         ];

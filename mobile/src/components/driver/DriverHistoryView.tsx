@@ -25,15 +25,18 @@ import {
   Users,
   X,
 } from 'lucide-react-native';
-import { routesService, tripsService, useAppStore } from '@uniwheels/shared';
+import { fechaColombiaStr, routesService, tripsService, useAppStore } from '@uniwheels/shared';
+import { FUNCIONES_SOLO_LOCALES } from '@/config/funciones';
+import { confirmarCancelacionDeRuta } from '@/services/viajesDeRuta';
 import { RatingFeedbackModal } from '@/components/RatingFeedbackModal';
+import { useDriverRoutesSync } from '@/hooks/useDriverRoutesSync';
 
 type PeriodFilter = 'todos' | 'semana' | 'mes';
 
 export function DriverHistoryView() {
   const publishedDriverTrips = useAppStore((state) => state.publishedDriverTrips);
+  const { sincronizar } = useDriverRoutesSync(true);
   const setPublishedDriverTrips = useAppStore((state) => state.setPublishedDriverTrips);
-  const cancelPublishedTrip = useAppStore((state) => state.cancelPublishedTrip);
   const startPublishedTrip = useAppStore((state) => state.startPublishedTrip);
   const recurringDriverTrips = useAppStore((state) => state.recurringDriverTrips);
   const toggleRecurringDriverTrip = useAppStore((state) => state.toggleRecurringDriverTrip);
@@ -57,7 +60,6 @@ export function DriverHistoryView() {
   const [nuevoOrigen, setNuevoOrigen] = useState('Cañaveral - C.C. Parque Caracolí');
   const [nuevoDestino, setNuevoDestino] = useState('Campus El Jardín');
   const [nuevosCupos, setNuevosCupos] = useState(3);
-  const [nuevaTarifa, setNuevaTarifa] = useState('4500');
 
   // Historial de viajes completados
   const [viajesHistorial, setViajesHistorial] = useState<any[]>([]);
@@ -69,11 +71,10 @@ export function DriverHistoryView() {
       const completados = (data || []).filter((d: any) => d.status === 'completado');
       const formateados = completados.map((d: any) => ({
         id: d.id,
-        date: d.date || new Date().toISOString().split('T')[0],
+        date: d.date || fechaColombiaStr(),
         origin: d.origin,
         destination: d.destination,
-        totalEarned: Number(d.fare_cop) || 0,
-        driverEarnings: Number(d.earnings_cop) || Math.round((Number(d.fare_cop) || 0) * 0.88),
+        aporte: Number(d.fare_cop) || 0,
         passenger: {
           id: d.passenger_id,
           name: d.passenger_name || 'Pasajero',
@@ -83,6 +84,9 @@ export function DriverHistoryView() {
       }));
       setViajesHistorial(formateados);
       setIsLoading(false);
+    }).catch((error: any) => {
+      setIsLoading(false);
+      Alert.alert('No se pudo cargar el historial', error?.message || 'Inténtalo de nuevo más tarde.');
     });
   }, []);
 
@@ -122,8 +126,8 @@ export function DriverHistoryView() {
   }, [setPublishedDriverTrips]);
 
   // Cálculos de métricas consolidadas
-  const totalNetEarnings = useMemo(() => {
-    return viajesHistorial.reduce((acc, v) => acc + (v.driverEarnings || 0), 0);
+  const totalAportes = useMemo(() => {
+    return viajesHistorial.reduce((acc, v) => acc + (v.aporte || 0), 0);
   }, [viajesHistorial]);
 
   const totalPassengers = useMemo(() => {
@@ -174,7 +178,6 @@ export function DriverHistoryView() {
       origin: nuevoOrigen,
       destination: nuevoDestino,
       seats: Number(nuevosCupos),
-      fare_cop: Number(nuevaTarifa),
     });
     setModalNuevaRutina(false);
   };
@@ -190,8 +193,9 @@ export function DriverHistoryView() {
         score: rating,
         optional_comment: comment || undefined,
       });
-    } catch {
-      // Registrar localmente
+    } catch (error: any) {
+      Alert.alert('No se pudo enviar la calificación', error?.message || 'Inténtalo de nuevo más tarde.');
+      return;
     }
 
     setViajesHistorial((prev) =>
@@ -231,13 +235,13 @@ export function DriverHistoryView() {
         <View className="flex-row gap-2">
           <View className="flex-1 bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 gap-1">
             <View className="flex-row items-center justify-between">
-              <Text className="text-[10px] font-bold uppercase text-slate-400">Ganancias Netas</Text>
+              <Text className="text-[10px] font-bold uppercase text-slate-400">Aportes Recibidos</Text>
               <DollarSign size={13} color="#10b981" />
             </View>
             <Text className="text-base font-black text-emerald-600 dark:text-emerald-400">
-              ${totalNetEarnings.toLocaleString('es-CO')}
+              ${totalAportes.toLocaleString('es-CO')}
             </Text>
-            <Text className="text-[9px] text-slate-400">Tras deducir 12%</Text>
+            <Text className="text-[9px] text-slate-400">Se pagan por fuera de la app</Text>
           </View>
 
           <View className="flex-1 bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 gap-1">
@@ -288,6 +292,7 @@ export function DriverHistoryView() {
           </Text>
         </Pressable>
 
+        {FUNCIONES_SOLO_LOCALES && (
         <Pressable
           onPress={() => setActiveSection('recurring')}
           className={`flex-1 py-2 rounded-xl items-center justify-center ${
@@ -302,6 +307,7 @@ export function DriverHistoryView() {
             Recurrentes ({recurringDriverTrips.length})
           </Text>
         </Pressable>
+        )}
 
         <Pressable
           onPress={() => setActiveSection('history')}
@@ -435,12 +441,7 @@ export function DriverHistoryView() {
                         <Text className="text-xs font-black text-white">Iniciar en Cabina GPS</Text>
                       </Pressable>
                       <Pressable
-                        onPress={() =>
-                          Alert.alert('Cancelar ruta', '¿Deseas cancelar esta ruta publicada?', [
-                            { text: 'No', style: 'cancel' },
-                            { text: 'Sí, cancelar', style: 'destructive', onPress: () => cancelPublishedTrip(viaje.id) },
-                          ])
-                        }
+                        onPress={() => confirmarCancelacionDeRuta(String(viaje.id), sincronizar)}
                         className="px-3.5 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20"
                       >
                         <Text className="text-xs font-bold text-rose-600 dark:text-rose-400">Cancelar</Text>
@@ -558,7 +559,7 @@ export function DriverHistoryView() {
                   <View className="flex-row items-center justify-between">
                     <Text className="text-[10px] font-bold text-slate-400">Ruta:</Text>
                     <Text className="text-xs font-black text-emerald-600 dark:text-emerald-400">
-                      ${Number(plantilla.fare_cop || 0).toLocaleString('es-CO')} • {plantilla.seats} cupos
+                      {plantilla.seats} cupos
                     </Text>
                   </View>
                   <View className="flex-row items-center gap-1.5">
@@ -611,13 +612,12 @@ export function DriverHistoryView() {
                 Sin viajes completados en este período
               </Text>
               <Text className="text-[11px] text-slate-400 text-center">
-                Tus trayectos finalizados y ganancias se listarán en esta sección.
+                Tus trayectos finalizados y los aportes recibidos se listarán en esta sección.
               </Text>
             </View>
           ) : (
             filteredHistorial.map((viaje) => {
               const isExpanded = viajeExpandido === viaje.id;
-              const comisionCop = Math.round(viaje.totalEarned * 0.12);
 
               return (
                 <View
@@ -648,7 +648,7 @@ export function DriverHistoryView() {
 
                     <View className="items-end">
                       <Text className="text-sm font-black text-emerald-600 dark:text-emerald-400">
-                        +${viaje.driverEarnings.toLocaleString('es-CO')}
+                        ${viaje.aporte.toLocaleString('es-CO')}
                       </Text>
                       <Text className="text-[10px] text-slate-400">{viaje.passenger?.name || 'Pasajero'}</Text>
                     </View>
@@ -657,25 +657,14 @@ export function DriverHistoryView() {
                   {/* Detalle Desplegable */}
                   {isExpanded && (
                     <View className="px-4 pb-4 pt-2 border-t border-slate-100 dark:border-slate-800 gap-3">
-                      <View className="flex-row p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                        <View className="flex-1 items-center">
-                          <Text className="text-[9px] font-bold text-slate-400">Total Cobrado</Text>
-                          <Text className="text-xs font-extrabold text-slate-900 dark:text-white">
-                            ${viaje.totalEarned.toLocaleString('es-CO')}
-                          </Text>
-                        </View>
-                        <View className="flex-1 items-center">
-                          <Text className="text-[9px] font-bold text-slate-400">Comisión (12%)</Text>
-                          <Text className="text-xs font-extrabold text-rose-500">
-                            -${comisionCop.toLocaleString('es-CO')}
-                          </Text>
-                        </View>
-                        <View className="flex-1 items-center">
-                          <Text className="text-[9px] font-bold text-slate-400">Ganancia Neta</Text>
-                          <Text className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">
-                            +${viaje.driverEarnings.toLocaleString('es-CO')}
-                          </Text>
-                        </View>
+                      <View className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 items-center gap-0.5">
+                        <Text className="text-[9px] font-bold text-slate-400">Aporte Recibido</Text>
+                        <Text className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">
+                          ${viaje.aporte.toLocaleString('es-CO')}
+                        </Text>
+                        <Text className="text-[9px] text-slate-400">
+                          Se paga directamente al conductor, fuera de la app.
+                        </Text>
                       </View>
 
                       {/* Pasajero Transportado */}
@@ -818,30 +807,9 @@ export function DriverHistoryView() {
               </View>
             </View>
 
-            <View className="gap-1">
-              <Text className="text-[10px] font-bold text-slate-400 uppercase">Tarifa por Cupo:</Text>
-              <View className="flex-row gap-1">
-                {['3500', '4000', '4500', '5000'].map((tarifa) => (
-                  <Pressable
-                    key={tarifa}
-                    onPress={() => setNuevaTarifa(tarifa)}
-                    className={`flex-1 py-2 rounded-xl items-center justify-center ${
-                      nuevaTarifa === tarifa
-                        ? 'bg-emerald-600'
-                        : 'bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800'
-                    }`}
-                  >
-                    <Text
-                      className={`text-[10px] font-bold ${
-                        nuevaTarifa === tarifa ? 'text-white font-black' : 'text-slate-500'
-                      }`}
-                    >
-                      ${Number(tarifa).toLocaleString('es-CO')}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
+            <Text className="text-[10px] text-slate-400">
+              El aporte se calcula al publicar, con el tope sugerido para la ruta.
+            </Text>
 
             <Pressable
               onPress={handleCrearRutina}

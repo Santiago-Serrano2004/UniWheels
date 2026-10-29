@@ -1,26 +1,21 @@
 import React from 'react';
-import { BadgeCheck, KeyRound, Siren, FileCheck2, Lock } from 'lucide-react';
 import { Reveal } from './Reveal';
 
 const GARANTIAS = [
   {
-    icono: BadgeCheck,
     titulo: 'Solo gente de tu universidad',
     texto: 'Para crear una cuenta necesitas tu correo institucional y confirmar el código que te llega a ese correo.',
   },
   {
-    icono: KeyRound,
     titulo: 'Un PIN en cada abordaje',
     texto: 'Cada reserva tiene un PIN de 4 dígitos. El viaje empieza solo cuando el conductor lo confirma.',
   },
   {
-    icono: Siren,
     titulo: 'Botón SOS durante el viaje',
     texto:
       'Con un toque llamas a la línea 123, a emergencias médicas o a la seguridad del campus, o compartes tu ubicación por WhatsApp. Cada alerta queda registrada para Bienestar Universitario.',
   },
   {
-    icono: FileCheck2,
     titulo: 'Conductores revisados',
     texto: 'Bienestar Universitario revisa el SOAT, la licencia y la tecnomecánica de cada conductor antes de aprobarlo.',
   },
@@ -52,9 +47,8 @@ export const Security = ({ onOpenPrivacy }) => (
       </div>
 
       <ul className="divide-y divide-[var(--color-linea)] border-y border-[var(--color-linea)]">
-        {GARANTIAS.map(({ icono: Icono, titulo, texto }, i) => (
+        {GARANTIAS.map(({ titulo, texto }, i) => (
           <Reveal as="li" key={titulo} delay={i * 0.08} y={16} className="flex gap-5 py-7">
-            <Icono className="mt-1 h-6 w-6 shrink-0 text-lochmara-600" strokeWidth={1.75} aria-hidden="true" />
             <div>
               <h3 className="text-xl font-bold tracking-[-0.015em]">{titulo}</h3>
               <p className="mt-1.5 leading-relaxed">{texto}</p>
@@ -62,7 +56,6 @@ export const Security = ({ onOpenPrivacy }) => (
           </Reveal>
         ))}
         <li className="flex gap-5 py-7">
-          <Lock className="mt-1 h-6 w-6 shrink-0 text-lochmara-600" strokeWidth={1.75} aria-hidden="true" />
           <div>
             <h3 className="text-xl font-bold tracking-[-0.015em]">Tus datos, bajo la Ley 1581 de 2012</h3>
             <p className="mt-1.5 leading-relaxed">

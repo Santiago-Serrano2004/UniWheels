@@ -35,7 +35,10 @@ export function useDriverGpsTracking({
 
   const lastReportTimeRef = useRef<number>(0);
   const onLocationUpdateRef = useRef(onLocationUpdate);
-  onLocationUpdateRef.current = onLocationUpdate;
+
+  useEffect(() => {
+    onLocationUpdateRef.current = onLocationUpdate;
+  }, [onLocationUpdate]);
 
   useEffect(() => {
     let locationSubscription: Location.LocationSubscription | null = null;

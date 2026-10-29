@@ -13,9 +13,11 @@ use App\Mail\RecuperacionClaveMail;
 use App\Mail\VerificacionCorreoMail;
 use App\Models\User;
 use App\Models\UserReputationStats;
-use App\Models\UserWallet;
+use App\Services\AccountErasureService;
 use App\Services\JwtService;
+use App\Services\SessionRevoker;
 use App\Services\SmsService;
+use App\Services\UserSuspensionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -60,7 +62,6 @@ class AuthController extends Controller
                 'id_document_number' => $datosValidados['id_document_number'] ?? '00000000',
                 'id_document_type' => $datosValidados['id_document_type'] ?? 'CC',
                 'phone_number' => $datosValidados['phone_number'] ?? '3000000000',
-                'profile_photo_path' => $datosValidados['profile_photo_path'] ?? null,
                 'institution_id' => $datosValidados['institution_id'],
                 'campus_id' => $datosValidados['campus_id'] ?? null,
                 'member_type' => $datosValidados['member_type'] ?? 'estudiante',
@@ -79,9 +80,8 @@ class AuthController extends Controller
             // (registerDriver), tras validar vehículo/documentos — nunca autodeclarado aquí.
             $nuevoUsuario->assignRole('estudiante');
 
-            // Inicializacion de estadisticas de reputacion y billetera virtual
+            // Inicializacion de estadisticas de reputacion
             UserReputationStats::create(['user_id' => $nuevoUsuario->id]);
-            UserWallet::create(['user_id' => $nuevoUsuario->id, 'balance_cop' => 0.00]);
 
             return $nuevoUsuario;
         });
@@ -96,7 +96,7 @@ class AuthController extends Controller
             Log::error('Error al enviar correo de bienvenida: '.$e->getMessage());
         }
 
-        $usuario->load(['institution', 'campus', 'reputationStats', 'wallet', 'roles']);
+        $usuario->load(['institution', 'campus', 'reputationStats', 'roles']);
         $tokenAcceso = $this->jwtService->issue($usuario);
 
         return response()->json([
@@ -126,6 +126,16 @@ class AuthController extends Controller
             ]);
         }
 
+        app(UserSuspensionService::class)->liftIfExpired($usuario);
+
+        if (! $usuario->is_active && $usuario->suspended_until) {
+            return response()->json([
+                'success' => false,
+                'message' => app(UserSuspensionService::class)->suspensionMessage($usuario),
+                'suspended_until' => $usuario->suspended_until->toISOString(),
+            ], 403);
+        }
+
         if (! $usuario->is_active) {
             return response()->json([
                 'success' => false,
@@ -133,7 +143,7 @@ class AuthController extends Controller
             ], 403);
         }
 
-        $usuario->load(['institution', 'campus', 'reputationStats', 'wallet', 'roles']);
+        $usuario->load(['institution', 'campus', 'reputationStats', 'roles']);
         $tokenAcceso = $this->jwtService->issue($usuario);
 
         return response()->json([
@@ -153,7 +163,7 @@ class AuthController extends Controller
     public function forgotPassword(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'string', 'email'],
         ]);
 
         $correo = $request->input('email');
@@ -193,7 +203,7 @@ class AuthController extends Controller
     public function resetPassword(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'string', 'email'],
             'code' => ['required', 'string', 'size:6'],
             'password' => ['required', 'string', 'min:8'],
         ]);
@@ -204,7 +214,23 @@ class AuthController extends Controller
 
         $codigoAlmacenado = Cache::get('password_reset_'.$correo);
 
-        if (! $codigoAlmacenado || $codigoAlmacenado !== $codigoIngresado) {
+        $claveIntentos = 'password_reset_attempts_'.$correo;
+
+        if (! $codigoAlmacenado || ! hash_equals((string) $codigoAlmacenado, $codigoIngresado)) {
+            // Al 5.º fallo el código se invalida: 6 dígitos no resisten fuerza bruta.
+            if ($codigoAlmacenado) {
+                Cache::add($claveIntentos, 0, now()->addMinutes(15));
+                if (Cache::increment($claveIntentos) >= 5) {
+                    Cache::forget('password_reset_'.$correo);
+                    Cache::forget($claveIntentos);
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Demasiados intentos. Solicita un código nuevo.',
+                    ], 422);
+                }
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'El código de verificación es inválido o ha expirado.',
@@ -224,6 +250,8 @@ class AuthController extends Controller
         ]);
 
         Cache::forget('password_reset_'.$correo);
+        Cache::forget($claveIntentos);
+        app(SessionRevoker::class)->revokeAll((string) $usuario->id);
 
         return response()->json([
             'success' => true,
@@ -237,7 +265,7 @@ class AuthController extends Controller
     public function sendVerificationCode(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'string', 'email'],
         ]);
 
         $correo = $request->input('email');
@@ -307,7 +335,7 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         $usuario = $request->user();
-        $usuario->load(['institution', 'campus', 'reputationStats', 'wallet', 'roles']);
+        $usuario->load(['institution', 'campus', 'reputationStats', 'roles']);
 
         return response()->json([
             'success' => true,
@@ -334,7 +362,7 @@ class AuthController extends Controller
             $usuario->assignRole('conductor');
         }
 
-        $usuario->load(['institution', 'campus', 'reputationStats', 'wallet', 'roles']);
+        $usuario->load(['institution', 'campus', 'reputationStats', 'roles']);
 
         return response()->json([
             'success' => true,
@@ -356,23 +384,28 @@ class AuthController extends Controller
     }
 
     /**
-     * Revocar el token de acceso actual (cerrar sesión).
-     */
-    /**
-     * Renovar el token del usuario autenticado antes de que expire (sesión deslizante).
-     * Rota el token: emite uno nuevo con TTL completo y revoca el anterior de inmediato,
-     * reutilizando la misma blocklist de Redis que ya usa logout/deleteAccount.
+     * Renovar la sesión (sesión deslizante, SIM-021). Acepta un token vigente o vencido hace
+     * menos de 7 días con firma válida y fuera de la blocklist: emite uno nuevo con TTL completo
+     * y revoca el anterior. Firma inválida o vencido hace más de 7 días -> 401.
      */
     public function refresh(Request $request): JsonResponse
     {
-        $usuario = $request->user();
-        $claimsAnteriores = $request->attributes->get('jwt_claims');
+        $token = $request->bearerToken();
+        $claimsAnteriores = $token ? $this->jwtService->verifyForRefresh($token) : null;
+        if ($claimsAnteriores && $this->jwtService->sessionRevoked($claimsAnteriores)) {
+            $claimsAnteriores = null;
+        }
+        $usuario = $claimsAnteriores ? User::find($claimsAnteriores->sub) : null;
+
+        if (! $usuario || ! $usuario->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token inválido, expirado o revocado.',
+            ], 401);
+        }
 
         $nuevoToken = $this->jwtService->issue($usuario);
-
-        if ($claimsAnteriores) {
-            $this->jwtService->revoke($claimsAnteriores);
-        }
+        $this->jwtService->revoke($claimsAnteriores);
 
         return response()->json([
             'success' => true,
@@ -383,6 +416,9 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Revocar el token de acceso actual (cerrar sesión).
+     */
     public function logout(Request $request): JsonResponse
     {
         $claims = $request->attributes->get('jwt_claims');
@@ -400,7 +436,7 @@ class AuthController extends Controller
     /**
      * Eliminar la cuenta del usuario autenticado (Habeas Data Ley 1581) y enviar correo de despedida.
      */
-    public function deleteAccount(Request $request): JsonResponse
+    public function deleteAccount(Request $request, AccountErasureService $erasure): JsonResponse
     {
         $usuario = $request->user();
 
@@ -432,9 +468,8 @@ class AuthController extends Controller
             $this->jwtService->revoke($claims);
         }
 
-        // Desactivar y soft-delete de la cuenta
-        $usuario->update(['is_active' => false]);
-        $usuario->delete();
+        // Anonimizar los datos personales (aquí y en los demás servicios) y soft-delete.
+        $erasure->erase($usuario);
 
         return response()->json([
             'success' => true,
@@ -470,30 +505,6 @@ class AuthController extends Controller
                 'total_trips_as_driver' => $stats->total_trips_as_driver,
                 'total_trips_as_passenger' => $stats->total_trips_as_passenger,
                 'reviews_count' => $stats->rating_count_as_driver + $stats->rating_count_as_passenger,
-            ],
-        ]);
-    }
-
-    /**
-     * Obtener historial de transacciones de la billetera del usuario autenticado.
-     */
-    public function walletTransactions(Request $request): JsonResponse
-    {
-        $wallet = $request->user()->wallet;
-
-        if (! $wallet) {
-            return response()->json(['success' => true, 'data' => []]);
-        }
-
-        $transacciones = $wallet->transactions()->paginate(20);
-
-        return response()->json([
-            'success' => true,
-            'data' => $transacciones->items(),
-            'meta' => [
-                'current_page' => $transacciones->currentPage(),
-                'last_page' => $transacciones->lastPage(),
-                'total' => $transacciones->total(),
             ],
         ]);
     }

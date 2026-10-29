@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { adminUserService, vehicleService } from '../services/api';
-import { formatCOP, formatDate, formatDateTime } from '../utils/formatters';
+import { formatDate, formatDateTime } from '../utils/formatters';
 import {
   Users,
   Search,
@@ -14,14 +14,11 @@ import {
   ShieldAlert,
   Car,
   User,
-  CreditCard,
   Star,
   Building2,
   GraduationCap,
   History,
   X,
-  Lock,
-  Unlock,
   Eye,
   Shield,
 } from 'lucide-react';
@@ -39,6 +36,26 @@ const ACTIVE_OPTIONS = [
   { value: 'true', label: 'Solo Activos' },
   { value: 'false', label: 'Solo Suspendidos' },
 ];
+
+const SUSPENSION_LOG_ACTIONS = {
+  suspended: { label: 'Cuenta suspendida', tone: 'text-rose-600' },
+  reactivated: { label: 'Cuenta reactivada', tone: 'text-emerald-600' },
+  auto_suspended: { label: 'Suspensión automática (cancelaciones tardías)', tone: 'text-rose-600' },
+  auto_reactivated: { label: 'Reactivación automática (fin del plazo)', tone: 'text-emerald-600' },
+};
+
+const formatSuspendedUntil = (iso) =>
+  new Intl.DateTimeFormat('es-CO', {
+    timeZone: 'America/Bogota',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(new Date(iso));
+
+const suspensionLabel = (user) =>
+  user?.suspended_until && !isNaN(new Date(user.suspended_until).getTime())
+    ? `Suspendido hasta ${formatSuspendedUntil(user.suspended_until)}`
+    : 'Suspendido';
 
 export const UsersPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -185,7 +202,7 @@ export const UsersPage = () => {
 
       // Actualizar en lista
       setUsers((prev) =>
-        prev.map((u) => (u.id === user.id ? { ...u, is_active: updatedActive } : u))
+        prev.map((u) => (u.id === user.id ? { ...u, is_active: updatedActive, ...(isSuspending ? {} : { suspended_until: null }) } : u))
       );
 
       // Actualizar en detalle si está abierto
@@ -193,6 +210,7 @@ export const UsersPage = () => {
         setSelectedUserDetail((prev) => ({
           ...prev,
           is_active: updatedActive,
+          ...(isSuspending ? {} : { suspended_until: null }),
           suspension_logs: [
             {
               id: `temp-${Date.now()}`,
@@ -226,7 +244,7 @@ export const UsersPage = () => {
             <span>Gestión y Control de Usuarios</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Consulta de perfiles universitarios, reputación, saldo de billetera y aplicación de suspensiones.
+            Consulta de perfiles universitarios, reputación y suspensiones.
           </p>
         </div>
 
@@ -387,7 +405,7 @@ export const UsersPage = () => {
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30">
                               <XCircle className="w-3 h-3" />
-                              <span>Suspendido</span>
+                              <span>{suspensionLabel(u)}</span>
                             </span>
                           )}
                         </td>
@@ -525,14 +543,14 @@ export const UsersPage = () => {
                     ) : (
                       <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30">
                         <XCircle className="w-3.5 h-3.5" />
-                        <span>Suspendido</span>
+                        <span>{suspensionLabel(selectedUserDetail)}</span>
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Grilla: Académico & Billetera */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Datos Académicos */}
+                <div className="grid grid-cols-1 gap-4">
                   {/* Datos Académicos */}
                   <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
                     <h4 className="font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
@@ -551,31 +569,6 @@ export const UsersPage = () => {
                     <p className="text-slate-500">
                       Código: {selectedUserDetail.academic_profile?.student_code || '—'} · Semestre: {selectedUserDetail.academic_profile?.semester || '—'}
                     </p>
-                  </div>
-
-                  {/* Billetera */}
-                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
-                    <h4 className="font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                      <CreditCard className="w-4 h-4 text-lochmara-600" />
-                      <span>Billetera Digital</span>
-                    </h4>
-                    <div className="pt-1">
-                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Saldo disponible</span>
-                      <p className="text-lg font-black text-slate-900 dark:text-white">
-                        {formatCOP(selectedUserDetail.wallet?.balance_cop ?? 0)}
-                      </p>
-                    </div>
-                    <div className="pt-1">
-                      {selectedUserDetail.wallet?.is_locked ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400">
-                          <Lock className="w-3 h-3" /> Bloqueada
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-                          <Unlock className="w-3 h-3" /> Operativa
-                        </span>
-                      )}
-                    </div>
                   </div>
                 </div>
 
@@ -652,8 +645,8 @@ export const UsersPage = () => {
                           className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-xs space-y-1"
                         >
                           <div className="flex items-center justify-between">
-                            <span className={`font-bold ${log.action === 'suspended' ? 'text-rose-600' : 'text-emerald-600'}`}>
-                              {log.action === 'suspended' ? 'Cuenta Suspendida' : 'Cuenta Reactivada'}
+                            <span className={`font-bold ${SUSPENSION_LOG_ACTIONS[log.action]?.tone || 'text-slate-600'}`}>
+                              {SUSPENSION_LOG_ACTIONS[log.action]?.label || log.action}
                             </span>
                             <span className="text-[10px] text-slate-400 font-mono">
                               {formatDateTime(log.created_at)}
@@ -665,7 +658,7 @@ export const UsersPage = () => {
                             </p>
                           )}
                           <p className="text-[10px] text-slate-400">
-                            Por: {log.admin_name || 'Administrador'}
+                            Por: {log.admin_name || 'Sistema'}
                           </p>
                         </div>
                       ))}

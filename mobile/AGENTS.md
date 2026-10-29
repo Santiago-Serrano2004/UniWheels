@@ -12,5 +12,6 @@ specs/mobile-sdk-57-migracion.md.)
 ## NativeWind: trampas conocidas
 
 - `space-x-*` / `space-y-*` no funcionan en nativo (dependen de selectores de hijos de CSS): usar `gap-*`.
+- `className` **no se aplica** en `Animated.View` de Reanimated (no está registrado con `cssInterop`): poner la animación en `Animated.View style={...}` y los estilos en un `View className` interno, o pasar los estilos en `style`.
 - `font-mono` está mapeado a Menlo (iOS) / monospace (Android) en `tailwind.config.js`; no usar listas de fuentes CSS.
 - Modales: usar `<Modal transparent>` con tarjeta centrada y `useSafeAreaInsets` (ver `SosEmergencyModal.tsx`). No usar `presentationStyle="fullScreen"` con `SafeAreaView`: rompió con "Couldn't find a navigation context".

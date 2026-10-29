@@ -1,0 +1,53 @@
+{
+  "pasos": [
+    {
+      "paso": "login",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "paso": "vehiculos_lista",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "paso": "vehiculo_detalle_con_documentos",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "paso": "usuarios_lista",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "paso": "usuario_detalle",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "paso": "usuario_suspender_y_reactivar",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "paso": "viajes",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "paso": "sos_lista_y_atender",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "paso": "responsive_movil_usuarios",
+      "ok": true,
+      "detalle": ""
+    }
+  ],
+  "consola": [],
+  "respuestas_http_error": [],
+  "vehiculos_visibles": 1,
+  "reactivar_sin_campo_de_motivo": true
+}

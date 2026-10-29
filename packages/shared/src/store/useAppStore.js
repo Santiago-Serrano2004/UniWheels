@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { fechaColombiaStr } from '../utils/fechas.js';
 import { getStorageAdapter } from '../platform.js';
 import { readStoredSession, writeStoredSession, removeStoredSession } from '../session.js';
 import { notificationsService } from '../api.js';
@@ -7,7 +8,7 @@ import { notificationsService } from '../api.js';
  * @file useAppStore.js
  * @description Gestor de Estado Global compartido entre frontend/ (web) y
  * mobile/ (Expo). Autenticación, rol activo, ciclo de vida de viajes activos,
- * billetera y navegación por pestañas.
+ * navegación por pestañas.
  *
  * Diferencia clave frente al store original de la web: NO lee la sesión de
  * storage de forma síncrona al crear el store (localStorage es síncrono, pero
@@ -75,7 +76,7 @@ export const useAppStore = create((set, get) => ({
   },
 
   // --- NAVEGACIÓN Y PESTAÑAS ---
-  // Pestañas disponibles: 'home' | 'map' | 'driver' | 'history' | 'trips' | 'wallet' | 'profile'
+  // Pestañas disponibles: 'home' | 'map' | 'driver' | 'history' | 'trips' | 'profile'
   activeTab: 'home',
   setActiveTab: (pestaña) => set({ activeTab: pestaña }),
 
@@ -214,9 +215,7 @@ export const useAppStore = create((set, get) => ({
       return { recurringPassengerAlerts: updated };
     }),
 
-  // --- BILLETERA PREPAGO Y MÉTODOS DE PAGO ---
-  driverWalletBalance: 0,
-  passengerWalletBalance: 0,
+  // --- MÉTODOS DE PAGO GUARDADOS ---
   savedCards: [],
   setSavedCards: (cards) => {
     persistSavedCards(cards || []);
@@ -259,27 +258,17 @@ export const useAppStore = create((set, get) => ({
       return { savedCards: updated };
     }),
   linkedNequi: null,
-  pendingOpenPaymentManagerModal: false,
-  setPendingOpenPaymentManagerModal: (val) => set({ pendingOpenPaymentManagerModal: val }),
-  openPaymentSettings: () => set({ activeTab: 'profile', pendingOpenPaymentManagerModal: true }),
-
-  // Sincronizar el saldo local con el saldo real de auth-service (wallet.balance_cop)
-  setDriverWalletBalance: (saldoReal) => set({ driverWalletBalance: Number(saldoReal) }),
-  rechargeDriverWallet: (monto) =>
-    set((state) => ({
-      driverWalletBalance: state.driverWalletBalance + Number(monto),
-    })),
 
   publishDriverTrip: (datosTrayecto) => {
     const nuevoViaje = {
       id: 'trip_' + Date.now(),
       createdAt: new Date().toISOString(),
-      date: datosTrayecto.departure_date || new Date().toISOString().split('T')[0],
+      date: datosTrayecto.departure_date || fechaColombiaStr(),
       departure_time: datosTrayecto.departure_time || '06:45 AM',
       direction: datosTrayecto.direction || 'hacia_campus',
       available_seats: datosTrayecto.available_seats || 3,
       total_seats: datosTrayecto.available_seats || 3,
-      fare_cop: datosTrayecto.fare_cop || 4500,
+      fare_cop: datosTrayecto.fare_cop ?? 0,
       status: 'publicado',
       passengers: [],
       ...datosTrayecto,
@@ -291,10 +280,8 @@ export const useAppStore = create((set, get) => ({
     return nuevoViaje;
   },
 
-  cancelDriverTrip: (aplicarPenalizacion = false, montoPenalizacion = 3000) => {
-    const saldoActual = get().driverWalletBalance;
-    const nuevoSaldo = aplicarPenalizacion ? Math.max(0, saldoActual - montoPenalizacion) : saldoActual;
-    set({ activeDriverTrip: null, currentRoutePassengerTrips: [], driverWalletBalance: nuevoSaldo });
+  cancelDriverTrip: () => {
+    set({ activeDriverTrip: null, currentRoutePassengerTrips: [] });
   },
 
   finishActiveDriverTrip: () => set({ activeDriverTrip: null, currentRoutePassengerTrips: [] }),
@@ -334,6 +321,27 @@ export const useAppStore = create((set, get) => ({
       recurringPassengerAlerts: storedAlerts.length > 0 ? storedAlerts : get().recurringPassengerAlerts,
       savedCards: storedCards.length > 0 ? storedCards : get().savedCards,
       isHydrating: false,
+    });
+  },
+
+  // Actualiza el usuario guardado con los datos actuales del servidor (/auth/me). Así una sesión
+  // vieja no queda con datos desactualizados (p. ej. un conductor aprobado después del login).
+  syncUserFromServer: (apiUser) => {
+    const state = get();
+    if (!state.user || !apiUser) return;
+    const roles = apiUser.roles || [];
+    const isDriver = Boolean(apiUser.is_driver);
+    const usuarioActualizado = {
+      ...state.user,
+      name: apiUser.name ?? state.user.name,
+      isDriver,
+      driverStatus: isDriver ? 'approved' : state.user.driverStatus || 'unregistered',
+      isAdmin: roles.includes('administrador'),
+    };
+    writeStoredSession(usuarioActualizado);
+    set({
+      user: usuarioActualizado,
+      activeRole: isDriver ? state.activeRole : 'passenger',
     });
   },
 

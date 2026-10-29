@@ -1,0 +1,59 @@
+{
+  "vistas": {
+    "escritorio": {
+      "pasos": [
+        {
+          "paso": "carga",
+          "ok": true
+        },
+        {
+          "paso": "ancla_universidades",
+          "ok": true
+        },
+        {
+          "paso": "modal_privacidad",
+          "ok": true
+        },
+        {
+          "paso": "faq",
+          "ok": true
+        }
+      ],
+      "consola": [],
+      "http_error": [],
+      "desbordamiento_horizontal": 0,
+      "titulo": "UniWheels | Carpooling universitario",
+      "universidades_top_px": 100.453125,
+      "faq_preguntas": 7,
+      "pasos_ok": 4
+    },
+    "movil_390": {
+      "pasos": [
+        {
+          "paso": "carga",
+          "ok": true
+        },
+        {
+          "paso": "ancla_universidades",
+          "ok": false,
+          "detalle": "la sección #universidades quedó en top=342.546875"
+        },
+        {
+          "paso": "modal_privacidad",
+          "ok": true
+        },
+        {
+          "paso": "faq",
+          "ok": true
+        }
+      ],
+      "consola": [],
+      "http_error": [],
+      "desbordamiento_horizontal": 0,
+      "titulo": "UniWheels | Carpooling universitario",
+      "universidades_top_px": 342.546875,
+      "faq_preguntas": 7,
+      "pasos_ok": 3
+    }
+  }
+}

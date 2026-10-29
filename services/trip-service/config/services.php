@@ -43,14 +43,4 @@ return [
         'url' => env('AUTH_SERVICE_URL', 'http://127.0.0.1:8001'),
     ],
 
-    'wompi' => [
-        // Mismas llaves de auth-service (una sola cuenta de Wompi para todo el
-        // ecosistema) — llenar con las de PRUEBAS del dashboard.wompi.co.
-        'public_key' => env('WOMPI_PUBLIC_KEY'),
-        'private_key' => env('WOMPI_PRIVATE_KEY'),
-        'integrity_secret' => env('WOMPI_INTEGRITY_SECRET'),
-        'events_secret' => env('WOMPI_EVENTS_SECRET'),
-        'redirect_url' => env('WOMPI_REDIRECT_URL'),
-    ],
-
 ];

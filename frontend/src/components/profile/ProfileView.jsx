@@ -95,8 +95,7 @@ export const ProfileView = () => {
   const consultarEstadoConductor = async () => {
     setVerificandoEstado(true);
     try {
-      const plate = user?.driverApplication?.plate_number || user?.driverInfo?.plate_number;
-      const res = await vehicleService.checkApprovedVehicle(user?.id, plate);
+      const res = await vehicleService.checkApprovedVehicle();
       if (res?.has_approved_vehicle || res?.status === 'aprobado') {
         updateDriverStatus('approved', res.data || user?.driverApplication);
       }

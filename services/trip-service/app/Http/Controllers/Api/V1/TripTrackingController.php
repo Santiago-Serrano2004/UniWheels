@@ -109,10 +109,9 @@ class TripTrackingController extends Controller
     }
 
     /**
-     * Registra la activación del botón de pánico SOS. No bloquea ni depende del
-     * estado del viaje: si el usuario pulsa SOS, el evento se audita siempre que
-     * pertenezca al viaje. El flujo real de emergencia (llamada, WhatsApp) ya
-     * ocurre en el cliente de forma independiente a esta llamada.
+     * Registra la activación del botón de pánico SOS. Solo se acepta en un viaje en curso
+     * (SIM-017) y pertenece al viaje del usuario. El flujo real de emergencia (llamada,
+     * WhatsApp) ocurre en el cliente de forma independiente a esta llamada.
      */
     public function sos(Request $request, string $id): JsonResponse
     {
@@ -122,13 +121,24 @@ class TripTrackingController extends Controller
             return $authError;
         }
 
+        if (! in_array($trip->status, [
+            Trip::STATUS_EN_CAMINO,
+            Trip::STATUS_EN_PUNTO_ENCUENTRO,
+            Trip::STATUS_RECOGIDO,
+        ], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El SOS solo se puede activar durante un viaje en curso.',
+            ], 422);
+        }
+
         $data = $request->validate([
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'emergency_type' => ['nullable', 'string', 'max:50'],
         ]);
 
-        $trip->sosEvents()->create([
+        $evento = $trip->sosEvents()->create([
             'triggered_by_user_id' => $request->attributes->get('user_id'),
             'latitude' => $data['latitude'],
             'longitude' => $data['longitude'],
@@ -136,6 +146,6 @@ class TripTrackingController extends Controller
             'triggered_at' => now(),
         ]);
 
-        return response()->json(['success' => true], 201);
+        return response()->json(['success' => true, 'data' => ['id' => $evento->id]], 201);
     }
 }

@@ -227,7 +227,6 @@ export default function RegisterScreen() {
         phone_number: telefonoLimpio,
         member_type: 'estudiante',
         academic_program_or_department: 'Comunidad Universitaria',
-        profile_photo_path: fotoPerfilPreview || null,
         is_driver: false,
         verification_code: pinLimpio,
       });
@@ -248,7 +247,6 @@ export default function RegisterScreen() {
           institutionWelcomeImage: institucionSeleccionada?.welcome_image_url,
           rating: 5.0,
           tripsCount: 0,
-          walletBalance: 0,
           token: res.data?.access_token,
         });
       }, 1200);
@@ -266,7 +264,8 @@ export default function RegisterScreen() {
     setMensajeError('');
     if (step === 3) setStep(2);
     else if (step === 2) setStep(1);
-    else router.back();
+    else if (router.canGoBack()) router.back();
+    else router.replace('/welcome');
   };
 
   return (

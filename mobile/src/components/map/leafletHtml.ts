@@ -407,10 +407,16 @@ export function generateLeafletHtml(options: LeafletHtmlOptions): string {
           if (!center) return;
           var dur = (duration !== undefined && duration > 0) ? duration / 1000 : 0.6;
           var targetZoom = zoom !== undefined ? zoom : map.getZoom();
-          map.flyTo(center, targetZoom, {
-            duration: dur,
-            easeLinearity: 0.25
-          });
+          // Con el mismo zoom, desplazar sin flyTo: flyTo aleja y acerca en cada posición GPS
+          // y, repetido cada pocos segundos, cancela la carga de teselas (mapa en blanco).
+          if (targetZoom === map.getZoom()) {
+            map.panTo(center, { animate: true, duration: dur });
+          } else {
+            map.flyTo(center, targetZoom, {
+              duration: dur,
+              easeLinearity: 0.25
+            });
+          }
         },
 
         fitToCoordinates: function(coords, padding, duration) {

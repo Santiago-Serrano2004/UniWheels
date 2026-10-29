@@ -75,7 +75,6 @@ class OptimizePassengersTest extends TestCase
                 'co2_reduction_kg' => 1.2,
                 'alns_cost_score' => 0.9,
                 'route_polyline' => [],
-                'fare_breakdown' => [],
             ], 200),
         ]);
 

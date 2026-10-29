@@ -65,17 +65,19 @@ export default function LoginScreen() {
         studentCode: u.academic_profile?.student_code || u.student_code || 'U000000',
         profilePhoto: u.profile_photo_url,
         role: u.roles?.includes('conductor') ? 'driver' : 'passenger',
+        // Sin esto el store trata a todo conductor aprobado como pasajero (no ve su panel).
+        isDriver: Boolean(u.is_driver),
         isAdmin: u.roles?.includes('administrador') || false,
         institution: u.institution?.name || 'Universidad Autónoma de Bucaramanga',
         campus: u.campus?.name || 'Campus El Jardín',
         institutionWelcomeImage: u.institution?.welcome_image_url,
         rating: u.reputation?.average_rating_as_passenger || 5.0,
         tripsCount: u.reputation?.total_trips_as_passenger || 0,
-        walletBalance: u.wallet?.balance_cop || 0,
         token: response.data.access_token,
       });
-    } catch (error) {
-      setErrorMessage(parseBackendError(error));
+    } catch (error: any) {
+      // Cuenta suspendida: el backend responde 403 con su propio mensaje.
+      setErrorMessage(error?.suspended_until && error?.message ? error.message : parseBackendError(error));
     } finally {
       setIsLoading(false);
     }
@@ -129,8 +131,10 @@ export default function LoginScreen() {
     setSuccessMessage('');
     if (recoveryMode) {
       setRecoveryMode(false);
-    } else {
+    } else if (router.canGoBack()) {
       router.back();
+    } else {
+      router.replace('/welcome');
     }
   };
 

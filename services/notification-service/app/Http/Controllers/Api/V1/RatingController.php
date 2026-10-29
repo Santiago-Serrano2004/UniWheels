@@ -5,20 +5,20 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRatingRequest;
 use App\Models\Rating;
+use App\Services\RatingValidationClient;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class RatingController extends Controller
 {
+    public function __construct(private RatingValidationClient $validationClient) {}
+
     /**
-     * Registrar una calificación 1-5 de un participante del viaje.
-     *
-     * NOTA (incompleto): aún no se valida contra trip-service que el rater
-     * realmente haya participado en trip_id y que el viaje esté completado —
-     * trip-service no expone hoy un endpoint de consulta genérica por id para
-     * verificarlo. El constraint UNIQUE(trip_id, rater_user_id, rated_user_id)
-     * sí evita duplicados, y rated_user_id nunca puede ser el propio rater.
+     * Registrar una calificación 1-5 de un participante de un viaje completado (SIM-020).
+     * Se verifica con trip-service que el calificador y el calificado participaron en el
+     * viaje (uno conductor y el otro pasajero) y que está completado; si no, 403.
+     * El constraint UNIQUE(trip_id, rater_user_id, rated_user_id) da el 409 por duplicado.
      */
     public function store(StoreRatingRequest $request): JsonResponse
     {
@@ -32,12 +32,36 @@ class RatingController extends Controller
             ], 422);
         }
 
+        $viaje = $this->validationClient->getTrip($datos['trip_id']);
+
+        if ($viaje === RatingValidationClient::TRIP_UNAVAILABLE) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No fue posible validar el viaje. Intenta nuevamente.',
+            ], 503);
+        }
+
+        $rolDelCalificado = $viaje === null ? null : match ((string) $datos['rated_user_id']) {
+            (string) $viaje['driver_id'] => 'conductor',
+            (string) $viaje['passenger_id'] => 'pasajero',
+            default => null,
+        };
+        $esParticipante = $viaje !== null
+            && in_array($raterUserId, [(string) $viaje['driver_id'], (string) $viaje['passenger_id']], true);
+
+        if (! $esParticipante || $rolDelCalificado === null || $viaje['status'] !== 'completado') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo puedes calificar a quien participó contigo en un viaje completado.',
+            ], 403);
+        }
+
         try {
             $rating = Rating::create([
                 'trip_id' => $datos['trip_id'],
                 'rater_user_id' => $raterUserId,
                 'rated_user_id' => $datos['rated_user_id'],
-                'role_rated' => $datos['role_rated'],
+                'role_rated' => $rolDelCalificado,
                 'score' => $datos['score'],
                 'optional_comment' => $datos['optional_comment'] ?? null,
             ]);
@@ -47,6 +71,8 @@ class RatingController extends Controller
                 'message' => 'Ya has calificado a este usuario para este viaje.',
             ], 409);
         }
+
+        $this->validationClient->reportRating($rating->rated_user_id, $rolDelCalificado, (int) $rating->score);
 
         return response()->json([
             'success' => true,

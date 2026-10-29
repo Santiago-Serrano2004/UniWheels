@@ -30,7 +30,7 @@ export function ReputationStatsModal({
   onClose: () => void;
   stats: any;
 }) {
-  const score = Number(stats?.rating_average ?? 5);
+  const score: number | null = stats?.rating_average_passenger != null ? Number(stats.rating_average_passenger) : null;
   const totalRatings = stats?.reviews_count ?? 0;
   const metrics = Object.keys(METRIC_LABELS)
     .filter((key) => stats?.[key] != null)
@@ -66,7 +66,7 @@ export function ReputationStatsModal({
                 Puntaje de Pasajero
               </Text>
               <View className="flex-row items-baseline gap-2">
-                <Text className="text-3xl font-extrabold text-white">{score.toFixed(2)}</Text>
+                <Text className="text-3xl font-extrabold text-white">{score != null ? score.toFixed(2) : '—'}</Text>
                 <View className="flex-row items-center gap-0.5">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <Star key={i} size={14} color="#fbbf24" fill="#fbbf24" />

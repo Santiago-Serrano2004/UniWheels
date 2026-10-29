@@ -64,7 +64,7 @@ export function DriverLicenseStep({
               <Text className="text-xs font-black text-slate-900 dark:text-white">
                 Licencia de Conducción
               </Text>
-              <Text className="text-[10px] text-slate-400">Documento RUNT oficial</Text>
+              <Text className="text-[10px] text-slate-400">Foto o PDF de tu licencia vigente</Text>
             </View>
           </View>
           <View className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">

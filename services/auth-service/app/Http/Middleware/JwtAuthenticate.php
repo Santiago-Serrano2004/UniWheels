@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\User;
 use App\Services\JwtService;
+use App\Services\UserSuspensionService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -12,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class JwtAuthenticate
 {
-    public function __construct(private JwtService $jwtService) {}
+    public function __construct(private JwtService $jwtService, private UserSuspensionService $suspensionService) {}
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -34,13 +35,26 @@ class JwtAuthenticate
             ], 401);
         }
 
+
+        if ($this->jwtService->sessionRevoked($claims)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tu sesión ya no es válida. Inicia sesión de nuevo.',
+            ], 401);
+        }
+
         $userId = (string) $claims->sub;
+
+        $usuario = User::find($userId);
+
+        // Levantamiento perezoso de una suspensión automática ya vencida (sin scheduler).
+        if ($usuario) {
+            $this->suspensionService->liftIfExpired($usuario);
+        }
 
         try {
             if (Redis::exists("uniwheels:suspended_user:{$userId}")) {
-                return response()->json([
-                    'message' => 'Tu cuenta está suspendida.',
-                ], 403);
+                return $this->suspendedResponse($usuario);
             }
         } catch (\Throwable $e) {
             Log::warning('No se pudo verificar el estado de suspensión en Redis: '.$e->getMessage(), [
@@ -48,7 +62,9 @@ class JwtAuthenticate
             ]);
         }
 
-        $usuario = User::find($userId);
+        if ($usuario && ! $usuario->is_active && $usuario->suspended_until) {
+            return $this->suspendedResponse($usuario);
+        }
 
         if (! $usuario || ! $usuario->is_active) {
             return response()->json([
@@ -63,5 +79,19 @@ class JwtAuthenticate
         $request->attributes->set('jwt_claims', $claims);
 
         return $next($request);
+    }
+
+    private function suspendedResponse(?User $usuario): Response
+    {
+        if ($usuario && $usuario->suspended_until) {
+            return response()->json([
+                'message' => $this->suspensionService->suspensionMessage($usuario),
+                'suspended_until' => $usuario->suspended_until->toISOString(),
+            ], 403);
+        }
+
+        return response()->json([
+            'message' => 'Tu cuenta está suspendida.',
+        ], 403);
     }
 }

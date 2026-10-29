@@ -1,3 +1,5 @@
+> **Nota (2026-10-05):** los pagos, la billetera y Wompi fueron eliminados del producto. Ver `docs/adr/0001-pivote-b2b-sin-pagos.md` y `specs/pivote-b2b-sin-pagos.md`.
+
 # Mapa de mobile con Leaflet en WebView (paridad con la web, sin Apple/Google Maps)
 
 **Documento:** `specs/mobile-mapa-leaflet-webview.md`

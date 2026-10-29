@@ -33,6 +33,7 @@ class User extends Authenticatable
         'password',
         'is_driver',
         'is_active',
+        'suspended_until',
         'email_verified_at',
         'phone_verified_at',
         'verification_expires_at',
@@ -49,6 +50,7 @@ class User extends Authenticatable
             'semester' => 'integer',
             'is_driver' => 'boolean',
             'is_active' => 'boolean',
+            'suspended_until' => 'datetime',
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
             'verification_expires_at' => 'datetime',
@@ -69,11 +71,6 @@ class User extends Authenticatable
     public function reputationStats(): HasOne
     {
         return $this->hasOne(UserReputationStats::class);
-    }
-
-    public function wallet(): HasOne
-    {
-        return $this->hasOne(UserWallet::class);
     }
 
     public function suspensionLogs(): HasMany

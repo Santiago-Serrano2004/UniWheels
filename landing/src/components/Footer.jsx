@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const Footer = ({ onOpenPrivacy }) => (
+export const Footer = () => (
   <footer className="border-t border-[var(--color-linea)] bg-white">
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
       <div className="max-w-sm">
@@ -22,13 +22,24 @@ export const Footer = ({ onOpenPrivacy }) => (
         >
           uniwheelscontact@gmail.com
         </a>
-        <button
-          type="button"
-          onClick={onOpenPrivacy}
-          className="text-left text-[var(--color-tinta)] hover:text-lochmara-700 transition-colors"
+        <a
+          href="/privacidad"
+          className="text-[var(--color-tinta)] hover:text-lochmara-700 transition-colors"
         >
           Política de tratamiento de datos
-        </button>
+        </a>
+        <a
+          href="/terminos"
+          className="text-[var(--color-tinta)] hover:text-lochmara-700 transition-colors"
+        >
+          Términos de uso
+        </a>
+        <a
+          href="/soporte"
+          className="text-[var(--color-tinta)] hover:text-lochmara-700 transition-colors"
+        >
+          Soporte
+        </a>
       </div>
     </div>
     <div className="border-t border-[var(--color-linea)]">

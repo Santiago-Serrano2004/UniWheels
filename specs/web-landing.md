@@ -1,3 +1,5 @@
+> **Nota (2026-10-05):** los pagos, la billetera y Wompi fueron eliminados del producto. Ver `docs/adr/0001-pivote-b2b-sin-pagos.md` y `specs/pivote-b2b-sin-pagos.md`.
+
 # Landing de UniWheels en uniwheels.org (y retiro de la app web de estudiantes)
 
 **Documento:** `specs/web-landing.md`

@@ -37,7 +37,6 @@ class AdminSosEventResource extends JsonResource
                 'pickup_address' => $trip->pickup_address,
                 'dropoff_address' => $trip->dropoff_address,
                 'status' => $trip->status,
-                'payment_method' => $trip->payment_method,
                 'total_fare_cop' => $trip->total_fare_cop,
                 'scheduled_pickup_time' => $trip->scheduled_pickup_time?->toISOString(),
             ] : null,

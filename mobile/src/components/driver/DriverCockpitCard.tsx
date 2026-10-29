@@ -33,19 +33,19 @@ import {
   tripsService,
   tripLifecycleService,
   routesService,
-  getPlaceCoordinates,
 } from '@uniwheels/shared';
+import { iniciarRecorridoDeRuta, llegarAlPuntoDeRuta } from '@/services/viajesDeRuta';
 import { AlertBanner } from '@/components/AlertBanner';
 
 export interface DriverCockpitCardProps {
   onOpenNavigator?: () => void;
-  onOpenSettlement?: () => void;
+  onCompleteTrip?: () => void;
   onOpenCancelModal?: () => void;
 }
 
 export function DriverCockpitCard({
   onOpenNavigator,
-  onOpenSettlement,
+  onCompleteTrip,
   onOpenCancelModal,
 }: DriverCockpitCardProps) {
   const {
@@ -106,18 +106,20 @@ export function DriverCockpitCard({
         : activeDriverTrip.passengers || [];
 
       if (activeTripsList.length >= 2) {
-        const candidates = activeTripsList.map((t: any) => {
-          const coords = getPlaceCoordinates(t.pickup_address, false);
-          return {
+        // Solo pasajeros con coordenadas reales de recogida; sin ellas no hay orden que optimizar.
+        const candidates = activeTripsList
+          .filter((t: any) => t.pickup_lat != null && t.pickup_lng != null)
+          .map((t: any) => ({
             id: t.id,
             name: t.passenger_name || t.name,
             pickup_address: t.pickup_address || t.pickup,
-            pickup_lat: coords ? coords[0] : 7.1193,
-            pickup_lng: coords ? coords[1] : -73.1042,
-          };
-        });
+            pickup_lat: Number(t.pickup_lat),
+            pickup_lng: Number(t.pickup_lng),
+          }));
 
-        const optimization = await routesService.optimizePassengers(activeDriverTrip.id, candidates);
+        const optimization = candidates.length >= 2
+          ? await routesService.optimizePassengers(activeDriverTrip.id, candidates)
+          : null;
         const stops = optimization?.data?.ordered_stops;
         if (optimization?.ai_powered && Array.isArray(stops) && stops.length > 0) {
           const orderedIds = stops.map((s: any) => s.user_id || s.id).filter(Boolean);
@@ -176,12 +178,12 @@ export function DriverCockpitCard({
     setIsUpdatingLifecycle(true);
     setGeneralError('');
     try {
-      await tripLifecycleService.startDriving(activeDriverTrip.id);
-    } catch {
-      // Tolera modo offline o simulación
+      await iniciarRecorridoDeRuta(String(activeDriverTrip.route_id || activeDriverTrip.id));
+      setTripStatus('en_camino');
+      setActiveDriverTrip({ ...activeDriverTrip, status: 'en_camino' });
+    } catch (error: any) {
+      setGeneralError(error?.message || 'No se pudo actualizar el viaje. Inténtalo de nuevo.');
     }
-    setTripStatus('en_camino');
-    setActiveDriverTrip({ ...activeDriverTrip, status: 'en_camino' });
     setIsUpdatingLifecycle(false);
   };
 
@@ -189,12 +191,12 @@ export function DriverCockpitCard({
     setIsUpdatingLifecycle(true);
     setGeneralError('');
     try {
-      await tripLifecycleService.arriveAtMeetingPoint(activeDriverTrip.id);
-    } catch {
-      // Tolera simulación
+      await llegarAlPuntoDeRuta(String(activeDriverTrip.route_id || activeDriverTrip.id));
+      setTripStatus('en_punto_encuentro');
+      setActiveDriverTrip({ ...activeDriverTrip, status: 'en_punto_encuentro' });
+    } catch (error: any) {
+      setGeneralError(error?.message || 'No se pudo actualizar el viaje. Inténtalo de nuevo.');
     }
-    setTripStatus('en_punto_encuentro');
-    setActiveDriverTrip({ ...activeDriverTrip, status: 'en_punto_encuentro' });
     setIsUpdatingLifecycle(false);
   };
 
@@ -313,9 +315,11 @@ export function DriverCockpitCard({
             </View>
 
             <View className="flex-1 p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-              <Text className="text-[10px] font-medium text-slate-400">Tarifa por Cupo</Text>
+              <Text className="text-[10px] font-medium text-slate-400">Aporte por Cupo</Text>
               <Text className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
-                ${Number(activeDriverTrip.fare_cop || activeDriverTrip.price || 4500).toLocaleString('es-CO')}
+                {Number(activeDriverTrip.fare_cop ?? activeDriverTrip.price ?? 0) > 0
+                  ? `$${Number(activeDriverTrip.fare_cop ?? activeDriverTrip.price).toLocaleString('es-CO')}`
+                  : 'Gratis'}
               </Text>
             </View>
           </View>
@@ -504,15 +508,15 @@ export function DriverCockpitCard({
             </Pressable>
           )}
 
-          {/* Botón de Finalización y Liquidación */}
+          {/* Botón de Finalización */}
           {(tripStatus === 'en_curso' || allPassengersBoarded) && (
             <Pressable
-              onPress={onOpenSettlement}
+              onPress={onCompleteTrip}
               className="w-full py-3.5 rounded-2xl border border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 flex-row items-center justify-center gap-2"
             >
               <CheckCircle2 size={16} color="#10b981" />
               <Text className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                Finalizar y Liquidar Viaje
+                Finalizar Viaje
               </Text>
             </Pressable>
           )}
@@ -541,7 +545,7 @@ export function DriverCockpitCard({
           className="flex-1 bg-black/75 items-center justify-center p-4"
           onPress={() => setSelectedPassengerForPin(null)}
         >
-          <Animated.View style={pinModalAnimatedStyle} className="w-full max-w-[320px]">
+          <Animated.View style={[pinModalAnimatedStyle, { width: '100%', maxWidth: 320 }]}>
             <Pressable
               className="w-full bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 gap-3.5 shadow-2xl"
               onPress={(e) => e.stopPropagation()}
@@ -589,11 +593,10 @@ export function DriverCockpitCard({
               <Pressable
                 disabled={isVerifyingPin || pinInput.length !== 4}
                 onPress={handleVerifyPin}
-                className={`w-full py-3 rounded-2xl flex-row items-center justify-center gap-2 ${
-                  isVerifyingPin || pinInput.length !== 4
-                    ? 'bg-lochmara-600/50'
-                    : 'bg-lochmara-600 active:bg-lochmara-700 shadow-md shadow-lochmara-600/30'
-                }`}
+                // Clases fijas: si `active:` aparece o desaparece en caliente, NativeWind cambia el
+                // componente por uno interactivo y dentro del Modal falla sin contexto de navegación.
+                className="w-full py-3 rounded-2xl flex-row items-center justify-center gap-2 bg-lochmara-600 active:bg-lochmara-700"
+                style={{ opacity: isVerifyingPin || pinInput.length !== 4 ? 0.5 : 1 }}
               >
                 {isVerifyingPin ? (
                   <ActivityIndicator size="small" color="#ffffff" />

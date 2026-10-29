@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\DB;
 
 class Route extends Model
 {
@@ -25,9 +24,20 @@ class Route extends Model
         'max_detour_minutes',
         'accumulated_detour_minutes',
         'available_seats',
+        'total_seats',
         'base_contribution_cop',
+        'distance_km',
+        'suggested_contribution_cop',
         'status',
     ];
+
+    protected static function booted(): void
+    {
+        // total_seats = capacidad ofertada al publicar; tope de release-seat.
+        static::creating(function (Route $route) {
+            $route->total_seats ??= $route->available_seats;
+        });
+    }
 
     protected function casts(): array
     {
@@ -38,7 +48,10 @@ class Route extends Model
             'max_detour_minutes' => 'integer',
             'accumulated_detour_minutes' => 'float',
             'available_seats' => 'integer',
+            'total_seats' => 'integer',
             'base_contribution_cop' => 'float',
+            'distance_km' => 'float',
+            'suggested_contribution_cop' => 'float',
         ];
     }
 

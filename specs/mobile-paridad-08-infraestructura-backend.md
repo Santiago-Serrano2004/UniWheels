@@ -1,3 +1,5 @@
+> **Nota (2026-10-05):** los pagos, la billetera y Wompi fueron eliminados del producto. Ver `docs/adr/0001-pivote-b2b-sin-pagos.md` y `specs/pivote-b2b-sin-pagos.md`.
+
 # Spec: Paridad móvil 08 — Impacto y Adecuación de Infraestructura y Backend Desplegado
 
 ## Contexto mínimo (ya investigado, no repetir)

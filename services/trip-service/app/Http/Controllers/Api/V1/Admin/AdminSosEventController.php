@@ -52,6 +52,13 @@ class AdminSosEventController extends Controller
             $adminUserId
         );
 
+        if ($updatedEvent === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Esta alerta SOS ya fue atendida.',
+            ], 409);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Alerta SOS atendida y documentada exitosamente.',

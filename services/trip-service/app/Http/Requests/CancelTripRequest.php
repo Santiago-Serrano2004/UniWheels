@@ -14,7 +14,8 @@ class CancelTripRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'cancelled_by' => ['required', 'in:conductor,pasajero'],
+            // Opcional e ignorado: el rol lo decide el servidor según el JWT (SIM-010).
+            'cancelled_by' => ['nullable', 'string'],
             'reason' => ['required', 'string', 'min:5', 'max:250'],
         ];
     }
@@ -22,7 +23,6 @@ class CancelTripRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'cancelled_by.required' => 'Debes indicar el rol del usuario que cancela.',
             'reason.required' => 'El motivo de cancelación es obligatorio.',
             'reason.min' => 'El motivo debe contener al menos 5 caracteres.',
         ];

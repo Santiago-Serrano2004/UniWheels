@@ -17,10 +17,11 @@ class LoginRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        $prefijoCorreo = trim($this->input('email_prefix', ''));
+        $prefijoCorreo = $this->input('email_prefix');
+        $prefijoCorreo = is_string($prefijoCorreo) ? trim($prefijoCorreo) : '';
         $idInstitucion = $this->input('institution_id');
 
-        if ($prefijoCorreo !== '' && $idInstitucion) {
+        if ($prefijoCorreo !== '' && is_scalar($idInstitucion) && $idInstitucion) {
             $institucion = Institution::find($idInstitucion);
             if ($institucion) {
                 $prefijoLimpio = explode('@', $prefijoCorreo)[0];
@@ -28,7 +29,7 @@ class LoginRequest extends FormRequest
                     'email' => strtolower($prefijoLimpio . '@' . $institucion->domain),
                 ]);
             }
-        } elseif ($this->has('email')) {
+        } elseif (is_string($this->input('email'))) {
             $this->merge([
                 'email' => strtolower(trim($this->input('email'))),
             ]);

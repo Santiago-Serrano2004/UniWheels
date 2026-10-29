@@ -17,7 +17,7 @@ const PASOS = {
     {
       titulo: 'Sube con tu PIN',
       texto:
-        'Cuando llega el conductor, le dictas tu PIN de 4 dígitos. Pagas en efectivo, por Nequi o Daviplata, o con tarjeta desde la app.',
+        'Cuando llega el conductor, le dictas tu PIN de 4 dígitos. Le pagas el aporte directamente, en efectivo o por Nequi.',
     },
   ],
   conductor: [

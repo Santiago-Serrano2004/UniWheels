@@ -30,6 +30,7 @@ import {
   Shield,
 } from 'lucide-react-native';
 import { tripLifecycleService, useAppStore } from '@uniwheels/shared';
+import { viajesActivosDeRuta } from '@/services/viajesDeRuta';
 
 export interface SosEmergencyModalProps {
   isOpen: boolean;
@@ -59,6 +60,8 @@ export function SosEmergencyModal({
   const [coords, setCoords] = useState<[number, number]>(currentCoords || DEFAULT_COORDS);
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  // SIM-022: si la alerta no quedó registrada en UniWheels se avisa y se ofrece llamar al 123.
+  const [sosReportError, setSosReportError] = useState<string | null>(null);
 
   const contentOpacity = useSharedValue(0);
   const contentScale = useSharedValue(0.92);
@@ -91,14 +94,14 @@ export function SosEmergencyModal({
     tripInfo?.driverName ||
     activePassengerBooking?.driverName ||
     activeDriverTrip?.driverName ||
-    (user?.role === 'driver' ? user?.name : 'Carlos Mendoza') ||
+    (user?.role === 'driver' ? user?.name : undefined) ||
     'Conductor Asignado';
 
   const plate =
     tripInfo?.plate ||
     activePassengerBooking?.plate ||
     activeDriverTrip?.plate ||
-    'KLU-492';
+    '—';
 
   const vehicle =
     tripInfo?.vehicle ||
@@ -106,16 +109,18 @@ export function SosEmergencyModal({
     activeDriverTrip?.vehicle ||
     'Vehículo en servicio';
 
-  const tripId =
-    tripInfo?.id ||
-    activePassengerBooking?.id ||
-    activeDriverTrip?.id;
+  // El pasajero reporta en su propio viaje. El conductor no tiene viaje propio en el
+  // servidor: su alerta se registra en el viaje de cada pasajero de la ruta.
+  const esConductor = !activePassengerBooking && Boolean(activeDriverTrip);
+  const rutaConductor = esConductor ? String(activeDriverTrip?.route_id || activeDriverTrip?.id || '') : '';
+  const tripId = esConductor ? rutaConductor : tripInfo?.id || activePassengerBooking?.id;
 
   // Actualizar coordenadas GPS en alta precisión al abrir el modal
   useEffect(() => {
     if (!isOpen) return;
 
     let isMounted = true;
+    setSosReportError(null);
     async function getPreciseLocationAndNotify() {
       setIsLocating(true);
       let targetLat = coords[0];
@@ -139,15 +144,24 @@ export function SosEmergencyModal({
         if (isMounted) setIsLocating(false);
       }
 
-      // Disparar reporte silencioso de SOS al backend para registro de auditoría
+      // Disparar reporte de SOS al backend para registro de auditoría
       if (tripId) {
-        tripLifecycleService
-          .triggerEmergencySos(tripId, {
-            latitude: targetLat,
-            longitude: targetLng,
-            emergencyType: 'panico_usuario',
+        const alerta = { latitude: targetLat, longitude: targetLng, emergencyType: 'panico_usuario' };
+        const viajes = esConductor
+          ? viajesActivosDeRuta(rutaConductor).then((vs) => vs.map((v) => v.id))
+          : Promise.resolve([tripId]);
+        viajes
+          .then((ids) => {
+            if (!ids.length) throw new Error('Tu ruta no tiene pasajeros activos; la alerta no quedó asociada a un viaje.');
+            return Promise.all(ids.map((id) => tripLifecycleService.triggerEmergencySos(id, alerta)));
           })
-          .catch(() => {});
+          .catch((err: any) => {
+            if (isMounted) {
+              setSosReportError(err?.message || 'No se pudo registrar la alerta en UniWheels.');
+            }
+          });
+      } else if (isMounted) {
+        setSosReportError('No hay un viaje activo al que asociar la alerta.');
       }
     }
 
@@ -234,8 +248,7 @@ export function SosEmergencyModal({
     <Modal visible={isOpen} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable className="flex-1 bg-slate-950/85 items-center justify-center p-4" onPress={onClose}>
         <Animated.View
-          style={[contentAnimatedStyle, { maxHeight: '90%', width: '100%' }]}
-          className="w-full max-w-sm"
+          style={[contentAnimatedStyle, { maxHeight: '90%', width: '100%', maxWidth: 384 }]}
         >
           <Pressable
             className="w-full bg-slate-900 rounded-3xl p-5 border-2 border-rose-500/60 shadow-2xl shadow-rose-950/80 gap-3.5"
@@ -268,6 +281,19 @@ export function SosEmergencyModal({
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+            {sosReportError && (
+              <View className="rounded-2xl p-3.5 bg-amber-500/10 border border-amber-500/50 gap-2">
+                <Text className="text-xs font-bold text-amber-300">La alerta no se registró en UniWheels</Text>
+                <Text className="text-[11px] text-amber-100/80">{sosReportError}</Text>
+                <Pressable
+                  onPress={() => realizarLlamada('tel:123', 'Policía Nacional 123')}
+                  className="py-2 rounded-xl bg-rose-600 items-center"
+                >
+                  <Text className="text-xs font-black text-white">Llamar al 123 ahora</Text>
+                </Pressable>
+              </View>
+            )}
+
             {/* Tarjeta de Coordenadas GPS en Vivo */}
             <View className="rounded-2xl p-3.5 bg-slate-950 border border-rose-900/50 gap-2">
               <View className="flex-row items-center justify-between">

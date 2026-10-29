@@ -1,0 +1,22 @@
+{
+  "name": "uniwheels-anuncio",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Anuncio de UniWheels hecho con Remotion",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render:vertical": "remotion render src/index.ts AnuncioVertical out/uniwheels-anuncio-9x16.mp4",
+    "render:horizontal": "remotion render src/index.ts AnuncioHorizontal out/uniwheels-anuncio-16x9.mp4",
+    "render": "npm run render:vertical && npm run render:horizontal",
+    "render:real": "remotion render src/index.ts RealVertical out/uniwheels-real-9x16.mp4 && remotion render src/index.ts RealHorizontal out/uniwheels-real-16x9.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.533",
+    "@remotion/google-fonts": "^4.0.533",
+    "@types/react": "^19.3.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "^4.0.533",
+    "typescript": "^7.0.2"
+  }
+}

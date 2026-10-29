@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Tabs } from 'expo-router';
-import { Home, Map, Route, User, Wallet } from 'lucide-react-native';
+import { Home, Map, Route, User } from 'lucide-react-native';
 import { useAppStore } from '@uniwheels/shared';
 import { AppHeader } from '@/components/AppHeader';
 import { InstitutionalWelcomeModal } from '@/components/InstitutionalWelcomeModal';
@@ -9,8 +9,8 @@ import { DriverInviteModal } from '@/components/DriverInviteModal';
 
 /**
  * Pestañas adaptativas según el rol activo (paridad con BottomNav.jsx de la web):
- * - Pasajero: Inicio / Ruta / Viajes / Perfil (Billetera oculta).
- * - Conductor: Mi Panel / Historial / Billetera / Perfil (Ruta oculta).
+ * - Pasajero: Inicio / Ruta / Viajes / Perfil.
+ * - Conductor: Mi Panel / Historial / Perfil (Ruta oculta).
  */
 export default function TabsLayout() {
   const activeRole = useAppStore((state) => state.activeRole);
@@ -47,14 +47,6 @@ export default function TabsLayout() {
             options={{
               title: isDriver ? 'Historial' : 'Viajes',
               tabBarIcon: ({ color, size }) => <Route color={color} size={size} />,
-            }}
-          />
-          <Tabs.Screen
-            name="wallet"
-            options={{
-              title: 'Billetera',
-              tabBarIcon: ({ color, size }) => <Wallet color={color} size={size} />,
-              href: isDriver ? '/(tabs)/wallet' : null,
             }}
           />
           <Tabs.Screen

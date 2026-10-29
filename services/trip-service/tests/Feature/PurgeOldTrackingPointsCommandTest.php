@@ -27,9 +27,6 @@ class PurgeOldTrackingPointsCommandTest extends TestCase
             'boarding_pin' => '4829',
             'is_pin_verified' => false,
             'total_fare_cop' => 4500,
-            'driver_amount_cop' => 3960,
-            'platform_commission_cop' => 540,
-            'commission_status' => 'pendiente_debito',
             'status' => $status,
             'scheduled_pickup_time' => Carbon::tomorrow()->setHour(7)->setMinute(0),
         ]);
